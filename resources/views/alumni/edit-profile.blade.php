@@ -37,12 +37,21 @@
     </section>
 
     <main class="max-w-5xl mx-auto mt-10 mb-12 px-4">
-        <form action="{{ route('alumni.updateProfile', $user->user_id) }}" method="POST" class="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden p-8 md:p-12">
+        <form action="{{ route('alumni.updateProfile', $user->user_id) }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden p-8 md:p-12">
             @csrf
             @method('PUT')
             <h2 class="w-fit mx-auto text-center text-3xl font-bold mb-10 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
                 EDIT PROFILE
             </h2>
+            @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
 
             <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
                 <div class="md:col-span-3 flex justify-center md:justify-start">
@@ -58,7 +67,7 @@
                         </div>
 
                         <div class="absolute bottom-1 right-1">
-                            <button onclick="togglePhotoOptions(event)" class="bg-gray-600 text-white p-2 rounded-full border-2 border-white hover:bg-gray-800 transition z-10 shadow-md">
+                            <button type="button" onclick="togglePhotoOptions(event)" class="bg-gray-600 text-white p-2 rounded-full border-2 border-white hover:bg-gray-800 transition z-10 shadow-md">
                                 <i class="fa-solid fa-camera text-xs"></i>
                             </button>
 
@@ -66,9 +75,9 @@
                                 <button class="w-full text-left px-4 py-2 text-sm text-[#0E0F3B] hover:font-bold hover:bg-gray-100 flex items-center gap-3">
                                     <i class="fa-solid fa-image text-[#0E0F3B]"></i> View Profile Image
                                 </button>
-                                <label for="imageUpload" class="w-full text-left px-4 py-2 text-sm text-[#0E0F3B] hover:font-bold hover:bg-gray-100 flex items-center gap-3 cursor-pointer mb-0">
+                                <label for="user_profile_picture" class="w-full text-left px-4 py-2 text-sm text-[#0E0F3B] hover:font-bold hover:bg-gray-100 flex items-center gap-3 cursor-pointer mb-0">
                                     <i class="fa-solid fa-upload text-[#0E0F3B]"></i> Upload an Image
-                                    <input type="file" id="imageUpload" class="hidden" accept="image/*">
+                                    <input type="file" name="user_profile_picture" id="user_profile_picture" class="hidden">
                                 </label>
                             </div>
                         </div>
@@ -115,34 +124,35 @@
 
                 <div class="space-y-4">
                     <div>
-                        <label class="text-xs font-bold text-orange-600 uppercase block mb-1">Employment Status</label>
-                        <select class="w-full md:w-3/4 py-1.5 px-2 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
+                        <label for="alumnus_employment_status" class="text-xs font-bold text-orange-600 uppercase block mb-1">Employment Status</label>
+                        <select name="alumnus_employment_status" class="w-full md:w-3/4 py-1.5 px-2 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
                             <option value="1" {{ $user->alumnus->alumnus_employment_status == 1 ? 'selected' : '' }}>Employed</option>
                             <option value="0" {{ $user->alumnus->alumnus_employment_status == 0 ? 'selected' : '' }}>Unemployed</option>
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-orange-600 uppercase block mb-1">Email</label>
-                        <input type="email" placeholder="example@email.com" value="{{ $user->user_email }}" class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
+                        <label for="user_email" class="text-xs font-bold text-orange-600 uppercase block mb-1">Email</label>
+                        <input type="email" name="user_email" placeholder="example@email.com" value="{{ $user->user_email }}" class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
                     </div>
 
                     <div>
-                        <label class="text-xs font-bold text-orange-600 uppercase block mb-1">Contact No.</label>
-                        <input type="text" placeholder="09XXXXXXXXX" value="{{ $user->user_number }}" class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
+                        <label for="user_number" class="text-xs font-bold text-orange-600 uppercase block mb-1">Contact No.</label>
+                        <input type="text" name="user_number" placeholder="09XXXXXXXXX" value="{{ $user->user_number }}" class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
                     </div>
 
                     <div>
-                        <label class="text-xs font-bold text-orange-600 uppercase block mb-1">Skills</label>
-                        <textarea rows="4" placeholder="e.g. Web Development, UI/UX Design, Data Analysis..." value="{{ $user->alumnus->alumnus_skills }}" class="w-full border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition"></textarea>
+                        <label for="alumnus_skills" class="text-xs font-bold text-orange-600 uppercase block mb-1">Skills</label>
+                        <textarea rows="4" name="alumnus_skills" placeholder="e.g. Web Development, UI/UX Design, Data Analysis..." class="w-full border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">{{ $user->alumnus->alumnus_skills }}</textarea>
                     </div>
                 </div>
 
                 <div class="flex flex-col justify-start items-end space-y-4">
                     <div class="w-full md:w-72 flex items-center justify-between">
                         <span class="text-xs font-bold text-orange-600 uppercase">Resume</span>
-                        <button class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white text-xs font-bold py-2 px-8 rounded shadow-md transition duration-200 uppercase w-44">
+                        <label for="alumnus_resume" class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white text-xs font-bold py-2 px-8 rounded shadow-md transition duration-200 uppercase w-44">
                             Upload Resume
-                        </button>
+                        </label>
+                        <input type="file" name="alumnus_resume" id="alumnus_resume" class="hidden">
                     </div>
                     <div class="w-full md:w-72 flex justify-end">
                         <button class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white text-xs font-bold py-2 px-8 rounded shadow-md transition duration-200 uppercase w-44">
@@ -266,6 +276,7 @@
         event.stopPropagation();
         const menu = document.getElementById('photoOptions');
         menu.classList.toggle('hidden');
+
     }
 
     window.addEventListener('click', function(e) {

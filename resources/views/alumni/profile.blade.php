@@ -42,6 +42,15 @@
             <h2 class="w-fit mx-auto text-center text-3xl font-bold mb-10 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
                 ALUMNI PROFILE
             </h2>
+            @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
 
             <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
 
@@ -49,9 +58,9 @@
                     <div class="w-40 h-40 bg-slate-900 rounded-full flex items-center justify-center border-4 border-white shadow-lg overflow-hidden">
                         <svg class="w-25 h-25 text-white mt-8" fill="currentColor" viewBox="0 0 20 20">
                             @if ($user->user_profile_picture)
-                                <img src="{{ asset('storage/' . $user->user_profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover">
+                            <img src="{{ asset('storage/' . $user->user_profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover">
                             @else
-                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
                             @endif
                         </svg>
                     </div>
@@ -119,9 +128,9 @@
                 <div class="flex flex-col justify-start items-end space-y-3">
                     <div class="w-full md:w-64 flex items-center justify-between">
                         <span class="text-xs font-black text-slate-900 uppercase">Resume</span>
-                        <button class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white text-xs font-bold py-2 px-8 rounded shadow-md transition duration-200 uppercase w-40">
+                        <a href="{{ asset('storage/' . $user->alumnus->alumnus_resume) ?? '#'}}" class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white text-xs font-bold py-2 px-8 rounded shadow-md transition duration-200 uppercase w-40">
                             View Resume
-                        </button>
+                        </a>
                     </div>
 
                     <div class="w-full md:w-64 flex justify-end">

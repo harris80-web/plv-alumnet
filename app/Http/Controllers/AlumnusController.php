@@ -75,27 +75,30 @@ class AlumnusController extends Controller
             'user_profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'alumnus_employment_status' => 'required|boolean|max:255',
             'alumnus_skills' => 'nullable|string',
-            'alumnus_resume' => 'nullable|array',
-            'alumnus_resume.*' => 'mimes:jpg,jpeg,png,pdf',
+            'alumnus_resume' => 'nullable|mimes:pdf,doc,docx',
             'user_email' => 'required|email|unique:users,user_email,' . $user->user_id . ',user_id',
             'user_number' => 'nullable|string|max:20',
         ]);
 
-
-        $resumes = [];
+        $oldResume = $user->alumnus->alumnus_resume ?? null;
+        $resume = null;
         if ($request->hasFile('alumnus_resume')) {
-            foreach ($request->file('alumnus_resume') as $resume) {
-                $path = $resume->store('resumes', 'public');
-                $resumes[] = $path;
+            if ($oldResume && Storage::disk('public')->exists($oldResume)) {
+                Storage::disk('public')->delete($oldResume);
             }
+            $resume = $request->file('alumnus_resume')->store('resumes', 'public');
         }
+        $oldProfilePicture = $user->user_profile_picture ?? null;
         $profilePicture = null;
         if ($request->hasFile('user_profile_picture')) {
+            if( $oldProfilePicture && Storage::disk('public')->exists($oldProfilePicture)){
+                Storage::disk('public')->delete($oldProfilePicture);
+            }
             $profilePicture = $request->file('user_profile_picture')->store('profilePictures', 'public');
         }
 
         try {
-            DB::transaction(function () use ($validated, $resumes, $alumnus, $profilePicture) {
+            DB::transaction(function () use ($validated, $resume, $alumnus, $profilePicture) {
                 $alumni = Alumnus::where('user_id', $alumnus)->firstOrFail();
 
                 $alumni->update([
@@ -103,9 +106,9 @@ class AlumnusController extends Controller
                     'alumnus_skills' => $validated['alumnus_skills'] ?? $alumni->alumnus_skills,
                 ]);
 
-                if ($resumes != null) {
+                if ($resume != null) {
                     $alumni->update([
-                        'alumnus_resume' => $resumes,
+                        'alumnus_resume' => $resume,
                     ]);
                 }
 
@@ -128,8 +131,8 @@ class AlumnusController extends Controller
                 'File' => $e->getFile(),
                 'Line' => $e->getLine()
             ]);
-            if ($resumes) {
-                Storage::disk('public')->delete($resumes);
+            if ($resume) {
+                Storage::disk('public')->delete($resume);
             }
             if ($profilePicture) {
                 Storage::disk('public')->delete($profilePicture);

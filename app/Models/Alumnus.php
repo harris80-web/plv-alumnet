@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Alumnus extends Model
 {
     protected $primaryKey = 'user_id';
+    public $incrementing = false;
 
     protected $fillable = [
         'program_id',
@@ -18,6 +19,9 @@ class Alumnus extends Model
         'alumnus_resume',
     ];
 
+    protected $casts = [
+        'alumnus_resume' => 'array',
+    ];
     
     public function user()
     {

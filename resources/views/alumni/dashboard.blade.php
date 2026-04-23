@@ -428,11 +428,12 @@
                 </a>
             </nav>
 
-            <div class="border-t pt-6">
-                <a href="{{ route('general.home') }}" class="flex items-center gap-4 text-[#0E0F3B] hover:text-[#ED7A07] p-3 transition font-bold">
+            <form action="{{ route('user.logout') }}" method="POST" class="border-t pt-6">
+                @csrf
+                <button type="submit" class="flex items-center gap-4 text-[#0E0F3B] hover:text-[#ED7A07] p-3 transition font-bold">
                     <i class="fa-solid fa-right-from-bracket"></i> Log out
-                </a>
-            </div>
+                </button>
+            </form>
         </div>
     </div>
 

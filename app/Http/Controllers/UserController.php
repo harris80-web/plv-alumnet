@@ -79,45 +79,45 @@ class UserController extends Controller
 
     public function storeEmployer(Request $request)
     {
-        /*$validated = $request->validate([
+        $validated = $request->validate([
             'employer_company_name' => 'required|string|max:255',
             'employer_website_url' => 'nullable|url|max:255',
             'user_first_name' => 'required|string|max:255',
             'user_last_name' => 'required|string|max:255',
             'user_email' => 'required|email|max:255',
-            'employer_id_picture' => 'required|file|mimes:jpg,png,pdf|max:20000',
-            'employer_id_picture_selfie' => 'required|file|mimes:jpg,png,pdf|max:20000',
-            'employer_company_id_picture' => 'required|file|mimes:jpg,png,pdf|max:20000',
-            'employer_company_id_picture_selfie' => 'required|file|mimes:jpg,png,pdf|max:20000',
+            // 'employer_id_picture' => 'required|file|mimes:jpg,png,pdf|max:20000',
+            // 'employer_id_picture_selfie' => 'required|file|mimes:jpg,png,pdf|max:20000',
+            // 'employer_company_id_picture' => 'required|file|mimes:jpg,png,pdf|max:20000',
+            // 'employer_company_id_picture_selfie' => 'required|file|mimes:jpg,png,pdf|max:20000',
             'user_password' => 'required|string|min:8'
         ]);
 
-        $companyIdPath = null;
-        if ($request->hasFile('employer_company_id_picture')) {
-            // This stores the file in storage/app/public/logos
-            $companyIdPath = $request->file('employer_company_id_picture')->store('companyIds', 'public');
-        }
+        // $companyIdPath = null;
+        // if ($request->hasFile('employer_company_id_picture')) {
+        //     // This stores the file in storage/app/public/logos
+        //     $companyIdPath = $request->file('employer_company_id_picture')->store('companyIds', 'public');
+        // }
 
-        $companyIdSelfiePath = null;
-        if ($request->hasFile('employer_company_id_picture_selfie')) {
-            // This stores the file in storage/app/public/logos
-            $companyIdSelfiePath = $request->file('employer_company_id_picture_selfie')->store('companyIdSelfies', 'public');
-        }
+        // $companyIdSelfiePath = null;
+        // if ($request->hasFile('employer_company_id_picture_selfie')) {
+        //     // This stores the file in storage/app/public/logos
+        //     $companyIdSelfiePath = $request->file('employer_company_id_picture_selfie')->store('companyIdSelfies', 'public');
+        // }
 
-        $employerIdPath = null;
-        if ($request->hasFile('employer_id_picture')) {
-            // This stores the file in storage/app/public/logos
-            $employerIdPath = $request->file('employer_id_picture')->store('employerIds', 'public');
-        }
+        // $employerIdPath = null;
+        // if ($request->hasFile('employer_id_picture')) {
+        //     // This stores the file in storage/app/public/logos
+        //     $employerIdPath = $request->file('employer_id_picture')->store('employerIds', 'public');
+        // }
 
-        $employerIdSelfiePath = null;
-        if ($request->hasFile('employer_id_picture_selfie')) {
-            // This stores the file in storage/app/public/logos
-            $employerIdSelfiePath = $request->file('employer_id_picture_selfie')->store('employerIdSelfies', 'public');
-        }
+        // $employerIdSelfiePath = null;
+        // if ($request->hasFile('employer_id_picture_selfie')) {
+        //     // This stores the file in storage/app/public/logos
+        //     $employerIdSelfiePath = $request->file('employer_id_picture_selfie')->store('employerIdSelfies', 'public');
+        // }
 
         try {
-            DB::transaction(function () use ($validated, $employerIdPath, $employerIdSelfiePath, $companyIdPath, $companyIdSelfiePath) {
+            DB::transaction(function () use ($validated) {
                 $user = User::create([
                     'user_email' => $validated['user_email'],
                     'user_password' => Hash::make($validated['user_password']),
@@ -130,10 +130,10 @@ class UserController extends Controller
                 $user->employer()->create([
                     'employer_company_name' => $validated['employer_company_name'],
                     'employer_website_url' => $validated['employer_website_url'] ?? null,
-                    'employer_id_picture' => $employerIdPath,
-                    'employer_id_picture_selfie' => $employerIdSelfiePath,
-                    'employer_company_id_picture' => $companyIdPath,
-                    'employer_company_id_picture_selfie' => $companyIdSelfiePath,
+                    // 'employer_id_picture' => $employerIdPath,
+                    // 'employer_id_picture_selfie' => $employerIdSelfiePath,
+                    // 'employer_company_id_picture' => $companyIdPath,
+                    // 'employer_company_id_picture_selfie' => $companyIdSelfiePath,
                     'industry_id' => 1, // Default position since we don't have this info yet
                     // 'user_id' => $user->user_id
                 ]);
@@ -144,23 +144,23 @@ class UserController extends Controller
             });
         } catch (\Exception $e) {
             // If the DB fails, delete the file we just uploaded
-            if ($employerIdPath) {
-                Storage::disk('public')->delete($employerIdPath);
-            }
-            if ($employerIdSelfiePath) {
-                Storage::disk('public')->delete($employerIdSelfiePath);
-            }
-            if ($companyIdPath) {
-                Storage::disk('public')->delete($companyIdPath);
-            }
-            if ($companyIdSelfiePath) {
-                Storage::disk('public')->delete($companyIdSelfiePath);
-            }
+            // if ($employerIdPath) {
+            //     Storage::disk('public')->delete($employerIdPath);
+            // }
+            // if ($employerIdSelfiePath) {
+            //     Storage::disk('public')->delete($employerIdSelfiePath);
+            // }
+            // if ($companyIdPath) {
+            //     Storage::disk('public')->delete($companyIdPath);
+            // }
+            // if ($companyIdSelfiePath) {
+            //     Storage::disk('public')->delete($companyIdSelfiePath);
+            // }
             return back()->withErrors($e->getMessage());
         }
 
 
-        return redirect()->route('general.waitForApproval');*/
+        return redirect()->route('general.waitForApproval');
     }
 
     public function goToWaitForApproval()
@@ -319,6 +319,26 @@ class UserController extends Controller
             return view('employer.profile', compact('user'));
         } else if ($user->user_role == 'alumni') {
             return view('alumni.profile', compact('user'));
+        } else {
+            Auth::logout();
+            return redirect()->route('auth.login')->withErrors('error', 'Your account role is not recognized. Please contact the administrator.');
+        }
+    }
+
+    public function editProfile()
+    {
+        $user = Auth::user();
+        if ($user->user_role == 'admin') {
+            return view('admin.edit-profile', compact('user'));
+        } else if ($user->user_role == 'super_admin') {
+            return view('superAdmin.edit-profile', compact('user'));
+        } else if ($user->user_role == 'registrar') {
+            return view('registrar.edit-profile', compact('user'));
+        } else if ($user->user_role == 'employer') {
+            return view('employer.edit-profile', compact('user'));
+        } else if ($user->user_role == 'alumni') {
+            dd(get_defined_vars());
+            return view('alumni.edit-profile', compact('user'));
         } else {
             Auth::logout();
             return redirect()->route('auth.login')->withErrors('error', 'Your account role is not recognized. Please contact the administrator.');

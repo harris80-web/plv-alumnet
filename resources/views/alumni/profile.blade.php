@@ -48,7 +48,11 @@
                 <div class="md:col-span-3 flex justify-center md:justify-start">
                     <div class="w-40 h-40 bg-slate-900 rounded-full flex items-center justify-center border-4 border-white shadow-lg overflow-hidden">
                         <svg class="w-25 h-25 text-white mt-8" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                            @if ($user->user_profile_picture)
+                                <img src="{{ asset('storage/' . $user->user_profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover">
+                            @else
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                            @endif
                         </svg>
                     </div>
                 </div>
@@ -85,7 +89,7 @@
                         </div>
                         <div>
                             <p class="text-xs font-black text-slate-900 uppercase">Batch</p>
-                            <p class="text-lg text-gray-600 font-medium">--</p>
+                            <p class="text-lg text-gray-600 font-medium">{{ $user->alumnus->alumnus_batch ?? '--' }}</p>
                         </div>
                     </div>
                 </div>
@@ -96,19 +100,19 @@
                 <div class="space-y-6">
                     <div>
                         <p class="text-xs font-black text-slate-900 uppercase">Employment Status</p>
-                        <p class="text-md text-gray-600 font-medium">--</p>
+                        <p class="text-md text-gray-600 font-medium">{{ $user->alumnus->alumnus_employment_status == 0 ? 'Unemployed' : 'Employed' }}</p>
                     </div>
                     <div>
                         <p class="text-xs font-black text-slate-900 uppercase">Email</p>
-                        <p class="text-md text-gray-600 font-medium">--</p>
+                        <p class="text-md text-gray-600 font-medium">{{ $user->user_email }}</p>
                     </div>
                     <div>
                         <p class="text-xs font-black text-slate-900 uppercase">Contact No.</p>
-                        <p class="text-md text-gray-600 font-medium">--</p>
+                        <p class="text-md text-gray-600 font-medium">{{ $user->user_number ?? '--' }}</p>
                     </div>
                     <div>
                         <p class="text-xs font-black text-slate-900 uppercase">Skills</p>
-                        <p class="text-md text-gray-600 font-medium">--</p>
+                        <p class="text-md text-gray-600 font-medium">{{ $user->alumnus->alumnus_skills ?? '--' }}</p>
                     </div>
                 </div>
 
@@ -172,19 +176,20 @@
                 <a href="{{ route('user.profile') }}" class="flex items-center gap-4 bg-[#ED7A07] text-white p-3 w-full transition font-bold rounded-sm">
                     <i class="fa-solid fa-address-card w-6"></i> View Profile
                 </a>
-                <a href="{{ route('user.edit') }" class="flex items-center gap-4 text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white p-3 w-full transition font-regular hover:font-semibold">
+                <a href="{{ route('users.editProfile') }}" class="flex items-center gap-4 text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white p-3 w-full transition font-regular hover:font-semibold">
                     <i class="fa-solid fa-user-pen w-6"></i> Edit Profile
                 </a>
-                <a href="alumni_change_password.php" class="flex items-center gap-4 text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white p-3 w-full transition font-regular hover:font-semibold">
+                <a href="{{ route('alumni.changePassword') }}" class="flex items-center gap-4 text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white p-3 w-full transition font-regular hover:font-semibold">
                     <i class="fa-solid fa-lock w-6"></i> Change Password
                 </a>
             </nav>
 
-            <div class="border-t pt-6">
-                <a href="logout.php" class="flex items-center gap-4 text-[#0E0F3B] hover:text-[#ED7A07] p-3 transition font-bold">
+            <form action="{{ route('user.logout') }}" method="POST" class="border-t pt-6">
+                @csrf
+                <button type="submit" class="flex items-center gap-4 text-[#0E0F3B] hover:text-[#ED7A07] p-3 transition font-bold">
                     <i class="fa-solid fa-right-from-bracket"></i> Log out
-                </a>
-            </div>
+                </button>
+            </form>
         </div>
     </div>
 

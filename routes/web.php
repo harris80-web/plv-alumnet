@@ -41,69 +41,69 @@ Route::get('/waitForApproval', [UserController::class, 'goToWaitForApproval'])->
 
 //in session routes
 Route::get('/profile', [UserController::class, 'showProfile'])->name('user.profile');
-Route::post('/logout', [UserController::class, 'logout'])->name('user.logout');
+Route::post('/user/logout', [UserController::class, 'logout'])->name('user.logout');
 
 Route::get('/profile/edit', function () {
-        return view('alumni.edit-profile');
-        })->name('user.edit');
+    return view('alumni.edit-profile');
+})->name('user.edit');
 
 Route::get('/alumni/change-password', function () {
     return view('alumni_change_password');
 })->name('alumni.changePassword');
 
 Route::get('/superAdmin/dashboard', function () {
-        return view('superAdmin.dashboard');
-    })->middleware(['auth'])->name('superAdmin.dashboard');
+    return view('superAdmin.dashboard');
+})->middleware(['auth'])->name('superAdmin.dashboard');
 
-Route::get('/superAdmin/dashboard', function () {
-        return view('superAdmin.dashboard');
-    })->name('superAdmin.dashboard');
 
 Route::get('/admin/dashboard', function () {
-        return view('admin.dashboard');
-    })->middleware(['auth']);
+    return view('admin.dashboard');
+})->middleware(['auth']);
 
 Route::get('/registrar/dashboard', function () {
-        return view('registrar.dashboard');
-    })->middleware(['auth']);
+    return view('registrar.dashboard');
+})->middleware(['auth']);
 
 Route::get('/employer/dashboard', function () {
-        return view('employer.dashboard');
-    })->middleware(['auth']);
+    return view('employer.dashboard');
+})->middleware(['auth']);
 
 Route::get('/alumni/dashboard', function () {
-        return view('alumni.dashboard');
-    })->middleware(['auth']);
+    return view('alumni.dashboard');
+})->middleware(['auth']);
 
 Route::get('/superAdmin/userManagement', [UserController::class, 'showUsers'])->name('superAdmin.userManagement');
 
 Route::group(['middleware' => 'super_admin'], function () {
     //super admin routes
-    
 
-    
+
+
 });
 Route::group(['middleware' => 'admin'], function () {
     //admin routes
-    
+
 });
 Route::group(['middleware' => 'registrar'], function () {
     //registrar routes
-    
+
 });
 Route::group(['middleware' => 'employer'], function () {
     //employer routes
-    
+
 });
 Route::group(['middleware' => 'alumni'], function () {
     //alumni routes
-    
+
 });
 
 
 
 //resource routes
 Route::resource('alumni', AlumnusController::class);
+Route::get('/alumni/profile', [AlumnusController::class, 'showAlumniProfile'])->name('alumni.profile');
+Route::put('/alumni/updateProfile/{alumnus}', [AlumnusController::class, 'updateAlumniProfile'])->name('alumni.updateProfile');
+
 
 Route::resource('announcements', AnnouncementController::class);
 
@@ -153,3 +153,4 @@ Route::post('/users/login', [UserController::class, 'login'])->name('users.login
 Route::post('/users/approve/{id}', [UserController::class, 'approveEmployer'])->name('users.approveEmployer');
 Route::post('/users/addAlumnus', [UserController::class, 'addAlumnus'])->name('users.addAlumnus');
 Route::post('/users/addAdmin', [UserController::class, 'addAdmin'])->name('users.addAdmin');
+Route::get('/users/editProfile', [UserController::class, 'editProfile'])->name('users.editProfile');

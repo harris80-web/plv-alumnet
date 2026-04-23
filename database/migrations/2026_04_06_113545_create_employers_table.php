@@ -25,10 +25,6 @@ return new class extends Migration
             $table->year('employer_year_established')->nullable();
             $table->string('employer_website_url', 255)->nullable();
             $table->unsignedBigInteger('employer_company_size')->nullable();
-            $table->string('employer_id_picture', 255);
-            $table->string('employer_company_id_picture', 255);
-            $table->string('employer_id_picture_selfie', 255);
-            $table->string('employer_company_id_picture_selfie', 255);
             $table->timestamps();
         });
     }

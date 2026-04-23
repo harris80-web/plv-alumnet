@@ -337,7 +337,6 @@ class UserController extends Controller
         } else if ($user->user_role == 'employer') {
             return view('employer.edit-profile', compact('user'));
         } else if ($user->user_role == 'alumni') {
-            dd(get_defined_vars());
             return view('alumni.edit-profile', compact('user'));
         } else {
             Auth::logout();

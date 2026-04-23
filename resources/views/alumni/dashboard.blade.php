@@ -420,7 +420,7 @@
                 <a href="{{ route('user.profile') }}" class="flex items-center gap-4 text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white p-3 w-full transition font-regular hover:font-semibold">
                     <i class="fa-solid fa-address-card w-6"></i> View Profile
                 </a>
-                <a href="{{ route('user.edit') }}" class="flex items-center gap-4 text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white p-3 w-full transition font-regular hover:font-semibold">
+                <a href="{{ route('users.editProfile') }}" class="flex items-center gap-4 text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white p-3 w-full transition font-regular hover:font-semibold">
                     <i class="fa-solid fa-user-pen w-6"></i> Edit Profile
                 </a>
                 <a href="#" class="flex items-center gap-4 text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white p-3 w-full transition font-regular hover:font-semibold">

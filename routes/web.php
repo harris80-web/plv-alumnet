@@ -22,6 +22,7 @@ use App\Http\Controllers\SeminarController;
 use App\Http\Controllers\TestimonialController;
 use App\Http\Controllers\UserController;
 
+
 //outside of session routes
 Route::get('/', function () {
     return view('/general/home');
@@ -43,9 +44,7 @@ Route::get('/waitForApproval', [UserController::class, 'goToWaitForApproval'])->
 Route::get('/profile', [UserController::class, 'showProfile'])->name('user.profile');
 Route::post('/user/logout', [UserController::class, 'logout'])->name('user.logout');
 
-Route::get('/profile/edit', function () {
-    return view('alumni.edit-profile');
-})->name('user.edit');
+Route::get('/profile/edit', [UserController::class, 'editProfile'])->name('users.editProfile');
 
 Route::get('/alumni/change-password', function () {
     return view('alumni_change_password');
@@ -153,4 +152,3 @@ Route::post('/users/login', [UserController::class, 'login'])->name('users.login
 Route::post('/users/approve/{id}', [UserController::class, 'approveEmployer'])->name('users.approveEmployer');
 Route::post('/users/addAlumnus', [UserController::class, 'addAlumnus'])->name('users.addAlumnus');
 Route::post('/users/addAdmin', [UserController::class, 'addAdmin'])->name('users.addAdmin');
-Route::get('/users/editProfile', [UserController::class, 'editProfile'])->name('users.editProfile');

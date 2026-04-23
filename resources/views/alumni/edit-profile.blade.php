@@ -37,8 +37,9 @@
     </section>
 
     <main class="max-w-5xl mx-auto mt-10 mb-12 px-4">
-        <div class="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden p-8 md:p-12">
-
+        <form action="{{ route('alumni.updateProfile', $user->user_id) }}" method="POST" class="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden p-8 md:p-12">
+            @csrf
+            @method('PUT')
             <h2 class="w-fit mx-auto text-center text-3xl font-bold mb-10 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
                 EDIT PROFILE
             </h2>
@@ -48,7 +49,12 @@
                     <div class="relative w-40 h-40">
 
                         <div class="w-full h-full bg-[#0E0F3B] rounded-full flex items-center justify-center border-4 border-white shadow-lg overflow-hidden">
+                            @if ($user->user_profile_picture)
+                            <img src="{{ asset('storage/' . $user->user_profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover">
+                            @else
                             <i class="fa-solid fa-user text-7xl text-white mt-4"></i>
+                            @endif
+
                         </div>
 
                         <div class="absolute bottom-1 right-1">
@@ -78,28 +84,28 @@
 
                         <div>
                             <p class="text-xs font-bold text-orange-600 uppercase">Last Name</p>
-                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">Last Name</h3>
+                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->user_last_name }}</h3>
                         </div>
                         <div>
                             <p class="text-xs font-bold text-orange-600 uppercase">First Name</p>
-                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">First Name</h3>
+                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->user_first_name }}</h3>
                         </div>
                         <div>
                             <p class="text-xs font-bold text-orange-600 uppercase">Middle Name</p>
-                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">Middle Name</h3>
+                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->user_middle_name }}</h3>
                         </div>
                         <div>
                             <p class="text-xs font-bold text-orange-600 uppercase">Suffix</p>
-                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">Suffix</h3>
+                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->user_suffix }}</h3>
                         </div>
 
                         <div class="md:col-span-2">
                             <p class="text-xs font-bold text-orange-600 uppercase">Program</p>
-                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">Program</h3>
+                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->alumnus->program->program_name ?? 'Not specified' }}</h3>
                         </div>
                         <div class="md:col-span-2">
                             <p class="text-xs font-bold text-orange-600 uppercase">Batch</p>
-                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">Batch</h3>
+                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->alumnus->alumnus_batch ?? 'Not specified' }}</h3>
                         </div>
                     </div>
                 </div>
@@ -111,24 +117,23 @@
                     <div>
                         <label class="text-xs font-bold text-orange-600 uppercase block mb-1">Employment Status</label>
                         <select class="w-full md:w-3/4 py-1.5 px-2 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
-                            <option value="" disabled selected>Select Status</option>
-                            <option value="employed">Employed</option>
-                            <option value="unemployed">Unemployed</option>
+                            <option value="1" {{ $user->alumnus->alumnus_employment_status == 1 ? 'selected' : '' }}>Employed</option>
+                            <option value="0" {{ $user->alumnus->alumnus_employment_status == 0 ? 'selected' : '' }}>Unemployed</option>
                         </select>
                     </div>
                     <div>
                         <label class="text-xs font-bold text-orange-600 uppercase block mb-1">Email</label>
-                        <input type="email" placeholder="example@email.com" class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
+                        <input type="email" placeholder="example@email.com" value="{{ $user->user_email }}" class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
                     </div>
 
                     <div>
                         <label class="text-xs font-bold text-orange-600 uppercase block mb-1">Contact No.</label>
-                        <input type="text" placeholder="09XXXXXXXXX" class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
+                        <input type="text" placeholder="09XXXXXXXXX" value="{{ $user->user_number }}" class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
                     </div>
 
                     <div>
                         <label class="text-xs font-bold text-orange-600 uppercase block mb-1">Skills</label>
-                        <textarea rows="4" placeholder="e.g. Web Development, UI/UX Design, Data Analysis..." class="w-full border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition"></textarea>
+                        <textarea rows="4" placeholder="e.g. Web Development, UI/UX Design, Data Analysis..." value="{{ $user->alumnus->alumnus_skills }}" class="w-full border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition"></textarea>
                     </div>
                 </div>
 
@@ -156,12 +161,12 @@
                 <button class="px-10 py-2 border-2 border-[#0E0F3B] text-[#0E0F3B] font-bold rounded-lg transition-all duration-200 uppercase tracking-widest text-sm hover:bg-[#0E0F3B] hover:text-white active:scale-95">
                     Cancel
                 </button>
-                <button class="px-10 py-2 bg-[#0E0F3B] text-white font-bold rounded-lg hover:bg-[#1D46A4] transition uppercase tracking-widest text-sm shadow-lg">
+                <button type="submit" class="px-10 py-2 bg-[#0E0F3B] text-white font-bold rounded-lg hover:bg-[#1D46A4] transition uppercase tracking-widest text-sm shadow-lg">
                     Save
                 </button>
             </div>
 
-        </div>
+        </form>
     </main>
 
     <div id="menuOverlay" class="fixed inset-0 bg-black/50 z-[60] hidden transition-opacity duration-300"></div>

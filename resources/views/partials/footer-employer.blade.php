@@ -32,18 +32,18 @@
             <div class="flex gap-4 font-[Montserrat]">
                 <div class="w-[1.5px] bg-white "></div>
                 <nav id="footer-nav" class="flex flex-col justify-center text-[15px] font-semibold gap-1">
-                    <a href="{{ route('alumni.dashboard') }}" class="hover:text-[#ED7A07]">HOME</a>
-                    <a href="{{ route('alumni.about') }}" class="hover:text-[#ED7A07]">ABOUT</a>
-                    <a href="" class="hover:text-[#ED7A07]">EVENTS</a>
+                    <a href="{{ route('employer.dashboard') }}" class="hover:text-[#ED7A07]">HOME</a>
+                    <a href="{{ route('employer.about') }}" class="hover:text-[#ED7A07]">ABOUT</a>
+                    <a href="announcements_employer.php" class="hover:text-[#ED7A07]">ANNOUNCEMENTS</a>
                 </nav>
             </div>
 
             <div class="flex gap-4 font-[Montserrat] ">
                 <div class="w-[1.5px] bg-white "></div>
                 <nav id="footer-nav" class="flex flex-col justify-center text-[15px] font-semibold gap-1">
-                    <a href="" class="hover:text-[#ED7A07]">PRIVACY POLICY</a>
-                    <a href="" class="hover:text-[#ED7A07]">TERMS OF USE</a>
-                    <a href="" class="hover:text-[#ED7A07]">FAQs</a>
+                    <a href="privacy_policy_employer.php" class="hover:text-[#ED7A07]">PRIVACY POLICY</a>
+                    <a href="tou_employer.php" class="hover:text-[#ED7A07]">TERMS OF USE</a>
+                    <a href="faqs_employer.php" class="hover:text-[#ED7A07]">FAQs</a>
                 </nav>
             </div>
 
@@ -58,7 +58,7 @@
                             Maysan Road corner Tongco Street, Maysan, Valenzuela City, Philippines
                         </p>
                         <div class="flex items-center gap-3 mt-2">
-                            <a href="https://facebook.com" target="_blank" class="group">
+                            <a href="https://www.facebook.com/PamantasanNgLungsodNgValenzuelaOfficialAccount/" target="_blank" class="group">
                                 <div
                                     class="flex items-center justify-center w-8 h-8 bg-white border border-white rounded-full transition-all duration-300 group-hover:border-[#ED7A07] group-hover:bg-[#ED7A07]">
                                     <i
@@ -74,7 +74,7 @@
                             </a>
                         </div>
                     </div>
-                    <img src="assets/PLV-Logo-2.svg" alt="" class="h-[100px] w-auto">
+                    <img src="{{ asset('assets/PLV-Logo-2.svg') }}" alt="" class="h-[100px] w-auto">
                 </div>
             </div>
         </div>

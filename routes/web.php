@@ -24,9 +24,15 @@ use App\Http\Controllers\UserController;
 
 
 //outside of session routes
+
+//general
 Route::get('/', function () {
     return view('/general/home');
 })->name('general.home');
+
+Route::get('/about', function () {
+    return view('general.about');
+})->name('general.about');
 
 Route::get('/register', function () {
     return view('/auth.register');
@@ -38,7 +44,15 @@ Route::get('/login', function () {
 
 Route::get('/waitForApproval', [UserController::class, 'goToWaitForApproval'])->name('general.waitForApproval');
 
+//alumni
+Route::get('/alumni/about', function () {
+    return view('alumni.about');
+})->name('alumni.about');
 
+//employer
+Route::get('/employer/about', function () {
+    return view('employer.about');
+})->name('employer.about');
 
 //in session routes
 Route::get('/profile', [UserController::class, 'showProfile'])->name('user.profile');
@@ -65,11 +79,11 @@ Route::get('/registrar/dashboard', function () {
 
 Route::get('/employer/dashboard', function () {
     return view('employer.dashboard');
-})->middleware(['auth']);
+})->middleware(['auth'])->name('employer.dashboard');
 
 Route::get('/alumni/dashboard', function () {
     return view('alumni.dashboard');
-})->middleware(['auth']);
+})->middleware(['auth'])->name('alumni.dashboard');
 
 Route::get('/superAdmin/userManagement', [UserController::class, 'showUsers'])->name('superAdmin.userManagement');
 

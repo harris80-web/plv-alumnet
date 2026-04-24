@@ -22,7 +22,7 @@
             <img src="{{ asset('assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png') }}" alt="" class="h-8 w-30">
         </div>
         <nav class="flex items-center justify-center gap-10 text-white flex-1 font-medium text-sm">
-            <a href="index_alumni.php"
+            <a href="{{ route('alumni.dashboard') }}"
                 class="<?php echo ($current_page == 'index_alumni') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; ?>">
                 HOME
             </a>

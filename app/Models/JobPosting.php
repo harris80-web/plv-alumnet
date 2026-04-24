@@ -10,8 +10,7 @@ class JobPosting extends Model
     protected $primaryKey = 'job_posting_id';
 
     protected $fillable = [
-        'salary_range_min_id',
-        'salary_range_max_id',
+        'employer_id',
         'program_id',
         'job_posting_title',
         'job_posting_company',
@@ -19,13 +18,15 @@ class JobPosting extends Model
         'job_posting_employment_type',
         'job_posting_setup',
         'job_posting_description',
-        'job_closing_date'
+        'job_closing_date',
+        'job_approved',
+        'job_posting_image',
     ];
 
     public function employer()
     {
         // "I belong to one user (the employer)"
-        return $this->belongsTo(Employer::class, 'user_id', 'user_id');
+        return $this->belongsTo(Employer::class, 'employer_id', 'user_id');
     }
 
     public function salaryMin()

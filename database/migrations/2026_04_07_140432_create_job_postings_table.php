@@ -14,8 +14,6 @@ return new class extends Migration
         Schema::create('job_postings', function (Blueprint $table) {
             $table->id('job_posting_id');
             $table->foreignId('employer_id')->constrained('employers', 'user_id')->onDelete('cascade');
-            $table->foreignId('salary_range_min_id')->constrained('salary_mins', 'salary_min_id');
-            $table->foreignId('salary_range_max_id')->constrained('salary_maxes', 'salary_max_id');
             $table->foreignId('program_id')->constrained('programs', 'program_id');
             $table->string('job_posting_title', 255);
             $table->string('job_posting_company', 255);
@@ -25,6 +23,8 @@ return new class extends Migration
             $table->text('job_posting_description');
             $table->date('job_posting_date')->default(now()->toDateString());
             $table->date('job_closing_date');
+            $table->text('job_posting_image')->nullable();
+            $table->boolean('job_approved')->default(false);
             $table->timestamps();
         });
     }

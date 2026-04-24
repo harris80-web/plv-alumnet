@@ -40,17 +40,6 @@
                         <h2>Email:</h2>
                         <p>{{ $employer->user->user_email }}</p>
                     </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Company ID:</h2>
-                        <img src="{{ asset('storage/' . $employer->employer_company_id_picture) }}" class="h-[50px] w-auto">
-                        <img src="{{ asset('storage/' . $employer->employer_company_id_picture_selfie) }}" class="h-[50px] w-auto">
-                    </div>
-
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Employer ID:</h2>
-                        <img src="{{ asset('storage/' . $employer->employer_id_picture) }}" class="h-[50px] w-auto">
-                        <img src="{{ asset('storage/' . $employer->employer_id_picture_selfie) }}" class="h-[50px] w-auto">
-                    </div>
                     <form action="{{ route('users.approveEmployer', $employer->user_id) }}" method="POST">
                         @csrf
                         <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">

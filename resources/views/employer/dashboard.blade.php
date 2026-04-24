@@ -11,7 +11,9 @@
     <h1>Employer Dashboard</h1>
     <br><br>
     <a href="{{ route('user.profile') }}">View Profile</a>
-    <br>
+    <br><br>
+    <a href="{{ route('jobPosting.jobBoard') }}">Job board</a>
+    <br><br>
     <form method="POST" action="{{ route('user.logout') }}">
         @csrf
         <button type="submit">Logout</button>

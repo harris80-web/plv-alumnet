@@ -123,6 +123,8 @@ Route::resource('industries', IndustryController::class);
 Route::resource('job-applications', JobApplicationController::class);
 
 Route::resource('job-postings', JobPostingController::class);
+Route::get('/jobBoard', [JobPostingController::class, 'showJobBoard'])->name('jobPosting.jobBoard');
+Route::post('/jobBoard/addJobPost/{id}', [JobPostingController::class, 'addJobPost'])->name('jobPosting.addJobPost');
 
 Route::resource('messages', MessageController::class);
 

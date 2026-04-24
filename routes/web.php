@@ -125,6 +125,8 @@ Route::resource('job-applications', JobApplicationController::class);
 Route::resource('job-postings', JobPostingController::class);
 Route::get('/jobBoard', [JobPostingController::class, 'showJobBoard'])->name('jobPosting.jobBoard');
 Route::post('/jobBoard/addJobPost/{id}', [JobPostingController::class, 'addJobPost'])->name('jobPosting.addJobPost');
+Route::get('/myJobPosts/{id}', [JobPostingController::class, 'showMyJobPosts'])->name('jobPosting.myJobPosts');
+Route::post('/editJobPost/{id}', [JobPostingController::class, 'editJobPost'])->name('jobPosting.editJobPost');
 
 Route::resource('messages', MessageController::class);
 

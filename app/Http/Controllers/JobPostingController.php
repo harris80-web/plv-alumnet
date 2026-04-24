@@ -122,4 +122,65 @@ class JobPostingController extends Controller
 
        
     }
+
+    public function showMyJobPosts($id)
+    {
+        $jobPostings = JobPosting::where('employer_id', $id)->get();
+        $programs = Program::all();
+        $users = Auth::user();
+        return view('general.jobPostings', compact('jobPostings', 'programs', 'users'));
+    }
+
+    public function editJobPost(Request $request, $id)
+    {
+        $job = JobPosting::findOrFail($id);
+        $validated = $request->validate([
+            'job_posting_image' => 'nullable|image|mimes:jpeg,png,jpg,svg',
+            'job_posting_title' => 'nullable|string',
+            'job_posting_company' => 'nullable|string',
+            'job_posting_address' => 'nullable|string',
+            'job_posting_employment_type' => 'nullable|string',
+            'job_posting_description' => 'nullable|string',
+            'job_closing_date' => 'nullable|date',
+            'job_posting_setup' => 'nullable|string',
+            'program' => 'required|exists:programs,program_id',
+        ]);
+
+        $oldJobImage = $job->job_posting_image ?? null;
+        $jobImage = null;
+        if ($request->hasFile('job_posting_image')) {
+            if ($oldJobImage && Storage::disk('public')->exists($oldJobImage)) {
+                Storage::disk('public')->delete($oldJobImage);
+            }
+            $jobImage = $request->file('job_posting_image')->store('jobImages', 'public');
+        }
+
+        try {
+            DB::transaction(function () use ($validated, $jobImage, $job) {
+                $job->update([
+                    'job_posting_title' => $validated['job_posting_title'] ?? $job->job_posting_title,
+                    'job_posting_company' => $validated['job_posting_company'] ?? $job->job_posting_company,
+                    'job_posting_address' => $validated['job_posting_address'] ?? $job->job_posting_address,
+                    'job_posting_employment_type' => $validated['job_posting_employment_type'] ?? $job->job_posting_employment_type,
+                    'job_posting_description' => $validated['job_posting_description'] ?? $job->job_posting_description,
+                    'job_closing_date' => $validated['job_closing_date'] ?? $job->job_closing_date,
+                    'job_posting_setup' => $validated['job_posting_setup'] ?? $job->job_posting_setup,
+                    'program_id' => $validated['program'] ?? $job->program_id,
+                ]);
+
+                if ($jobImage != null) {
+                    $job->update([
+                        'job_posting_image' => $jobImage,
+                    ]);
+                }
+            });
+        } catch (\Exception $e) {
+            if ($jobImage) {
+                Storage::disk('public')->delete($jobImage);
+            }
+            return back()->withErrors(['error' => 'Failed to upload job posting image. Please try again.']);
+        }
+
+        return redirect()->route('jobPosting.myJobPosts', ['id' => $job->employer_id]);
+    }
 }

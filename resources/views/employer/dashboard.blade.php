@@ -14,6 +14,9 @@
     <br><br>
     <a href="{{ route('jobPosting.jobBoard') }}">Job board</a>
     <br><br>
+    <a href="{{ route('jobPosting.myJobPosts', ['id' => Auth::id()]) }}">My job postings</a>
+    <br><br>
+    
     <form method="POST" action="{{ route('user.logout') }}">
         @csrf
         <button type="submit">Logout</button>

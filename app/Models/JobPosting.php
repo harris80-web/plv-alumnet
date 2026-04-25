@@ -10,8 +10,8 @@ class JobPosting extends Model
     protected $primaryKey = 'job_posting_id';
 
     protected $fillable = [
+        'job_posting_id',
         'employer_id',
-        'program_id',
         'job_posting_title',
         'job_posting_company',
         'job_posting_address',
@@ -45,5 +45,11 @@ class JobPosting extends Model
     {
         // "I belong to one user (the employer)"
         return $this->belongsTo(Program::class, 'program_id', 'program_id');
+    }
+
+    public function programs()
+    {
+        // job_program is the table name, job_posting_id and program_id are the keys
+        return $this->belongsToMany(Program::class, 'job_program', 'job_posting_id', 'program_id');
     }
 }

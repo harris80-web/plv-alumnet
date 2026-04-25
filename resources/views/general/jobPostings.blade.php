@@ -18,7 +18,12 @@
         <p><strong>Posted by:</strong> {{ $job->employer->user->user_first_name }} {{ $job->employer->user->user_last_name }}</p>
         <p><strong>Job type:</strong> {{ $job->job_posting_employment_type }}</p>
         <p><strong>Job setup:</strong> {{ $job->job_posting_setup }}</p>
-        <p><strong>Recommended program:</strong> {{ $job->program->program_name }}</p>
+        <p><strong>Recommended program:</strong> 
+        @foreach ($job->programs as $program)
+            {{ $program->program_name }}
+            <br><br>
+        @endforeach
+        </p>
         <p><strong>Description:</strong> {{ $job->job_posting_description }}</p>
         <p><strong>Valid until:</strong> {{ $job->job_closing_date }}</p>
         <img src="{{ asset('storage/'.$job->job_posting_image) }}" alt="Job Image" style="max-width: 200px; max-height: 200px;">
@@ -53,10 +58,10 @@
                 </div>
                 <div>
                     <label for="program">Recommended program:</label>
-                    <select name="program" id="">
+                    <select name="program[]" id="">
                         <option value="" selected hidden>Select a program</option>
                         @foreach($programs as $program)
-                            <option value="{{ $program->program_id }}" {{ $job->program->program_id == $program->program_id ? 'selected' : '' }}>
+                            <option value="{{ $program->program_id }}" >
                                 {{ $program->program_name }}
                             </option>
                         @endforeach

@@ -35,12 +35,12 @@
                 ANNOUNCEMENTS
             </a>
 
-            <a href="employer_job_board.php"
+            <a href="{{ route('jobPosting.jobBoard') }}"
                 class="<?php echo ($current_page == 'employer_job_board') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; ?> transition-colors">
                 JOB BOARD
             </a>
 
-            <a href="employer_job_postings.php"
+            <a href="{{ route('jobPosting.myJobPosts', ['id' => auth()->id()]) }}"
                 class="<?php echo ($current_page == 'employer_job_postings') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; ?> transition-colors">
                 MY JOB POSTINGS
             </a>

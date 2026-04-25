@@ -86,7 +86,8 @@ class JobPostingController extends Controller
             'job_posting_description' => 'required|string',
             'job_closing_date' => 'required|date',
             'job_posting_setup' => 'required|string',
-            'program' => 'required|exists:programs,program_id',
+            'program' => 'required|array|max:3',
+            'program.*' => 'exists:programs,program_id',
         ]);
 
         
@@ -94,9 +95,10 @@ class JobPostingController extends Controller
         if ($request->hasFile('job_posting_image')) {
             $jobImagePath = $request->file('job_posting_image')->store('jobImages', 'public');
         }
+        $selectedPrograms = array_unique(array_filter($request->program));
 
         try{
-            DB::transaction(function() use($validated, $jobImagePath, $id) {
+            DB::transaction(function() use($validated, $jobImagePath, $id, $selectedPrograms) {
                 $jobPost = JobPosting::create([
                     'job_posting_image' => $jobImagePath,
                     'job_posting_title' => $validated['job_posting_title'],
@@ -106,16 +108,16 @@ class JobPostingController extends Controller
                     'job_posting_description' => $validated['job_posting_description'],
                     'job_closing_date' => $validated['job_closing_date'],
                     'job_posting_setup' => $validated['job_posting_setup'],
-                    'program_id' => $validated['program'],
                     'employer_id' => $id,
                 ]);
-        });
+                $jobPost->programs()->attach($selectedPrograms);
+            });
         } catch (\Exception $e) {
             if ($jobImagePath) {
                 // Delete the uploaded image if the transaction fails
                 Storage::disk('public')->delete($jobImagePath);
             }
-            return back()->withErrors(['error' => 'Failed to upload job posting image. Please try again.']);
+            return back()->withErrors($e->getMessage());
         }
 
         return redirect()->route('jobPosting.jobBoard')->with('success', 'Job posting added successfully!');
@@ -143,7 +145,8 @@ class JobPostingController extends Controller
             'job_posting_description' => 'nullable|string',
             'job_closing_date' => 'nullable|date',
             'job_posting_setup' => 'nullable|string',
-            'program' => 'required|exists:programs,program_id',
+            'program' => 'required|array|max:3',
+            'program.*' => 'exists:programs,program_id',
         ]);
 
         $oldJobImage = $job->job_posting_image ?? null;
@@ -154,9 +157,10 @@ class JobPostingController extends Controller
             }
             $jobImage = $request->file('job_posting_image')->store('jobImages', 'public');
         }
+        $selectedPrograms = array_unique(array_filter($request->program));
 
         try {
-            DB::transaction(function () use ($validated, $jobImage, $job) {
+            DB::transaction(function () use ($validated, $jobImage, $job, $selectedPrograms) {
                 $job->update([
                     'job_posting_title' => $validated['job_posting_title'] ?? $job->job_posting_title,
                     'job_posting_company' => $validated['job_posting_company'] ?? $job->job_posting_company,
@@ -165,8 +169,9 @@ class JobPostingController extends Controller
                     'job_posting_description' => $validated['job_posting_description'] ?? $job->job_posting_description,
                     'job_closing_date' => $validated['job_closing_date'] ?? $job->job_closing_date,
                     'job_posting_setup' => $validated['job_posting_setup'] ?? $job->job_posting_setup,
-                    'program_id' => $validated['program'] ?? $job->program_id,
                 ]);
+
+                $job->programs()->sync($selectedPrograms);
 
                 if ($jobImage != null) {
                     $job->update([

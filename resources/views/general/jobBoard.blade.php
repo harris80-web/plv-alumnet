@@ -77,7 +77,6 @@
                 <p><strong>Posted by:</strong> {{ $job->employer->user->user_first_name }} {{ $job->employer->user->user_last_name }}</p>
                 <p><strong>Job type:</strong> {{ $job->job_posting_employment_type }}</p>
                 <p><strong>Job setup:</strong> {{ $job->job_posting_setup }}</p>
-                <p><strong>Recommended program:</strong> {{ $job->program->program_name }}</p>
                 <p><strong>Description:</strong> {{ $job->job_posting_description }}</p>
                 <p><strong>Valid until:</strong> {{ $job->job_closing_date }}</p>
                 <img src="{{ asset('storage/'.$job->job_posting_image) }}" alt="Job Image" style="max-width: 200px; max-height: 200px;">
@@ -234,7 +233,7 @@
             </div>
 
         </div>
-
+        @if(auth()->user()->user_role === 'employer')
         <div class="flex justify-end p-4">
             <button
                 onclick="openPostJobModal()"
@@ -243,73 +242,91 @@
                 <span>POST A NEW JOB</span>
             </button>
         </div>
+        @endif
 
         <div id="job-list" class="space-y-6">
             <!--JOB POST CONTAINER -->
+            @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+
             @foreach($jobPostings as $job)
-<div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row relative hover:shadow-lg transition-shadow">
+            @if ($job->job_approved ==1)
+            <div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row relative hover:shadow-lg transition-shadow">
 
-    <div class="md:w-1/4 h-48 md:h-auto bg-gray-300 relative">
-        <img src="{{ asset('storage/'.$job->job_posting_image) }}" 
-             class="object-cover w-full h-full opacity-60">
-        <div class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>
-    </div>
+                <div class="md:w-1/4 h-48 md:h-auto bg-gray-300 relative">
+                    <img src="{{ asset('storage/'.$job->job_posting_image) }}"
+                        class="object-cover w-full h-full opacity-60">
+                    <div class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>
+                </div>
 
-    <div class="p-6 flex-1 relative">
-        <div class="flex justify-between items-start">
-            <div>
-                <h2 class="text-2xl font-bold uppercase text-[#0E0F3B]">
-                    {{ $job->job_posting_title }}
-                </h2>
+                <div class="p-6 flex-1 relative">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h2 class="text-2xl font-bold uppercase text-[#0E0F3B]">
+                                {{ $job->job_posting_title }}
+                            </h2>
 
-                <p class="text-gray-600">
-                    {{ $job->job_posting_company }}
-                </p>
+                            <p class="text-gray-600">
+                                {{ $job->job_posting_company }}
+                            </p>
 
-                <p class="text-gray-500 text-sm">
-                    {{ $job->job_posting_address }}
-                </p>
+                            <p class="text-gray-500 text-sm">
+                                {{ $job->job_posting_address }}
+                            </p>
+                        </div>
+
+                        <p class="text-xs text-gray-400">
+                            {{ $job->created_at->diffForHumans() }}
+                        </p>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-2 gap-4 text-sm font-semibold">
+                        <div>
+                            <p>Job Type: {{ $job->job_posting_employment_type }}</p>
+                            <p>Job Setup: {{ $job->job_posting_setup }}</p>
+                        </div>
+
+                        <div>
+                            <p>
+                                Program:
+                                @foreach ($job->programs as $program)
+                                {{ $program->program_name }}
+                                <br><br>
+                                @endforeach
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <p class="text-xs text-gray-500">
+                            {{ $job->job_posting_description }}
+                        </p>
+                    </div>
+
+                    <div class="mt-6 flex justify-between">
+                        <p class="text-xs text-gray-400">
+                            Valid until: {{ $job->job_closing_date }}
+                        </p>
+                    </div>
+
+                    <div class="mt-4 text-xs text-gray-500">
+                        Posted by:
+                        {{ $job->employer->user->user_first_name }}
+                        {{ $job->employer->user->user_last_name }}
+                    </div>
+                </div>
+
             </div>
+            @endif
 
-            <p class="text-xs text-gray-400">
-                {{ $job->created_at->diffForHumans() }}
-            </p>
-        </div>
-
-        <div class="mt-4 grid grid-cols-2 gap-4 text-sm font-semibold">
-            <div>
-                <p>Job Type: {{ $job->job_posting_employment_type }}</p>
-                <p>Job Setup: {{ $job->job_posting_setup }}</p>
-            </div>
-
-            <div>
-                <p>
-                    Program: {{ $job->program->program_name }}
-                </p>
-            </div>
-        </div>
-
-        <div class="mt-4">
-            <p class="text-xs text-gray-500">
-                {{ $job->job_posting_description }}
-            </p>
-        </div>
-
-        <div class="mt-6 flex justify-between">
-            <p class="text-xs text-gray-400">
-                Valid until: {{ $job->job_closing_date }}
-            </p>
-        </div>
-
-        <div class="mt-4 text-xs text-gray-500">
-            Posted by:
-            {{ $job->employer->user->user_first_name }}
-            {{ $job->employer->user->user_last_name }}
-        </div>
-    </div>
-
-</div>
-@endforeach
+            @endforeach
 
             <div class="mt-12 flex justify-center items-center space-x-4 text-gray-500 font-medium">
                 <button class="hover:text-black"><i class="fas fa-chevron-left text-xs"></i></button>
@@ -496,11 +513,12 @@
 
                             <div id="course-input-container" class="space-y-2">
                                 <div class="flex items-center gap-3 course-row">
-                                    <select name="program"
-                                        class="flex-1 border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white">
+                                    <select name="program[]"
+                                        class="flex-1 border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white w-full ">
                                         <option selected disabled>Select Undergraduate Program</option>
-                                        <option>BSIT - Bachelor of Science in Information Technology</option>
-                                        <option>Bachelor of Science in Psychology</option>
+                                        @foreach ($programs as $program)
+                                        <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
+                                        @endforeach
                                     </select>
 
                                     <button type="button" onclick="addCourseField()"

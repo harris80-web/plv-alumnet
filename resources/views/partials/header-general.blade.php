@@ -19,8 +19,8 @@
 
     <header class="sticky top-0 z-50 w-full h-20 bg-[#0E0F3B] font-semibold flex justify-between">
         <div class="flex items-center gap-3 ml-10">
-            <img src="assets/PLV-AlumNet LOGOMARK_WHITE.svg" alt="" class="h-12 w-12">
-            <img src="assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png" alt="" class="h-8 w-30">
+            <img src="{{ asset('assets/PLV-AlumNet LOGOMARK_WHITE.svg') }}" alt="" class="h-12 w-12">
+            <img src="{{ asset('assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png') }}" alt="" class="h-8 w-30">
         </div>
         <nav class="flex items-center justify-center gap-10 text-white flex-1 font-medium text-sm">
             <a href="{{ route('general.home') }}"

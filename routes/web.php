@@ -44,15 +44,51 @@ Route::get('/login', function () {
 
 Route::get('/waitForApproval', [UserController::class, 'goToWaitForApproval'])->name('general.waitForApproval');
 
+Route::get('/general/privacy-policy', function () {
+    return view('general.privacy-policy');
+})->name('general.privacy-policy');
+
+Route::get('/general/tou', function () {
+    return view('general.tou');
+})->name('general.tou');
+
+Route::get('/general/faqs', function () {
+    return view('general.faqs');
+})->name('general.faqs');
+
 //alumni
 Route::get('/alumni/about', function () {
     return view('alumni.about');
 })->name('alumni.about');
 
+Route::get('/alumni/privacy-policy', function () {
+    return view('alumni.privacy-policy');
+})->name('alumni.privacy-policy');
+
+Route::get('/alumni/tou', function () {
+    return view('alumni.tou');
+})->name('alumni.tou');
+
+Route::get('/alumni/faqs', function () {
+    return view('alumni.faqs');
+})->name('alumni.faqs');
+
 //employer
 Route::get('/employer/about', function () {
     return view('employer.about');
 })->name('employer.about');
+
+Route::get('/employer/privacy-policy', function () {
+    return view('employer.privacy-policy');
+})->name('employer.privacy-policy');
+
+Route::get('/employer/tou', function () {
+    return view('employer.tou');
+})->name('employer.tou');
+
+Route::get('/employer/faqs', function () {
+    return view('employer.faqs');
+})->name('employer.faqs');
 
 //in session routes
 Route::get('/profile', [UserController::class, 'showProfile'])->name('user.profile');

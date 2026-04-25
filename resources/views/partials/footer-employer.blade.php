@@ -41,9 +41,9 @@
             <div class="flex gap-4 font-[Montserrat] ">
                 <div class="w-[1.5px] bg-white "></div>
                 <nav id="footer-nav" class="flex flex-col justify-center text-[15px] font-semibold gap-1">
-                    <a href="privacy_policy_employer.php" class="hover:text-[#ED7A07]">PRIVACY POLICY</a>
-                    <a href="tou_employer.php" class="hover:text-[#ED7A07]">TERMS OF USE</a>
-                    <a href="faqs_employer.php" class="hover:text-[#ED7A07]">FAQs</a>
+                    <a href="{{ route('employer.privacy-policy') }}" class="hover:text-[#ED7A07]">PRIVACY POLICY</a>
+                    <a href="{{ route('employer.tou') }}" class="hover:text-[#ED7A07]">TERMS OF USE</a>
+                    <a href="{{ route('employer.faqs') }}" class="hover:text-[#ED7A07]">FAQs</a>
                 </nav>
             </div>
 

@@ -219,7 +219,6 @@
         </div>
     </section>
 
-
     @include('partials.footer')
 
 </body>

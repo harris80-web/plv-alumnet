@@ -132,7 +132,7 @@
                 For quick answers to common questions about registration, services, and membership, please visit our <strong>Frequently Asked Questions (FAQ)</strong> page or send an inquiry through our <strong>AlumNet Chatbot</strong>!
             </p>
             <div class="flex flex-wrap justify-center gap-5">
-                <a href="faqs.php" class="px-8 py-3 rounded-md font-semibold border-2 border-[#0b1b4d] text-[#0b1b4d] transition-colors hover:bg-[#0b1b4d] hover:text-white">VIEW FAQs</a>
+                <a href="{{ route('general.faqs') }}" class="px-8 py-3 rounded-md font-semibold border-2 border-[#0b1b4d] text-[#0b1b4d] transition-colors hover:bg-[#0b1b4d] hover:text-white">VIEW FAQs</a>
             </div>
         </div>
     </section>

@@ -70,10 +70,10 @@
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-y-6 gap-x-4">
 
                         <!-- OPTIONAL LANG TO TE DI KO SURE KUNG NILAGAY BA NI HARRIS TO-->
-                        <div class="md:col-span-4">
+                        <!--<div class="md:col-span-4">
                             <p class="text-xs font-black text-slate-900 uppercase">Alumni ID No.</p>
                             <p class="text-lg text-gray-600 font-medium">--</p>
-                        </div>
+                        </div>-->
 
                         <div>
                             <p class="text-xs font-black text-slate-900 uppercase">Last Name</p>

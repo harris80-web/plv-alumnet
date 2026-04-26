@@ -129,7 +129,7 @@
 
 <body>
     @php
-        $current_page = 'employer_job_postings';
+    $current_page = 'employer_job_postings';
     @endphp
     @include('partials.header-employer')
 
@@ -283,7 +283,7 @@
                                     Recommended Course/Program:
                                     <span class="font-normal text-black">
                                         @foreach ($job->programs as $program)
-                                            {{ $program->program_name }}<br>
+                                        {{ $program->program_name }}<br>
                                         @endforeach
                                     </span>
                                 </p>
@@ -308,10 +308,12 @@
                                     <i class="far fa-calendar-check mr-1"></i> Valid until {{ $job->job_closing_date }}
                                 </p>
 
-                                <p class="text-red-600 font-semibold">
-                                    APPLICATIONS RECEIVED: 10 <br>
-                                    UNREAD APPLICATIONS: 2
-                                </p>
+                                @if(auth()->user()->user_role === 'employer')
+                                <div class="text-sm font-bold">
+                                    <p class="text-[#C73D1A]">APPLICATIONS RECEIVED: {{ $job->applicants->count() }}</p>
+                                    <p class="text-[#C73D1A]">UNREAD APPLICATIONS: {{ $job->applicants->where('pivot.is_read', 0)->count() }}</p>
+                                </div>
+                                @endif
                             </div>
 
                             <!-- RIGHT BUTTONS -->
@@ -330,7 +332,7 @@
 
                         <!-- FOOTER -->
                         <div class="mt-4 flex items-center text-xs text-gray-500 border-t pt-4">
-                            <img src="https://ui-avatars.com/api/?name=EN&background=random"
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode($job->employer->user->user_first_name . ' ' . $job->employer->user->user_last_name) }}&background=random"
                                 class="w-6 h-6 rounded-full mr-2">
                             <span>Posted by <span class="font-bold text-black">{{ $job->employer->user->user_first_name }} {{ $job->employer->user->user_last_name }}</span></span>
                         </div>
@@ -506,8 +508,9 @@
                                 <select name="job_posting_employment_type"
                                     class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em_1em]">
                                     <option>Select Type (e.g., Full-time)</option>
-                                    <option>Full-time</option>
-                                    <option>Part-time</option>
+                                    <option>Full-Time</option>
+                                    <option>Part-Time</option>
+                                    <option>Freelance</option>
                                 </select>
                             </div>
 
@@ -517,7 +520,7 @@
                                     class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] appearance-none">
                                     <option>Select Setup (e.g., Remote)</option>
                                     <option>Remote</option>
-                                    <option>On-site</option>
+                                    <option>On-Site</option>
                                     <option>Hybrid</option>
                                 </select>
                             </div>
@@ -533,7 +536,7 @@
                                         class="w-full flex-1 border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white">
                                         <option selected disabled>Select Undergraduate Program</option>
                                         @foreach($programs as $program)
-                                            <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
+                                        <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
                                         @endforeach
                                     </select>
 
@@ -646,6 +649,7 @@
                                     class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em_1em]">
                                     <option {{ $job->job_posting_employment_type == 'Full-time' ? 'selected' : '' }}>Full-time</option>
                                     <option {{ $job->job_posting_employment_type == 'Part-time' ? 'selected' : '' }}>Part-time</option>
+                                    <option {{ $job->job_posting_employment_type == 'Freelance' ? 'selected' : '' }}>Freelance</option>
                                 </select>
                             </div>
 
@@ -654,7 +658,7 @@
                                 <select name="job_posting_setup"
                                     class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] appearance-none">
                                     <option {{ $job->job_posting_setup == 'Remote' ? 'selected' : '' }}>Remote</option>
-                                    <option {{ $job->job_posting_setup == 'On-site' ? 'selected' : '' }}>On-site</option>
+                                    <option {{ $job->job_posting_setup == 'On-site' ? 'selected' : '' }}>On-Site</option>
                                     <option {{ $job->job_posting_setup == 'Hybrid' ? 'selected' : '' }}>Hybrid</option>
                                 </select>
                             </div>
@@ -670,9 +674,9 @@
                                         class="flex-1 border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white w-full">
                                         <option value="" selected disabled>Select Undergraduate Program</option>
                                         @foreach($programs as $program)
-                                            <option value="{{ $program->program_id }}" {{ $jobProgram->program_id == $program->program_id ? 'selected' : '' }}>
-                                                {{ $program->program_name }}
-                                            </option>
+                                        <option value="{{ $program->program_id }}" {{ $jobProgram->program_id == $program->program_id ? 'selected' : '' }}>
+                                            {{ $program->program_name }}
+                                        </option>
                                         @endforeach
                                     </select>
 

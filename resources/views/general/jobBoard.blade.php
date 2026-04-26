@@ -140,7 +140,11 @@
     @php
     $current_page = 'employer_job_board';
     @endphp
+    @if(auth()->user()->user_role === 'alumni')
+    @include('partials.header-alumni')
+    @else
     @include('partials.header-employer')
+    @endif
 
     <section class="HeroSection h-[200px] flex items-end text-white shadow-lg">
         <div class="max-w-6xl  w-full my-7 ml-10">
@@ -149,10 +153,26 @@
         </div>
     </section>
 
+    @if(auth()->user()->user_role === 'alumni')
+    <nav class="bg-white border-b sticky top-0 z-10 shadow-md">
+        <div class="max-w-5xl mx-auto px-4">
+            <div class="flex justify-start space-x-8 uppercase text-sm font-bold tracking-wide">
+                <button class="py-4 tab-active transition-all">Job Board</button>
+                <button class="py-4 text-gray-500 hover:text-orange-600 transition-all">My Applications</button>
+                <button class="py-4 text-gray-500 hover:text-orange-600 transition-all">Bookmarks</button>
+            </div>
+        </div>
+    </nav>
+    @endif
+
     <main class="max-w-5xl mx-auto p-6">
         <div class="w-full text-center mb-8">
             <h1 class="inline-block text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+                @if(auth()->user()->user_role === 'alumni')
+                ALUMNI CAREER HUB
+                @else
                 JOB BOARD
+                @endif
             </h1>
         </div>
 
@@ -260,9 +280,22 @@
                             </p>
                         </div>
 
-                        <p class="text-xs text-gray-400">
-                            {{ $job->created_at->diffForHumans() }}
-                        </p>
+                        <div class="text-right">
+                            <div class="relative flex flex-col items-end">
+                                <div class="bookmark-tooltip invisible opacity-0 absolute bottom-full right-0 mb-2 pointer-events-none transition-all duration-300 z-50">
+                                    <div class="bg-blue-900 text-white text-[10px] py-1 px-3 rounded shadow-xl whitespace-nowrap relative">
+                                        Job post saved!
+                                        <div class="absolute top-full right-2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-blue-900"></div>
+                                    </div>
+                                </div>
+                                <button class="bookmark-btn text-gray-400 hover:text-blue-900 text-2xl transition-colors">
+                                    <i class="far fa-bookmark"></i>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-2 flex items-center justify-end">
+                                <i class="far fa-calendar-alt mr-1"></i> {{ $job->created_at->diffForHumans() }}
+                            </p>
+                        </div>
                     </div>
 
                     <div class="mt-4 grid grid-cols-2 gap-4 text-sm font-semibold">
@@ -273,11 +306,11 @@
 
                         <div>
                             <p>
-                                Program:
-                                @foreach ($job->programs as $program)
-                                {{ $program->program_name }}
-                                <br><br>
-                                @endforeach
+                            <p class="text-blue-900">Recommended Course/Program: <span class="font-normal ph"></span></p>
+                            @foreach ($job->programs as $program)
+                            {{ $program->program_name }}
+                            <br><br>
+                            @endforeach
                             </p>
                         </div>
                     </div>
@@ -288,28 +321,55 @@
                         </p>
                     </div>
 
-                    <div class="mt-6 flex justify-between">
-                        <p class="text-xs text-gray-400">
-                            Valid until: {{ $job->job_closing_date }}
+                    <div class="mt-6 flex items-center justify-between">
+                        <p class="text-xs text-gray-400 flex items-center">
+                            <i class="far fa-calendar-check mr-1"></i> Valid until: {{ $job->job_closing_date }}
                         </p>
+                        <div class="flex items-center space-x-3">
+                            @if (auth()->user()->user_role === 'alumni')
+                            <form action="{{ route('jobApplication.apply', $job->job_posting_id) }}" method="POST">
+                                @csrf
+                                <button type="submit"
+                                    class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white px-8 py-2 rounded-md font-bold text-sm transition-colors {{ $job->applicants->contains(auth()->user()->alumnus->user_id) ? 'bg-gray-400 cursor-not-allowed' : '' }}"
+                                    {{ $job->applicants->contains(auth()->user()->alumnus->user_id) ? 'disabled' : '' }}>
+                                    {{ $job->applicants->contains(auth()->user()->alumnus->user_id) ? 'APPLIED' : 'APPLY' }}
+                                </button>
+                            </form>
+                            @endif
+                            
+                            @php $jobImageUrl = asset('storage/' . $job->job_posting_image); @endphp
+                            <button
+                                data-title="{{ addslashes($job->job_posting_title) }}"
+                                data-company="{{ addslashes($job->job_posting_company) }}"
+                                data-address="{{ addslashes($job->job_posting_address) }}"
+                                data-date="{{ $job->created_at->diffForHumans() }}"
+                                data-description="{{ addslashes($job->job_posting_description) }}"
+                                data-type="{{ $job->job_posting_employment_type }}"
+                                data-setup="{{ $job->job_posting_setup }}"
+                                data-valid="{{ $job->job_closing_date }}"
+                                data-image="{{ asset('storage/' . $job->job_posting_image) }}"
+                                data-programs="{{ $job->programs->pluck('program_name')->implode(', ') }}"
+                                onclick="openJobModal(this)"
+                                class="border border-[#1D46A4] text-[#1D46A4] px-6 py-2 rounded-md font-bold text-sm hover:bg-[#1D46A4] hover:border-none hover:text-white transition-colors">VIEW DETAILS</button>
+                            <div class="relative flex items-center">
+                                <button class="share-btn text-gray-500 hover:text-black transition-colors p-2" onclick="copyJobLink(this)">
+                                    <i class="fas fa-share-nodes"></i>
+                                </button>
+                                <div class="share-tooltip invisible opacity-0 absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-3 rounded shadow-lg transition-all duration-300">
+                                    Link Copied!
+                                    <div class="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-gray-800"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mt-4 text-xs text-gray-500">
-                        Posted by:
-                        {{ $job->employer->user->user_first_name }}
-                        {{ $job->employer->user->user_last_name }}
+                    <div class="mt-4 flex items-center text-xs text-gray-500 border-t pt-4">
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode($job->employer->user->user_first_name . ' ' . $job->employer->user->user_last_name) }}&background=random"
+                            class="w-6 h-6 rounded-full mr-2">
+                        <span>Posted by <span class="font-bold text-black">{{ $job->employer->user->user_first_name }} {{ $job->employer->user->user_last_name }}</span></span>
                     </div>
                 </div>
-                @if (auth()->user()->user_role === 'alumni')
-                <form action="{{ route('jobApplication.apply', $job->job_posting_id) }}" method="POST" class="">
-                    @csrf
-                    <button type="submit" {{ $job->applicants->contains(auth()->user()->alumnus->user_id) ? 'disabled' : '' }}>
-                    {{ $job->applicants->contains(auth()->user()->alumnus->user_id) ? 'Applied' : 'Apply' }}
-                    </button>
-                </form>
-                @endif
-                
-                
+
             </div>
             @endif
 
@@ -331,7 +391,7 @@
         <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl relative">
 
             <div class="h-48 w-full relative rounded-t-3xl overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover">
+                <img id="modal-img" src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>
 
                 <button onclick="toggleModal()" class="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 transition-colors">
@@ -342,12 +402,12 @@
             <div class="p-8">
                 <div class="flex justify-between items-start">
                     <div>
-                        <h2 class="text-3xl font-bold text-[#1D264F] uppercase tracking-tighter">JOB TITLE</h2>
+                        <h2 id="modal-title" class="text-3xl font-bold text-[#1D264F] uppercase tracking-tighter">JOB TITLE</h2>
                         <div class="flex items-center text-gray-600 mt-1 space-x-4">
-                            <p class="font-semibold text-lg">Business Name</p>
-                            <span class="flex items-center text-sm"><i class="far fa-calendar-alt mr-2"></i> Posted 2 days ago</span>
+                            <p id="modal-company" class="font-semibold text-lg">Business Name</p>
+                            <span id="modal-date" class="flex items-center text-sm"><i class="far fa-calendar-alt mr-2"></i> Posted 2 days ago</span>
                         </div>
-                        <p class="text-gray-500 font-medium">Business Address</p>
+                        <p id="modal-address" class="text-gray-500 font-medium">Business Address</p>
                     </div>
 
                     <div class="relative">
@@ -366,26 +426,26 @@
                 <div class="mt-8 flex flex-col md:flex-row gap-8">
                     <div class="md:w-3/5">
                         <h3 class="font-bold text-[#0E0F3B] mb-3">Job Description:</h3>
-                        <p class="text-gray-600 text-sm leading-relaxed text-justify">
+                        <p id="modal-description" class="text-gray-600 text-sm leading-relaxed text-justify">
                             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent placerat, nulla quis aliquam fringilla, nulla elit accumsan nisi, vel feugiat massa erat vel eros. Curabitur sed massa vel leo accumsan imperdiet.
                         </p>
                     </div>
 
                     <div class="md:w-2/5 space-y-2 text-[#1D264F]">
-                        <p class="flex justify-between text-sm"><span class="font-bold">Job Type:</span> Full-Time</p>
-                        <p class="flex justify-between text-sm"><span class="font-bold">Job Setup:</span> Remote</p>
+                        <p class="flex justify-between text-sm"><span class="font-bold">Job Type:</span> <span id="modal-job-type">Full-Time</span></p>
+                        <p class="flex justify-between text-sm"><span class="font-bold">Job Setup:</span> <span id="modal-job-setup">Remote</span></p>
                     </div>
                 </div>
 
                 <div class="pt-2 border-t border-gray-100">
                     <p class="font-bold text-sm">Recommended Course/Program:</p>
-                    <p class="text-sm leading-snug text-gray-600 mt-1">
+                    <p id="modal-programs" class="text-sm leading-snug text-gray-600 mt-1">
                         BSIT - Bachelor of Science in Information Technology
                     </p>
                 </div>
 
                 <div class="mt-10 pt-6 border-t flex items-center justify-between">
-                    <div class="text-gray-500 text-sm flex items-center font-semibold">
+                    <div id="modal-valid" class="text-gray-500 text-sm flex items-center font-semibold">
                         <i class="far fa-calendar-check mr-2"></i> Valid until
                     </div>
 
@@ -552,7 +612,12 @@
             </form>
         </div>
     </div>
+
+    @if(auth()->user()->user_role === 'alumni')
+    @include('partials.footer-alumni')
+    @else
     @include('partials.footer-employer')
+    @endif
 
 </body>
 
@@ -615,16 +680,26 @@
 
     //job post modal script
 
+    function openJobModal(btn) {
+        document.getElementById('modal-img').src = btn.dataset.image;
+        document.getElementById('modal-title').textContent = btn.dataset.title;
+        document.getElementById('modal-company').textContent = btn.dataset.company;
+        document.getElementById('modal-date').innerHTML = '<i class="far fa-calendar-alt mr-2"></i> ' + btn.dataset.date;
+        document.getElementById('modal-address').textContent = btn.dataset.address;
+        document.getElementById('modal-description').textContent = btn.dataset.description;
+        document.getElementById('modal-job-type').textContent = btn.dataset.type;
+        document.getElementById('modal-job-setup').textContent = btn.dataset.setup;
+        document.getElementById('modal-programs').textContent = btn.dataset.programs;
+        document.getElementById('modal-valid').innerHTML = '<i class="far fa-calendar-check mr-2"></i> Valid until: ' + btn.dataset.valid;
+
+        document.getElementById('jobModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
     function toggleModal() {
         const modal = document.getElementById('jobModal');
-        modal.classList.toggle('hidden');
-
-        // Prevent background scrolling when modal is open
-        if (!modal.classList.contains('hidden')) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'auto';
-        }
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
     }
 
     // Optional: Close modal if user clicks outside the white box

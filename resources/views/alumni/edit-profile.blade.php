@@ -13,14 +13,14 @@
         rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
         rel="stylesheet">
-    <link rel="icon" type="image/x-icon" href="assets/PLV-AlumNet LOGO.png">
+    <link rel="icon" type="image/x-icon" href="{{ asset('assets/PLV-AlumNet LOGO.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <style>
     .HeroSection {
         background:
-            url('assets/heroSectionBackground.png');
+            url("{{ asset('assets/heroSectionBackground.png') }}");
         background-size: cover;
         background-position: center;
     }
@@ -231,6 +231,7 @@
     </div>
 
     @include('partials.footer-alumni')
+    
 </body>
 
 <script>

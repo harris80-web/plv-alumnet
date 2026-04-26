@@ -1,14 +1,12 @@
 <div id="menuOverlay" class="fixed inset-0 bg-black/50 z-[60] hidden transition-opacity duration-300"></div>
 
-<div id="notificationPopup" class=" absolute  top-20 right-[20px] md:right-[250px] w-72 bg-white rounded-xl shadow-2xl z-[100] hidden transform origin-top-right transition-all duration-300 scale-95 opacity-0">
-
+<div id="notificationPopup" class="absolute top-20 right-[20px] md:right-[250px] w-72 bg-white rounded-xl shadow-2xl z-[100] hidden transform origin-top-right transition-all duration-300 scale-95 opacity-0">
     <div class="p-4 border-b flex justify-between items-center">
         <h3 class="text-[#0E0F3B] font-bold">Notifications</h3>
         <button onclick="toggleNotifications(event)" class="text-gray-400 hover:text-gray-600">
             <i class="fa-solid fa-xmark"></i>
         </button>
     </div>
-
     <div class="p-10 flex flex-col items-center justify-center text-center">
         <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
             <i class="fa-regular fa-bell text-gray-400 text-xl"></i>
@@ -28,40 +26,48 @@
                 <i class="fa-solid fa-user text-5xl text-white"></i>
             </div>
             <h2 class="text-[#ED7A07] font-semibold text-xl uppercase tracking-wider">
-                <?php echo (strpos($current_page, 'employer') !== false) ? 'Employer' : 'Alumni'; ?>
+                {{ auth()->user()->user_first_name }} {{ auth()->user()->user_last_name }}
             </h2>
             <div class="w-full border-b mt-4"></div>
         </div>
 
         <nav class="space-y-4 flex-grow">
-            <?php if (strpos($current_page, 'employer') !== false): ?>
-                <a href="employer_profile.php" class="flex items-center gap-4 p-3 w-full transition <?php echo ($current_page == 'employer_profile') ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white'; ?>">
+            @if(str_contains($current_page, 'employer'))
+                <a href="{{ route('user.profile') }}"
+                    class="flex items-center gap-4 p-3 w-full transition {{ $current_page == 'employer_profile' ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
                     <i class="fa-solid fa-building w-6"></i> Company Profile
                 </a>
-                <a href="employer_edit.php" class="flex items-center gap-4 p-3 w-full transition <?php echo ($current_page == 'employer_edit') ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white'; ?>">
+                <a href="{{ route('users.editProfile') }}"
+                    class="flex items-center gap-4 p-3 w-full transition {{ $current_page == 'employer_edit' ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
                     <i class="fa-solid fa-pen-to-square w-6"></i> Edit Details
                 </a>
-                <a href="employer_change_password.php" class="flex items-center gap-4 p-3 w-full transition <?php echo ($current_page == 'employer_change_password') ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white'; ?>">
+                <a href="#"
+                    class="flex items-center gap-4 p-3 w-full transition {{ $current_page == 'employer_change_password' ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
                     <i class="fa-solid fa-lock w-6"></i> Change Password
                 </a>
-
-            <?php else: ?>
-                <a href="alumni_profile.php" class="flex items-center gap-4 p-3 w-full transition <?php echo ($current_page == 'alumni_profile') ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white'; ?>">
+            @else
+                <a href="{{ route('user.profile') }}"
+                    class="flex items-center gap-4 p-3 w-full transition {{ $current_page == 'alumni_profile' ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
                     <i class="fa-solid fa-address-card w-6"></i> View Profile
                 </a>
-                <a href="alumni_edit.php" class="flex items-center gap-4 p-3 w-full transition <?php echo ($current_page == 'alumni_edit') ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white'; ?>">
+                <a href="{{ route('users.editProfile') }}"
+                    class="flex items-center gap-4 p-3 w-full transition {{ $current_page == 'alumni_edit' ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
                     <i class="fa-solid fa-user-pen w-6"></i> Edit Profile
                 </a>
-                <a href="alumni_change_password.php" class="flex items-center gap-4 p-3 w-full transition <?php echo ($current_page == 'alumni_change_password') ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white'; ?>">
+                <a href="#"
+                    class="flex items-center gap-4 p-3 w-full transition {{ $current_page == 'alumni_change_password' ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
                     <i class="fa-solid fa-lock w-6"></i> Change Password
                 </a>
-            <?php endif; ?>
+            @endif
         </nav>
 
         <div class="border-t pt-6">
-            <a href="logout.php" class="flex items-center gap-4 text-[#0E0F3B] hover:text-[#ED7A07] p-3 transition font-bold">
-                <i class="fa-solid fa-right-from-bracket"></i> Log out
-            </a>
+            <form method="POST" action="{{ route('user.logout') }}">
+                @csrf
+                <button type="submit" class="flex items-center gap-4 text-[#0E0F3B] hover:text-[#ED7A07] p-3 transition font-bold w-full">
+                    <i class="fa-solid fa-right-from-bracket"></i> Log out
+                </button>
+            </form>
         </div>
     </div>
 </div>
@@ -73,10 +79,8 @@
 
     function toggleSidebar() {
         if (sidebar && overlay) {
-            const isHidden = sidebar.classList.contains('translate-x-full');
             sidebar.classList.toggle('translate-x-full');
             overlay.classList.toggle('hidden');
-            // Hide notification if sidebar opens
             if (notification) {
                 notification.classList.add('hidden', 'scale-95', 'opacity-0');
             }
@@ -85,8 +89,8 @@
 
     function toggleNotifications(event) {
         if (event) {
-            event.stopPropagation(); // Stops the window click from firing
-            event.preventDefault(); // Prevents any jumping if it's an 'a' tag
+            event.stopPropagation();
+            event.preventDefault();
         }
 
         if (!notification) return;
@@ -94,7 +98,6 @@
 
         if (isHidden) {
             notification.classList.remove('hidden');
-            // Small delay to allow 'hidden' to be removed before animating
             setTimeout(() => {
                 notification.classList.remove('scale-95', 'opacity-0');
             }, 10);
@@ -113,7 +116,6 @@
         }, 300);
     }
 
-    // 1. Close when clicking the overlay (for sidebar)
     if (overlay) {
         overlay.addEventListener('click', () => {
             sidebar.classList.add('translate-x-full');
@@ -122,15 +124,11 @@
         });
     }
 
-    // 2. Close when clicking anywhere outside the popup
     window.addEventListener('click', function(e) {
         const isClickInside = notification.contains(e.target);
-        // Add the ID or class of your Bell/Notification button here to avoid instant closing
         const isNotificationBtn = e.target.closest('[onclick="toggleNotifications()"]');
-
         if (!isClickInside && !isNotificationBtn && !notification.classList.contains('hidden')) {
             closeNotifications();
         }
     });
-    
 </script>

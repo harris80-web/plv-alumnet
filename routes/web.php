@@ -171,6 +171,12 @@ Route::resource('faqs', FaqController::class);
 Route::resource('industries', IndustryController::class);
 
 Route::resource('job-applications', JobApplicationController::class);
+Route::post('/jobBoard/applyJob/{jobPostingId}', [JobApplicationController::class, 'applyJob'])->name('jobApplication.apply');
+Route::get('/jobBoard/applications/{jobPostingId}', [JobApplicationController::class, 'showApplications'])->name('jobApplication.showApplications');
+Route::post('/jobBoard/hireApplicant/{applicationId}', [JobApplicationController::class, 'hireApplicant'])->name('jobApplication.hireApplicant');
+Route::post('/jobBoard/declineApplicant/{applicationId}', [JobApplicationController::class, 'declineApplicant'])->name('jobApplication.declineApplicant');
+Route::post('/jobBoard/shortlistApplicant/{applicationId}', [JobApplicationController::class, 'shortlistApplicant'])->name('jobApplication.shortlistApplicant');
+
 
 Route::resource('job-postings', JobPostingController::class);
 Route::get('/jobBoard', [JobPostingController::class, 'showJobBoard'])->name('jobPosting.jobBoard');

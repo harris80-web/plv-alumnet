@@ -316,7 +316,7 @@
 
                             <!-- RIGHT BUTTONS -->
                             <div class="flex gap-2">
-                                <a href='employer_view_applicants.php' class="bg-[#1D46A4] text-white px-6 py-2 rounded-md font-bold text-xs hover:bg-[#0E0F3B]">
+                                <a href='{{ route("jobApplication.showApplications", ["jobPostingId" => $job->job_posting_id]) }}' class="bg-[#1D46A4] text-white px-6 py-2 rounded-md font-bold text-xs hover:bg-[#0E0F3B]">
                                     VIEW APPLICANTS
                                 </a>
 
@@ -530,7 +530,7 @@
                             <div id="course-input-container" class="space-y-2">
                                 <div class="flex items-center gap-3 course-row">
                                     <select name="program[]"
-                                        class="flex-1 border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white">
+                                        class="w-full flex-1 border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white">
                                         <option selected disabled>Select Undergraduate Program</option>
                                         @foreach($programs as $program)
                                             <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
@@ -665,9 +665,9 @@
 
                             <div id="editCourseInputContainer-{{ $job->job_posting_id }}" class="space-y-2">
                                 @foreach($job->programs as $index => $jobProgram)
-                                <div class="flex items-center gap-3 course-row">
+                                <div class="flex items-center gap-3 course-row ">
                                     <select name="program[]"
-                                        class="flex-1 border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white">
+                                        class="flex-1 border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white w-full">
                                         <option value="" selected disabled>Select Undergraduate Program</option>
                                         @foreach($programs as $program)
                                             <option value="{{ $program->program_id }}" {{ $jobProgram->program_id == $program->program_id ? 'selected' : '' }}>

@@ -300,7 +300,16 @@
                         {{ $job->employer->user->user_last_name }}
                     </div>
                 </div>
-
+                @if (auth()->user()->user_role === 'alumni')
+                <form action="{{ route('jobApplication.apply', $job->job_posting_id) }}" method="POST" class="">
+                    @csrf
+                    <button type="submit" {{ $job->applicants->contains(auth()->user()->alumnus->user_id) ? 'disabled' : '' }}>
+                    {{ $job->applicants->contains(auth()->user()->alumnus->user_id) ? 'Applied' : 'Apply' }}
+                    </button>
+                </form>
+                @endif
+                
+                
             </div>
             @endif
 

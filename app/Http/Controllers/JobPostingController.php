@@ -73,22 +73,23 @@ class JobPostingController extends Controller
         $jobPostings = JobPosting::all();
         $programs = Program::all();
         $users = Auth::user();
-        return view('general.jobBoard', compact('jobPostings', 'programs', 'users'));
+        $applications = Auth::user()->alumnus ? Auth::user()->alumnus->appliedJobs->pluck('job_id')->toArray() : [];
+        return view('general.jobBoard', compact('jobPostings', 'programs', 'users', 'applications'));
     }
 
     public function addJobPost(Request $request, $id)
     {
        $validated = $request->validate([
-            'job_posting_image' => 'required|image|mimes:jpeg,png,jpg,svg',
-            'job_posting_title' => 'required|string',
-            'job_posting_company' => 'required|string',
-            'job_posting_address' => 'required|string',
-            'job_posting_employment_type' => ['required|string', Rule::in('Full-Time', 'Part-Time', 'Freelance')],
-            'job_posting_description' => 'required|string',
-            'job_closing_date' => 'required|date',
-            'job_posting_setup' => ['required|string', Rule::in('On-Site', 'Remote', 'Hybrid')],
-            'program' => 'required|array|max:3',
-            'program.*' => 'exists:programs,program_id',
+            'job_posting_image' => ['required','image','mimes:jpeg,png,jpg,svg'],
+            'job_posting_title' => ['required','string'],
+            'job_posting_company' => ['required','string'],
+            'job_posting_address' => ['required','string'],
+            'job_posting_employment_type' => ['required','string', Rule::in('Full-Time', 'Part-Time', 'Freelance')],
+            'job_posting_description' => ['required','string'],
+            'job_closing_date' => ['required','date'],
+            'job_posting_setup' => ['required','string', Rule::in('On-Site', 'Remote', 'Hybrid')],
+            'program' => ['required','array','max:3'],
+            'program.*' => ['exists:programs,program_id'],
         ]);
 
         
@@ -204,4 +205,5 @@ class JobPostingController extends Controller
         $job->update(['job_approved' => true]);
         return redirect()->route('jobPosting.jobManagement')->with('success', 'Job posting approved successfully!');
     }
+
 }

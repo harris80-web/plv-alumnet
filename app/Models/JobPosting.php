@@ -52,4 +52,12 @@ class JobPosting extends Model
         // job_program is the table name, job_posting_id and program_id are the keys
         return $this->belongsToMany(Program::class, 'job_program', 'job_posting_id', 'program_id');
     }
+
+    public function applicants()
+    {
+        // Assuming your pivot table is 'applications' and links to 'alumni'
+        return $this->belongsToMany(Alumnus::class, 'job_applications', 'job_id', 'alumnus_id')
+            ->withPivot('application_status', 'application_date') // Allows you to access $job->pivot->status
+            ->withTimestamps();
+    }
 }

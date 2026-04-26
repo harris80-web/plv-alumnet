@@ -12,6 +12,8 @@
     <br><br><br>
     <a href="{{ route('superAdmin.userManagement') }}">User Management</a>
     <br><br><br>
+    <a href="{{ route('jobPosting.jobManagement') }}">Job Management</a>
+    <br><br><br>
     <br><br>
     <a href="{{ route('user.profile') }}">View Profile</a>
     <br><br><br>

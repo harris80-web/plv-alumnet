@@ -37,7 +37,7 @@
                 ANNOUNCEMENTS
             </a>
 
-            <a href="alumni_job_board.php"
+            <a href="{{ route('jobPosting.jobBoard') }}"
                 class="<?php echo ($current_page == 'jobs') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; ?>">
                 JOB BOARD
             </a>

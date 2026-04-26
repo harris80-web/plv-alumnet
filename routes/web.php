@@ -141,6 +141,8 @@ Route::get('/jobBoard', [JobPostingController::class, 'showJobBoard'])->name('jo
 Route::post('/jobBoard/addJobPost/{id}', [JobPostingController::class, 'addJobPost'])->name('jobPosting.addJobPost');
 Route::get('/myJobPosts/{id}', [JobPostingController::class, 'showMyJobPosts'])->name('jobPosting.myJobPosts');
 Route::post('/editJobPost/{id}', [JobPostingController::class, 'editJobPost'])->name('jobPosting.editJobPost');
+Route::get('/jobManagement', [JobPostingController::class, 'showJobManagement'])->name('jobPosting.jobManagement');
+Route::post('/approveJobPost/{id}', [JobPostingController::class, 'approveJobPost'])->name('jobPosting.approve');
 
 Route::resource('messages', MessageController::class);
 

@@ -15,9 +15,8 @@ return new class extends Migration
             $table->id('application_id');
             $table->foreignId('job_id')->constrained('job_postings', 'job_posting_id')->onDelete('cascade');
             $table->foreignId('alumnus_id')->constrained('alumni', 'user_id')->onDelete('cascade');
-            $table->string('alumnus_resume', 255);
             $table->timestamp('application_date');
-            $table->enum('application_status', ['hire', 'decline', 'shorlisted']);
+            $table->enum('application_status', ['pending', 'hired', 'declined', 'shortlisted'])->default('pending');
             $table->timestamps();
         });
     }

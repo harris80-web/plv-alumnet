@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('job_posting_title', 255);
             $table->string('job_posting_company', 255);
             $table->text('job_posting_address');
-            $table->string('job_posting_employment_type', 100);
-            $table->string('job_posting_setup', 255);
+            $table->enum('job_posting_employment_type', ['Full-Time', 'Part-Time', 'Freelance']);
+            $table->enum('job_posting_setup', ['On-Site', 'Remote', 'Hybrid']);
             $table->text('job_posting_description');
             $table->date('job_posting_date')->default(now()->toDateString());
             $table->date('job_closing_date');

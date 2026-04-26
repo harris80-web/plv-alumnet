@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\JobApplication;
+use App\Models\JobPosting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
 
 class JobApplicationController extends Controller
 {
@@ -61,5 +64,66 @@ class JobApplicationController extends Controller
     public function destroy(JobApplication $jobApplication)
     {
         //
+    }
+
+    public function applyJob($jobPostingId)
+    {
+        if (Auth::user()->user_role == 'alumni') {
+            $alumniId = Auth::id();
+        }
+
+
+        // Check if the user has already applied for this job
+        $existingApplication = JobApplication::where('alumnus_id', $alumniId)
+            ->where('job_id', $jobPostingId)
+            ->first();
+
+        if ($existingApplication) {
+            $existingApplication->delete();
+            return redirect()->back();
+        }
+
+        // Create a new job application
+        JobApplication::create([
+            'alumnus_id' => $alumniId,
+            'job_id' => $jobPostingId,
+            'application_status' => 'pending',
+        ]);
+
+        return redirect()->route('jobPosting.jobBoard');
+    }
+
+    public function showApplications($jobPostingId)
+    {
+        $jobPost = JobPosting::with('applicants.user')->findOrFail($jobPostingId);
+
+        return view('general.jobApplicants', compact('jobPost'));
+    }
+
+    public function hireApplicant($applicationId)
+    {
+        $application = JobApplication::findOrFail($applicationId);
+        $application->application_status = 'hired';
+        $application->save();
+
+        return redirect()->route("jobApplication.showApplications", ["jobPostingId" => $applicationId])->with('success', 'Application status updated successfully.');
+    }
+
+    public function declineApplicant($applicationId)
+    {
+        $application = JobApplication::findOrFail($applicationId);
+        $application->application_status = 'declined';
+        $application->save();
+
+        return redirect()->route("jobApplication.showApplications", ["jobPostingId" => $applicationId])->with('success', 'Application status updated successfully.');
+    }
+
+    public function shortlistApplicant($applicationId)
+    {
+        $application = JobApplication::findOrFail($applicationId);
+        $application->application_status = 'shortlisted';
+        $application->save();
+
+        return redirect()->route("jobApplication.showApplications", ["jobPostingId" => $applicationId])->with('success', 'Application status updated successfully.');
     }
 }

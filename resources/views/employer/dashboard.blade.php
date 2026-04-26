@@ -409,7 +409,9 @@
             </div>
         </div>
     </div>
+
     @include('partials.footer-employer')
+    
 </body>
 
 </html>

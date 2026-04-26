@@ -171,31 +171,9 @@
                 </span>
                 <select class="w-full pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
                     <option selected disabled>Select Undergraduate Program</option>
-
-                    <option>Bachelor of Arts in Communication</option>
-                    <option>Bachelor of Early Childhood Education</option>
-                    <option>Bachelor of Science in Accountancy</option>
-
-                    <optgroup label="BS in Business Administration">
-                        <option>BSBA - Major in Financial Management</option>
-                        <option>BSBA - Major in Human Resource Management</option>
-                        <option>BSBA - Major in Marketing Management</option>
-                    </optgroup>
-
-                    <option>BSCE - Bachelor of Science in Civil Engineering</option>
-                    <option>BSEE - Bachelor of Science in Electrical Engineering</option>
-                    <option>BSIT - Bachelor of Science in Information Technology</option>
-                    <option>Bachelor of Science in Psychology</option>
-                    <option>Bachelor of Public Administration</option>
-                    <option>Bachelor of Science in Social Work</option>
-
-                    <optgroup label="Bachelor of Secondary Education">
-                        <option>BSEd - Major in English</option>
-                        <option>BSEd - Major in Filipino</option>
-                        <option>BSEd - Major in Mathematics</option>
-                        <option>BSEd - Major in Science</option>
-                        <option>BSEd - Major in Social Studies</option>
-                    </optgroup>
+                    @foreach ($programs as $program)
+                    <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
+                    @endforeach
                 </select>
                 <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
                     <i class="fas fa-chevron-down text-xs"></i>
@@ -322,7 +300,16 @@
                         {{ $job->employer->user->user_last_name }}
                     </div>
                 </div>
-
+                @if (auth()->user()->user_role === 'alumni')
+                <form action="{{ route('jobApplication.apply', $job->job_posting_id) }}" method="POST" class="">
+                    @csrf
+                    <button type="submit" {{ $job->applicants->contains(auth()->user()->alumnus->user_id) ? 'disabled' : '' }}>
+                    {{ $job->applicants->contains(auth()->user()->alumnus->user_id) ? 'Applied' : 'Apply' }}
+                    </button>
+                </form>
+                @endif
+                
+                
             </div>
             @endif
 
@@ -490,8 +477,9 @@
                                 <select name="job_posting_employment_type"
                                     class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em_1em]">
                                     <option>Select Type (e.g., Full-time)</option>
-                                    <option>Full-time</option>
-                                    <option>Part-time</option>
+                                    <option>Full-Time</option>
+                                    <option>Part-Time</option>
+                                    <option>Freelance</option>
                                 </select>
                             </div>
 
@@ -501,7 +489,7 @@
                                     class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] appearance-none">
                                     <option>Select Setup (e.g., Remote)</option>
                                     <option>Remote</option>
-                                    <option>On-site</option>
+                                    <option>On-Site</option>
                                     <option>Hybrid</option>
                                 </select>
                             </div>

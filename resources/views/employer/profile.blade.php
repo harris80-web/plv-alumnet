@@ -59,6 +59,13 @@
                         <p class="text-[11px] font-bold text-[#12123B] uppercase tracking-tighter">Employer Name</p>
                     </div>
 
+                    <div>
+                        <h3 class="text-2xl font-extrabold text-black">
+                            {{ $user->employer->employer_position ?? 'Not provided' }}
+                        </h3>
+                        <p class="text-[11px] font-bold text-[#12123B] uppercase tracking-tighter">Employer Position</p>
+                    </div>
+
                     <div class="space-y-4 pt-4">
                         <div>
                             <p class="text-gray-800 font-medium">{{ $user->user_email }}</p>
@@ -101,11 +108,19 @@
                 <div class="grid grid-cols-2 gap-x-12 gap-y-10 w-full text-center">
                     <div>
                         <p class="text-gray-800 font-semibold">
+                            {{ $user->employer->employer_year_established ?? 'Not provided' }}
+                        </p>
+                        <p class="text-[10px] font-bold text-[#12123B] uppercase tracking-tighter leading-none">Year Established</p>
+                        <p class="text-gray-800 font-semibold">
                             {{ $user->employer->industry->industry_name ?? 'Not provided' }}
                         </p>
                         <p class="text-[10px] font-bold text-[#12123B] uppercase tracking-tighter leading-none">Industry / Sector</p>
                     </div>
                     <div>
+                        <p class="text-gray-800 font-semibold">
+                            {{ $user->employer->employer_company_size ?? 'Not provided' }}
+                        </p>
+                        <p class="text-[10px] font-bold text-[#12123B] uppercase tracking-tighter leading-none">Company Size</p>
                         @if ($user->employer->employer_website_url)
                             <a href="{{ $user->employer->employer_website_url }}" target="_blank"
                                 class="text-gray-800 font-semibold underline block">

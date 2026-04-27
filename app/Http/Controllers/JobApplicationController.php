@@ -102,7 +102,7 @@ class JobApplicationController extends Controller
 
     public function hireApplicant($applicationId)
     {
-        $application = JobApplication::findOrFail($applicationId);
+        $application = JobApplication::where('job_id', $applicationId)->first();
         $application->application_status = 'hired';
         $application->save();
 
@@ -111,7 +111,7 @@ class JobApplicationController extends Controller
 
     public function declineApplicant($applicationId)
     {
-        $application = JobApplication::findOrFail($applicationId);
+        $application = JobApplication::where('job_id', $applicationId)->first();
         $application->application_status = 'declined';
         $application->save();
 
@@ -120,7 +120,7 @@ class JobApplicationController extends Controller
 
     public function shortlistApplicant($applicationId)
     {
-        $application = JobApplication::findOrFail($applicationId);
+        $application = JobApplication::where('job_id', $applicationId)->first();
         $application->application_status = 'shortlisted';
         $application->save();
 

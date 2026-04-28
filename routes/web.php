@@ -214,3 +214,4 @@ Route::post('/users/login', [UserController::class, 'login'])->name('users.login
 Route::post('/users/approve/{id}', [UserController::class, 'approveEmployer'])->name('users.approveEmployer');
 Route::post('/users/addAlumnus', [UserController::class, 'addAlumnus'])->name('users.addAlumnus');
 Route::post('/users/addAdmin', [UserController::class, 'addAdmin'])->name('users.addAdmin');
+Route::get('/dashboard', [UserController::class, 'redirectToDashboard'])->name('users.dashboardRedirect');

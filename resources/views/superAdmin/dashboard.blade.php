@@ -9,11 +9,21 @@
 </head> 
 <body>
     <h1>Superadmin Dashboard</h1>
-    <br><br><br>
+    <a href="{{ route('superAdmin.dashboard') }}">Dashboard</a>
+    <br><br>
     <a href="{{ route('superAdmin.userManagement') }}">User Management</a>
-    <br><br><br>
+    <br><br>
     <a href="{{ route('jobPosting.jobManagement') }}">Job Management</a>
-    <br><br><br>
+    <br><br>
+    <a href="">Alumni ID and yearbook management</a>
+    <br><br>
+    <a href="">Notice and events management</a>
+    <br><br>
+    <a href="">Chatbot and messaging management</a>
+    <br><br>
+    <a href="">Testimonial management</a>
+    <br><br>
+    <a href="">Manage faqs</a>
     <br><br>
     <a href="{{ route('user.profile') }}">View Profile</a>
     <br><br><br>

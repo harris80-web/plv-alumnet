@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use App\Mail\AlumniCreatedMail;
 use Illuminate\Support\Facades\Mail;
+use Carbon\Carbon;
 
 
 class UserController extends Controller
@@ -183,7 +184,20 @@ class UserController extends Controller
                 $stats =[ 
                     'jobPlacementRate' => DB::table('job_applications')
                     ->where('application_status', 'hired')
-                    ->count()];
+                    ->count(),
+                    'activeJobs' => DB::table('job_postings')
+                    ->where('job_approved', true)
+                    ->where('job_closing_date', '>', now())
+                    ->count(),
+                    'industryPartners' => DB::table('users')
+                    ->where('user_active', true)
+                    ->where('user_role', 'employer')
+                    ->count(),
+                    'alumniUsers' => DB::table('users')
+                    ->where('user_active', true)
+                    ->where('user_role', 'alumni')
+                    ->count()
+                ];
                 return view('superAdmin.dashboard', compact('stats'));
             } else if (Auth::User()->user_role == 'registrar' && Auth::User()->user_active == true) {
                 return redirect()->intended('/registrar/dashboard');

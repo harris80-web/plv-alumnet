@@ -37,10 +37,22 @@
     </div>
     <div>
         <h2>SYSTEM OVERVIEW</h2>
-        <div class="flex">
+        <div class="flex gap-[20px]">
             <div>
                 <h3>Job Placement Rate</h3>
                 <p>{{ $stats['jobPlacementRate'] }}</p>
+            </div>
+            <div>
+                <h3>Active job postings</h3>
+                <p>{{ $stats['activeJobs'] }}</p>
+            </div>
+            <div>
+                <h3>Industry Partners</h3>
+                <p>{{ $stats['industryPartners'] }}</p>
+            </div>
+            <div>
+                <h3>Alumni Users</h3>
+                <p>{{ $stats['alumniUsers'] }}</p>
             </div>
         </div>
     </div>

@@ -180,7 +180,11 @@ class UserController extends Controller
             if (Auth::User()->user_role == 'admin' && Auth::User()->user_active == true) {
                 return redirect()->intended('/admin/dashboard');
             } else if (Auth::User()->user_role == 'super_admin' && Auth::User()->user_active == true) {
-                return redirect()->intended('/superAdmin/dashboard');
+                $stats =[ 
+                    'jobPlacementRate' => DB::table('job_applications')
+                    ->where('application_status', 'hired')
+                    ->count()];
+                return view('superAdmin.dashboard', compact('stats'));
             } else if (Auth::User()->user_role == 'registrar' && Auth::User()->user_active == true) {
                 return redirect()->intended('/registrar/dashboard');
             } else if (Auth::User()->user_role == 'employer' && Auth::User()->user_active == true) {

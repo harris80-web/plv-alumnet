@@ -40,7 +40,7 @@
         <div class="flex gap-[20px]">
             <div>
                 <h3>Job Placement Rate</h3>
-                <p>{{ $stats['jobPlacementRate'] }}</p>
+                <p>{{ $stats['jobPlacementRate'] }}%</p>
             </div>
             <div>
                 <h3>Active job postings</h3>

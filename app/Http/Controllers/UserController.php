@@ -182,22 +182,26 @@ class UserController extends Controller
             if (Auth::User()->user_role == 'admin' && Auth::User()->user_active == true) {
                 return redirect()->intended('/admin/dashboard');
             } else if (Auth::User()->user_role == 'super_admin' && Auth::User()->user_active == true) {
-                $stats =[ 
-                    'jobPlacementRate' => DB::table('job_applications')
+                $jobPlacementCount = DB::table('job_applications')
                     ->where('application_status', 'hired')
-                    ->count(),
+                    ->count();
+                $jobApplicationCount = DB::table('job_applications')
+                    ->count();
+                $jobPlacementRate = $jobApplicationCount > 0 ? ($jobPlacementCount / $jobApplicationCount) * 100 : 0;
+                $stats = [
+                    'jobPlacementRate' => round($jobPlacementRate, 2),
                     'activeJobs' => DB::table('job_postings')
-                    ->where('job_approved', true)
-                    ->where('job_closing_date', '>', now())
-                    ->count(),
+                        ->where('job_approved', true)
+                        ->where('job_closing_date', '>', now())
+                        ->count(),
                     'industryPartners' => DB::table('users')
-                    ->where('user_active', true)
-                    ->where('user_role', 'employer')
-                    ->count(),
+                        ->where('user_active', true)
+                        ->where('user_role', 'employer')
+                        ->count(),
                     'alumniUsers' => DB::table('users')
-                    ->where('user_active', true)
-                    ->where('user_role', 'alumni')
-                    ->count()
+                        ->where('user_active', true)
+                        ->where('user_role', 'alumni')
+                        ->count()
                 ];
                 return view('superAdmin.dashboard', compact('stats'));
             } else if (Auth::User()->user_role == 'registrar' && Auth::User()->user_active == true) {

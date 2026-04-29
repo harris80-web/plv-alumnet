@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employer;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class EmployerController extends Controller
 {
@@ -61,5 +64,99 @@ class EmployerController extends Controller
     public function destroy(Employer $employer)
     {
         //
+    }
+
+    public function updateEmployerProfile(Request $request, $employer)
+    {
+        $user = User::where('user_id', $employer)->firstOrFail();
+        // Validate the incoming request data
+        $validated = $request->validate([
+            'user_profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10048',
+            'user_first_name' => 'required|string',
+            'user_last_name' => 'required|string',
+            'user_middle_name' => 'nullable|string',
+            'user_suffix' => 'nullable|string',
+            'employer_position' => 'required|string',
+            'user_email' => 'required|email|unique:users,user_email,' . $user->user_id . ',user_id',
+            'user_number' => 'required|string',
+            'employer_company_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10048',
+            'employer_company_name' => 'required|string',
+            'employer_year_established' => 'required|date_format:Y',
+            'employer_company_size' => 'required|string',
+            'industry' => 'required|exists:industries,industry_id',
+            'employer_website_url' => 'nullable|url',
+        ]);
+
+        // Update the user's profile information
+        $oldProfilePicture = $user->user_profile_picture ?? null;
+        $profilePicture = null;
+        if ($request->hasFile('user_profile_picture')) {
+            if( $oldProfilePicture && Storage::disk('public')->exists($oldProfilePicture)){
+                Storage::disk('public')->delete($oldProfilePicture);
+            }
+            $profilePicture = $request->file('user_profile_picture')->store('profilePictures', 'public');
+        }
+
+        $oldCompanyLogo = $user->employer->employer_company_logo ?? null;
+        $companyLogo = null;
+        if ($request->hasFile('employer_company_logo')) {
+            if( $oldCompanyLogo && Storage::disk('public')->exists($oldCompanyLogo)){
+                Storage::disk('public')->delete($oldCompanyLogo);
+            }
+            $companyLogo = $request->file('employer_company_logo')->store('companyLogos', 'public');
+        }
+
+        try {
+            DB::transaction(function () use ($validated, $employer, $profilePicture, $companyLogo) {
+                $employer = Employer::where('user_id', $employer)->firstOrFail();
+
+                $employer->update([
+                    'employer_position' => $validated['employer_position'] ?? $employer->employer_position,
+                    'employer_company_name' => $validated['employer_company_name'] ?? $employer->employer_company_name,
+                    'employer_year_established' => $validated['employer_year_established'] ?? $employer->employer_year_established,
+                    'employer_company_size' => $validated['employer_company_size'] ?? $employer->employer_company_size,
+                    'industry' => $validated['industry'] ?? $employer->industry->industry_id,
+                    'employer_website_url' => $validated['employer_website_url'] ?? $employer->employer_website_url,
+                ]);
+
+                
+                $employer->user->update([
+                    'user_first_name' => $validated['user_first_name'] ?? $employer->user->user_first_name,
+                    'user_last_name' => $validated['user_last_name'] ?? $employer->user->user_last_name,
+                    'user_middle_name' => $validated['user_middle_name'] ?? $employer->user->user_middle_name,
+                    'user_suffix' => $validated['user_suffix'] ?? $employer->user->user_suffix,
+                    'user_email' => $validated['user_email'] ?? $employer->user->user_email,
+                    'user_number' => $validated['user_number'] ?? $employer->user->user_number,
+                ]);
+
+                if ($profilePicture != null) {
+                    $employer->user->update([
+                        'user_profile_picture' => $profilePicture,
+                    ]);
+                }
+
+                if ($companyLogo != null) {
+                    $employer->update([
+                        'employer_company_logo' => $companyLogo,
+                    ]);
+                }
+            });
+        } catch (\Exception $e) {
+            dd([
+                'Message' => $e->getMessage(),
+                'File' => $e->getFile(),
+                'Line' => $e->getLine()
+            ]);
+            if ($profilePicture) {
+                Storage::disk('public')->delete($profilePicture);
+            }
+            if ($companyLogo) {
+                Storage::disk('public')->delete($companyLogo);
+            }
+
+            return redirect()->route('user.profile')->with('error', 'An error occurred while uploading the resume: ' . $e->getMessage());
+        }
+
+        return redirect()->route('user.profile')->with('success', 'Profile updated successfully.');
     }
 }

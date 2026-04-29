@@ -163,6 +163,7 @@ Route::resource('chat-tickets', ChatTicketController::class);
 Route::resource('conversations', ConversationController::class);
 
 Route::resource('employers', EmployerController::class);
+Route::put('/employers/updateProfile/{employer}', [EmployerController::class, 'updateEmployerProfile'])->name('employers.updateProfile');
 
 Route::resource('events', EventController::class);
 

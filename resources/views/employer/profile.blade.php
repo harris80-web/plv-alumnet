@@ -45,9 +45,9 @@
 
                 <div class="w-40 h-40 rounded-full bg-[#0E0F3B] mb-6 flex items-center justify-center shadow-inner border-4 border-white overflow-hidden">
                     @if ($user->user_profile_picture)
-                        <img src="{{ asset('storage/' . $user->user_profile_picture) }}" class="w-full h-full object-cover">
+                    <img src="{{ asset('storage/' . $user->user_profile_picture) }}" class="w-full h-full object-cover">
                     @else
-                        <i class="fa-solid fa-user text-7xl text-white mt-4"></i>
+                    <i class="fa-solid fa-user text-7xl text-white mt-4"></i>
                     @endif
                 </div>
 
@@ -88,13 +88,20 @@
                 </h2>
 
                 <div class="w-40 h-40 flex flex-col items-center justify-center mb-4">
+                    @if (Storage::disk('public')->exists($user->employer->employer_company_logo))
+                    <img src="{{ asset('storage/'. $user->employer->employer_company_logo) }}" alt="Company Logo">
+                    @else
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-24 h-24 text-[#12123B]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                         <rect width="16" height="20" x="4" y="2" rx="2" ry="2"></rect>
                         <path d="M9 22v-4h6v4"></path>
-                        <path d="M8 6h.01"></path><path d="M16 6h.01"></path>
-                        <path d="M8 10h.01"></path><path d="M16 10h.01"></path>
-                        <path d="M8 14h.01"></path><path d="M16 14h.01"></path>
+                        <path d="M8 6h.01"></path>
+                        <path d="M16 6h.01"></path>
+                        <path d="M8 10h.01"></path>
+                        <path d="M16 10h.01"></path>
+                        <path d="M8 14h.01"></path>
+                        <path d="M16 14h.01"></path>
                     </svg>
+                    @endif
                 </div>
                 <p class="text-[11px] font-bold text-[#12123B] uppercase tracking-tighter mb-8">Business Logo</p>
 
@@ -122,12 +129,12 @@
                         </p>
                         <p class="text-[10px] font-bold text-[#12123B] uppercase tracking-tighter leading-none">Company Size</p>
                         @if ($user->employer->employer_website_url)
-                            <a href="{{ $user->employer->employer_website_url }}" target="_blank"
-                                class="text-gray-800 font-semibold underline block">
-                                {{ $user->employer->employer_website_url }}
-                            </a>
+                        <a href="{{ $user->employer->employer_website_url }}" target="_blank"
+                            class="text-gray-800 font-semibold underline block">
+                            {{ $user->employer->employer_website_url }}
+                        </a>
                         @else
-                            <p class="text-gray-800 font-semibold">Not provided</p>
+                        <p class="text-gray-800 font-semibold">Not provided</p>
                         @endif
                         <p class="text-[10px] font-bold text-[#12123B] uppercase tracking-tighter leading-none">Official Website URL</p>
                     </div>

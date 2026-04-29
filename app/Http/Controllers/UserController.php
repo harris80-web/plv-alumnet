@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use App\Mail\AlumniCreatedMail;
+use App\Models\Industry;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 
@@ -346,6 +347,7 @@ class UserController extends Controller
     public function editProfile()
     {
         $user = Auth::user();
+        $industries = Industry::all();
         if ($user->user_role == 'admin') {
             return view('admin.edit-profile', compact('user'));
         } else if ($user->user_role == 'super_admin') {
@@ -353,7 +355,7 @@ class UserController extends Controller
         } else if ($user->user_role == 'registrar') {
             return view('registrar.edit-profile', compact('user'));
         } else if ($user->user_role == 'employer') {
-            return view('employer.edit-profile', compact('user'));
+            return view('employer.edit-profile', compact('user', 'industries'));
         } else if ($user->user_role == 'alumni') {
             return view('alumni.edit-profile', compact('user'));
         } else {

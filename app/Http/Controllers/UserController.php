@@ -367,4 +367,48 @@ class UserController extends Controller
             return redirect()->route('auth.login')->withErrors('error', 'Your account role is not recognized. Please contact the administrator.');
         }
     }
+
+    public function showChangePassword(Request $request)
+    {
+        return view('general.changePassword');
+    }
+
+    public function redirectToDashboard()
+    {
+        $user = Auth::user();
+        if ($user->user_role == 'admin') {
+            return redirect()->route('admin.dashboard');
+        } else if ($user->user_role == 'super_admin') {
+            return redirect()->route('superAdmin.dashboard');
+        } else if ($user->user_role == 'registrar') {
+            return redirect()->route('registrar.dashboard');
+        } else if ($user->user_role == 'employer') {
+            return redirect()->route('employer.dashboard');
+        } else if ($user->user_role == 'alumni') {
+            return redirect()->route('alumni.dashboard');
+        } else {
+            Auth::logout();
+            return redirect()->route('auth.login')->withErrors('error', 'Your account role is not recognized. Please contact the administrator.');
+        }
+    }
+
+    public function changePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => 'required|string|min:8',
+            'new_password' => 'required|string|min:8|confirmed',
+            'new_password_confirmation' => 'required|string|min:8|same:new_password',
+        ]);
+
+        $user = Auth::user();
+
+        if (!Hash::check($validated['current_password'], $user->user_password)) {
+            return back()->withErrors(['current_password' => 'Current password is incorrect']);
+        }
+
+        $user->user_password = Hash::make($validated['new_password']);
+        DB::table('users')->where('user_id', $user->user_id)->update(['user_password' => Hash::make($validated['new_password'])]);
+
+        return redirect()->route('users.dashboardRedirect')->with('success', 'Password changed successfully!');
+    }
 }

@@ -54,7 +54,7 @@
                     class="flex items-center gap-4 p-3 w-full transition {{ $current_page == 'alumni_edit' ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
                     <i class="fa-solid fa-user-pen w-6"></i> Edit Profile
                 </a>
-                <a href="#"
+                <a href="{{ route('users.showChangePassword') }}"
                     class="flex items-center gap-4 p-3 w-full transition {{ $current_page == 'alumni_change_password' ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
                     <i class="fa-solid fa-lock w-6"></i> Change Password
                 </a>

@@ -189,6 +189,7 @@ Route::post('/approveJobPost/{id}', [JobPostingController::class, 'approveJobPos
 Route::resource('messages', MessageController::class);
 
 Route::resource('offices', OfficeController::class);
+Route::put('/offices/updateProfile/{office}', [OfficeController::class, 'updateOfficeProfile'])->name('offices.updateProfile');
 
 Route::resource('password-reset-tokens', PasswordResetTokenController::class);
 Route::get('/forgotPassword', [PasswordResetTokenController::class, 'index'])->name('passReset.forgotPassword');

@@ -10,9 +10,14 @@ class Testimonial extends Model
     protected $primaryKey = 'testimonial_id';
 
     protected $fillable = [
-        'testimonial_name',
-        'testimonial_program',
-        'testimonial_batch',
-        'testimonial_body'
+        'user_id',
+        'testimonial_body',
+        'testimonial_post',
     ];
+
+    public function alumnus()
+    {
+        // hasMany(RelatedModel, foreignKey, localKey)
+        return $this->belongsTo(Alumnus::class, 'user_id', 'user_id');
+    }
 }

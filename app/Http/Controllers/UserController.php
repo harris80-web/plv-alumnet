@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use App\Mail\AlumniCreatedMail;
 use App\Models\Industry;
+use App\Models\Testimonial;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 
@@ -209,7 +210,8 @@ class UserController extends Controller
             } else if (Auth::User()->user_role == 'employer' && Auth::User()->user_active == true) {
                 return redirect()->intended('/employer/dashboard');
             } else if (Auth::User()->user_role == 'alumni' && Auth::User()->user_active == true) {
-                return redirect()->intended('/alumni/dashboard');
+                $testimonials = Testimonial::all()->where('testimonial_post', true);
+                return view('/alumni/dashboard', compact('testimonials'));
             } else if (Auth::User()->user_active == false) {
                 return redirect()->route('auth.login')->withErrors('error', 'Your account is not yet approved or the account is deactivated. Please wait for the administrator to approve your account or contact them for reactivating your account.');
             } else {

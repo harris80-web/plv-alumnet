@@ -13,9 +13,7 @@ return new class extends Migration
     {
         Schema::create('testimonials', function (Blueprint $table) {
             $table->id('testimonial_id');
-            $table->string('testimonial_name', 100)->nullable();
-            $table->string('testimonial_program', 100)->nullable();
-            $table->year('testimonial_batch')->nullable();
+            $table->foreignId('user_id')->constrained('alumni', 'user_id')->onDelete('cascade');
             $table->text('testimonial_body');
             $table->boolean('testimonial_post')->default(false);
             $table->timestamps();

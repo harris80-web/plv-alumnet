@@ -25,6 +25,8 @@ class DatabaseSeeder extends Seeder
             ProgramSeeder::class,
             SectionSeeder::class,
             SuperAdminSeeder::class,
+            AlumnusSeeder::class,
+            EmployerSeeder::class,  
             // You can add more seeders here later (e.g., UserSeeder)
         ]);
     }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Testimonial;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TestimonialController extends Controller
 {
@@ -61,5 +62,46 @@ class TestimonialController extends Controller
     public function destroy(Testimonial $testimonial)
     {
         //
+    }
+
+    public function submitTestimonial(Request $request, $id)
+    {
+        // Validate the incoming request data
+        $validatedData = $request->validate([
+            'testimonial_body' => 'required|string|max:1000',
+        ]);
+
+        // Create a new testimonial record in the database
+        try {
+            DB::transaction(function () use ($validatedData, $id) {
+                Testimonial::create([
+                    'testimonial_body' => $validatedData['testimonial_body'],
+                    'user_id' => $id,
+                    'testimonial_post' => false,
+                ]);
+            });
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Failed to add admin: ' . $e->getMessage()]);
+        }
+
+
+        // Redirect back with a success message
+        return redirect()->back()->with('success', 'Your testimonial has been submitted successfully!');
+    }
+
+    public function showTestimonials()
+    {
+         $testimonials = Testimonial::all()->where('testimonial_post', false);
+         return view('superAdmin.testimonialManagement', compact('testimonials'));
+    }
+
+    public function postTestimonial($id)
+    {
+        $testimonial = Testimonial::findOrFail($id);
+
+        $testimonial->testimonial_post = true;
+        $testimonial->save();
+
+        return back()->with('success', 'Status updated successfully!');
     }
 }

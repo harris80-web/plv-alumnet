@@ -21,31 +21,27 @@
 
 <style>
     .HeroSection {
-        background:
-            url("{{ asset('assets/heroSectionBackground.png') }}");
+        background: url("{{ asset('assets/heroSectionBackground.png') }}");
         background-size: cover;
         background-position: center;
     }
 
     .AlumniServices {
-        background:
-            url("{{ asset('assets/Landing Page/Alumni Services.png') }}");
+        background: url("{{ asset('assets/Landing Page/Alumni Services.png') }}");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
     }
 
     .AlumniTestimonial {
-        background:
-            url("{{ asset('assets/Landing Page/Alumni Testimonial.png') }}");
+        background: url("{{ asset('assets/Landing Page/Alumni Testimonial.png') }}");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
     }
 
     .Experience {
-        background:
-            url("{{ asset('assets/Landing Page/ShareExperience.png') }}");
+        background: url("{{ asset('assets/Landing Page/ShareExperience.png') }}");
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -62,9 +58,8 @@
         scrollbar-width: none;
         /* Firefox */
         overflow-y: scroll;
-       
-    }
 
+    }
 </style>
 
 <body>
@@ -316,7 +311,26 @@
         <h2 class="text-3xl font-bold uppercase mb-12 tracking-widest">Alumni Testimonials</h2>
 
         <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
-            <script>
+            @foreach ($testimonials as $testimonial)
+            <div class="bg-white text-left p-6 rounded-lg shadow-2xl relative flex gap-4">
+                <div class="flex-shrink-0">
+                    <div class="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center">
+                        @if ($testimonial->alumnus->user->user_profile_picture)
+                            <img src="{{ asset($testimonial->alumnus->user->user_profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover rounded-full">
+                        @else
+                        <i class="fa-solid fa-user text-3xl text-white"></i>
+                        @endif
+
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-blue-900 font-bold uppercase text-lg">{{ $testimonial->alumnus->user->user_first_name }} {{ $testimonial->alumnus->user->user_last_name }}</h4>
+                    <p class="text-blue-700 text-[10px] font-semibold mb-3 uppercase">{{ $testimonial->alumnus->program->program_name }}, Batch {{ $testimonial->alumnus->alumnus_batch }}</p>
+                    <p class="text-gray-600 text-xs leading-relaxed">{{ $testimonial->testimonial_body }}</p>
+                </div>
+            </div>
+            @endforeach
+            <!-- <script>
                 const roles = ["BS Information Technology, Batch 2023", "BS Psychology, Batch 2022", "BS Electrical Engineering, Batch 2018", "BS Civil Engineering, Batch 2022"];
                 roles.forEach(role => {
                     document.write(`
@@ -334,7 +348,7 @@
                     </div>
                     `);
                 });
-            </script>
+            </script> -->
         </div>
     </section>
 
@@ -343,10 +357,11 @@
         <div class="relative w-full ">
 
             <div class="relative z-10 bg-[#0E0F3B] p-8 shadow-2xl w-full max-w-md mx-auto shadow-outer">
-                <form action="#" method="POST" class="space-y-4">
-                    <div>
-                        <label class="block text-white font-bold mb-1 text-sm">Name:</label>
-                        <input type="text"
+                <form action="{{ route('testimonials.submit', Auth::user()) }}" method="POST" class="space-y-4">
+                    @csrf
+                    <!-- <div>
+                        <label for="testimonial_name" class="block text-white font-bold mb-1 text-sm">Name:</label>
+                        <input type="text" name="testimonial_name"
                             class="w-full p-2 rounded-lg bg-white border-b-2 border-[#ED7A07] shadow-inner focus:ring-2 focus:ring-[#C73D1A] outline-none">
                     </div>
 
@@ -358,11 +373,11 @@
                     <div>
                         <label class="block text-white font-bold mb-1 text-sm">Batch:</label>
                         <input type="text" class="w-full p-2 rounded-lg bg-white border-b-2 border-[#ED7A07] focus:ring-2 focus:ring-[#C73D1A] outline-none">
-                    </div>
+                    </div> -->
 
                     <div>
-                        <label class="block text-white font-bold mb-1 text-sm">Message:</label>
-                        <textarea rows="4" class="w-full p-2 rounded-lg bg-white border-b-2 border-[#ED7A07] focus:ring-2 focus:ring-[#C73D1A] outline-none resize-none"></textarea>
+                        <label for="testimonial_body" class="block text-white font-bold mb-1 text-sm">Message:</label>
+                        <textarea name="testimonial_body" rows="4" class="w-full p-2 rounded-lg bg-white border-b-2 border-[#ED7A07] focus:ring-2 focus:ring-[#C73D1A] outline-none resize-none"></textarea>
                     </div>
 
                     <div class="flex justify-center pt-2">

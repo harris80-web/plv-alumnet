@@ -24,7 +24,7 @@
         <br><br>
         <a href="">Chatbot and messaging management</a>
         <br><br>
-        <a href="">Testimonial management</a>
+        <a href="{{ route('testimonials.manage') }}">Testimonial management</a>
         <br><br>
         <a href="">Manage faqs</a>
         <br><br>

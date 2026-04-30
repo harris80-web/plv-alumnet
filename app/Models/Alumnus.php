@@ -41,6 +41,12 @@ class Alumnus extends Model
         return $this->belongsTo(Section::class, 'section_id', 'section_id');
     }
 
+    public function testimonial()
+    {
+        // hasMany(RelatedModel, foreignKey, localKey)
+        return $this->hasMany(Testimonial::class, 'user_id', 'user_id');
+    }
+
     public function appliedJobs()
     {
         // Assuming your pivot table is 'applications' and links to 'alumni'

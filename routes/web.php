@@ -209,6 +209,9 @@ Route::resource('sections', SectionController::class);
 Route::resource('seminars', SeminarController::class);
 
 Route::resource('testimonials', TestimonialController::class);
+Route::post('/submitTestimonial/{id}', [TestimonialController::class, 'submitTestimonial'])->name('testimonials.submit');
+Route::get('/testimonialManagement', [TestimonialController::class, 'showTestimonials'])->name('testimonials.manage');
+Route::put('/postTestimonial/{id}', [TestimonialController::class, 'postTestimonial'])->name('testimonials.post');
 
 Route::resource('users', UserController::class);
 Route::post('/users/storeEmployer', [UserController::class, 'storeEmployer'])->name('users.storeEmployer');

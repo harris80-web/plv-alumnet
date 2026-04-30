@@ -278,6 +278,11 @@
                             <p class="text-gray-500 text-sm">
                                 {{ $job->job_posting_address }}
                             </p>
+                            @if (auth()->user()->user_role === 'alumni' && $job->applicants->contains(auth()->user()->alumnus->user_id))
+                            <p>{{ $job->applicants->find(auth()->id())->pivot->application_status }}</p>
+                            @endif
+
+
                         </div>
 
                         <div class="text-right">
@@ -336,7 +341,7 @@
                                 </button>
                             </form>
                             @endif
-                            
+
                             @php $jobImageUrl = asset('storage/' . $job->job_posting_image); @endphp
                             <button
                                 data-title="{{ addslashes($job->job_posting_title) }}"

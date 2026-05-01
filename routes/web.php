@@ -100,9 +100,7 @@ Route::get('/alumni/change-password', function () {
     return view('alumni_change_password');
 })->name('alumni.changePassword');
 
-Route::get('/superAdmin/dashboard', function () {
-    return view('superAdmin.dashboard');
-})->middleware(['auth'])->name('superAdmin.dashboard');
+Route::get('/superAdmin/dashboard', [UserController::class, 'showDashboard'])->name('superAdmin.dashboard');
 
 
 Route::get('/admin/dashboard', function () {

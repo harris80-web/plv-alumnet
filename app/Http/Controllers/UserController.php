@@ -328,7 +328,7 @@ class UserController extends Controller
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Failed to add admin: ' . $e->getMessage()]);
         }
-        return redirect()->route('superAdmin.dashboard')->with('success', 'Admin added successfully!');
+        return redirect()->route('superAdmin.userManagement')->with('success', 'Admin added successfully!');
     }
 
     public function showProfile()
@@ -412,5 +412,34 @@ class UserController extends Controller
         DB::table('users')->where('user_id', $user->user_id)->update(['user_password' => Hash::make($validated['new_password'])]);
 
         return redirect()->route('users.dashboardRedirect')->with('success', 'Password changed successfully!');
+    }
+
+    public function showDashboard()
+    {
+        $jobPlacementCount = DB::table('job_applications')
+            ->where('application_status', 'hired')
+            ->count();
+        $jobApplicationCount = DB::table('job_applications')->count();
+        $jobPlacementRate = $jobApplicationCount > 0
+            ? ($jobPlacementCount / $jobApplicationCount) * 100
+            : 0;
+
+        $stats = [
+            'jobPlacementRate' => round($jobPlacementRate, 2),
+            'activeJobs' => DB::table('job_postings')
+                ->where('job_approved', true)
+                ->where('job_closing_date', '>', now())
+                ->count(),
+            'industryPartners' => DB::table('users')
+                ->where('user_active', true)
+                ->where('user_role', 'employer')
+                ->count(),
+            'alumniUsers' => DB::table('users')
+                ->where('user_active', true)
+                ->where('user_role', 'alumni')
+                ->count()
+        ];
+
+        return view('superAdmin.dashboard', compact('stats'));
     }
 }

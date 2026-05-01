@@ -400,4 +400,8 @@
         </div>
     </section>
 
+    @include('partials.footer-alumni')
+
+</body>
+
 </html>

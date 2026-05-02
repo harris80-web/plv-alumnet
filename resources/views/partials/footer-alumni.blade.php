@@ -32,8 +32,14 @@
             <div class="flex gap-4 font-[Montserrat]">
                 <div class="w-[1.5px] bg-white "></div>
                 <nav id="footer-nav" class="flex flex-col justify-center text-[15px] font-semibold gap-1">
-                    <a href="{{ route('alumni.dashboard') }}" class="hover:text-[#ED7A07]">HOME</a>
-                    <a href="{{ route('alumni.about') }}" class="hover:text-[#ED7A07]">ABOUT</a>
+                    <a href="{{ route('alumni.dashboard') }}"
+                        class="{{ request()->routeIs('alumni.dashboard') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                        HOME
+                    </a>
+                    <a href="{{ route('alumni.about') }}"
+                        class="{{ request()->routeIs('alumni.about') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                        ABOUT
+                    </a>
                     <a href="" class="hover:text-[#ED7A07]">EVENTS</a>
                 </nav>
             </div>
@@ -41,9 +47,18 @@
             <div class="flex gap-4 font-[Montserrat] ">
                 <div class="w-[1.5px] bg-white "></div>
                 <nav id="footer-nav" class="flex flex-col justify-center text-[15px] font-semibold gap-1">
-                    <a href="{{ route('alumni.privacy-policy') }}" class="hover:text-[#ED7A07]">PRIVACY POLICY</a>
-                    <a href="{{ route('alumni.tou') }}" class="hover:text-[#ED7A07]">TERMS OF USE</a>
-                    <a href="{{ route('alumni.faqs') }}" class="hover:text-[#ED7A07]">FAQs</a>
+                    <a href="{{ route('alumni.privacy-policy') }}"
+                        class="{{ request()->routeIs('alumni.privacy-policy') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                        PRIVACY POLICY
+                    </a>
+                    <a href="{{ route('alumni.tou') }}"
+                        class="{{ request()->routeIs('alumni.tou') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                        TERMS OF USE
+                    </a>
+                    <a href="{{ route('alumni.faqs') }}"
+                        class="{{ request()->routeIs('alumni.faqs') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                        FAQs
+                    </a>
                 </nav>
             </div>
 

@@ -32,8 +32,14 @@
             <div class="flex gap-4 font-[Montserrat]">
                 <div class="w-[1.5px] bg-white "></div>
                 <nav id="footer-nav" class="flex flex-col justify-center text-[15px] font-semibold gap-1">
-                    <a href="{{ route('employer.dashboard') }}" class="hover:text-[#ED7A07]">HOME</a>
-                    <a href="{{ route('employer.about') }}" class="hover:text-[#ED7A07]">ABOUT</a>
+                    <a href="{{ route('employer.dashboard') }}"
+                        class="{{ request()->routeIs('employer.dashboard') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                        HOME
+                    </a>
+                    <a href="{{ route('employer.about') }}"
+                        class="{{ request()->routeIs('employer.about') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                        ABOUT
+                    </a>
                     <a href="announcements_employer.php" class="hover:text-[#ED7A07]">ANNOUNCEMENTS</a>
                 </nav>
             </div>
@@ -41,9 +47,18 @@
             <div class="flex gap-4 font-[Montserrat] ">
                 <div class="w-[1.5px] bg-white "></div>
                 <nav id="footer-nav" class="flex flex-col justify-center text-[15px] font-semibold gap-1">
-                    <a href="{{ route('employer.privacy-policy') }}" class="hover:text-[#ED7A07]">PRIVACY POLICY</a>
-                    <a href="{{ route('employer.tou') }}" class="hover:text-[#ED7A07]">TERMS OF USE</a>
-                    <a href="{{ route('employer.faqs') }}" class="hover:text-[#ED7A07]">FAQs</a>
+                    <a href="{{ route('employer.privacy-policy') }}"
+                        class="{{ request()->routeIs('employer.privacy-policy') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                        PRIVACY POLICY
+                    </a>
+                    <a href="{{ route('employer.tou') }}"
+                        class="{{ request()->routeIs('employer.tou') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                        TERMS OF USE
+                    </a>
+                    <a href="{{ route('employer.faqs') }}"
+                        class="{{ request()->routeIs('employer.faqs') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                        FAQs
+                    </a>
                 </nav>
             </div>
 

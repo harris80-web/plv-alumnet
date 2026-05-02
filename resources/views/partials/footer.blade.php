@@ -32,8 +32,14 @@
             <div class="flex gap-4 font-[Montserrat]">
                 <div class="w-[1.5px] bg-white "></div>
                 <nav id="footer-nav" class="flex flex-col justify-center text-[15px] font-semibold gap-1">
-                    <a href="{{ route('general.home') }}" class="hover:text-[#ED7A07]">HOME</a>
-                    <a href="{{ route('general.about') }}" class="hover:text-[#ED7A07]">ABOUT</a>
+                    <a href="{{ route('general.home') }}"
+                        class="{{ request()->routeIs('general.home') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                        HOME
+                    </a>
+                    <a href="{{ route('general.about') }}"
+                        class="{{ request()->routeIs('general.about') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                        ABOUT
+                    </a>
                     <a href="" class="hover:text-[#ED7A07]">EVENTS</a>
                 </nav>
             </div>
@@ -41,9 +47,18 @@
             <div class="flex gap-4 font-[Montserrat] ">
                 <div class="w-[1.5px] bg-white "></div>
                 <nav id="footer-nav" class="flex flex-col justify-center text-[15px] font-semibold gap-1">
-                    <a href="{{ route('general.privacy-policy') }}" class="hover:text-[#ED7A07]">PRIVACY POLICY</a>
-                    <a href="{{ route('general.tou') }}" class="hover:text-[#ED7A07]">TERMS OF USE</a>
-                    <a href="{{ route('general.faqs') }}" class="hover:text-[#ED7A07]">FAQs</a>
+                    <a href="{{ route('general.privacy-policy') }}"
+                        class="{{ request()->routeIs('general.privacy-policy') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                        PRIVACY POLICY
+                    </a>
+                    <a href="{{ route('general.tou') }}"
+                        class="{{ request()->routeIs('general.tou') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                        TERMS OF USE
+                    </a>
+                    <a href="{{ route('general.faqs') }}"
+                        class="{{ request()->routeIs('general.faqs') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                        FAQs
+                    </a>
                 </nav>
             </div>
 
@@ -98,7 +113,6 @@
                 link.classList.remove('text-white');
             }
         });
-
     </script>
 </body>
 

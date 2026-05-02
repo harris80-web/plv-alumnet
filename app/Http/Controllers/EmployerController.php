@@ -83,7 +83,7 @@ class EmployerController extends Controller
             'employer_company_name' => 'required|string',
             'employer_year_established' => 'required|date_format:Y',
             'employer_company_size' => 'required|string',
-            'industry' => 'required|exists:industries,industry_id',
+            'industry' => 'nullable|exists:industries,industry_id',
             'employer_website_url' => 'nullable|url',
         ]);
 
@@ -91,7 +91,7 @@ class EmployerController extends Controller
         $oldProfilePicture = $user->user_profile_picture ?? null;
         $profilePicture = null;
         if ($request->hasFile('user_profile_picture')) {
-            if( $oldProfilePicture && Storage::disk('public')->exists($oldProfilePicture)){
+            if ($oldProfilePicture && Storage::disk('public')->exists($oldProfilePicture)) {
                 Storage::disk('public')->delete($oldProfilePicture);
             }
             $profilePicture = $request->file('user_profile_picture')->store('profilePictures', 'public');
@@ -100,7 +100,7 @@ class EmployerController extends Controller
         $oldCompanyLogo = $user->employer->employer_company_logo ?? null;
         $companyLogo = null;
         if ($request->hasFile('employer_company_logo')) {
-            if( $oldCompanyLogo && Storage::disk('public')->exists($oldCompanyLogo)){
+            if ($oldCompanyLogo && Storage::disk('public')->exists($oldCompanyLogo)) {
                 Storage::disk('public')->delete($oldCompanyLogo);
             }
             $companyLogo = $request->file('employer_company_logo')->store('companyLogos', 'public');
@@ -115,11 +115,11 @@ class EmployerController extends Controller
                     'employer_company_name' => $validated['employer_company_name'] ?? $employer->employer_company_name,
                     'employer_year_established' => $validated['employer_year_established'] ?? $employer->employer_year_established,
                     'employer_company_size' => $validated['employer_company_size'] ?? $employer->employer_company_size,
-                    'industry' => $validated['industry'] ?? $employer->industry->industry_id,
+                    'industry_id' => $validated['industry'] ?? $employer->industry_id,
                     'employer_website_url' => $validated['employer_website_url'] ?? $employer->employer_website_url,
                 ]);
 
-                
+
                 $employer->user->update([
                     'user_first_name' => $validated['user_first_name'] ?? $employer->user->user_first_name,
                     'user_last_name' => $validated['user_last_name'] ?? $employer->user->user_last_name,

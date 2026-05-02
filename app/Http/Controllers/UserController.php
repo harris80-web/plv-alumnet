@@ -397,9 +397,9 @@ class UserController extends Controller
     public function changePassword(Request $request)
     {
         $validated = $request->validate([
-            'current_password' => 'required|string|min:8',
-            'new_password' => 'required|string|min:8|confirmed',
-            'new_password_confirmation' => 'required|string|min:8|same:new_password',
+            'current_password'             => 'required|string|min:8',
+            'new_password'                 => 'required|string|min:8|confirmed',
+            'new_password_confirmation'    => 'required|string|min:8|same:new_password',
         ]);
 
         $user = Auth::user();
@@ -408,10 +408,11 @@ class UserController extends Controller
             return back()->withErrors(['current_password' => 'Current password is incorrect']);
         }
 
-        $user->user_password = Hash::make($validated['new_password']);
-        DB::table('users')->where('user_id', $user->user_id)->update(['user_password' => Hash::make($validated['new_password'])]);
+        DB::table('users')
+            ->where('user_id', $user->user_id)
+            ->update(['user_password' => Hash::make($validated['new_password'])]);
 
-        return redirect()->route('users.dashboardRedirect')->with('success', 'Password changed successfully!');
+        return back()->with('success', 'Password changed successfully!');
     }
 
     public function showDashboard()

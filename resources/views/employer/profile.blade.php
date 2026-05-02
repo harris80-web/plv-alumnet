@@ -43,11 +43,14 @@
                     Employer Profile
                 </h2>
 
-                <div class="w-40 h-40 rounded-full bg-[#0E0F3B] mb-6 flex items-center justify-center shadow-inner border-4 border-white overflow-hidden">
+                <div class="w-40 h-40 rounded-full bg-cyan-100 mb-6 flex items-center justify-center shadow-inner border-4 border-white overflow-hidden">
                     @if ($user->user_profile_picture)
                     <img src="{{ asset('storage/' . $user->user_profile_picture) }}" class="w-full h-full object-cover">
                     @else
-                    <i class="fa-solid fa-user text-7xl text-white mt-4"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 text-cyan-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
                     @endif
                 </div>
 
@@ -60,9 +63,9 @@
                     </div>
 
                     <div>
-                        <h3 class="text-2xl font-extrabold text-black">
+                        <p class="text-lg font-medium text-gray-800">
                             {{ $user->employer->employer_position ?? 'Not provided' }}
-                        </h3>
+                        </p>
                         <p class="text-[11px] font-bold text-[#12123B] uppercase tracking-tighter">Employer Position</p>
                     </div>
 
@@ -88,7 +91,7 @@
                 </h2>
 
                 <div class="w-40 h-40 flex flex-col items-center justify-center mb-4">
-                    @if (Storage::disk('public')->exists($user->employer->employer_company_logo))
+                    @if (($user->employer->employer_company_logo))
                     <img src="{{ asset('storage/'. $user->employer->employer_company_logo) }}" alt="Company Logo">
                     @else
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-24 h-24 text-[#12123B]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -112,33 +115,37 @@
                     <p class="text-[11px] font-bold text-[#12123B] uppercase tracking-tighter">Business Name</p>
                 </div>
 
-                <div class="grid grid-cols-2 gap-x-12 gap-y-10 w-full text-center">
-                    <div>
-                        <p class="text-gray-800 font-semibold">
-                            {{ $user->employer->employer_year_established ?? 'Not provided' }}
-                        </p>
-                        <p class="text-[10px] font-bold text-[#12123B] uppercase tracking-tighter leading-none">Year Established</p>
-                        <p class="text-gray-800 font-semibold">
-                            {{ $user->employer->industry->industry_name ?? 'Not provided' }}
-                        </p>
-                        <p class="text-[10px] font-bold text-[#12123B] uppercase tracking-tighter leading-none">Industry / Sector</p>
+                <<!-- REPLACE the entire grid div WITH: -->
+                    <div class="grid grid-cols-2 gap-x-12 gap-y-10 w-full text-center">
+                        <div>
+                            <p class="text-gray-800 font-semibold">
+                                {{ $user->employer->employer_year_established ?? 'Not provided' }}
+                            </p>
+                            <p class="text-[10px] font-bold text-[#12123B] uppercase tracking-tighter leading-none">Year Established</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-800 font-semibold">
+                                {{ $user->employer->employer_company_size ?? 'Not provided' }}
+                            </p>
+                            <p class="text-[10px] font-bold text-[#12123B] uppercase tracking-tighter leading-none">Company/Business Size</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-800 font-semibold uppercase">
+                                {{ $user->employer->industry->industry_name ?? 'None' }}
+                            </p>
+                            <p class="text-[10px] font-bold text-[#12123B] uppercase tracking-tighter leading-none">Industry / Sector</p>
+                        </div>
+                        <div>
+                            @if ($user->employer->employer_website_url)
+                            <a href="{{ $user->employer->employer_website_url }}" target="_blank" class="text-gray-800 font-semibold underline block break-all">
+                                {{ $user->employer->employer_website_url }}
+                            </a>
+                            @else
+                            <p class="text-gray-800 font-semibold">Not provided</p>
+                            @endif
+                            <p class="text-[10px] font-bold text-[#12123B] uppercase tracking-tighter leading-none">Official Website URL</p>
+                        </div>
                     </div>
-                    <div>
-                        <p class="text-gray-800 font-semibold">
-                            {{ $user->employer->employer_company_size ?? 'Not provided' }}
-                        </p>
-                        <p class="text-[10px] font-bold text-[#12123B] uppercase tracking-tighter leading-none">Company Size</p>
-                        @if ($user->employer->employer_website_url)
-                        <a href="{{ $user->employer->employer_website_url }}" target="_blank"
-                            class="text-gray-800 font-semibold underline block">
-                            {{ $user->employer->employer_website_url }}
-                        </a>
-                        @else
-                        <p class="text-gray-800 font-semibold">Not provided</p>
-                        @endif
-                        <p class="text-[10px] font-bold text-[#12123B] uppercase tracking-tighter leading-none">Official Website URL</p>
-                    </div>
-                </div>
             </section>
 
         </div>

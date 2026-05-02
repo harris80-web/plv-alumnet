@@ -26,7 +26,7 @@
 
         <nav class="flex items-center justify-center gap-10 text-white flex-1 font-medium text-sm">
             <a href="{{ route('employer.dashboard') }}"
-                class="<?php echo ($current_page == 'index_employer') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; ?> transition-colors">
+                class="{{ $current_page === 'index_employer' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; }}">
                 HOME
             </a>
 
@@ -36,12 +36,12 @@
             </a>
 
             <a href="{{ route('jobPosting.jobBoard') }}"
-                class="<?php echo ($current_page == 'employer_job_board') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; ?> transition-colors">
+                class="{{ $current_page === 'employer_job_board' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; }}">
                 JOB BOARD
             </a>
 
             <a href="{{ route('jobPosting.myJobPosts', ['id' => auth()->id()]) }}"
-                class="<?php echo ($current_page == 'employer_job_postings') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; ?> transition-colors">
+                class="{{ $current_page === 'employer_job_postings' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; }}">
                 MY JOB POSTINGS
             </a>
 

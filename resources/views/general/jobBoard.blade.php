@@ -94,8 +94,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PLV-AlumNet | Job Board</title>
-    @vite('resources/css/app.css')
-    @vite('resources/js/app.js')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -617,6 +615,7 @@
                             </button>
 
                             <button type="submit"
+                                onclick="handleJobSubmit(event)"
                                 class="px-12 py-2 bg-[#0E0F3B] text-white rounded-md font-bold text-sm hover:bg-blue-900 transition-colors">
                                 POST
                             </button>
@@ -645,6 +644,33 @@
                     YES, APPLY
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- JOB POST PENDING APPROVAL MODAL -->
+    <div id="pendingModal" class="fixed inset-0 z-[200] flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full relative text-center">
+            <button onclick="closePendingModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div class="flex justify-center mb-6">
+                <div class="bg-[#0E0F3B] rounded-full p-4">
+                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            <h2 class="text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent mb-2">
+                Job Post is now Pending for Approval
+            </h2>
+            <p class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-sm mb-8 leading-relaxed">
+                Your job post has been queued for review by the PLV-AlumNet Admin. We'll notify you as soon as it is approved.
+            </p>
+            <button onclick="closePendingModal()" class="w-full bg-[#0E0F3B] text-white py-3 rounded-md font-bold hover:bg-blue-900 transition-colors uppercase tracking-wider">
+                Back to Job Board
+            </button>
         </div>
     </div>
 
@@ -903,6 +929,21 @@
 
         document.body.appendChild(form);
         form.submit();
+    }
+
+    function closePendingModal() {
+        document.getElementById('pendingModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        document.querySelector('#postJobModal form').submit();
+    }
+
+    function handleJobSubmit(event) {
+        event.preventDefault();
+        document.getElementById('postJobModal').classList.add('hidden');
+        document.getElementById('pendingModal').classList.remove('hidden');
+
+        // Submit the form for real after showing the modal
+       // event.target.closest('form').submit();
     }
 </script>
 

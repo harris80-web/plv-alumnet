@@ -86,11 +86,6 @@
 
                 <div class="md:col-span-9">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-y-6 gap-x-6">
-                        <div class="md:col-span-4">
-                            <p class="text-xs font-bold text-orange-600 uppercase">Alumni ID No.</p>
-                            <h3 class="text-xl font-black text-[#0E0F3B] uppercase">Alumni ID No.</h3>
-                        </div>
-
                         <div>
                             <p class="text-xs font-bold text-orange-600 uppercase">Last Name</p>
                             <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->user_last_name }}</h3>

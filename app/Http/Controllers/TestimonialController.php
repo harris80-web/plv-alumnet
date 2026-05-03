@@ -83,16 +83,17 @@ class TestimonialController extends Controller
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Failed to add admin: ' . $e->getMessage()]);
         }
+        $testimonials = Testimonial::all();
 
 
         // Redirect back with a success message
-        return redirect()->back()->with('success', 'Your testimonial has been submitted successfully!');
+        return redirect()->route('users.dashboardRedirect', compact('testimonials'))->with('success', 'Your testimonial has been submitted successfully!');
     }
 
     public function showTestimonials()
     {
-         $testimonials = Testimonial::all()->where('testimonial_post', false);
-         return view('superAdmin.testimonialManagement', compact('testimonials'));
+        $testimonials = Testimonial::with(['alumnus.user', 'alumnus.program'])->get();
+        return view('superAdmin.testimonialManagement', compact('testimonials'));
     }
 
     public function postTestimonial($id)
@@ -103,5 +104,12 @@ class TestimonialController extends Controller
         $testimonial->save();
 
         return back()->with('success', 'Status updated successfully!');
+    }
+
+    public function bulkPost(Request $request)
+    {
+        $ids = explode(',', $request->input('ids'));
+        Testimonial::whereIn('testimonial_id', $ids)->update(['testimonial_post' => true]);
+        return back()->with('success', 'Selected testimonials published successfully!');
     }
 }

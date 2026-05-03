@@ -15,7 +15,7 @@ class Employer extends Model
         'employer_position', 
         'employer_company_name',
         'employer_company_logo',
-        'mployer_year_established',
+        'employer_year_established',
         'employer_website_url',
         'employer_company_size',
         'employer_id_picture',

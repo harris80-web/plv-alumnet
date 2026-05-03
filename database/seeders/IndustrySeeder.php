@@ -17,5 +17,11 @@ class IndustrySeeder extends Seeder
         DB::table('industries')->insert([
             'industry_name' => 'None',
         ]);
+        DB::table('industries')->insert([
+            'industry_name' => 'Technology',
+        ]);
+        DB::table('industries')->insert([
+            'industry_name' => 'Healthcare',
+        ]);
     }
 }

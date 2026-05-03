@@ -5,8 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PLV-AlumNet | Home</title>
-    @vite('resources/css/app.css')
-    @vite('resources/js/app.js')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -399,5 +397,9 @@
             </p>
         </div>
     </section>
+
+    @include('partials.footer-alumni')
+
+</body>
 
 </html>

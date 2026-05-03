@@ -163,7 +163,7 @@ class UserController extends Controller
         }
 
 
-        return redirect()->route('general.waitForApproval');
+        return redirect()->route('auth.register')->with('success', 'Account registered successfully!');
     }
 
     public function goToWaitForApproval()
@@ -328,7 +328,7 @@ class UserController extends Controller
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Failed to add admin: ' . $e->getMessage()]);
         }
-        return redirect()->route('superAdmin.dashboard')->with('success', 'Admin added successfully!');
+        return redirect()->route('superAdmin.userManagement')->with('success', 'Admin added successfully!');
     }
 
     public function showProfile()
@@ -387,7 +387,8 @@ class UserController extends Controller
         } else if ($user->user_role == 'employer') {
             return redirect()->route('employer.dashboard');
         } else if ($user->user_role == 'alumni') {
-            return redirect()->route('alumni.dashboard');
+            $testimonials = Testimonial::all()->where('testimonial_post', true);
+            return view('/alumni/dashboard', compact('testimonials'));
         } else {
             Auth::logout();
             return redirect()->route('auth.login')->withErrors('error', 'Your account role is not recognized. Please contact the administrator.');
@@ -397,9 +398,9 @@ class UserController extends Controller
     public function changePassword(Request $request)
     {
         $validated = $request->validate([
-            'current_password' => 'required|string|min:8',
-            'new_password' => 'required|string|min:8|confirmed',
-            'new_password_confirmation' => 'required|string|min:8|same:new_password',
+            'current_password'             => 'required|string|min:8',
+            'new_password'                 => 'required|string|min:8|confirmed',
+            'new_password_confirmation'    => 'required|string|min:8|same:new_password',
         ]);
 
         $user = Auth::user();
@@ -408,9 +409,46 @@ class UserController extends Controller
             return back()->withErrors(['current_password' => 'Current password is incorrect']);
         }
 
-        $user->user_password = Hash::make($validated['new_password']);
-        DB::table('users')->where('user_id', $user->user_id)->update(['user_password' => Hash::make($validated['new_password'])]);
+        DB::table('users')
+            ->where('user_id', $user->user_id)
+            ->update(['user_password' => Hash::make($validated['new_password'])]);
 
-        return redirect()->route('users.dashboardRedirect')->with('success', 'Password changed successfully!');
+        return redirect()->route('users.dashboardRedirect')
+            ->with('password_changed', true);
+    }
+
+    public function showDashboard()
+    {
+        $jobPlacementCount = DB::table('job_applications')
+            ->where('application_status', 'hired')
+            ->count();
+        $jobApplicationCount = DB::table('job_applications')->count();
+        $jobPlacementRate = $jobApplicationCount > 0
+            ? ($jobPlacementCount / $jobApplicationCount) * 100
+            : 0;
+
+        $stats = [
+            'jobPlacementRate' => round($jobPlacementRate, 2),
+            'activeJobs' => DB::table('job_postings')
+                ->where('job_approved', true)
+                ->where('job_closing_date', '>', now())
+                ->count(),
+            'industryPartners' => DB::table('users')
+                ->where('user_active', true)
+                ->where('user_role', 'employer')
+                ->count(),
+            'alumniUsers' => DB::table('users')
+                ->where('user_active', true)
+                ->where('user_role', 'alumni')
+                ->count()
+        ];
+
+        return view('superAdmin.dashboard', compact('stats'));
+    }
+
+    public function showSuperAdminProfile()
+    {
+        $user = Auth::user();
+        return view('superAdmin.profile', compact('user'));
     }
 }

@@ -16,8 +16,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            background-image:
-                url("{{ asset('assets/loginBackground.svg') }}");
+            background-image: url("{{ asset('assets/loginBackground.svg') }}");
             background-size: cover;
             background-position: center;
 
@@ -70,13 +69,13 @@
                         class=" font-[Inter] text-[#b85c38] font-medium bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent"><br>
                         Welcome Back!</span>
                 </div>
-                
+
                 @if ($errors->any())
-                    <div class="text-red-500 text-sm mb-4">
-                        @foreach ($errors->all() as $error)
-                            <p>{{ $error }}</p>
-                        @endforeach
-                    </div>
+                <div class="text-red-500 text-sm mb-4">
+                    @foreach ($errors->all() as $error)
+                    <p>{{ $error }}</p>
+                    @endforeach
+                </div>
                 @endif
 
                 <form action="{{ route('users.login') }}" method="POST" class="space-y-4 w-full max-w-md mx-auto h-auto ">
@@ -113,6 +112,11 @@
                         class="w-full bg-[#0E0F3B] text-white my-4 py-3 rounded-md font-[Montserrat] font-bold hover:bg-blue-900 transition-colors uppercase tracking-widest text-sm shadow-lg">
                         Log In
                     </button>
+                    <div class="mt-4 text-center">
+                        <a href="{{ route('passReset.forgetPasswordPost') }}" class="text-[#0E0F3B] font-semibold underline decoration-1 underline-offset-4 hover:text-orange-700 text-sm transition-colors">
+                            Forgot Password?
+                        </a>
+                    </div>
                 </form>
 
                 <div class="mt-6 text-center text-sm text-gray-600">
@@ -122,13 +126,13 @@
             </div>
         </div>
     </div>
-
+    
     <script>
         const passwordInput = document.getElementById('passwordInput');
         const togglePassword = document.getElementById('togglePassword');
         const eyeIcon = document.getElementById('eyeIcon');
 
-        togglePassword.addEventListener('click', function () {
+        togglePassword.addEventListener('click', function() {
             // Toggle the type attribute
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);

@@ -94,8 +94,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PLV-AlumNet | Job Board</title>
-    @vite('resources/css/app.css')
-    @vite('resources/js/app.js')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -278,10 +276,6 @@
                             <p class="text-gray-500 text-sm">
                                 {{ $job->job_posting_address }}
                             </p>
-                            @if (auth()->user()->user_role === 'alumni' && $job->applicants->contains(auth()->user()->alumnus->user_id))
-                            <p>{{ $job->applicants->find(auth()->id())->pivot->application_status }}</p>
-                            @endif
-
 
                         </div>
 
@@ -305,8 +299,8 @@
 
                     <div class="mt-4 grid grid-cols-2 gap-4 text-sm font-semibold">
                         <div>
-                            <p>Job Type: {{ $job->job_posting_employment_type }}</p>
-                            <p>Job Setup: {{ $job->job_posting_setup }}</p>
+                            <p class="text-[#0E0F3B]">Job Type: <span class="font-normal">{{ $job->job_posting_employment_type }}</span></p>
+                            <p class="text-[#0E0F3B]">Job Setup: <span class="font-normal">{{ $job->job_posting_setup }}</span></p>
                         </div>
 
                         <div>
@@ -321,9 +315,8 @@
                     </div>
 
                     <div class="mt-4">
-                        <p class="text-xs text-gray-500">
-                            {{ $job->job_posting_description }}
-                        </p>
+                        <p class="font-bold text-sm text-[#0E0F3B]">Job Description:</p>
+                        <p class="text-xs text-gray-500">{{ $job->job_posting_description }}</p>
                     </div>
 
                     <div class="mt-6 flex items-center justify-between">
@@ -332,14 +325,18 @@
                         </p>
                         <div class="flex items-center space-x-3">
                             @if (auth()->user()->user_role === 'alumni')
-                            <form action="{{ route('jobApplication.apply', $job->job_posting_id) }}" method="POST">
-                                @csrf
-                                <button type="submit"
-                                    class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white px-8 py-2 rounded-md font-bold text-sm transition-colors {{ $job->applicants->contains(auth()->user()->alumnus->user_id) ? 'bg-gray-400 cursor-not-allowed' : '' }}"
-                                    {{ $job->applicants->contains(auth()->user()->alumnus->user_id) ? 'disabled' : '' }}>
-                                    {{ $job->applicants->contains(auth()->user()->alumnus->user_id) ? 'APPLIED' : 'APPLY' }}
-                                </button>
-                            </form>
+                            @if($job->applicants->contains(auth()->user()->alumnus->user_id))
+                            <button disabled class="bg-green-600 cursor-not-allowed text-white px-8 py-2 rounded-md font-bold text-sm flex items-center gap-2">
+                                <i class="fas fa-check-circle"></i> APPLIED
+                            </button>
+                            @else
+                            <button
+                                data-action="{{ route('jobApplication.apply', $job->job_posting_id) }}"
+                                onclick="handleApplyClick(this)"
+                                class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white px-8 py-2 rounded-md font-bold text-sm transition-colors">
+                                APPLY
+                            </button>
+                            @endif
                             @endif
 
                             @php $jobImageUrl = asset('storage/' . $job->job_posting_image); @endphp
@@ -368,10 +365,22 @@
                         </div>
                     </div>
 
-                    <div class="mt-4 flex items-center text-xs text-gray-500 border-t pt-4">
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode($job->employer->user->user_first_name . ' ' . $job->employer->user->user_last_name) }}&background=random"
-                            class="w-6 h-6 rounded-full mr-2">
-                        <span>Posted by <span class="font-bold text-black">{{ $job->employer->user->user_first_name }} {{ $job->employer->user->user_last_name }}</span></span>
+                    <div class="mt-4 flex items-center justify-between text-xs text-gray-500 border-t pt-4">
+                        <div class="flex items-center">
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode($job->employer->user->user_first_name . ' ' . $job->employer->user->user_last_name) }}&background=random"
+                                class="w-6 h-6 rounded-full mr-2">
+                            <span>Posted by <span class="font-bold text-black">{{ $job->employer->user->user_first_name }} {{ $job->employer->user->user_last_name }}</span></span>
+                        </div>
+
+                        @if (auth()->user()->user_role === 'alumni' && $job->applicants->contains(auth()->user()->alumnus->user_id))
+                        @php $status = $job->applicants->find(auth()->user()->alumnus->user_id)->pivot->application_status; @endphp
+                        <span class="inline-block text-xs font-bold px-3 py-1 rounded-full
+                            {{ $status === 'hired' ? 'bg-green-100 text-green-700' : '' }}
+                            {{ $status === 'declined' ? 'bg-red-100 text-red-700' : '' }}
+                            {{ $status === 'pending' ? 'bg-yellow-100 text-yellow-700' : '' }}">
+                            {{ strtoupper($status) }}
+                        </span>
+                        @endif
                     </div>
                 </div>
 
@@ -606,6 +615,7 @@
                             </button>
 
                             <button type="submit"
+                                onclick="handleJobSubmit(event)"
                                 class="px-12 py-2 bg-[#0E0F3B] text-white rounded-md font-bold text-sm hover:bg-blue-900 transition-colors">
                                 POST
                             </button>
@@ -615,6 +625,52 @@
                 </div>
 
             </form>
+        </div>
+    </div>
+
+    <!-- APPLY CONFIRMATION MODAL -->
+    <div id="applyConfirmModal" class="fixed inset-0 z-[200] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-briefcase text-[#1D46A4] text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold text-[#0E0F3B] mb-2">Confirm Application</h2>
+            <p class="text-gray-500 text-sm mb-6">Are you sure you want to apply for this job?</p>
+            <div class="flex gap-3">
+                <button onclick="cancelApply()" class="flex-1 border border-gray-300 text-gray-600 py-2.5 rounded-lg font-bold text-sm hover:bg-gray-100 transition-colors">
+                    CANCEL
+                </button>
+                <button onclick="confirmApply()" class="flex-1 bg-[#0E0F3B] text-white py-2.5 rounded-lg font-bold text-sm hover:bg-[#1D46A4] transition-colors">
+                    YES, APPLY
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JOB POST PENDING APPROVAL MODAL -->
+    <div id="pendingModal" class="fixed inset-0 z-[200] flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full relative text-center">
+            <button onclick="closePendingModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div class="flex justify-center mb-6">
+                <div class="bg-[#0E0F3B] rounded-full p-4">
+                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            <h2 class="text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent mb-2">
+                Job Post is now Pending for Approval
+            </h2>
+            <p class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-sm mb-8 leading-relaxed">
+                Your job post has been queued for review by the PLV-AlumNet Admin. We'll notify you as soon as it is approved.
+            </p>
+            <button onclick="closePendingModal()" class="w-full bg-[#0E0F3B] text-white py-3 rounded-md font-bold hover:bg-blue-900 transition-colors uppercase tracking-wider">
+                Back to Job Board
+            </button>
         </div>
     </div>
 
@@ -838,6 +894,56 @@
         // Re-enable the add button and hide limit message
         document.getElementById('course-limit-msg').classList.add('hidden');
         document.getElementById('add-course-btn').classList.remove('opacity-50', 'pointer-events-none');
+    }
+
+    let pendingApplyButton = null;
+
+    function handleApplyClick(button) {
+        pendingApplyButton = button;
+        document.getElementById('applyConfirmModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function cancelApply() {
+        pendingApplyButton = null;
+        document.getElementById('applyConfirmModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    function confirmApply() {
+        document.getElementById('applyConfirmModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+
+        if (!pendingApplyButton) return;
+
+        const url = pendingApplyButton.dataset.action;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = '_token';
+        csrf.value = '{{ csrf_token() }}';
+        form.appendChild(csrf);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    function closePendingModal() {
+        document.getElementById('pendingModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        document.querySelector('#postJobModal form').submit();
+    }
+
+    function handleJobSubmit(event) {
+        event.preventDefault();
+        document.getElementById('postJobModal').classList.add('hidden');
+        document.getElementById('pendingModal').classList.remove('hidden');
+
+        // Submit the form for real after showing the modal
+       // event.target.closest('form').submit();
     }
 </script>
 

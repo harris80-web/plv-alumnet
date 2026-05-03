@@ -15,11 +15,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
         rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/PLV-AlumNet LOGO.png') }}">
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            background-image:
-                url("{{ asset('assets/loginBackground.svg') }}");
+            background-image: url("{{ asset('assets/loginBackground.svg') }}");
             background-size: cover;
             background-position: center;
 
@@ -75,17 +73,22 @@
                 </div>
 
                 @if ($errors->any())
-                    <div class="bg-red-100 text-red-600 p-3 rounded mb-4 text-sm">
-                        <ul>
-                            @foreach ($errors->all() as $error)
-                                <li>• {{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
+                <div class="bg-red-100 text-red-600 p-3 rounded mb-4 text-sm">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                        <li>• {{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
                 @endif
 
                 <form action="{{ route('users.storeEmployer') }}" method="POST" enctype="multipart/form-data" class="space-y-4 w-full max-w-md mx-auto h-auto ">
                     @csrf
+                    @if (session('success'))
+                    <script>
+                        window.addEventListener('DOMContentLoaded', () => showSuccessModal());
+                    </script>
+                    @endif
 
                     <div>
                         <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Business Name:</label>
@@ -151,16 +154,19 @@
 
                     <div class="space-y-2 py-2">
                         <label class="flex items-start gap-2 cursor-pointer">
-                            <input type="checkbox" class="mt-1 accent-[#C73D1A]" required>
-                            <span class="text-[11px] text-black">I agree to the <a href="#"
-                                    class="text-orange-600 underline font-bold">Terms of Use</a> and <a href="#"
-                                    class="text-orange-600 underline font-bold">Privacy Policy</a>.</span>
+                            <input type="checkbox" id="terms-checkbox" class="mt-1 accent-[#C73D1A]" required>
+                            <span class="text-[11px] text-black">I agree to the
+                                <a href="#" onclick="openModal(event)" class="text-orange-600 underline font-bold">Terms of Use</a>
+                                and
+                                <a href="#" onclick="openModal(event)" class="text-orange-600 underline font-bold">Privacy Policy</a>.
+                            </span>
                         </label>
                         <label class="flex items-start gap-2 cursor-pointer">
-                            <input type="checkbox" class="mt-1 accent-[#C73D1A]" required>
+                            <input type="checkbox" id="rep-checkbox" class="mt-1 accent-[#C73D1A]" required>
                             <span class="text-[11px] text-black">I confirm that I am an authorized representative of my
-                                company and agree to handle all applicant data in compliance with the <a href="#"
-                                    class="text-orange-600 underline font-bold">Data Privacy Act</a>.</span>
+                                company and agree to handle all applicant data in compliance with the
+                                <a href="#" onclick="openPrivacyModal(event)" class="text-orange-600 underline font-bold">Data Privacy Act</a>.
+                            </span>
                         </label>
                     </div>
 
@@ -178,30 +184,187 @@
         </div>
     </div>
 
-    <script>
-    const passwordInput = document.getElementById('passwordInput');
-    const togglePassword = document.getElementById('togglePassword');
-    const eyeIcon = document.getElementById('eyeIcon');
+    <!-- Terms & Privacy Modal -->
+    <div id="termsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden font-[Montserrat]">
+        <div class="bg-white rounded-xl shadow-2xl w-[90%] max-w-lg overflow-hidden">
+            <div class="bg-[#0E0F3B] px-4 py-2 flex items-center justify-between">
+                <span class="text-white text-[10px] font-semibold uppercase tracking-widest">Terms of Use & Privacy Policy</span>
+                <button onclick="closeModal()" class="text-white text-xl leading-none hover:text-gray-300 focus:outline-none">&times;</button>
+            </div>
+            <div class="px-6 py-5 overflow-y-auto max-h-[75vh] text-center">
+                <div class="flex items-center justify-center gap-3 mb-1">
+                    <div class="text-center">
+                        <img src="{{ asset('assets/PLV-AlumNet LETTERMARK_COLORED 2.png') }}" alt="" class="h-auto w-36 ml-9">
+                        <p class="text-[9px] uppercase tracking-tight font-medium text-[#0E0F3B]">Pamantasan ng Lungsod ng Valenzuela <br>Alumni Connect</p>
+                    </div>
+                </div>
+                <h2 class="text-xl font-bold mt-3 mb-3">
+                    <span class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Terms of Use</span>
+                </h2>
+                <p class="text-[11px] text-[#0E0F3B] leading-relaxed mb-6">
+                    By using <strong>PLV-AlumNet</strong>, you agree to provide accurate information and use this platform strictly for professional networking, job placement, and official university-related activities. Any form of harassment, spamming, or posting of fraudulent content is prohibited and may result in the immediate suspension of your account. We reserve the right to verify all user identities and company details through the PLV Alumni Affairs Office to maintain a secure and professional environment for the entire community.
+                </p>
+                <h2 class="text-xl font-bold mb-3">
+                    <span class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Privacy Policy</span>
+                </h2>
+                <p class="text-[11px] text-[#0E0F3B] leading-relaxed mb-6">
+                    In compliance with the <strong>Data Privacy Act of 2012 (RA 10173)</strong>, we are committed to protecting your personal information. We collect and process your data: including your name, identification details, and contact info, solely for account verification and platform security. We implement strict technical measures to prevent unauthorized access and will never share your information with third parties without your explicit consent, except as required by law. You maintain the right to access, update, or request the permanent deletion of your records at any time.
+                </p>
+                <button onclick="agreeAndClose()"
+                    class="bg-[#0E0F3B] text-white text-[13px] font-bold uppercase tracking-widest px-12 py-2.5 rounded-md hover:bg-blue-900 transition-colors">
+                    I Agree
+                </button>
+            </div>
+        </div>
+    </div>
 
-    togglePassword.addEventListener('click', function () {
-        // Toggle the type attribute
-        const type = passwordInput.getAttribute('type') === 'user_password' ? 'text' : 'user_password';
-        passwordInput.setAttribute('type', type);
-        
-        // Change the Icon (Optional: Swaps to "Eye with Slash" when visible)
-        if (type === 'text') {
-            eyeIcon.innerHTML = `
+    <!-- Data Privacy Act Modal -->
+    <div id="dataPrivacyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden font-[Montserrat]">
+        <div class="bg-white rounded-xl shadow-2xl w-[90%] max-w-lg overflow-hidden">
+            <div class="bg-[#0E0F3B] px-4 py-2 flex items-center justify-between">
+                <span class="text-white text-[10px] font-semibold uppercase tracking-widest">Data Privacy Act</span>
+                <button onclick="closePrivacyModal()" class="text-white text-xl leading-none hover:text-gray-300 focus:outline-none">&times;</button>
+            </div>
+            <div class="px-6 py-5 overflow-y-auto max-h-[75vh] text-center">
+                <div class="flex items-center justify-center gap-3 mb-1">
+                    <div class="text-center">
+                        <img src="{{ asset('assets/PLV-AlumNet LETTERMARK_COLORED 2.png') }}" alt="" class="h-auto w-36 ml-9">
+                        <p class="text-[9px] uppercase tracking-tight font-medium text-[#0E0F3B]">Pamantasan ng Lungsod ng Valenzuela <br>Alumni Connect</p>
+                    </div>
+                </div>
+                <h2 class="text-xl font-bold mt-3 mb-3">
+                    <span class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Data Privacy Act of 2012</span>
+                </h2>
+                <p class="text-[11px] font-medium text-[#0E0F3B] leading-relaxed mb-4">
+                    In accordance with the Data Privacy Act of 2012 (RA 10173), <strong>Pamantasan ng Lungsod ng Valenzuela (PLV)</strong> is committed to protecting the confidentiality and security of your personal information.
+                </p>
+                <p class="text-[11px] font-medium text-[#0E0F3B] leading-relaxed mb-4">
+                    By registering for <strong>PLV-AlumNet</strong>, you acknowledge and consent to the collection and processing of your personal data, including your full name, student identification number, and professional details, for the sole purpose of identity verification through the University Registrar, and facilitating official alumni networking and job placement services.
+                </p>
+                <p class="text-[11px] font-medium text-[#0E0F3B] leading-relaxed mb-4">
+                    We implement strict technical and organizational security measures to ensure your information is protected against unauthorized access or misuse, and we guarantee that your data will not be shared with third parties without your explicit consent, except as required by law.
+                </p>
+                <p class="text-[11px] font-medium text-[#0E0F3B] leading-relaxed mb-4">
+                    As a data subject, you maintain the right to access, rectify, or request the deletion of your records at any time by contacting the PLV Alumni Affairs Office.
+                </p>
+                <p class="text-[11px] font-medium text-[#0E0F3B] leading-relaxed mb-6">
+                    By clicking <strong>"I Agree"</strong>, you confirm that you have read and understood these terms and voluntarily authorize PLV-AlumNet to manage your information in accordance with these privacy standards.
+                </p>
+                <button onclick="agreePrivacyAndClose()"
+                    class="bg-[#0E0F3B] text-white text-[13px] font-bold uppercase tracking-widest px-12 py-2.5 rounded-md hover:bg-blue-900 transition-colors">
+                    I Agree
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 hidden font-[Montserrat]">
+        <div class="bg-white rounded-xl shadow-2xl w-[90%] max-w-md overflow-hidden transform transition-all relative">
+            <button onclick="closeSuccessModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none z-10">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div class="p-8 text-center pt-12">
+                <div class="flex justify-center mb-6">
+                    <div class="bg-[#0E0F3B] w-20 h-20 rounded-full flex items-center justify-center shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">
+                    <span class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+                        Account Pending<br>for Approval
+                    </span>
+                </h2>
+                <p class="text-sm leading-relaxed mb-8 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+                    Your account has been successfully registered and is currently awaiting <strong>administrative review</strong>. Access will be granted once your account has been <strong>approved</strong>.
+                </p>
+                <a href="{{ route('general.home') }}"
+                    class="block w-full bg-[#0E0F3B] text-white py-3 rounded-md font-bold uppercase tracking-widest hover:bg-blue-900 transition-colors shadow-lg text-center">
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const passwordInput = document.getElementById('passwordInput');
+        const togglePassword = document.getElementById('togglePassword');
+        const eyeIcon = document.getElementById('eyeIcon');
+
+        togglePassword.addEventListener('click', function() {
+            // Toggle the type attribute
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+
+            // Change the Icon (Optional: Swaps to "Eye with Slash" when visible)
+            if (type === 'text') {
+                eyeIcon.innerHTML = `
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
             `;
-        } else {
-            eyeIcon.innerHTML = `
+            } else {
+                eyeIcon.innerHTML = `
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
             `;
-        }
-    });
-</script>
+            }
+        });
 
+        // Terms & Privacy Modal
+        function openModal(event) {
+            event.preventDefault();
+            document.getElementById('termsModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('termsModal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function agreeAndClose() {
+            document.getElementById('terms-checkbox').checked = true;
+            closeModal();
+        }
+
+        document.getElementById('termsModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Data Privacy Modal
+        function openPrivacyModal(event) {
+            event.preventDefault();
+            document.getElementById('dataPrivacyModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePrivacyModal() {
+            document.getElementById('dataPrivacyModal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function agreePrivacyAndClose() {
+            document.getElementById('rep-checkbox').checked = true;
+            closePrivacyModal();
+        }
+
+        document.getElementById('dataPrivacyModal').addEventListener('click', function(e) {
+            if (e.target === this) closePrivacyModal();
+        });
+
+        function showSuccessModal() {
+            document.getElementById('successModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    </script>
 </body>
 
 </html>

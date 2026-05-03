@@ -23,7 +23,9 @@
         </div>
         <nav class="flex items-center justify-center gap-10 text-white flex-1 font-medium text-sm">
             <a href="{{ route('alumni.dashboard') }}"
-                class="{{ $current_page == 'index_alumni' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">HOME</a>
+                class="{{ $current_page == 'index_alumni' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                HOME
+            </a>
             <a href="events.php"
                 class="{{ $current_page == 'events' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">EVENTS</a>
             <a href="announcements.php"

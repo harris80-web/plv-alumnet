@@ -101,6 +101,7 @@ Route::get('/alumni/change-password', function () {
 })->name('alumni.changePassword');
 
 Route::get('/superAdmin/dashboard', [UserController::class, 'showDashboard'])->name('superAdmin.dashboard');
+Route::get('/superAdmin/profile', [UserController::class, 'showSuperAdminProfile'])->name('superAdmin.profile');
 
 
 Route::get('/admin/dashboard', function () {
@@ -206,10 +207,11 @@ Route::resource('sections', SectionController::class);
 
 Route::resource('seminars', SeminarController::class);
 
+Route::put('/testimonials/bulk-post', [TestimonialController::class, 'bulkPost'])->name('testimonials.bulkPost');
+Route::put('/postTestimonial/{id}', [TestimonialController::class, 'postTestimonial'])->name('testimonials.post');
 Route::resource('testimonials', TestimonialController::class);
 Route::post('/submitTestimonial/{id}', [TestimonialController::class, 'submitTestimonial'])->name('testimonials.submit');
 Route::get('/testimonialManagement', [TestimonialController::class, 'showTestimonials'])->name('testimonials.manage');
-Route::put('/postTestimonial/{id}', [TestimonialController::class, 'postTestimonial'])->name('testimonials.post');
 
 Route::resource('users', UserController::class);
 Route::post('/users/storeEmployer', [UserController::class, 'storeEmployer'])->name('users.storeEmployer');

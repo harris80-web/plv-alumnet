@@ -65,68 +65,52 @@ class OfficeController extends Controller
     {
         //
     }
-
-    public function updateOfficeProfile(Request $request, $office)
+    public function updateOfficeProfile(Request $request, $id)
     {
-        $user = User::where('user_id', $office)->firstOrFail();
         $validated = $request->validate([
-            'user_profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10048',
-            'user_first_name' => 'required|string',
-            'user_last_name' => 'required|string',
-            'user_middle_name' => 'nullable|string',
-            'user_suffix' => 'nullable|string',
-            'office_birth_date' => 'required|date',
-            'user_email' => 'required|email|unique:users,user_email,' . $user->user_id . ',user_id',
-            'user_number' => 'required|string',
-            'office_address' => 'required|string',
+            'user_first_name'    => 'required|string|max:255',
+            'user_middle_name'   => 'nullable|string|max:255',
+            'user_last_name'     => 'required|string|max:255',
+            'user_suffix'        => 'nullable|string|max:50',
+            'user_email'         => 'required|email|max:255|unique:users,user_email,' . $id . ',user_id',
+            'user_number'        => 'nullable|string|max:20',
+            'office_address'     => 'nullable|string|max:255',
+            'office_birth_date'  => 'nullable|date',
+            'user_profile_picture' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $oldProfilePicture = $user->user_profile_picture ?? null;
-        $profilePicture = null;
+        $user = User::findOrFail($id);
+
+        // Update user fields
+        $user->update([
+            'user_first_name'  => $validated['user_first_name'],
+            'user_middle_name' => $validated['user_middle_name'] ?? null,
+            'user_last_name'   => $validated['user_last_name'],
+            'user_suffix'      => $validated['user_suffix'] ?? null,
+            'user_email'       => $validated['user_email'],
+            'user_number'      => $validated['user_number'] ?? null,
+        ]);
+
+        // Update office fields
+        $user->office()->updateOrCreate(
+            ['user_id' => $user->user_id],
+            [
+                'office_address'    => $validated['office_address'] ?? null,
+                'office_birth_date' => $validated['office_birth_date'] ?? null,
+            ]
+        );
+
+        // Handle profile picture upload
         if ($request->hasFile('user_profile_picture')) {
-            if( $oldProfilePicture && Storage::disk('public')->exists($oldProfilePicture)){
-                Storage::disk('public')->delete($oldProfilePicture);
+            // Delete old picture if exists
+            if ($user->user_profile_picture) {
+                Storage::disk('public')->delete($user->user_profile_picture);
             }
-            $profilePicture = $request->file('user_profile_picture')->store('profilePictures', 'public');
+            $path = $request->file('user_profile_picture')->store('profile_pictures', 'public');
+            $user->update(['user_profile_picture' => $path]);
         }
 
-        try {
-            DB::transaction(function () use ($validated, $office, $profilePicture) {
-                $office = Office::where('user_id', $office)->firstOrFail();
-
-                $office->update([
-                    'office_birth_date' => $validated['office_birth_date'] ?? $office->office_birth_date,
-                    'office_address' => $validated['office_address'] ?? $office->office_address,
-                ]);
-
-                
-                $office->user->update([
-                    'user_first_name' => $validated['user_first_name'] ?? $office->user->user_first_name,
-                    'user_last_name' => $validated['user_last_name'] ?? $office->user->user_last_name,
-                    'user_middle_name' => $validated['user_middle_name'] ?? $office->user->user_middle_name,
-                    'user_suffix' => $validated['user_suffix'] ?? $office->user->user_suffix,
-                    'user_email' => $validated['user_email'] ?? $office->user->user_email,
-                    'user_number' => $validated['user_number'] ?? $office->user->user_number,
-                ]);
-
-                if ($profilePicture != null) {
-                    $office->user->update([
-                        'user_profile_picture' => $profilePicture,
-                    ]);
-                }
-            });
-        } catch (\Exception $e) {
-            dd([
-                'Message' => $e->getMessage(),
-                'File' => $e->getFile(),
-                'Line' => $e->getLine()
-            ]);
-            if ($profilePicture) {
-                Storage::disk('public')->delete($profilePicture);
-            }
-
-            return redirect()->route('user.profile')->with('error', 'An error occurred while uploading the resume: ' . $e->getMessage());
-        }
-        return redirect()->route('user.profile')->with('success', 'Profile updated successfully.');
+        return redirect()->route('user.profile')
+            ->with('success', 'Profile updated successfully!');
     }
 }

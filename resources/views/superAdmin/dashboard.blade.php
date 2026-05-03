@@ -75,7 +75,6 @@ $current_page = 'dashboard';
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/PLV-AlumNet LOGO.png') }}">
     @vite('resources/css/app.css')
     @vite('resources/js/app.js')
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
@@ -469,7 +468,7 @@ $current_page = 'dashboard';
                             <span class="s-label">Job Placement Rate</span>
                             <!--<span class="stat-badge badge-flat">▶ +0.0%</span>-->
                         </div>
-                        <div class="s-value">{{ $stats['jobPlacementRate'] }}</div>
+                        <div class="s-value">{{ $stats['jobPlacementRate'] }}%</div>
                     </div>
 
                 </div>

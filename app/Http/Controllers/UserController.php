@@ -163,7 +163,7 @@ class UserController extends Controller
         }
 
 
-        return redirect()->route('general.waitForApproval');
+        return redirect()->route('auth.register')->with('success', 'Account registered successfully!');
     }
 
     public function goToWaitForApproval()
@@ -412,7 +412,8 @@ class UserController extends Controller
             ->where('user_id', $user->user_id)
             ->update(['user_password' => Hash::make($validated['new_password'])]);
 
-        return back()->with('success', 'Password changed successfully!');
+        return redirect()->route('superAdmin.dashboard')
+            ->with('password_changed', true);
     }
 
     public function showDashboard()
@@ -442,5 +443,11 @@ class UserController extends Controller
         ];
 
         return view('superAdmin.dashboard', compact('stats'));
+    }
+
+    public function showSuperAdminProfile()
+    {
+        $user = Auth::user();
+        return view('superAdmin.profile', compact('user'));
     }
 }

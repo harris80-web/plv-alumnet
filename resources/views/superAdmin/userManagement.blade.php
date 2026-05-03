@@ -267,7 +267,6 @@ $current_page = 'user_management';
     <link rel="icon" type="image/x-icon" href="assets/PLV-AlumNet LOGO.png">
     @vite('resources/css/app.css')
     @vite('resources/js/app.js')
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {

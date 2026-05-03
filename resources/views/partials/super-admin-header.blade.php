@@ -3,13 +3,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
 $pageTitles = [
     'super_admin_dashboard.php'       => 'Dashboard',
-    'super_admin_profile.php'         => 'Profile',
+    'super_admin_profile.php'         => 'Super Admin Profile',
     'super_admin_user_management.php' => 'User Management',
-    'super_admin_job_placement.php'   => 'Job Management',
-    'super_admin_id_yearbook.php'     => 'Alumni ID & Yearbook',
+    'super_admin_job_placement.php'   => 'Job Placement Management',
+    'super_admin_id_yearbook.php'     => 'Alumni ID & Yearbook Management',
     'super_admin_notices_events.php'  => 'Notices & Events',
     'super_admin_chatbot_messaging.php' => 'Chatbot & Messaging',
-    'super_admin_testimonials.php'    => 'Testimonials',
+    'super_admin_testimonials.php'    => 'Testimonial Management',
     'super_admin_faqs.php'            => 'Manage FAQs'
 ];
 
@@ -62,7 +62,7 @@ $title = $pageTitles[$currentPage] ?? 'Super Admin Panel';
 
     <div class="flex items-center gap-3 relative">
 
-        <!-- 🔔 Notifications -->
+        <!--  Notifications -->
         <button id="notif-btn"
             class="icon-btn relative p-2 rounded-full hover:bg-slate-100 transition">
             <i data-lucide="bell" class="w-5 h-5"></i>
@@ -117,7 +117,7 @@ $title = $pageTitles[$currentPage] ?? 'Super Admin Panel';
             </div>
         </div>
 
-        <!-- ⚙️ Settings -->
+        <!-- Settings -->
         <button id="settings-btn"
             class="icon-btn p-2 rounded-full hover:bg-slate-100 transition">
             <i data-lucide="settings" class="w-5 h-5"></i>
@@ -130,21 +130,21 @@ $title = $pageTitles[$currentPage] ?? 'Super Admin Panel';
                 <div class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center">
                     <i data-lucide="user" class="w-5 h-5 text-slate-500"></i>
                 </div>
-                <a href="super_admin_profile.php" class="block">
+                <a href="{{ route('superAdmin.profile') }}" class="block">
                     <div class="hover:bg-slate-50 px-2 py-1 rounded-md transition cursor-pointer">
-                        <div class="text-sm font-semibold text-slate-700">Miguel Santos</div>
+                        <div class="text-sm font-semibold text-slate-700">{{ auth()->user()->user_first_name }} {{ auth()->user()->user_last_name }}</div>
                         <div class="text-xs text-slate-400">View Profile</div>
                     </div>
                 </a>
             </div>
 
-            <a href="super_admin_change_password.php"
+            <a href="javascript:void(0)" id="pw-modal-link"
                 class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
                 <i data-lucide="lock" class="w-4 h-4"></i>
                 Change Password
             </a>
 
-            <form method="POST" action="{{ route('user.logout') }}">
+            <form id="logout-form" method="POST" action="{{ route('user.logout') }}">
                 @csrf
                 <button type="submit"
                     class="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 w-full">
@@ -180,9 +180,108 @@ $title = $pageTitles[$currentPage] ?? 'Super Admin Panel';
 
         </div>
     </div>
+    
 </header>
+@if(session('password_changed'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const successModal = document.getElementById('successModal');
+        if (successModal) {
+            successModal.classList.remove('hidden');
+            successModal.classList.add('flex');
+            setTimeout(() => closeModal(), 5000);
+        }
+    });
+</script>
+@endif
+
+<!-- CHANGE PASSWORD MODAL -->
+<div id="password-modal" class="fixed inset-0 z-[9999] bg-black/40 hidden items-center justify-center">
+    <div class="bg-[#F3F4F6] w-[380px] rounded-[30px] shadow-2xl p-8 relative animate-fadeIn">
+
+        <button id="close-pw-modal" class="absolute top-5 right-6 text-slate-400 hover:text-slate-600 transition">
+            <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+
+        <div class="text-center mb-5">
+            <h2 class="text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent inline-block">
+                Change Password
+            </h2>
+            <p class="text-[11px] text-[#C73D1A] mt-2 font-medium leading-tight">
+                Your new password must be different from previously used passwords.
+            </p>
+        </div>
+
+        <form id="change-password-form" method="POST" action="{{ route('users.changePassword') }}" class="space-y-4 text-left">
+            @csrf
+            @method('PUT')
+            <div>
+                <label class="block text-[#0E0F3B] text-xs font-bold mb-1 ml-1">Old Password:</label>
+                <div class="relative">
+                    <input type="password" id="old_password" name="current_password" required
+                        class="w-full pl-3 pr-10 py-2 text-sm rounded-xl border border-[#ED7A07]/30 focus:border-[#ED7A07] outline-none shadow-sm bg-white">
+                    <button type="button" onclick="togglePassword('old_password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        <i id="old_password_icon" data-lucide="eye" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[#0E0F3B] text-xs font-bold mb-1 ml-1">New Password:</label>
+                <div class="relative">
+                    <input type="password" id="new_password" name="new_password" required
+                        class="w-full pl-3 pr-10 py-2 text-sm rounded-xl border border-[#ED7A07]/30 focus:border-[#ED7A07] outline-none shadow-sm bg-white">
+                    <button type="button" onclick="togglePassword('new_password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        <i id="new_password_icon" data-lucide="eye" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <p class="text-[9px] text-[#C73D1A] mt-1 ml-1 leading-tight">Minimum 8 characters, including a number and a symbol.</p>
+            </div>
+
+            <div>
+                <label class="block text-[#0E0F3B] text-xs font-bold mb-1 ml-1">Confirm New Password:</label>
+                <div class="relative">
+                    <input type="password" id="confirm_password" name="new_password_confirmation" required
+                        class="w-full pl-3 pr-10 py-2 text-sm rounded-xl border border-[#ED7A07]/30 focus:border-[#ED7A07] outline-none shadow-sm bg-white">
+                    <button type="button" onclick="togglePassword('confirm_password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        <i id="confirm_password_icon" data-lucide="eye" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit"
+                class="w-full mt-2 bg-[#0E0F3B] text-white text-xs font-bold py-3 rounded-xl hover:bg-[#1a1c5a] transition-all tracking-wider">
+                UPDATE PASSWORD
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div id="successModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-2xl max-w-md w-full p-8 relative text-center">
+        <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-300 hover:text-gray-500 transition">
+            <i class="fa-solid fa-circle-xmark text-2xl"></i>
+        </button>
+        <div class="flex justify-center mb-6">
+            <div class="bg-[#0D0D2B] w-20 h-20 rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-check text-white text-4xl"></i>
+            </div>
+        </div>
+        <h3 class="text-3xl font-bold mb-4">
+            <span class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Password Updated Successfully</span>
+        </h3>
+        <p class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-sm mb-8 leading-relaxed">
+            Your account security <span class="font-medium">has been updated</span>. Please use your new password the next time you log in.
+        </p>
+        <button onclick="closeModal()" class="w-full max-w-[150px] bg-[#0D0D2B] text-white py-3 rounded font-bold tracking-widest hover:bg-blue-900 transition duration-200 uppercase text-sm">
+            DONE
+        </button>
+    </div>
+</div>
 
 <script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
@@ -279,21 +378,20 @@ $title = $pageTitles[$currentPage] ?? 'Super Admin Panel';
     }
 
     //log out confirmation modal js
-    const logoutLink = document.getElementById('logout-link');
+    // Replace the entire logout modal JS block with this:
     const logoutModal = document.getElementById('logout-modal');
+    const logoutForm = document.getElementById('logout-form');
     const confirmBtn = document.getElementById('confirm-logout');
     const cancelBtn = document.getElementById('cancel-logout');
 
-    if (logoutLink) {
-        logoutLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            logoutModal.classList.remove('hidden');
-            logoutModal.classList.add('flex');
-        });
-    }
+    logoutForm?.querySelector('button[type="submit"]')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        logoutModal.classList.remove('hidden');
+        logoutModal.classList.add('flex');
+    });
 
     confirmBtn?.addEventListener('click', function() {
-        window.location.href = logoutLink.href;
+        logoutForm.submit();
     });
 
     cancelBtn?.addEventListener('click', function() {
@@ -307,4 +405,56 @@ $title = $pageTitles[$currentPage] ?? 'Super Admin Panel';
             logoutModal.classList.remove('flex');
         }
     });
+
+    // Change Password modal
+    const pwModalLink = document.getElementById('pw-modal-link');
+    const pwModal = document.getElementById('password-modal');
+    const closePwBtn = document.getElementById('close-pw-modal');
+
+    if (pwModalLink) {
+        pwModalLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeAllMenus();
+            pwModal.classList.remove('hidden');
+            pwModal.classList.add('flex');
+        });
+    }
+
+    function hidePwModal() {
+        pwModal.classList.add('hidden');
+        pwModal.classList.remove('flex');
+    }
+
+    closePwBtn?.addEventListener('click', hidePwModal);
+
+    pwModal?.addEventListener('click', function(e) {
+        if (e.target === pwModal) hidePwModal();
+    });
+
+    document.getElementById('change-password-form')?.addEventListener('submit', function() {
+        hidePwModal(); // hide the modal while submitting
+    });
+
+    function closeModal() {
+        const successModal = document.getElementById('successModal');
+        successModal.classList.add('hidden');
+        successModal.classList.remove('flex');
+    }
+
+    document.getElementById('successModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    function togglePassword(fieldId, btn) {
+        const input = document.getElementById(fieldId);
+        const icon = document.getElementById(fieldId + '_icon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.setAttribute('data-lucide', 'eye-off');
+        } else {
+            input.type = 'password';
+            icon.setAttribute('data-lucide', 'eye');
+        }
+        lucide.createIcons();
+    }
 </script>

@@ -72,18 +72,18 @@ class EmployerController extends Controller
         // Validate the incoming request data
         $validated = $request->validate([
             'user_profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10048',
-            'user_first_name' => 'required|string',
-            'user_last_name' => 'required|string',
+            'user_first_name' => 'nullable|string',
+            'user_last_name' => 'nullable|string',
             'user_middle_name' => 'nullable|string',
             'user_suffix' => 'nullable|string',
-            'employer_position' => 'required|string',
-            'user_email' => 'required|email|unique:users,user_email,' . $user->user_id . ',user_id',
-            'user_number' => 'required|string',
+            'employer_position' => 'nullable|string',
+            'user_email' => 'nullable|email|unique:users,user_email,' . $user->user_id . ',user_id',
+            'user_number' => 'nullable|string',
             'employer_company_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10048',
-            'employer_company_name' => 'required|string',
-            'employer_year_established' => 'required|date_format:Y',
-            'employer_company_size' => 'required|string',
-            'industry' => 'required|exists:industries,industry_id',
+            'employer_company_name' => 'nullable|string',
+            'employer_year_established' => 'nullable|date_format:Y',
+            'employer_company_size' => 'nullable|string',
+            'industry' => 'nullable|exists:industries,industry_id',
             'employer_website_url' => 'nullable|url',
         ]);
 

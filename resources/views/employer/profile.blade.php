@@ -88,7 +88,7 @@
                 </h2>
 
                 <div class="w-40 h-40 flex flex-col items-center justify-center mb-4">
-                    @if (Storage::disk('public')->exists($user->employer->employer_company_logo))
+                    @if ($user->employer->employer_company_logo)
                     <img src="{{ asset('storage/'. $user->employer->employer_company_logo) }}" alt="Company Logo">
                     @else
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-24 h-24 text-[#12123B]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

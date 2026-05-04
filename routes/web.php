@@ -192,7 +192,7 @@ Route::resource('offices', OfficeController::class);
 Route::put('/offices/updateProfile/{office}', [OfficeController::class, 'updateOfficeProfile'])->name('offices.updateProfile');
 
 Route::resource('password-reset-tokens', PasswordResetTokenController::class);
-Route::get('/forgotPassword', [PasswordResetTokenController::class, 'index'])->name('passReset.forgotPassword');
+Route::get('/forgotPasswordForm', [PasswordResetTokenController::class, 'index'])->name('passReset.forgotPassword');
 Route::post('/forgotPassword', [PasswordResetTokenController::class, 'forgetPassword'])->name('passReset.forgetPasswordPost');
 Route::get('/resetPassword/{token}', [PasswordResetTokenController::class, 'resetPassword'])->name('passReset.resetPassword');
 Route::post('/resetPassword', [PasswordResetTokenController::class, 'updatePassword'])->name('passReset.updatePassword');

@@ -109,8 +109,10 @@
                 We'll send you a link to reset your password.
             </p>
 
-            <form id="resetForm" action="#" class="space-y-4">
+            <form id="resetForm" action="{{ route('passReset.forgetPasswordPost') }}" method="POST" class="space-y-4">
+                @csrf
                 <input type="email"
+                    name="email"
                     id="emailInput"
                     required
                     placeholder="juan.delacruz@plv.edu.ph"
@@ -145,6 +147,7 @@
             <h2 class="text-4xl font-bold mb-4 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Check your inbox</h2>
 
             <div id="modalBodyText" class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-sm space-y-1 mb-8 leading-relaxed">
+                
                 <p id="messageLine1">A password reset link has been sent to</p>
                 <p class="font-bold text-base" id="displayEmail">[User Email]</p>
                 <p id="messageLine2" class="mt-4">Please follow the instructions in the email to regain access to your account.</p>
@@ -177,7 +180,7 @@
 
     // Handle Form Submission
     resetForm.addEventListener('submit', (e) => {
-        e.preventDefault(); // Prevent page reload
+       // Prevent page reload
 
         // Show the user's email in the modal
         displayEmail.textContent = emailInput.value;

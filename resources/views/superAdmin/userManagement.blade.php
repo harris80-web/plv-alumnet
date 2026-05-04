@@ -582,6 +582,15 @@ $current_page = 'user_management';
                                     <th class="px-3 py-4 font-semibold text-center">Action</th>
                                 </tr>
                             </thead>
+                            @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
                             <tbody class="divide-y divide-slate-100">
                                 @forelse ($alumni as $alumnus)
                                 @php
@@ -949,7 +958,7 @@ $current_page = 'user_management';
                     </div>
                     <div class="flex items-center gap-4">
                         <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Program:</label>
-                        <select name="program_id" required class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white transition-all truncate">
+                        <select name="program_id" required class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white transition-all truncate w-full">
                             <option value="" disabled selected>Select Undergraduate Program</option>
                             @foreach ($programs as $program)
                             <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>

@@ -113,7 +113,7 @@
                         Log In
                     </button>
                     <div class="mt-4 text-center">
-                        <a href="{{ route('passReset.forgetPasswordPost') }}" class="text-[#0E0F3B] font-semibold underline decoration-1 underline-offset-4 hover:text-orange-700 text-sm transition-colors">
+                        <a href="{{ route('passReset.forgotPassword') }}" class="text-[#0E0F3B] font-semibold underline decoration-1 underline-offset-4 hover:text-orange-700 text-sm transition-colors">
                             Forgot Password?
                         </a>
                     </div>

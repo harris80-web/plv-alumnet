@@ -85,9 +85,9 @@ class UserController extends Controller
         $validated = $request->validate([
             'employer_company_name' => 'required|string|max:255',
             'employer_website_url' => 'nullable|url|max:255',
-            'user_first_name' => 'required|string|max:255',
-            'user_last_name' => 'required|string|max:255',
-            'user_email' => 'required|email|max:255',
+            'user_first_name' => 'required|string|max:100',
+            'user_last_name' => 'required|string|max:100',
+            'user_email' => 'required|email|max:100|unique:users,user_email',
             // 'employer_id_picture' => 'required|file|mimes:jpg,png,pdf|max:20000',
             // 'employer_id_picture_selfie' => 'required|file|mimes:jpg,png,pdf|max:20000',
             // 'employer_company_id_picture' => 'required|file|mimes:jpg,png,pdf|max:20000',
@@ -159,7 +159,14 @@ class UserController extends Controller
             // if ($companyIdSelfiePath) {
             //     Storage::disk('public')->delete($companyIdSelfiePath);
             // }
-            return back()->withErrors($e->getMessage());
+            return back()->withErrors([
+                'user_email' => $e->getMessage(),
+                'user_password' => $e->getMessage(),
+                'user_first_name' => $e->getMessage(),
+                'user_last_name' => $e->getMessage(),
+                'employer_company_name' => $e->getMessage(),
+                'employer_website_url' => $e->getMessage()
+            ]);
         }
 
 
@@ -174,7 +181,7 @@ class UserController extends Controller
     public function login(Request $request)
     {
         $validated = $request->validate([
-            'user_email' => 'required|email|max:255',
+            'user_email' => 'required|email|max:255|',
             'user_password' => 'required|string|min:8'
         ]);
 
@@ -218,7 +225,7 @@ class UserController extends Controller
                 return redirect()->route('auth.login')->withErrors('error', 'Your account role is not recognized. Please contact the administrator.');
             }
         } else {
-            return back()->withErrors('error', 'Please enter correct credentials');
+            return back()->withErrors(['user_password' => 'invalid password'])->onlyInput('user_email');
         }
     }
 

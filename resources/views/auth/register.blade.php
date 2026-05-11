@@ -42,7 +42,8 @@
                     <img src="{{ asset('assets/PLV-Logo-2.svg') }}" alt="" class="h-[90px] w-auto">
                 </div>
                 <div class="flex flex-col items-center h-auto w-auto">
-                    <img src="{{ asset('assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png') }}" alt="" class="h-auto w-auto ">
+                    <img src="{{ asset('assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png') }}" alt=""
+                        class="h-auto w-auto ">
                     <p class="font-[Montserrat] font-regular text-xs tracking-widest uppercase text-center">Pamantasan
                         ng Lungsod ng Valenzuela</p>
                     <p class="text-xs text-center opacity-80 uppercase">Alumni Connect</p>
@@ -57,7 +58,8 @@
 
         <div>
             <div class="text-left mb-4 mt-5">
-                <a href="{{ route('general.home') }}" class="text-white text-sm hover:text-[#0E0F3B]">↩ Return to Home</a>
+                <a href="{{ route('general.home') }}" class="text-white text-sm hover:text-[#0E0F3B]">↩ Return to
+                    Home</a>
             </div>
 
             <div class="bg-white rounded-xl shadow-2xl p-8 w-full w-auto h-auto mb-4">
@@ -72,23 +74,16 @@
                         Get Started!</span>
                 </div>
 
-                @if ($errors->any())
-                <div class="bg-red-100 text-red-600 p-3 rounded mb-4 text-sm">
-                    <ul>
-                        @foreach ($errors->all() as $error)
-                        <li>• {{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                @endif
+
                 @include('partials.success')
 
-                <form action="{{ route('users.storeEmployer') }}" method="POST" enctype="multipart/form-data" class="space-y-4 w-full max-w-md mx-auto h-auto ">
+                <form action="{{ route('users.storeEmployer') }}" method="POST" enctype="multipart/form-data"
+                    class="space-y-4 w-full max-w-md mx-auto h-auto ">
                     @csrf
                     @if (session('success'))
-                    <script>
-                        window.addEventListener('DOMContentLoaded', () => showSuccessModal());
-                    </script>
+                        <script>
+                            window.addEventListener('DOMContentLoaded', () => showSuccessModal());
+                        </script>
                     @endif
 
                     <div>
@@ -96,12 +91,22 @@
                         <input type="text" name="employer_company_name"
                             class="w-full px-4 py-0.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A]"
                             required>
+                        @if($errors->has('employer_company_name'))
+                            <div class="alert alert-danger">
+                                {{ $errors->first('employer_company_name') }}
+                            </div>
+                        @endif
                     </div>
 
                     <div>
                         <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Website URL:</label>
                         <input type="url" name="employer_website_url"
                             class="w-full px-4 py-0.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                        @if($errors->has('employer_website_url'))
+                            <div class="alert alert-danger">
+                                {{ $errors->first('employer_website_url') }}
+                            </div>
+                        @endif
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
@@ -110,12 +115,22 @@
                             <input type="text" name="user_first_name"
                                 class="w-full px-4 py-0.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A]"
                                 required>
+                            @if($errors->has('user_first_name'))
+                                <div class="alert alert-danger">
+                                    {{ $errors->first('user_first_name') }}
+                                </div>
+                            @endif
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Last Name:</label>
                             <input type="text" name="user_last_name"
                                 class="w-full px-4 py-0.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A]"
                                 required>
+                            @if($errors->has('user_last_name'))
+                                <div class="alert alert-danger">
+                                    {{ $errors->first('user_last_name') }}
+                                </div>
+                            @endif
                         </div>
                     </div>
 
@@ -124,6 +139,11 @@
                         <input type="email" name="user_email"
                             class="w-full px-4 py-0.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A]"
                             required>
+                            @if($errors->has('user_email'))
+                                <div class="alert alert-danger">
+                                    {{ $errors->first('user_email') }}
+                                </div>
+                            @endif
                     </div>
 
                     <div class="relative">
@@ -132,6 +152,11 @@
                         <input id="passwordInput" type="password" name="user_password"
                             class="w-full px-4 py-0.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A] pr-10"
                             required>
+                            @if($errors->has('user_password'))
+                                <div class="alert alert-danger">
+                                    {{ $errors->first('user_password') }}
+                                </div>
+                            @endif
 
                         <button type="button" id="togglePassword"
                             class="absolute right-3 top-8 text-gray-400 hover:text-orange-500 focus:outline-none">
@@ -157,16 +182,19 @@
                         <label class="flex items-start gap-2 cursor-pointer">
                             <input type="checkbox" id="terms-checkbox" class="mt-1 accent-[#C73D1A]" required>
                             <span class="text-[11px] text-black">I agree to the
-                                <a href="#" onclick="openModal(event)" class="text-orange-600 underline font-bold">Terms of Use</a>
+                                <a href="#" onclick="openModal(event)" class="text-orange-600 underline font-bold">Terms
+                                    of Use</a>
                                 and
-                                <a href="#" onclick="openModal(event)" class="text-orange-600 underline font-bold">Privacy Policy</a>.
+                                <a href="#" onclick="openModal(event)"
+                                    class="text-orange-600 underline font-bold">Privacy Policy</a>.
                             </span>
                         </label>
                         <label class="flex items-start gap-2 cursor-pointer">
                             <input type="checkbox" id="rep-checkbox" class="mt-1 accent-[#C73D1A]" required>
                             <span class="text-[11px] text-black">I confirm that I am an authorized representative of my
                                 company and agree to handle all applicant data in compliance with the
-                                <a href="#" onclick="openPrivacyModal(event)" class="text-orange-600 underline font-bold">Data Privacy Act</a>.
+                                <a href="#" onclick="openPrivacyModal(event)"
+                                    class="text-orange-600 underline font-bold">Data Privacy Act</a>.
                             </span>
                         </label>
                     </div>
@@ -186,30 +214,49 @@
     </div>
 
     <!-- Terms & Privacy Modal -->
-    <div id="termsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden font-[Montserrat]">
+    <div id="termsModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden font-[Montserrat]">
         <div class="bg-white rounded-xl shadow-2xl w-[90%] max-w-lg overflow-hidden">
             <div class="bg-[#0E0F3B] px-4 py-2 flex items-center justify-between">
-                <span class="text-white text-[10px] font-semibold uppercase tracking-widest">Terms of Use & Privacy Policy</span>
-                <button onclick="closeModal()" class="text-white text-xl leading-none hover:text-gray-300 focus:outline-none">&times;</button>
+                <span class="text-white text-[10px] font-semibold uppercase tracking-widest">Terms of Use & Privacy
+                    Policy</span>
+                <button onclick="closeModal()"
+                    class="text-white text-xl leading-none hover:text-gray-300 focus:outline-none">&times;</button>
             </div>
             <div class="px-6 py-5 overflow-y-auto max-h-[75vh] text-center">
                 <div class="flex items-center justify-center gap-3 mb-1">
                     <div class="text-center">
-                        <img src="{{ asset('assets/PLV-AlumNet LETTERMARK_COLORED 2.png') }}" alt="" class="h-auto w-36 ml-9">
-                        <p class="text-[9px] uppercase tracking-tight font-medium text-[#0E0F3B]">Pamantasan ng Lungsod ng Valenzuela <br>Alumni Connect</p>
+                        <img src="{{ asset('assets/PLV-AlumNet LETTERMARK_COLORED 2.png') }}" alt=""
+                            class="h-auto w-36 ml-9">
+                        <p class="text-[9px] uppercase tracking-tight font-medium text-[#0E0F3B]">Pamantasan ng Lungsod
+                            ng Valenzuela <br>Alumni Connect</p>
                     </div>
                 </div>
                 <h2 class="text-xl font-bold mt-3 mb-3">
-                    <span class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Terms of Use</span>
+                    <span
+                        class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Terms
+                        of Use</span>
                 </h2>
                 <p class="text-[11px] text-[#0E0F3B] leading-relaxed mb-6">
-                    By using <strong>PLV-AlumNet</strong>, you agree to provide accurate information and use this platform strictly for professional networking, job placement, and official university-related activities. Any form of harassment, spamming, or posting of fraudulent content is prohibited and may result in the immediate suspension of your account. We reserve the right to verify all user identities and company details through the PLV Alumni Affairs Office to maintain a secure and professional environment for the entire community.
+                    By using <strong>PLV-AlumNet</strong>, you agree to provide accurate information and use this
+                    platform strictly for professional networking, job placement, and official university-related
+                    activities. Any form of harassment, spamming, or posting of fraudulent content is prohibited and may
+                    result in the immediate suspension of your account. We reserve the right to verify all user
+                    identities and company details through the PLV Alumni Affairs Office to maintain a secure and
+                    professional environment for the entire community.
                 </p>
                 <h2 class="text-xl font-bold mb-3">
-                    <span class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Privacy Policy</span>
+                    <span
+                        class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Privacy
+                        Policy</span>
                 </h2>
                 <p class="text-[11px] text-[#0E0F3B] leading-relaxed mb-6">
-                    In compliance with the <strong>Data Privacy Act of 2012 (RA 10173)</strong>, we are committed to protecting your personal information. We collect and process your data: including your name, identification details, and contact info, solely for account verification and platform security. We implement strict technical measures to prevent unauthorized access and will never share your information with third parties without your explicit consent, except as required by law. You maintain the right to access, update, or request the permanent deletion of your records at any time.
+                    In compliance with the <strong>Data Privacy Act of 2012 (RA 10173)</strong>, we are committed to
+                    protecting your personal information. We collect and process your data: including your name,
+                    identification details, and contact info, solely for account verification and platform security. We
+                    implement strict technical measures to prevent unauthorized access and will never share your
+                    information with third parties without your explicit consent, except as required by law. You
+                    maintain the right to access, update, or request the permanent deletion of your records at any time.
                 </p>
                 <button onclick="agreeAndClose()"
                     class="bg-[#0E0F3B] text-white text-[13px] font-bold uppercase tracking-widest px-12 py-2.5 rounded-md hover:bg-blue-900 transition-colors">
@@ -220,36 +267,52 @@
     </div>
 
     <!-- Data Privacy Act Modal -->
-    <div id="dataPrivacyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden font-[Montserrat]">
+    <div id="dataPrivacyModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden font-[Montserrat]">
         <div class="bg-white rounded-xl shadow-2xl w-[90%] max-w-lg overflow-hidden">
             <div class="bg-[#0E0F3B] px-4 py-2 flex items-center justify-between">
                 <span class="text-white text-[10px] font-semibold uppercase tracking-widest">Data Privacy Act</span>
-                <button onclick="closePrivacyModal()" class="text-white text-xl leading-none hover:text-gray-300 focus:outline-none">&times;</button>
+                <button onclick="closePrivacyModal()"
+                    class="text-white text-xl leading-none hover:text-gray-300 focus:outline-none">&times;</button>
             </div>
             <div class="px-6 py-5 overflow-y-auto max-h-[75vh] text-center">
                 <div class="flex items-center justify-center gap-3 mb-1">
                     <div class="text-center">
-                        <img src="{{ asset('assets/PLV-AlumNet LETTERMARK_COLORED 2.png') }}" alt="" class="h-auto w-36 ml-9">
-                        <p class="text-[9px] uppercase tracking-tight font-medium text-[#0E0F3B]">Pamantasan ng Lungsod ng Valenzuela <br>Alumni Connect</p>
+                        <img src="{{ asset('assets/PLV-AlumNet LETTERMARK_COLORED 2.png') }}" alt=""
+                            class="h-auto w-36 ml-9">
+                        <p class="text-[9px] uppercase tracking-tight font-medium text-[#0E0F3B]">Pamantasan ng Lungsod
+                            ng Valenzuela <br>Alumni Connect</p>
                     </div>
                 </div>
                 <h2 class="text-xl font-bold mt-3 mb-3">
-                    <span class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Data Privacy Act of 2012</span>
+                    <span
+                        class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Data
+                        Privacy Act of 2012</span>
                 </h2>
                 <p class="text-[11px] font-medium text-[#0E0F3B] leading-relaxed mb-4">
-                    In accordance with the Data Privacy Act of 2012 (RA 10173), <strong>Pamantasan ng Lungsod ng Valenzuela (PLV)</strong> is committed to protecting the confidentiality and security of your personal information.
+                    In accordance with the Data Privacy Act of 2012 (RA 10173), <strong>Pamantasan ng Lungsod ng
+                        Valenzuela (PLV)</strong> is committed to protecting the confidentiality and security of your
+                    personal information.
                 </p>
                 <p class="text-[11px] font-medium text-[#0E0F3B] leading-relaxed mb-4">
-                    By registering for <strong>PLV-AlumNet</strong>, you acknowledge and consent to the collection and processing of your personal data, including your full name, student identification number, and professional details, for the sole purpose of identity verification through the University Registrar, and facilitating official alumni networking and job placement services.
+                    By registering for <strong>PLV-AlumNet</strong>, you acknowledge and consent to the collection and
+                    processing of your personal data, including your full name, student identification number, and
+                    professional details, for the sole purpose of identity verification through the University
+                    Registrar, and facilitating official alumni networking and job placement services.
                 </p>
                 <p class="text-[11px] font-medium text-[#0E0F3B] leading-relaxed mb-4">
-                    We implement strict technical and organizational security measures to ensure your information is protected against unauthorized access or misuse, and we guarantee that your data will not be shared with third parties without your explicit consent, except as required by law.
+                    We implement strict technical and organizational security measures to ensure your information is
+                    protected against unauthorized access or misuse, and we guarantee that your data will not be shared
+                    with third parties without your explicit consent, except as required by law.
                 </p>
                 <p class="text-[11px] font-medium text-[#0E0F3B] leading-relaxed mb-4">
-                    As a data subject, you maintain the right to access, rectify, or request the deletion of your records at any time by contacting the PLV Alumni Affairs Office.
+                    As a data subject, you maintain the right to access, rectify, or request the deletion of your
+                    records at any time by contacting the PLV Alumni Affairs Office.
                 </p>
                 <p class="text-[11px] font-medium text-[#0E0F3B] leading-relaxed mb-6">
-                    By clicking <strong>"I Agree"</strong>, you confirm that you have read and understood these terms and voluntarily authorize PLV-AlumNet to manage your information in accordance with these privacy standards.
+                    By clicking <strong>"I Agree"</strong>, you confirm that you have read and understood these terms
+                    and voluntarily authorize PLV-AlumNet to manage your information in accordance with these privacy
+                    standards.
                 </p>
                 <button onclick="agreePrivacyAndClose()"
                     class="bg-[#0E0F3B] text-white text-[13px] font-bold uppercase tracking-widest px-12 py-2.5 rounded-md hover:bg-blue-900 transition-colors">
@@ -260,28 +323,35 @@
     </div>
 
     <!-- Success Modal -->
-    <div id="successModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 hidden font-[Montserrat]">
+    <div id="successModal"
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 hidden font-[Montserrat]">
         <div class="bg-white rounded-xl shadow-2xl w-[90%] max-w-md overflow-hidden transform transition-all relative">
-            <button onclick="closeSuccessModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none z-10">
+            <button onclick="closeSuccessModal()"
+                class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none z-10">
                 <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
                 </svg>
             </button>
             <div class="p-8 text-center pt-12">
                 <div class="flex justify-center mb-6">
                     <div class="bg-[#0E0F3B] w-20 h-20 rounded-full flex items-center justify-center shadow-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
                 </div>
                 <h2 class="text-2xl font-bold mb-2">
-                    <span class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+                    <span
+                        class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
                         Account Pending<br>for Approval
                     </span>
                 </h2>
-                <p class="text-sm leading-relaxed mb-8 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
-                    Your account has been successfully registered and is currently awaiting <strong>administrative review</strong>. Access will be granted once your account has been <strong>approved</strong>.
+                <p
+                    class="text-sm leading-relaxed mb-8 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+                    Your account has been successfully registered and is currently awaiting <strong>administrative
+                        review</strong>. Access will be granted once your account has been <strong>approved</strong>.
                 </p>
                 <a href="{{ route('general.home') }}"
                     class="block w-full bg-[#0E0F3B] text-white py-3 rounded-md font-bold uppercase tracking-widest hover:bg-blue-900 transition-colors shadow-lg text-center">
@@ -296,7 +366,7 @@
         const togglePassword = document.getElementById('togglePassword');
         const eyeIcon = document.getElementById('eyeIcon');
 
-        togglePassword.addEventListener('click', function() {
+        togglePassword.addEventListener('click', function () {
             // Toggle the type attribute
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
@@ -331,7 +401,7 @@
             closeModal();
         }
 
-        document.getElementById('termsModal').addEventListener('click', function(e) {
+        document.getElementById('termsModal').addEventListener('click', function (e) {
             if (e.target === this) closeModal();
         });
 
@@ -352,7 +422,7 @@
             closePrivacyModal();
         }
 
-        document.getElementById('dataPrivacyModal').addEventListener('click', function(e) {
+        document.getElementById('dataPrivacyModal').addEventListener('click', function (e) {
             if (e.target === this) closePrivacyModal();
         });
 

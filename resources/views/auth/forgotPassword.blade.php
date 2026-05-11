@@ -53,7 +53,9 @@
         rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
         rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
+        rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="assets/PLV-AlumNet LOGO.png">
 </head>
 
@@ -101,22 +103,28 @@
         </div>
 
         <div class="bg-white rounded-[2rem] shadow-2xl p-10 w-full max-w-md text-center">
-            <h2 class="inline-block text-4xl font-bold mb-6 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Forgot <br> Password</h2>
+            <h2
+                class="inline-block text-4xl font-bold mb-6 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+                Forgot <br> Password</h2>
 
-            <p class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-sm mb-8 px-4 leading-relaxed">
-                Enter the email address associated with your <span class="text-red-700 font-semibold">PLV-AlumNet</span> account.
+            <p
+                class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-sm mb-8 px-4 leading-relaxed">
+                Enter the email address associated with your <span class="text-red-700 font-semibold">PLV-AlumNet</span>
+                account.
                 <br><br>
                 We'll send you a link to reset your password.
             </p>
 
             <form id="resetForm" action="{{ route('passReset.forgetPasswordPost') }}" method="POST" class="space-y-4">
                 @csrf
-                <input type="email"
-                    name="email"
-                    id="emailInput"
-                    required
-                    placeholder="juan.delacruz@plv.edu.ph"
+                <input type="email" name="email" id="emailInput" required placeholder="juan.delacruz@plv.edu.ph"
                     class="w-full px-4 py-3 border border-[#0E0F3B] rounded-md text-black focus:outline-none focus:border-[#C73D1A] transition-all text-center">
+                @error('email')
+                    <span class="my-custom-error font-semibold text-sm">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ $message }}
+                    </span>
+                @enderror
 
                 <button type="submit"
                     class="w-full bg-[#0E0F3B] text-white font-bold py-3 rounded-md hover:bg-blue-900 transition-colors tracking-widest text-sm uppercase">
@@ -125,42 +133,52 @@
             </form>
 
             <div class="mt-6">
-                <a href="{{ route('auth.login') }}" class="text-orange-600 font-semibold underline decoration-2 underline-offset-4 hover:text-orange-700 text-sm">
+                <a href="{{ route('auth.login') }}"
+                    class="text-orange-600 font-semibold underline decoration-2 underline-offset-4 hover:text-orange-700 text-sm">
                     Back to Login
                 </a>
             </div>
         </div>
     </div>
 
-    <div id="successModal" class="hidden-modal fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-        <div class="bg-white rounded-[2rem] shadow-2xl p-10 w-full max-w-md text-center animate-in fade-in zoom-in duration-300">
+    <div id="successModal"
+        class="hidden-modal fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div
+            class="bg-white rounded-[2rem] shadow-2xl p-10 w-full max-w-md text-center animate-in fade-in zoom-in duration-300">
 
             <div class="flex justify-center mb-6">
                 <div class="relative text-[#bc4b26]">
                     <i class="fa-solid fa-envelope text-8xl"></i>
-                    <div class="absolute -bottom-2 -right-2 bg-[#bc4b26] text-white rounded-full h-9 w-9 flex items-center justify-center border-4 border-white">
+                    <div
+                        class="absolute -bottom-2 -right-2 bg-[#bc4b26] text-white rounded-full h-9 w-9 flex items-center justify-center border-4 border-white">
                         <i class="fa-solid fa-check text-lg"></i>
                     </div>
                 </div>
             </div>
 
-            <h2 class="text-4xl font-bold mb-4 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Check your inbox</h2>
+            <h2
+                class="text-4xl font-bold mb-4 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+                Check your inbox</h2>
 
-            <div id="modalBodyText" class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-sm space-y-1 mb-8 leading-relaxed">
-                
+            <div id="modalBodyText"
+                class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-sm space-y-1 mb-8 leading-relaxed">
+
                 <p id="messageLine1">A password reset link has been sent to</p>
                 <p class="font-bold text-base" id="displayEmail">[User Email]</p>
-                <p id="messageLine2" class="mt-4">Please follow the instructions in the email to regain access to your account.</p>
+                <p id="messageLine2" class="mt-4">Please follow the instructions in the email to regain access to your
+                    account.</p>
             </div>
 
-            <a href="{{ route('auth.login') }}" class="block w-full bg-[#0E0F3B] text-white font-bold py-4 rounded-md tracking-widest text-sm hover:bg-blue-900 transition-all text-center uppercase">
+            <a href="{{ route('auth.login') }}"
+                class="block w-full bg-[#0E0F3B] text-white font-bold py-4 rounded-md tracking-widest text-sm hover:bg-blue-900 transition-all text-center uppercase">
                 BACK TO LOGIN
             </a>
 
             <div class="mt-6 text-xs text-[#C73D1A]">
                 <div id="resendContainer">
                     <p>Didn't receive an email?
-                        <button onclick="startResendTimer()" class="underline font-bold ml-1 hover:text-orange-700">Resend link</button>
+                        <button onclick="startResendTimer()"
+                            class="underline font-bold ml-1 hover:text-orange-700">Resend link</button>
                     </p>
                 </div>
                 <div id="timerContainer" class="hidden">
@@ -180,7 +198,7 @@
 
     // Handle Form Submission
     resetForm.addEventListener('submit', (e) => {
-       // Prevent page reload
+        // Prevent page reload
 
         // Show the user's email in the modal
         displayEmail.textContent = emailInput.value;

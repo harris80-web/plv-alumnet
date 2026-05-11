@@ -40,7 +40,8 @@
                     <img src="{{ asset('assets/PLV-Logo-2.svg') }}" alt="" class="h-[90px] w-auto">
                 </div>
                 <div class="flex flex-col items-center h-auto w-auto">
-                    <img src="{{ asset('assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png') }}" alt="" class="h-auto w-auto ">
+                    <img src="{{ asset('assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png') }}" alt=""
+                        class="h-auto w-auto ">
                     <p class="font-[Montserrat] font-regular text-xs tracking-widest uppercase text-center">Pamantasan
                         ng Lungsod ng Valenzuela</p>
                     <p class="text-xs text-center opacity-80 uppercase">Alumni Connect</p>
@@ -55,7 +56,8 @@
 
         <div>
             <div class="text-left mb-4 mt-5">
-                <a href="{{ route('general.home') }}" class="text-white text-sm hover:text-[#0E0F3B]">↩ Return to Home</a>
+                <a href="{{ route('general.home') }}" class="text-white text-sm hover:text-[#0E0F3B]">↩ Return to
+                    Home</a>
             </div>
 
             <div class="bg-white rounded-xl shadow-2xl p-8 w-full h-auto mb-4">
@@ -70,15 +72,10 @@
                         Welcome Back!</span>
                 </div>
 
-                @if ($errors->any())
-                <div class="text-red-500 text-sm mb-4">
-                    @foreach ($errors->all() as $error)
-                    <p>{{ $error }}</p>
-                    @endforeach
-                </div>
-                @endif
+
                 @include('partials.success')
-                <form action="{{ route('users.login') }}" method="POST" class="space-y-4 w-full max-w-md mx-auto h-auto ">
+                <form action="{{ route('users.login') }}" method="POST"
+                    class="space-y-4 w-full max-w-md mx-auto h-auto ">
                     @csrf
 
                     <div>
@@ -86,6 +83,12 @@
                         <input type="email" name="user_email"
                             class="w-full px-4 py-1.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A]"
                             required>
+                        @error('user_email')
+                            <span class="my-custom-error font-semibold text-sm">
+                                <i class="fas fa-exclamation-circle"></i> 
+                                {{ $message }}
+                            </span>
+                        @enderror
                     </div>
 
                     <div class="relative">
@@ -94,6 +97,12 @@
                         <input id="passwordInput" type="password" name="user_password"
                             class="w-full px-4 py-1.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A] pr-10"
                             required>
+                        @error('user_password')
+                            <span class="my-custom-error text-sm">
+                                <i class="fas fa-exclamation-circle"></i> 
+                                {{ $message }}
+                            </span>
+                        @enderror
 
                         <button type="button" id="togglePassword"
                             class="absolute right-3 top-8 text-gray-400 hover:text-orange-500 focus:outline-none">
@@ -113,7 +122,8 @@
                         Log In
                     </button>
                     <div class="mt-4 text-center">
-                        <a href="{{ route('passReset.forgotPassword') }}" class="text-[#0E0F3B] font-semibold underline decoration-1 underline-offset-4 hover:text-orange-700 text-sm transition-colors">
+                        <a href="{{ route('passReset.forgotPassword') }}"
+                            class="text-[#0E0F3B] font-semibold underline decoration-1 underline-offset-4 hover:text-orange-700 text-sm transition-colors">
                             Forgot Password?
                         </a>
                     </div>
@@ -126,13 +136,13 @@
             </div>
         </div>
     </div>
-    
+
     <script>
         const passwordInput = document.getElementById('passwordInput');
         const togglePassword = document.getElementById('togglePassword');
         const eyeIcon = document.getElementById('eyeIcon');
 
-        togglePassword.addEventListener('click', function() {
+        togglePassword.addEventListener('click', function () {
             // Toggle the type attribute
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);

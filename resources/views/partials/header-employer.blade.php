@@ -15,7 +15,7 @@
 <body>
     <?php
     // Logic to determine active page
-    $current_page = basename($_SERVER['PHP_SELF'], ".php");
+    $current_page = Route::currentRouteName();
     ?>
 
     <header class="sticky top-0 z-50 w-full bg-[#0E0F3B] font-bold flex justify-between px-[4em] py-[1em]">
@@ -26,22 +26,22 @@
 
         <nav class="flex items-center justify-center gap-10 text-white flex-1 font-medium text-sm">
             <a href="{{ route('employer.dashboard') }}"
-                class="{{ $current_page === 'index_employer' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                class="{{ $current_page === 'employer.dashboard' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                 HOME
             </a>
 
             <a href="announcements_employer.php"
-                class="<?php echo ($current_page == 'announcements_employer') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; ?> transition-colors">
+                class="{{ $current_page === 'general.announcements' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                 ANNOUNCEMENTS
             </a>
 
             <a href="{{ route('jobPosting.jobBoard') }}"
-                class="{{ $current_page === 'employer_job_board' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; }}">
+                class="{{ $current_page === 'jobPosting.jobBoard' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                 JOB BOARD
             </a>
 
             <a href="{{ route('jobPosting.myJobPosts', ['id' => auth()->id()]) }}"
-                class="{{ $current_page === 'employer_job_postings' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; }}">
+                class="{{ $current_page === 'jobPosting.myJobPosts' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                 MY JOB POSTINGS
             </a>
 

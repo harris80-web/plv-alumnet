@@ -51,7 +51,7 @@
                 </ul>
             </div>
             @endif
-
+            @include('partials.success')
             <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
 
                 <div class="md:col-span-3 flex justify-center md:justify-start">

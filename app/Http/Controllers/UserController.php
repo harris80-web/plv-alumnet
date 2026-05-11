@@ -300,7 +300,7 @@ class UserController extends Controller
         $validated = request()->validate([
             'user_first_name' => 'required|string|max:255',
             'user_last_name' => 'required|string|max:255',
-            'user_middle_name' => 'required|string|max:255',
+            'user_middle_name' => 'nullable|string|max:255',
             'user_suffix' => 'nullable|string|max:255',
             'office_address' => 'required|string|max:255',
             'user_email' => 'required|email|max:255|unique:users,user_email',
@@ -388,7 +388,7 @@ class UserController extends Controller
             return redirect()->route('employer.dashboard');
         } else if ($user->user_role == 'alumni') {
             $testimonials = Testimonial::all()->where('testimonial_post', true);
-            return view('/alumni/dashboard', compact('testimonials'));
+            return view('alumni.dashboard', compact('testimonials'));
         } else {
             Auth::logout();
             return redirect()->route('auth.login')->withErrors('error', 'Your account role is not recognized. Please contact the administrator.');

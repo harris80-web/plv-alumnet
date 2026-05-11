@@ -354,7 +354,7 @@ $current_page = 'user_management';
         <main class="flex-1 flex flex-col overflow-hidden">
 
             @include('partials.super-admin-header')
-
+            @include('partials.success')
             <!-- Tabs -->
             <div class="bg-white px-8 flex gap-8 border-b border-slate-200 shrink-0 shadow-md">
                 <button id="tab-admin" class="tab-btn active py-3 px-2 flex items-center gap-2 text-sm transition-colors" onclick="switchTab('admin')">
@@ -868,23 +868,23 @@ $current_page = 'user_management';
                         <p class="text-[10px] font-bold text-[#C73D1A] uppercase">Personal Information</p>
                     </div>
                     <div class="flex items-center gap-4">
-                        <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">First Name:</label>
+                        <label for="user_first_name" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">First Name:</label>
                         <input type="text" name="user_first_name" placeholder="Enter First Name here" required class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
                     </div>
                     <div class="flex items-center gap-4">
-                        <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Middle Name:</label>
+                        <label for="user_middle_name" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Middle Name:</label>
                         <input type="text" name="user_middle_name" placeholder="Enter Middle Name here" class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
                     </div>
                     <div class="flex items-center gap-4">
-                        <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Last Name:</label>
+                        <label for="user_last_name" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Last Name:</label>
                         <input type="text" name="user_last_name" placeholder="Enter Last Name here" required class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
                     </div>
                     <div class="flex items-center gap-4">
-                        <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Suffix:</label>
+                        <label for="user_suffix" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Suffix:</label>
                         <input type="text" name="user_suffix" placeholder="e.g. Jr., III" class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
                     </div>
                     <div class="flex items-center gap-4">
-                        <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Address:</label>
+                        <label for="office_address" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Address:</label>
                         <input type="text" name="office_address" placeholder="Enter Address here" required class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
                     </div>
 
@@ -892,11 +892,11 @@ $current_page = 'user_management';
                         <p class="text-[10px] font-bold text-[#C73D1A] uppercase">Account Details</p>
                     </div>
                     <div class="flex items-center gap-4">
-                        <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Email:</label>
+                        <label for="user_email" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Email:</label>
                         <input type="email" name="user_email" placeholder="Enter Email here" required class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
                     </div>
                     <div class="flex items-center gap-4">
-                        <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Password:</label>
+                        <label for="user_password" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Password:</label>
                         <div class="flex-1 relative group">
                             <input type="password" name="user_password" id="adminPass" placeholder="••••••••" required class="w-full px-3 py-1.5 border border-[#0E0F3B] group-hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
                             <button type="button" onclick="togglePassword('adminPass', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#C73D1A]">
@@ -905,7 +905,7 @@ $current_page = 'user_management';
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
-                        <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Confirm Password:</label>
+                        <label for="user_password_confirmation" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Confirm Password:</label>
                         <div class="flex-1 relative group">
                             <input type="password" name="user_password_confirmation" id="adminConfirmPass" placeholder="••••••••" required class="w-full px-3 py-1.5 border border-[#0E0F3B] group-hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
                             <button type="button" onclick="togglePassword('adminConfirmPass', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#C73D1A]">

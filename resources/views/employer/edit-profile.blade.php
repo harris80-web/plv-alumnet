@@ -47,6 +47,7 @@
             </ul>
         </div>
         @endif
+        @include('partials.success')
         <form action="{{ route('employers.updateProfile', $user->user_id) }}" method="post" enctype="multipart/form-data">
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl font-['Montserrat']">

@@ -31,11 +31,11 @@
 </html>-->
 
 @php
-$current_page = 'testimonials';
-$total_testimonials = $testimonials->count();
-$published_count = $testimonials->where('testimonial_post', 1)->count();
-$hidden_count = $testimonials->where('testimonial_post', 0)->count();
-$programs_count = $testimonials->map(fn($t) => $t->alumnus->program->program_id ?? null)->filter()->unique()->count();
+    $current_page = 'testimonials';
+    $total_testimonials = $testimonials->count();
+    $published_count = $testimonials->where('testimonial_post', 1)->count();
+    $hidden_count = $testimonials->where('testimonial_post', 0)->count();
+    $programs_count = $testimonials->map(fn($t) => $t->alumnus->program->program_id ?? null)->filter()->unique()->count();
 @endphp
 
 <!DOCTYPE html>
@@ -118,7 +118,7 @@ $programs_count = $testimonials->map(fn($t) => $t->alumnus->program->program_id 
         <main class="flex-1 flex flex-col overflow-hidden">
             @include('partials.super-admin-header')
             <div class="flex-1 overflow-y-auto p-8">
-
+                @include('partials.success')
                 <!-- Stat Cards -->
                 <div class="grid grid-cols-4 gap-4 mb-6">
                     <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
@@ -145,7 +145,8 @@ $programs_count = $testimonials->map(fn($t) => $t->alumnus->program->program_id 
                     <div class="flex gap-2 items-center">
                         <!-- Search -->
                         <div class="relative w-64">
-                            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <i data-lucide="search"
+                                class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
                             <input id="search-input" type="text" placeholder="Search by Name"
                                 class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A] transition-all">
                         </div>
@@ -157,45 +158,83 @@ $programs_count = $testimonials->map(fn($t) => $t->alumnus->program->program_id 
                                 <span id="program-label" class="truncate">Program</span>
                                 <i data-lucide="chevron-down" class="w-3 h-3 shrink-0"></i>
                             </button>
-                            <div id="program-dropdown" class="filter-dropdown-menu bg-white border border-slate-200 rounded-lg shadow-lg py-1 mt-1 w-72 max-h-72 overflow-y-auto" style="scrollbar-width:thin">
+                            <div id="program-dropdown"
+                                class="filter-dropdown-menu bg-white border border-slate-200 rounded-lg shadow-lg py-1 mt-1 w-72 max-h-72 overflow-y-auto"
+                                style="scrollbar-width:thin">
                                 <button onclick="setFilter('program','All','program-label','program-dropdown')"
                                     class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">All</button>
-                                <button onclick="setFilter('program','Bachelor of Arts in Communication','program-label','program-dropdown')"
-                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">Bachelor of Arts in Communication</button>
-                                <button onclick="setFilter('program','Bachelor of Early Childhood Education','program-label','program-dropdown')"
-                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">Bachelor of Early Childhood Education</button>
-                                <button onclick="setFilter('program','Bachelor of Science in Accountancy','program-label','program-dropdown')"
-                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">Bachelor of Science in Accountancy</button>
-                                <p class="px-4 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">BS in Business Administration</p>
-                                <button onclick="setFilter('program','BSBA - Major in Financial Management','program-label','program-dropdown')"
-                                    class="w-full text-left px-6 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSBA - Major in Financial Management</button>
-                                <button onclick="setFilter('program','BSBA - Major in Human Resource Management','program-label','program-dropdown')"
-                                    class="w-full text-left px-6 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSBA - Major in Human Resource Management</button>
-                                <button onclick="setFilter('program','BSBA - Major in Marketing Management','program-label','program-dropdown')"
-                                    class="w-full text-left px-6 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSBA - Major in Marketing Management</button>
-                                <button onclick="setFilter('program','BSCE - Bachelor of Science in Civil Engineering','program-label','program-dropdown')"
-                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSCE - Bachelor of Science in Civil Engineering</button>
-                                <button onclick="setFilter('program','BSEE - Bachelor of Science in Electrical Engineering','program-label','program-dropdown')"
-                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSEE - Bachelor of Science in Electrical Engineering</button>
-                                <button onclick="setFilter('program','BSIT - Bachelor of Science in Information Technology','program-label','program-dropdown')"
-                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSIT - Bachelor of Science in Information Technology</button>
-                                <button onclick="setFilter('program','Bachelor of Science in Psychology','program-label','program-dropdown')"
-                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">Bachelor of Science in Psychology</button>
-                                <button onclick="setFilter('program','Bachelor of Public Administration','program-label','program-dropdown')"
-                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">Bachelor of Public Administration</button>
-                                <button onclick="setFilter('program','Bachelor of Science in Social Work','program-label','program-dropdown')"
-                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">Bachelor of Science in Social Work</button>
-                                <p class="px-4 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bachelor of Secondary Education</p>
-                                <button onclick="setFilter('program','BSEd - Major in English','program-label','program-dropdown')"
-                                    class="w-full text-left px-6 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSEd - Major in English</button>
-                                <button onclick="setFilter('program','BSEd - Major in Filipino','program-label','program-dropdown')"
-                                    class="w-full text-left px-6 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSEd - Major in Filipino</button>
-                                <button onclick="setFilter('program','BSEd - Major in Mathematics','program-label','program-dropdown')"
-                                    class="w-full text-left px-6 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSEd - Major in Mathematics</button>
-                                <button onclick="setFilter('program','BSEd - Major in Science','program-label','program-dropdown')"
-                                    class="w-full text-left px-6 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSEd - Major in Science</button>
-                                <button onclick="setFilter('program','BSEd - Major in Social Studies','program-label','program-dropdown')"
-                                    class="w-full text-left px-6 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSEd - Major in Social Studies</button>
+                                <button
+                                    onclick="setFilter('program','Bachelor of Arts in Communication','program-label','program-dropdown')"
+                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">Bachelor
+                                    of Arts in Communication</button>
+                                <button
+                                    onclick="setFilter('program','Bachelor of Early Childhood Education','program-label','program-dropdown')"
+                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">Bachelor
+                                    of Early Childhood Education</button>
+                                <button
+                                    onclick="setFilter('program','Bachelor of Science in Accountancy','program-label','program-dropdown')"
+                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">Bachelor
+                                    of Science in Accountancy</button>
+                                <p class="px-4 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    BS in Business Administration</p>
+                                <button
+                                    onclick="setFilter('program','BSBA - Major in Financial Management','program-label','program-dropdown')"
+                                    class="w-full text-left px-6 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSBA
+                                    - Major in Financial Management</button>
+                                <button
+                                    onclick="setFilter('program','BSBA - Major in Human Resource Management','program-label','program-dropdown')"
+                                    class="w-full text-left px-6 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSBA
+                                    - Major in Human Resource Management</button>
+                                <button
+                                    onclick="setFilter('program','BSBA - Major in Marketing Management','program-label','program-dropdown')"
+                                    class="w-full text-left px-6 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSBA
+                                    - Major in Marketing Management</button>
+                                <button
+                                    onclick="setFilter('program','BSCE - Bachelor of Science in Civil Engineering','program-label','program-dropdown')"
+                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSCE
+                                    - Bachelor of Science in Civil Engineering</button>
+                                <button
+                                    onclick="setFilter('program','BSEE - Bachelor of Science in Electrical Engineering','program-label','program-dropdown')"
+                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSEE
+                                    - Bachelor of Science in Electrical Engineering</button>
+                                <button
+                                    onclick="setFilter('program','BSIT - Bachelor of Science in Information Technology','program-label','program-dropdown')"
+                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSIT
+                                    - Bachelor of Science in Information Technology</button>
+                                <button
+                                    onclick="setFilter('program','Bachelor of Science in Psychology','program-label','program-dropdown')"
+                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">Bachelor
+                                    of Science in Psychology</button>
+                                <button
+                                    onclick="setFilter('program','Bachelor of Public Administration','program-label','program-dropdown')"
+                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">Bachelor
+                                    of Public Administration</button>
+                                <button
+                                    onclick="setFilter('program','Bachelor of Science in Social Work','program-label','program-dropdown')"
+                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">Bachelor
+                                    of Science in Social Work</button>
+                                <p class="px-4 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    Bachelor of Secondary Education</p>
+                                <button
+                                    onclick="setFilter('program','BSEd - Major in English','program-label','program-dropdown')"
+                                    class="w-full text-left px-6 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSEd
+                                    - Major in English</button>
+                                <button
+                                    onclick="setFilter('program','BSEd - Major in Filipino','program-label','program-dropdown')"
+                                    class="w-full text-left px-6 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSEd
+                                    - Major in Filipino</button>
+                                <button
+                                    onclick="setFilter('program','BSEd - Major in Mathematics','program-label','program-dropdown')"
+                                    class="w-full text-left px-6 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSEd
+                                    - Major in Mathematics</button>
+                                <button
+                                    onclick="setFilter('program','BSEd - Major in Science','program-label','program-dropdown')"
+                                    class="w-full text-left px-6 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSEd
+                                    - Major in Science</button>
+                                <button
+                                    onclick="setFilter('program','BSEd - Major in Social Studies','program-label','program-dropdown')"
+                                    class="w-full text-left px-6 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">BSEd
+                                    - Major in Social Studies</button>
                             </div>
                         </div>
 
@@ -206,7 +245,8 @@ $programs_count = $testimonials->map(fn($t) => $t->alumnus->program->program_id 
                                 <span id="batch-label">Batch</span>
                                 <i data-lucide="chevron-down" class="w-3 h-3"></i>
                             </button>
-                            <div id="batch-dropdown" class="filter-dropdown-menu bg-white border border-slate-200 rounded-lg shadow-lg py-1 mt-1">
+                            <div id="batch-dropdown"
+                                class="filter-dropdown-menu bg-white border border-slate-200 rounded-lg shadow-lg py-1 mt-1">
                                 <button onclick="setFilter('batch','All','batch-label','batch-dropdown')"
                                     class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">All</button>
 
@@ -220,7 +260,8 @@ $programs_count = $testimonials->map(fn($t) => $t->alumnus->program->program_id 
                                 <span id="status-label">Status</span>
                                 <i data-lucide="chevron-down" class="w-3 h-3"></i>
                             </button>
-                            <div id="status-dropdown" class="filter-dropdown-menu bg-white border border-slate-200 rounded-lg shadow-lg py-1 mt-1">
+                            <div id="status-dropdown"
+                                class="filter-dropdown-menu bg-white border border-slate-200 rounded-lg shadow-lg py-1 mt-1">
                                 <button onclick="setFilter('status','All','status-label','status-dropdown')"
                                     class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">All</button>
                                 <button onclick="setFilter('status','Published','status-label','status-dropdown')"
@@ -257,11 +298,14 @@ $programs_count = $testimonials->map(fn($t) => $t->alumnus->program->program_id 
                         <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                             <tr>
                                 <th class="px-4 py-4 font-semibold border-r border-slate-700">
-                                    <input type="checkbox" id="select-all" class="rounded" onclick="toggleAllCheckboxes(this)">
+                                    <input type="checkbox" id="select-all" class="rounded"
+                                        onclick="toggleAllCheckboxes(this)">
                                 </th>
                                 <th class="px-4 py-4 font-semibold border-r border-slate-700">Name</th>
-                                <th class="px-4 py-4 font-semibold border-r border-slate-700">Program <i data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
-                                <th class="px-4 py-4 font-semibold border-r border-slate-700">Batch <i data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
+                                <th class="px-4 py-4 font-semibold border-r border-slate-700">Program <i
+                                        data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
+                                <th class="px-4 py-4 font-semibold border-r border-slate-700">Batch <i
+                                        data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
                                 <th class="px-4 py-4 font-semibold border-r border-slate-700">Message</th>
                                 <th class="px-4 py-4 font-semibold border-r border-slate-700">Status</th>
                                 <th class="px-4 py-4 font-semibold text-center">Action</th>
@@ -269,74 +313,86 @@ $programs_count = $testimonials->map(fn($t) => $t->alumnus->program->program_id 
                         </thead>
                         <tbody class="divide-y divide-slate-100" id="testimonials-tbody">
                             @forelse ($testimonials as $t)
-                            @php
-                            $statusLabel = $t->testimonial_post ? 'Published' : 'Hidden';
-                            $statusClass = $t->testimonial_post
-                            ? 'bg-green-100 text-green-700 border-green-200'
-                            : 'bg-slate-100 text-slate-500 border-slate-200';
-                            $msgPreview = mb_strlen($t->testimonial_body) > 50
-                            ? '"' . mb_substr($t->testimonial_body, 0, 50) . '..."'
-                            : '"' . $t->testimonial_body . '"';
-                            @endphp
-                            <tr class="hover:bg-slate-50/80 transition-colors text-center"
-                                data-id="{{ $t->testimonial_id }}"
-                                data-name="{{ $t->alumnus->user->user_first_name }}"
-                                data-program="{{ $t->alumnus->program->program_name ?? '' }}"
-                                data-batch="{{ $t->alumnus->alumnus_batch ?? '' }}"
-                                data-status="{{ $statusLabel }}"
-                                data-message="{{ $t->testimonial_body }}">
-                                <td class="px-4 py-3 border-r border-slate-100">
-                                    <input type="checkbox" class="row-checkbox rounded" data-id="{{ $t->testimonial_id }}">
-                                </td>
-                                <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $t->alumnus->user->user_first_name }}</td>
-                                <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $t->alumnus->program->program_name ?? '—' }}</td>
-                                <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $t->alumnus->alumnus_batch ?? '—' }}</td>
-                                <td class="px-4 py-3 font-medium text-black border-r border-slate-100 text-left">{{ $msgPreview }}</td>
-                                <td class="px-4 py-3 border-r border-slate-100">
-                                    <span class="px-2 py-1 rounded-full border text-[9px] font-bold {{ $statusClass }}">
-                                        {{ strtoupper($statusLabel) }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 text-center relative">
-                                    <div class="inline-block text-left">
-                                        <button class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                            <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                        </button>
-                                        <div class="action-dropdown absolute right-4 mt-2 w-44 origin-top-right rounded-md bg-white shadow-xl ring-1 ring-black ring-opacity-5 z-50 hidden">
-                                            <div class="py-1">
-                                                <button onclick="openView({{ $t->testimonial_id }})"
-                                                    class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 transition-colors">
-                                                    <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View
-                                                </button>
-                                                @if ($t->testimonial_post)
-                                                <button onclick="openToggleConfirm({{ $t->testimonial_id }}, 'Published', '{{ $t->alumnus->user->user_first_name }}')"
-                                                    class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-slate-50 transition-colors">
-                                                    <i data-lucide="eye-off" class="w-4 h-4 mr-3 text-slate-400"></i> Hide
-                                                </button>
-                                                @else
-                                                <button onclick="openToggleConfirm({{ $t->testimonial_id }}, 'Hidden', '{{ $t->alumnus->user->user_first_name }}')"
-                                                    class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-green-50 transition-colors">
-                                                    <i data-lucide="send" class="w-4 h-4 mr-3 text-green-500"></i> Publish
-                                                </button>
-                                                @endif
-                                                <hr class="my-1 border-slate-100">
-                                                <button onclick="openDeleteConfirm({{ $t->testimonial_id }}, '{{ $t->alumnus->user->user_first_name }}')"
-                                                    class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                    <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i> Delete
-                                                </button>
+                                @php
+                                    $statusLabel = $t->testimonial_post ? 'Published' : 'Hidden';
+                                    $statusClass = $t->testimonial_post
+                                        ? 'bg-green-100 text-green-700 border-green-200'
+                                        : 'bg-slate-100 text-slate-500 border-slate-200';
+                                    $msgPreview = mb_strlen($t->testimonial_body) > 50
+                                        ? '"' . mb_substr($t->testimonial_body, 0, 50) . '..."'
+                                        : '"' . $t->testimonial_body . '"';
+                                @endphp
+                                <tr class="hover:bg-slate-50/80 transition-colors text-center"
+                                    data-id="{{ $t->testimonial_id }}" data-name="{{ $t->alumnus->user->user_first_name }}"
+                                    data-program="{{ $t->alumnus->program->program_name ?? '' }}"
+                                    data-batch="{{ $t->alumnus->alumnus_batch ?? '' }}" data-status="{{ $statusLabel }}"
+                                    data-message="{{ $t->testimonial_body }}">
+                                    <td class="px-4 py-3 border-r border-slate-100">
+                                        <input type="checkbox" class="row-checkbox rounded"
+                                            data-id="{{ $t->testimonial_id }}">
+                                    </td>
+                                    <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                        {{ $t->alumnus->user->user_first_name }}</td>
+                                    <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                        {{ $t->alumnus->program->program_name ?? '—' }}</td>
+                                    <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                        {{ $t->alumnus->alumnus_batch ?? '—' }}</td>
+                                    <td class="px-4 py-3 font-medium text-black border-r border-slate-100 text-left">
+                                        {{ $msgPreview }}</td>
+                                    <td class="px-4 py-3 border-r border-slate-100">
+                                        <span class="px-2 py-1 rounded-full border text-[9px] font-bold {{ $statusClass }}">
+                                            {{ strtoupper($statusLabel) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-center relative">
+                                        <div class="inline-block text-left">
+                                            <button
+                                                class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                                <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
+                                            </button>
+                                            <div
+                                                class="action-dropdown absolute right-4 mt-2 w-44 origin-top-right rounded-md bg-white shadow-xl ring-1 ring-black ring-opacity-5 z-50 hidden">
+                                                <div class="py-1">
+                                                    <button onclick="openView({{ $t->testimonial_id }})"
+                                                        class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 transition-colors">
+                                                        <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View
+                                                    </button>
+                                                    @if ($t->testimonial_post)
+                                                        <button
+                                                            onclick="openToggleConfirm({{ $t->testimonial_id }}, 'Published', '{{ $t->alumnus->user->user_first_name }}')"
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-slate-50 transition-colors">
+                                                            <i data-lucide="eye-off" class="w-4 h-4 mr-3 text-slate-400"></i>
+                                                            Hide
+                                                        </button>
+                                                    @else
+                                                        <button
+                                                            onclick="openToggleConfirm({{ $t->testimonial_id }}, 'Hidden', '{{ $t->alumnus->user->user_first_name }}')"
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-green-50 transition-colors">
+                                                            <i data-lucide="send" class="w-4 h-4 mr-3 text-green-500"></i>
+                                                            Publish
+                                                        </button>
+                                                    @endif
+                                                    <hr class="my-1 border-slate-100">
+                                                    <button
+                                                        onclick="openDeleteConfirm({{ $t->testimonial_id }}, '{{ $t->alumnus->user->user_first_name }}')"
+                                                        class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                        <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i> Delete
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </td>
-                            </tr>
+                                    </td>
+                                </tr>
                             @empty
-                            <tr>
-                                <td colspan="7" class="py-12 text-center text-slate-400 text-sm">No testimonials found.</td>
-                            </tr>
+                                <tr>
+                                    <td colspan="7" class="py-12 text-center text-slate-400 text-sm">No testimonials found.
+                                    </td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>
-                    <div id="empty-state" class="hidden text-center py-12 text-slate-400 text-sm">No testimonials found.</div>
+                    <div id="empty-state" class="hidden text-center py-12 text-slate-400 text-sm">No testimonials found.
+                    </div>
                 </div><!-- end Table -->
 
             </div><!-- end flex-1 overflow-y-auto p-8 -->
@@ -351,14 +407,16 @@ $programs_count = $testimonials->map(fn($t) => $t->alumnus->program->program_id 
             <!-- Header-->
             <div class="bg-[#0E0F3B] px-8 pt-5 pb-14 flex justify-between items-start relative">
                 <h2 class="text-white font-[Montserrat] text-m font-semibold">View Testimonial</h2>
-                <button onclick="closeModal('view-modal')" class="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
+                <button onclick="closeModal('view-modal')"
+                    class="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
 
             <!-- Avatar -->
             <div class="flex justify-center -mt-10 relative z-10">
-                <div class="w-20 h-20 rounded-full bg-orange-500 flex items-center justify-center shadow-md ring-4 ring-white">
+                <div
+                    class="w-20 h-20 rounded-full bg-orange-500 flex items-center justify-center shadow-md ring-4 ring-white">
                     <i data-lucide="user-round" class="w-10 h-10 text-white"></i>
                 </div>
             </div>
@@ -398,21 +456,27 @@ $programs_count = $testimonials->map(fn($t) => $t->alumnus->program->program_id 
     </div>
 
     <!-- ===== CONFIRM MODAL ===== -->
-    <div id="confirmModal" class="fixed inset-0 z-[100] flex items-center justify-center invisible transition-all duration-300">
+    <div id="confirmModal"
+        class="fixed inset-0 z-[100] flex items-center justify-center invisible transition-all duration-300">
         <div class="absolute inset-0 bg-[#0E0F3B]/40 backdrop-blur-sm" onclick="closeConfirmModal()"></div>
-        <div id="confirmContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
+        <div id="confirmContent"
+            class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
             <div class="p-8 text-center">
-                <div id="confirmIconContainer" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div id="confirmIconContainer"
+                    class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i id="confirmIcon" data-lucide="alert-triangle" class="w-8 h-8"></i>
                 </div>
                 <h3 id="confirmTitle" class="text-[#0E0F3B] text-xl font-bold mb-2">Confirmation</h3>
-                <p id="confirmMessage" class="text-slate-500 text-sm leading-relaxed">Are you sure you want to proceed?</p>
+                <p id="confirmMessage" class="text-slate-500 text-sm leading-relaxed">Are you sure you want to proceed?
+                </p>
             </div>
             <div class="px-8 pb-8 flex gap-3">
-                <button onclick="closeConfirmModal()" class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all uppercase">
+                <button onclick="closeConfirmModal()"
+                    class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all uppercase">
                     Cancel
                 </button>
-                <button id="confirmYesBtn" class="flex-1 py-2.5 text-white rounded-lg text-xs font-bold transition-all uppercase hover:brightness-110">
+                <button id="confirmYesBtn"
+                    class="flex-1 py-2.5 text-white rounded-lg text-xs font-bold transition-all uppercase hover:brightness-110">
                     Yes, Proceed
                 </button>
             </div>
@@ -422,13 +486,13 @@ $programs_count = $testimonials->map(fn($t) => $t->alumnus->program->program_id 
 
     <script>
         const testimonialData = <?= json_encode($testimonials->map(fn($t) => [
-                                    'id'      => $t->testimonial_id,
-                                    'name'    => $t->alumnus->user->user_first_name,
-                                    'program' => $t->alumnus->program->program_name ?? '—',
-                                    'batch'   => $t->alumnus->alumnus_batch ?? '—',
-                                    'message' => $t->testimonial_body,
-                                    'status'  => $t->testimonial_post ? 'Published' : 'Hidden',
-                                ])->values()) ?>;
+    'id' => $t->testimonial_id,
+    'name' => $t->alumnus->user->user_first_name,
+    'program' => $t->alumnus->program->program_name ?? '—',
+    'batch' => $t->alumnus->alumnus_batch ?? '—',
+    'message' => $t->testimonial_body,
+    'status' => $t->testimonial_post ? 'Published' : 'Hidden',
+])->values()) ?>;
 
         let activeFilters = {
             program: 'All',

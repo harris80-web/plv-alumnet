@@ -43,6 +43,8 @@ Route::get('/login', function () {
 })->name('auth.login');
 
 Route::get('/waitForApproval', [UserController::class, 'goToWaitForApproval'])->name('general.waitForApproval');
+Route::get('/dashboardRedirect', [UserController::class, 'redirectToDashboard'])->name('users.dashboardRedirect');
+
 
 Route::get('/general/privacy-policy', function () {
     return view('general.privacy-policy');
@@ -118,7 +120,7 @@ Route::get('/employer/dashboard', function () {
 
 Route::get('/alumni/dashboard', function () {
     return view('alumni.dashboard');
-})->middleware(['auth'])->name('alumni.dashboard');
+})->middleware(['auth'])->name('alumnus.dashboard');
 
 Route::get('/superAdmin/userManagement', [UserController::class, 'showUsers'])->name('superAdmin.userManagement');
 
@@ -219,6 +221,5 @@ Route::post('/users/login', [UserController::class, 'login'])->name('users.login
 Route::post('/users/approve/{id}', [UserController::class, 'approveEmployer'])->name('users.approveEmployer');
 Route::post('/users/addAlumnus', [UserController::class, 'addAlumnus'])->name('users.addAlumnus');
 Route::post('/users/addAdmin', [UserController::class, 'addAdmin'])->name('users.addAdmin');
-Route::get('/dashboard', [UserController::class, 'redirectToDashboard'])->name('users.dashboardRedirect');
 Route::get('/showChangePassword', [UserController::class, 'showChangePassword'])->name('users.showChangePassword');
 Route::put('/changePassword', [UserController::class, 'changePassword'])->name('users.changePassword');

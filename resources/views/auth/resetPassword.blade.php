@@ -24,6 +24,7 @@
                 </ul>
             </div>
         @endif
+        @include('partials.success')
     </div>
     <h1>Reset Password</h1>
     <form method="POST" action="{{ route('passReset.updatePassword') }}">

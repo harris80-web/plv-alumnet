@@ -127,7 +127,7 @@
 
 <body>
     @php
-    $current_page = 'employer_job_postings';
+    $current_page = 'general.jobPostings';
     @endphp
     @include('partials.header-employer')
 

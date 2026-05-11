@@ -62,7 +62,7 @@
 </html>-->
 
 @php
-$current_page = 'dashboard';
+    $current_page = 'dashboard';
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -342,15 +342,19 @@ $current_page = 'dashboard';
             @include('partials.super-admin-header')
 
             <!-- ════════════ DASHBOARD CONTENT ════════════ -->
+            @include('partials.success')
             <div class="dash-scroll">
                 <!-- Filter Section Container -->
                 <div class="w-full bg-slate-100 px-6 py-4">
-                    <div class="flex items-center gap-8 bg-white px-8 py-4 rounded-xl border border-slate-200 shadow-md text-sm font-medium text-slate-700">
+                    <div
+                        class="flex items-center gap-8 bg-white px-8 py-4 rounded-xl border border-slate-200 shadow-md text-sm font-medium text-slate-700">
 
                         <!-- Batch Year -->
                         <div class="flex items-center gap-2">
-                            <label class="whitespace-nowrap font-[Montserrat] font-semibold text-[#0E0F3B]">Batch Year:</label>
-                            <select class="border border-slate-300 rounded-md px-3 py-1.5 w-36 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
+                            <label class="whitespace-nowrap font-[Montserrat] font-semibold text-[#0E0F3B]">Batch
+                                Year:</label>
+                            <select
+                                class="border border-slate-300 rounded-md px-3 py-1.5 w-36 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
                                 <option value="" selected disabled>Select Year</option>
                                 <option value="2026">2026</option>
                                 <option value="2025">2025</option>
@@ -362,8 +366,10 @@ $current_page = 'dashboard';
 
                         <!-- Course -->
                         <div class="flex items-center gap-2">
-                            <label class="whitespace-nowrap font-[Montserrat] font-semibold text-[#0E0F3B]">Course:</label>
-                            <select class="border border-slate-300 rounded-md px-3 py-1.5 w-72 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
+                            <label
+                                class="whitespace-nowrap font-[Montserrat] font-semibold text-[#0E0F3B]">Course:</label>
+                            <select
+                                class="border border-slate-300 rounded-md px-3 py-1.5 w-72 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
                                 <option selected disabled>Select Undergraduate Program</option>
 
                                 <option>Bachelor of Arts in Communication</option>
@@ -395,8 +401,10 @@ $current_page = 'dashboard';
 
                         <!-- Employment Status -->
                         <div class="flex items-center gap-2">
-                            <label class="whitespace-nowrap font-[Montserrat] font-semibold text-[#0E0F3B]">Employment Status:</label>
-                            <select class="border border-slate-300 rounded-md px-3 py-1.5 w-48 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
+                            <label class="whitespace-nowrap font-[Montserrat] font-semibold text-[#0E0F3B]">Employment
+                                Status:</label>
+                            <select
+                                class="border border-slate-300 rounded-md px-3 py-1.5 w-48 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
                                 <option value="" selected disabled>Select Status</option>
                                 <option>Employed</option>
                                 <option>Unemployed</option>
@@ -404,7 +412,8 @@ $current_page = 'dashboard';
                         </div>
 
                         <!-- Export Button -->
-                        <button class="ml-auto bg-[#C04828] text-[8px] text-white px-4 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-[#A03D22] transition shadow-sm font-semibold uppercase tracking-wide">
+                        <button
+                            class="ml-auto bg-[#C04828] text-[8px] text-white px-4 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-[#A03D22] transition shadow-sm font-semibold uppercase tracking-wide">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i> EXPORT CSV
                         </button>
                     </div>
@@ -412,7 +421,9 @@ $current_page = 'dashboard';
 
                 <!-- System Overview Heading -->
                 <div class="mb-2 ml-1">
-                    <span class="section-heading bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">System Overview</span>
+                    <span
+                        class="section-heading bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">System
+                        Overview</span>
                 </div>
 
                 <!-- Stat Cards -->
@@ -420,7 +431,8 @@ $current_page = 'dashboard';
 
                     <div class="stat-card">
                         <div class="s-top">
-                            <svg class="s-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="s-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
                                 <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
                                 <path d="M6 12v5c3 3 9 3 12 0v-5" />
                             </svg>
@@ -432,7 +444,8 @@ $current_page = 'dashboard';
 
                     <div class="stat-card">
                         <div class="s-top">
-                            <svg class="s-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="s-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
                                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                                 <circle cx="9" cy="7" r="4" />
                                 <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -446,7 +459,8 @@ $current_page = 'dashboard';
 
                     <div class="stat-card">
                         <div class="s-top">
-                            <svg class="s-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="s-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
                                 <rect x="2" y="7" width="20" height="14" rx="2" />
                                 <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
                                 <line x1="12" y1="12" x2="12" y2="16" />
@@ -460,7 +474,8 @@ $current_page = 'dashboard';
 
                     <div class="stat-card">
                         <div class="s-top">
-                            <svg class="s-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="s-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
                                 <path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
                                 <circle cx="12" cy="12" r="2" />
                                 <path d="M6 12H4M20 12h-2" />
@@ -583,7 +598,8 @@ $current_page = 'dashboard';
                         <div class="card-title">Alumni ID & Yearbook Reports</div>
                         <div class="grid grid-cols-2 gap-4 mt-3">
                             <div>
-                                <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px;">Alumni ID Status</div>
+                                <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px;">Alumni ID
+                                    Status</div>
                                 <div style="height:130px;"><canvas id="chartAlumniID"></canvas></div>
                                 <div style="font-size:9.5px;color:#6b7280;margin-top:8px;line-height:1.7;">
                                     Registered for ID: <strong>6,842 (80%)</strong><br>
@@ -591,7 +607,8 @@ $current_page = 'dashboard';
                                 </div>
                             </div>
                             <div>
-                                <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px;">Yearbook Distribution</div>
+                                <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px;">Yearbook
+                                    Distribution</div>
                                 <div style="height:130px;"><canvas id="chartYearbook"></canvas></div>
                                 <div style="font-size:9.5px;color:#6b7280;margin-top:8px;line-height:1.7;">
                                     Distributed: 53.4% &nbsp;<strong>1,247 (54.8%)</strong><br>
@@ -619,7 +636,8 @@ $current_page = 'dashboard';
                         <div class="activity-row">
                             <span>Mark Garcia (Profile Updated)</span>
                         </div>
-                        <div class="activity-row" style="color:#9ca3af;font-style:italic;font-size:11px;border-top:1px solid #f1f5f9;">
+                        <div class="activity-row"
+                            style="color:#9ca3af;font-style:italic;font-size:11px;border-top:1px solid #f1f5f9;">
                             <span>No more recent updates</span>
                         </div>
                     </div>
@@ -695,25 +713,25 @@ $current_page = 'dashboard';
             data: {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
                 datasets: [{
-                        label: 'Connections',
-                        data: [120, 180, 160, 230, 290, 340],
-                        borderColor: '#e05c00',
-                        backgroundColor: 'rgba(224,92,0,.08)',
-                        borderWidth: 2,
-                        pointRadius: 3,
-                        fill: false,
-                        tension: 0.4
-                    },
-                    {
-                        label: 'Messages',
-                        data: [200, 250, 220, 300, 380, 450],
-                        borderColor: '#1a3a6e',
-                        backgroundColor: 'rgba(26,58,110,.08)',
-                        borderWidth: 2,
-                        pointRadius: 3,
-                        fill: true,
-                        tension: 0.4
-                    }
+                    label: 'Connections',
+                    data: [120, 180, 160, 230, 290, 340],
+                    borderColor: '#e05c00',
+                    backgroundColor: 'rgba(224,92,0,.08)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    fill: false,
+                    tension: 0.4
+                },
+                {
+                    label: 'Messages',
+                    data: [200, 250, 220, 300, 380, 450],
+                    borderColor: '#1a3a6e',
+                    backgroundColor: 'rgba(26,58,110,.08)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    fill: true,
+                    tension: 0.4
+                }
                 ]
             },
             options: {
@@ -785,15 +803,15 @@ $current_page = 'dashboard';
             data: {
                 labels: ['2022', '2023', '2024', '2025', '2026'],
                 datasets: [{
-                        label: 'Unemployed',
-                        data: [30, 25, 28, 35, 20],
-                        backgroundColor: '#e05c00'
-                    },
-                    {
-                        label: 'Employed',
-                        data: [70, 75, 72, 65, 80],
-                        backgroundColor: '#1a3a6e'
-                    }
+                    label: 'Unemployed',
+                    data: [30, 25, 28, 35, 20],
+                    backgroundColor: '#e05c00'
+                },
+                {
+                    label: 'Employed',
+                    data: [70, 75, 72, 65, 80],
+                    backgroundColor: '#1a3a6e'
+                }
                 ]
             },
             options: {

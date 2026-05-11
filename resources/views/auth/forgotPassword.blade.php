@@ -75,7 +75,7 @@
 
 
 <body class="min-h-screen flex items-center justify-center font-[Montserrat]">
-
+    @include('partials.success')
     <div class="absolute inset-0 z-0">
         <img src="assets/alumnetBackground.svg" alt="PLV Building" class="w-full h-full object-cover">
     </div>

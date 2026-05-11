@@ -77,7 +77,7 @@
                     @endforeach
                 </div>
                 @endif
-
+                @include('partials.success')
                 <form action="{{ route('users.login') }}" method="POST" class="space-y-4 w-full max-w-md mx-auto h-auto ">
                     @csrf
 

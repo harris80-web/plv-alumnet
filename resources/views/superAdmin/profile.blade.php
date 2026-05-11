@@ -140,53 +140,63 @@
             <div class="dash-scroll bg-[#e9eff6] p-6 lg:p-10">
 
                 @if (session('success'))
-                <div class="bg-green-100 border border-green-300 text-green-700 px-4 py-3 rounded-lg text-sm mb-4 max-w-6xl mx-auto">
-                    {{ session('success') }}
-                </div>
-                <script>
-                    setTimeout(() => {
-                        const alert = document.getElementById('successAlert');
-                        alert.style.opacity = '0';
-                        setTimeout(() => alert.remove(), 500); // remove after fade
-                    }, 5000);
-                </script>
+                    <div
+                        class="bg-green-100 border border-green-300 text-green-700 px-4 py-3 rounded-lg text-sm mb-4 max-w-6xl mx-auto">
+                        {{ session('success') }}
+                    </div>
+                    <script>
+                        setTimeout(() => {
+                            const alert = document.getElementById('successAlert');
+                            alert.style.opacity = '0';
+                            setTimeout(() => alert.remove(), 500); // remove after fade
+                        }, 5000);
+                    </script>
                 @endif
 
                 @if ($errors->any())
-                <div class="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-sm mb-4 max-w-6xl mx-auto">
-                    @foreach ($errors->all() as $error)
-                    <p>{{ $error }}</p>
-                    @endforeach
-                </div>
+                    <div
+                        class="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-sm mb-4 max-w-6xl mx-auto">
+                        @foreach ($errors->all() as $error)
+                            <p>{{ $error }}</p>
+                        @endforeach
+                    </div>
                 @endif
+                @include('partials.success')
 
                 <!-- FORM WRAPPER START -->
-                <form id="profileForm" action="{{ route('offices.updateProfile', $user->user_id) }}" method="POST" enctype="multipart/form-data" class="max-w-6xl mx-auto space-y-6">
+                <form id="profileForm" action="{{ route('offices.updateProfile', $user->user_id) }}" method="POST"
+                    enctype="multipart/form-data" class="max-w-6xl mx-auto space-y-6">
                     @csrf
                     @method('PUT')
 
                     <!-- Profile Header Card -->
                     <div class="bg-white rounded-3xl p-8 flex items-center gap-8 card-shadow relative">
                         <div class="relative group">
-                            <div class="w-32 h-32 bg-[#0a0f2c] rounded-full flex items-center justify-center overflow-hidden">
+                            <div
+                                class="w-32 h-32 bg-[#0a0f2c] rounded-full flex items-center justify-center overflow-hidden">
                                 @if ($user->user_profile_picture)
-                                <img src="{{ asset('storage/' . $user->user_profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover">
+                                    <img src="{{ asset('storage/' . $user->user_profile_picture) }}" alt="Profile Picture"
+                                        class="w-full h-full object-cover">
                                 @else
-                                <i data-lucide="user" class="w-20 h-20 text-white opacity-20"></i>
+                                    <i data-lucide="user" class="w-20 h-20 text-white opacity-20"></i>
                                 @endif
                             </div>
                             <!-- Camera Icon for Edit Mode -->
-                            <button type="button" id="cameraBtn" class="hidden absolute bottom-0 right-0 bg-slate-200 p-2 rounded-full border-2 border-white hover:bg-slate-300 transition shadow-sm">
+                            <button type="button" id="cameraBtn"
+                                class="hidden absolute bottom-0 right-0 bg-slate-200 p-2 rounded-full border-2 border-white hover:bg-slate-300 transition shadow-sm">
                                 <i data-lucide="camera" class="w-4 h-4 text-slate-700"></i>
                             </button>
                             <!-- Photo Tooltip (Context Menu) -->
                             <!-- Positioned relative to the profile image container -->
-                            <div id="photoMenu" class="hidden absolute top-full mt-2 left-1/2 -translate-x-1/2 md:left-32 md:top-10 md:translate-x-0 bg-white border rounded-xl shadow-xl p-2 w-48 z-20 text-[#0E0F3B] font-medium">
-                                <button type="button" class="flex items-center gap-3 w-full p-2.5 hover:bg-slate-100 rounded-lg text-sm transition-colors">
+                            <div id="photoMenu"
+                                class="hidden absolute top-full mt-2 left-1/2 -translate-x-1/2 md:left-32 md:top-10 md:translate-x-0 bg-white border rounded-xl shadow-xl p-2 w-48 z-20 text-[#0E0F3B] font-medium">
+                                <button type="button"
+                                    class="flex items-center gap-3 w-full p-2.5 hover:bg-slate-100 rounded-lg text-sm transition-colors">
                                     <i data-lucide="user" class="w-4 h-4 text-slate-500"></i>
                                     See Profile Image
                                 </button>
-                                <label class="flex items-center gap-3 w-full p-2.5 hover:bg-slate-100 rounded-lg text-sm cursor-pointer transition-colors">
+                                <label
+                                    class="flex items-center gap-3 w-full p-2.5 hover:bg-slate-100 rounded-lg text-sm cursor-pointer transition-colors">
                                     <i data-lucide="image" class="w-4 h-4 text-slate-500"></i>
                                     Choose Profile Image
                                     <input type="file" name="user_profile_picture" class="hidden">
@@ -194,8 +204,10 @@
                             </div>
                         </div>
                         <div>
-                            <h2 class="text-2xl font-bold text-[#0a0f2c]">{{ $user->user_first_name }} {{ $user->user_last_name }}</h2>
-                            <p class="text-[#C73D1A] font-semibold">{{ ucwords(str_replace('_', ' ', $user->user_role)) }}</p>
+                            <h2 class="text-2xl font-bold text-[#0a0f2c]">{{ $user->user_first_name }}
+                                {{ $user->user_last_name }}</h2>
+                            <p class="text-[#C73D1A] font-semibold">
+                                {{ ucwords(str_replace('_', ' ', $user->user_role)) }}</p>
                             <p class="text-slate-400 text-sm">{{ $user->office->office_address ?? '—' }}</p>
                         </div>
                     </div>
@@ -206,14 +218,17 @@
                             <h3 class="text-xl font-bold plv-gradient-text">Personal Information</h3>
 
                             <div id="viewActions">
-                                <button type="button" onclick="toggleEdit(true)" class="bg-plv-orange text-white px-6 py-1.5 rounded-lg flex items-center gap-2 hover:bg-orange-600 transition text-sm">
+                                <button type="button" onclick="toggleEdit(true)"
+                                    class="bg-plv-orange text-white px-6 py-1.5 rounded-lg flex items-center gap-2 hover:bg-orange-600 transition text-sm">
                                     Edit <i data-lucide="edit-3" class="w-4 h-4"></i>
                                 </button>
                             </div>
 
                             <div id="editActions" class="hidden flex gap-3">
-                                <button type="button" onclick="toggleEdit(false)" class="border border-plv-orange text-plv-orange px-6 py-1.5 rounded-lg hover:bg-orange-50 transition text-sm">Cancel</button>
-                                <button type="submit" class="bg-plv-orange text-white px-6 py-1.5 rounded-lg hover:bg-orange-600 transition text-sm">Save</button>
+                                <button type="button" onclick="toggleEdit(false)"
+                                    class="border border-plv-orange text-plv-orange px-6 py-1.5 rounded-lg hover:bg-orange-50 transition text-sm">Cancel</button>
+                                <button type="submit"
+                                    class="bg-plv-orange text-white px-6 py-1.5 rounded-lg hover:bg-orange-600 transition text-sm">Save</button>
                             </div>
                         </div>
 
@@ -221,42 +236,54 @@
                             <div class="flex flex-col gap-1">
                                 <label class="text-slate-500 text-sm">First Name</label>
                                 <span class="view-mode font-semibold text-info">{{ $user->user_first_name }}</span>
-                                <input type="text" name="user_first_name" value="{{ $user->user_first_name }}" class="edit-mode hidden border border-plv-orange/50 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#C73D1A] text-[#0a0f2c]">
+                                <input type="text" name="user_first_name" value="{{ $user->user_first_name }}"
+                                    class="edit-mode hidden border border-plv-orange/50 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#C73D1A] text-[#0a0f2c]">
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label class="text-slate-500 text-sm">Middle Name</label>
-                                <span class="view-mode font-semibold text-info">{{ $user->user_middle_name ?? '—' }}</span>
-                                <input type="text" name="user_middle_name" value="{{ $user->user_middle_name }}" class="edit-mode hidden border border-plv-orange/50 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#C73D1A] text-[#0a0f2c]">
+                                <span
+                                    class="view-mode font-semibold text-info">{{ $user->user_middle_name ?? '—' }}</span>
+                                <input type="text" name="user_middle_name" value="{{ $user->user_middle_name }}"
+                                    class="edit-mode hidden border border-plv-orange/50 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#C73D1A] text-[#0a0f2c]">
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label class="text-slate-500 text-sm">Last Name</label>
                                 <span class="view-mode font-semibold text-info">{{ $user->user_last_name }}</span>
-                                <input type="text" name="user_last_name" value="{{ $user->user_last_name }}" class="edit-mode hidden border border-plv-orange/50 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#C73D1A] text-[#0a0f2c]">
+                                <input type="text" name="user_last_name" value="{{ $user->user_last_name }}"
+                                    class="edit-mode hidden border border-plv-orange/50 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#C73D1A] text-[#0a0f2c]">
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label class="text-slate-500 text-sm">Suffix</label>
                                 <span class="view-mode font-semibold text-info">{{ $user->user_suffix ?? 'N/A' }}</span>
-                                <input type="text" name="user_suffix" value="{{ $user->user_suffix }}" class="edit-mode hidden border border-plv-orange/50 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#C73D1A] text-[#0a0f2c]">
+                                <input type="text" name="user_suffix" value="{{ $user->user_suffix }}"
+                                    class="edit-mode hidden border border-plv-orange/50 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#C73D1A] text-[#0a0f2c]">
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label class="text-slate-500 text-sm">Date of Birth</label>
-                                <span class="view-mode font-semibold text-info">{{ $user->office->office_birth_date ?? '—' }}</span>
-                                <input type="date" name="office_birth_date" value="{{ $user->office->office_birth_date }}" class="edit-mode hidden border border-plv-orange/50 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#C73D1A] text-[#0a0f2c]">
+                                <span
+                                    class="view-mode font-semibold text-info">{{ $user->office->office_birth_date ?? '—' }}</span>
+                                <input type="date" name="office_birth_date"
+                                    value="{{ $user->office->office_birth_date }}"
+                                    class="edit-mode hidden border border-plv-orange/50 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#C73D1A] text-[#0a0f2c]">
                             </div>
                             <div class="flex flex-col gap-1 md:col-span-1">
                                 <label class="text-slate-500 text-sm">Email Address</label>
                                 <span class="view-mode font-semibold text-info">{{ $user->user_email }}</span>
-                                <input type="email" name="user_email" value="{{ $user->user_email }}" class="edit-mode hidden border border-plv-orange/50 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#C73D1A] text-[#0a0f2c]">
+                                <input type="email" name="user_email" value="{{ $user->user_email }}"
+                                    class="edit-mode hidden border border-plv-orange/50 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#C73D1A] text-[#0a0f2c]">
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label class="text-slate-500 text-sm">Phone Number</label>
                                 <span class="view-mode font-semibold text-info">{{ $user->user_number ?? '—' }}</span>
-                                <input type="text" name="user_number" value="{{ $user->user_number }}" class="edit-mode hidden border border-plv-orange/50 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#C73D1A] text-[#0a0f2c]">
+                                <input type="text" name="user_number" value="{{ $user->user_number }}"
+                                    class="edit-mode hidden border border-plv-orange/50 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#C73D1A] text-[#0a0f2c]">
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label class="text-slate-500 text-sm">Address</label>
-                                <span class="view-mode font-semibold text-info">{{ $user->office->office_address ?? '—' }}</span>
-                                <input type="text" name="office_address" value="{{ $user->office->office_address }}" class="edit-mode hidden border border-plv-orange/50 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#C73D1A] text-[#0a0f2c]">
+                                <span
+                                    class="view-mode font-semibold text-info">{{ $user->office->office_address ?? '—' }}</span>
+                                <input type="text" name="office_address" value="{{ $user->office->office_address }}"
+                                    class="edit-mode hidden border border-plv-orange/50 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#C73D1A] text-[#0a0f2c]">
                             </div>
                         </div>
                     </div>
@@ -272,11 +299,13 @@
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                             <div class="flex flex-col gap-1">
                                 <label class="text-slate-500 text-sm">User Role</label>
-                                <span class="font-semibold text-info">{{ ucwords(str_replace('_', ' ', $user->user_role)) }}</span>
+                                <span
+                                    class="font-semibold text-info">{{ ucwords(str_replace('_', ' ', $user->user_role)) }}</span>
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label class="text-slate-500 text-sm">Account Status</label>
-                                <span class="font-semibold text-info">{{ $user->user_active ? 'Active' : 'Inactive' }}</span>
+                                <span
+                                    class="font-semibold text-info">{{ $user->user_active ? 'Active' : 'Inactive' }}</span>
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label class="text-slate-500 text-sm">Date Created</label>

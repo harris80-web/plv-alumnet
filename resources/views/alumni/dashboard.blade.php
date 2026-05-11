@@ -72,7 +72,7 @@
             <p class="text-xl font-light">Honoring the Past. Shaping the Future.</p>
         </div>
     </section>
-
+    @include('partials.success')
     <section id="status-section" class="py-12 px-6 max-w-6xl mx-auto">
         <h2 class="text-4xl font-bold mb-10">
             <span class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Alumni Dashboard</span>

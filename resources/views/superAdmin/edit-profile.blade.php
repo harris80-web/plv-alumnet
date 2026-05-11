@@ -17,6 +17,7 @@
                 </ul>
             </div>
             @endif
+            @include('partials.success')
     <form action="{{ route('offices.updateProfile', $user->user_id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')

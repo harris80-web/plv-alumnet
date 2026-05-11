@@ -136,7 +136,7 @@
 
 <body>
     @php
-    $current_page = 'employer_job_board';
+    $current_page = Route::currentRouteName();
     @endphp
     @if(auth()->user()->user_role === 'alumni')
     @include('partials.header-alumni')

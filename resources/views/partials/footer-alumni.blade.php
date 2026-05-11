@@ -32,8 +32,8 @@
             <div class="flex gap-4 font-[Montserrat]">
                 <div class="w-[1.5px] bg-white "></div>
                 <nav id="footer-nav" class="flex flex-col justify-center text-[15px] font-semibold gap-1">
-                    <a href="{{ route('alumni.dashboard') }}"
-                        class="{{ request()->routeIs('alumni.dashboard') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                    <a href="{{ route('alumnus.dashboard') }}"
+                        class="{{ request()->routeIs('alumnus.dashboard') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                         HOME
                     </a>
                     <a href="{{ route('alumni.about') }}"

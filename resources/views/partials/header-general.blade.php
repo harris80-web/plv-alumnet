@@ -23,8 +23,8 @@
             <img src="{{ asset('assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png') }}" alt="" class="h-8 w-30">
         </div>
         <nav class="flex items-center justify-center gap-10 text-white flex-1 font-medium text-sm">
-            <a href="{{ route('general.home') }}"
-                class="{{ $current_page === 'index' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+            <a href="{{ route('users.dashboardRedirect') }}"
+                class="{{ $current_page === 'users.dashboardRedirect' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                 HOME
             </a>
             

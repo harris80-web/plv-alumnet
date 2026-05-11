@@ -73,7 +73,7 @@ $approved_count = $approved_jobs->count();
     <link rel="icon" type="image/x-icon" href="assets/PLV-AlumNet LOGO.png">
     @vite('resources/css/app.css')
     @vite('resources/js/app.js')
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest" defer></script>
     <style>
         body {
             font-family: 'Montserrat', sans-serif;
@@ -173,10 +173,8 @@ $approved_count = $approved_jobs->count();
 <body class="bg-slate-100">
     <div class="flex h-screen overflow-hidden">
         @include('partials.super-admin-side-bar')
-
         <main class="flex-1 flex flex-col overflow-hidden min-w-0">
             @include('partials.super-admin-header')
-
             <div class="flex-1 overflow-y-auto p-6">
 
                 <!-- Stat Cards -->

@@ -57,9 +57,9 @@ function icon_class($page_name, $current_page)
 
             <a href="{{ route('jobPosting.jobManagement') }}"
                 data-tooltip="Job Placement Management"
-                class="nav-link relative group flex items-center h-10 transition-all {{ $current_page === 'job_placement' ? 'bg-white/10 border-l-4 border-orange-500 pl-4' : 'hover:bg-white/10 px-5 group' }}">
+                class="nav-link relative group flex items-center h-10 transition-all {{ $current_page === 'job_management' ? 'bg-white/10 border-l-4 border-orange-500 pl-4' : 'hover:bg-white/10 px-5 group' }}">
                 <div class="w-8 shrink-0 flex items-center">
-                    <i data-lucide="briefcase" class="w-4 h-4 transition-colors {{ $current_page === 'job_placement' ? 'text-orange-500' : 'text-slate-400 group-hover:text-orange-500' }}"></i>
+                    <i data-lucide="briefcase" class="w-4 h-4 transition-colors {{ $current_page === 'job_management' ? 'text-orange-500' : 'text-slate-400 group-hover:text-orange-500' }}"></i>
                 </div>
                 <span class="sidebar-text hidden opacity-0 whitespace-nowrap">Job Placement Management</span>
             </a>
@@ -111,7 +111,7 @@ function icon_class($page_name, $current_page)
         </nav>
 
         <div class="mt-auto">
-            <button onclick="toggleSidebar()" data-tooltip="Expand" id="collapse-btn"
+            <button onclick="toggleSidebarMain()" data-tooltip="Expand" id="collapse-btn"
                 class="nav-btn-tooltip w-full flex items-center h-10 transition-all hover:bg-white/10 px-5 group">
                 <div class="w-8 shrink-0 flex items-center">
                     <i data-lucide="panel-left-open" id="collapse-icon"
@@ -147,7 +147,7 @@ function icon_class($page_name, $current_page)
     const sidebarTexts = document.querySelectorAll('.sidebar-text');
 
     /* ── Sidebar expand/collapse ── */
-    function toggleSidebar() {
+    function toggleSidebarMain() {
         const collapseBtn = document.getElementById('collapse-btn');
         const isCollapsed = sidebar.classList.contains('w-16');
 

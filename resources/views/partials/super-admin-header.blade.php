@@ -1,16 +1,16 @@
 <?php
-$currentPage = basename($_SERVER['PHP_SELF']);
+$currentPage = basename(request()->path()) . '.blade.php';
 
 $pageTitles = [
-    'super_admin_dashboard.php'       => 'Dashboard',
-    'super_admin_profile.php'         => 'Super Admin Profile',
-    'super_admin_user_management.php' => 'User Management',
-    'super_admin_job_placement.php'   => 'Job Placement Management',
-    'super_admin_id_yearbook.php'     => 'Alumni ID & Yearbook Management',
-    'super_admin_notices_events.php'  => 'Notices & Events',
-    'super_admin_chatbot_messaging.php' => 'Chatbot & Messaging',
-    'super_admin_testimonials.php'    => 'Testimonial Management',
-    'super_admin_faqs.php'            => 'Manage FAQs'
+    'dashboard.blade.php'       => 'Dashboard',
+    'profile.blade.php'         => 'Super Admin Profile',
+    'userManagement.blade.php' => 'User Management',
+    'jobManagement.blade.php'   => 'Job Placement Management',
+    'yearbook.blade.php'     => 'Alumni ID & Yearbook Management',
+    'notices.blade.php'  => 'Notices & Events',
+    'messaging.blade.php' => 'Chatbot & Messaging',
+    'testimonialManagement.blade.php'    => 'Testimonial Management',
+    'faqs.blade.php'            => 'Manage FAQs'
 ];
 
 $title = $pageTitles[$currentPage] ?? 'Super Admin Panel';

@@ -193,7 +193,7 @@ class JobPostingController extends Controller
 
     public function showJobManagement()
     {
-        $jobPostings = JobPosting::all();
+        $jobPostings = JobPosting::latest()->get();
         $programs = Program::all();
         $users = Auth::user();
         return view('superAdmin.jobManagement', compact('jobPostings', 'programs', 'users'));

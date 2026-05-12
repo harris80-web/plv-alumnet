@@ -203,6 +203,7 @@
                     <table class="jobs-table">
                         <thead class="bg-[#0E0F3B] text-white">
                             <tr>
+                                <th class="border-r border-slate-700">ID</th>
                                 <th class="border-r border-slate-700">Job Title</th>
                                 <th class="border-r border-slate-700">Company Name <i data-lucide="chevron-down"
                                         class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
@@ -218,6 +219,7 @@
                                         class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
                                 <th class="border-r border-slate-700">Status <i data-lucide="chevron-down"
                                         class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
+                                <th class="border-r border-slate-700">Posting Date</th>
                                 <th class="border-r border-slate-700">Closing Date</th>
                                 <th>Actions</th>
                             </tr>
@@ -225,6 +227,7 @@
                         <tbody class="divide-y divide-slate-100">
                             @forelse ($pending_jobs as $j)
                                                         <tr class="hover:bg-slate-50/80 transition-colors">
+                                                            <td class="font-medium text-black border-r border-slate-100">{{ $loop->iteration }}</td>
                                                             <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_title }}
                                                             </td>
                                                             <td class="font-medium text-black border-r border-slate-100">
@@ -246,9 +249,10 @@
                                                             <td class="border-r border-slate-100">
                                                                 <span
                                                                     class="px-2 py-1 rounded-full border text-[7px] font-bold bg-amber-100 text-amber-600 border-amber-200 inline-block">
-                                                                    ● PENDING
+                                                                     PENDING
                                                                 </span>
                                                             </td>
+                                                            <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_date }}
                                                             <td class="font-medium text-black border-r border-slate-100">{{ $j->job_closing_date }}
                                                             </td>
                                                             <td class="text-center relative">
@@ -328,6 +332,7 @@
                     <table class="jobs-table">
                         <thead class="bg-[#0E0F3B] text-white">
                             <tr>
+                                <th class="border-r border-slate-700">ID</th>
                                 <th class="border-r border-slate-700">Job Title</th>
                                 <th class="border-r border-slate-700">Company Name <i data-lucide="chevron-down"
                                         class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
@@ -343,6 +348,7 @@
                                         class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
                                 <th class="border-r border-slate-700">Status <i data-lucide="chevron-down"
                                         class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
+                                        <th class="border-r border-slate-700">Posting Date</th>
                                 <th class="border-r border-slate-700">Closing Date</th>
                                 <th>Actions</th>
                             </tr>
@@ -350,12 +356,14 @@
                         <tbody class="divide-y divide-slate-100" id="jobs-tbody">
                             @forelse ($approved_jobs as $j)
                                                         <tr class="hover:bg-slate-50/80 transition-colors"
+                                                        
                                                             data-title="{{ strtolower($j->job_posting_title) }}"
                                                             data-company="{{ strtolower($j->job_posting_company) }}"
                                                             data-type="{{ $j->job_posting_employment_type }}"
                                                             data-setup="{{ $j->job_posting_setup }}"
                                                             data-program="{{ $j->programs->pluck('program_name')->join(', ') }}"
                                                             data-datetime="{{ $j->created_at }}" data-closing="{{ $j->job_closing_date }}">
+                                                            <td class="font-medium text-black border-r border-slate-100">{{ $loop->iteration }}</td>
                                                             <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_title }}
                                                             </td>
                                                             <td class="font-medium text-black border-r border-slate-100">
@@ -376,10 +384,11 @@
                                                             </td>
                                                             <td class="border-r border-slate-100">
                                                                 <span
-                                                                    class="px-2 py-1 rounded-full border text-[6px] font-semibold bg-green-100 text-green-600 border-green-200 inline-block">
-                                                                    ● APPROVED
+                                                                    class="px-2 py-1 rounded-full border text-[6px] font-semibold bg-green-100 text-green-600 border-green-200 inline-block whitespace-nowrap">
+                                                                     APPROVED
                                                                 </span>
                                                             </td>
+                                                            <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_date }}
                                                             <td class="font-medium text-black border-r border-slate-100">{{ $j->job_closing_date }}
                                                             </td>
                                                             <td class="text-center relative">
@@ -765,7 +774,7 @@
                 <p><strong>Job Setup:</strong> ${data.setup}</p>
                 <p><strong>Recommended Program:</strong> ${data.program}</p>
                 <p><strong>Closing Date:</strong> ${data.closing}</p>
-                <p><strong>Status:</strong> <span class="px-2 py-1 rounded-full border text-[9px] font-bold ${statusClass}">● ${data.status.toUpperCase()}</span></p>
+                <p><strong>Status:</strong> <span class="px-2 py-1 rounded-full border text-[9px] font-bold ${statusClass}"> ${data.status.toUpperCase()}</span></p>
                 <p><strong>Description:</strong> ${data.description ?? 'N/A'}</p>
             </div>`;
 

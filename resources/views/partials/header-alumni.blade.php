@@ -14,7 +14,7 @@
 </head>
 
 <body>
-    <?php $current_page = basename($_SERVER['PHP_SELF'], ".php");  ?>
+    <?php $current_page = Route::currentRouteName();  ?>
 
     <header class="sticky top-0 z-50 w-full bg-[#0E0F3B] font-bold flex justify-between px-[4em] py-[1em]">
         <div class="flex items-center gap-3 ml-10">
@@ -23,7 +23,7 @@
         </div>
         <nav class="flex items-center justify-center gap-10 text-white flex-1 font-medium text-sm">
             <a href="{{ route('users.dashboardRedirect') }}"
-                class="{{ $current_page == 'index_alumni' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+                class="{{ $current_page == 'users.dashboardRedirect' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                 HOME
             </a>
             <a href="events.php"
@@ -31,7 +31,7 @@
             <a href="announcements.php"
                 class="{{ $current_page == 'announcements' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">ANNOUNCEMENTS</a>
             <a href="{{ route('jobPosting.jobBoard') }}"
-                class="{{ $current_page == 'employer_job_board' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">JOB BOARD</a>
+                class="{{ $current_page == 'jobPosting.jobBoard' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">JOB BOARD</a>
             <a href="alumni_directory.php"
                 class="{{ $current_page == 'alumni_directory' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">DIRECTORY</a>
 

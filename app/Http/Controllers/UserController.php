@@ -235,7 +235,7 @@ class UserController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('auth.login');
+        return view('auth.login');
     }
 
     public function showUsers(User $user)

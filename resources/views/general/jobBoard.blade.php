@@ -22,7 +22,7 @@
         <br><br>
         
         <div>
-            <form action="{{ route('jobPosting.addJobPost', ['id' => $users->user_id]) }}" method="post" enctype="multipart/form-data">
+            <form action="{{ route('jobPosting.addJobPost', ['id' => $user->user_id]) }}" method="post" enctype="multipart/form-data">
                 @csrf
                 <div>
                     <label for="job_posting_image">Job photo:</label>
@@ -486,7 +486,7 @@
 
         <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col min-h-[600px]">
 
-            <form action="{{ route('jobPosting.addJobPost', ['id' => $users->user_id]) }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('jobPosting.addJobPost', ['id' => $user->user_id]) }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
                 <button type="button" onclick="closePostModal()" class="absolute top-11 right-8 text-gray-300 hover:text-gray-500 transition-colors z-10">
@@ -534,7 +534,7 @@
 
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-[#1D264F] uppercase">Business Name <span class="text-red-500">*</span></label>
-                                <input type="text" name="job_posting_company" placeholder="Enter the registered name"
+                                <input type="text" name="job_posting_company" placeholder="{{ $user->employer->employer_company_name ?? 'e.g., ABC Corporation' }}" value="{{ $user->employer_company_name }}" disabled
                                     class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
                             </div>
                         </div>

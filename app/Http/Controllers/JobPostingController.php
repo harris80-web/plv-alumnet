@@ -70,37 +70,53 @@ class JobPostingController extends Controller
 
     public function showJobBoard()
     {
-        $jobPostings = JobPosting::all();
+        $allJobs = JobPosting::all();
         $programs = Program::all();
-        $users = Auth::user();
         $applications = Auth::user()->alumnus ? Auth::user()->alumnus->appliedJobs->pluck('job_id')->toArray() : [];
-        return view('general.jobBoard', compact('jobPostings', 'programs', 'users', 'applications'));
+
+        $user = Auth::user();
+        $query = JobPosting::query()->with('user');
+
+        if ($user->user_role === 'super_admin') {
+            // Super Admin sees jobs from Employers and Admins
+            $query->whereHas('user', function ($q) {
+                $q->whereIn('user_role', ['employer', 'admin']);
+            });
+        } elseif ($user->user_role === 'admin') {
+            // Admin sees jobs from Employers and Super Admins
+            $query->whereHas('user', function ($q) {
+                $q->whereIn('user_role', ['employer', 'super_admin']);
+            });
+        }
+
+        $jobPostings = $query->get();
+        return view('general.jobBoard', compact('jobPostings', 'programs', 'user', 'applications', 'allJobs'));
     }
 
     public function addJobPost(Request $request, $id)
     {
-       $validated = $request->validate([
-            'job_posting_image' => ['required','image','mimes:jpeg,png,jpg,svg'],
-            'job_posting_title' => ['required','string'],
-            'job_posting_company' => ['required','string'],
-            'job_posting_address' => ['required','string'],
-            'job_posting_employment_type' => ['required','string', Rule::in('Full-Time', 'Part-Time', 'Freelance')],
-            'job_posting_description' => ['required','string'],
-            'job_closing_date' => ['required','date'],
-            'job_posting_setup' => ['required','string', Rule::in('On-Site', 'Remote', 'Hybrid')],
-            'program' => ['required','array','max:3'],
+        $validated = $request->validate([
+            'job_posting_image' => ['required', 'image', 'mimes:jpeg,png,jpg,svg'],
+            'job_posting_title' => ['required', 'string'],
+            'job_posting_company' => ['required', 'string'],
+            'job_posting_address' => ['required', 'string'],
+            'job_posting_employment_type' => ['required', 'string', Rule::in('Full-Time', 'Part-Time', 'Freelance')],
+            'job_posting_description' => ['required', 'string'],
+            'job_closing_date' => ['required', 'date'],
+            'job_posting_setup' => ['required', 'string', Rule::in('On-Site', 'Remote', 'Hybrid')],
+            'program' => ['required', 'array', 'max:3'],
             'program.*' => ['exists:programs,program_id'],
         ]);
 
-        
+
         $jobImagePath = null;
         if ($request->hasFile('job_posting_image')) {
             $jobImagePath = $request->file('job_posting_image')->store('jobImages', 'public');
         }
         $selectedPrograms = array_unique(array_filter($request->program));
 
-        try{
-            DB::transaction(function() use($validated, $jobImagePath, $id, $selectedPrograms) {
+        try {
+            DB::transaction(function () use ($validated, $jobImagePath, $id, $selectedPrograms) {
                 $jobPost = JobPosting::create([
                     'job_posting_image' => $jobImagePath,
                     'job_posting_title' => $validated['job_posting_title'],
@@ -123,8 +139,6 @@ class JobPostingController extends Controller
         }
 
         return redirect()->route('jobPosting.jobBoard')->with('success', 'Job posting added successfully!');
-
-       
     }
 
     public function showMyJobPosts($id)
@@ -205,5 +219,4 @@ class JobPostingController extends Controller
         $job->update(['job_approved' => true]);
         return redirect()->route('jobPosting.jobManagement')->with('success', 'Job posting approved successfully!');
     }
-
 }

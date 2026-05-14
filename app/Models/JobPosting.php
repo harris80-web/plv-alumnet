@@ -29,6 +29,18 @@ class JobPosting extends Model
         return $this->belongsTo(Employer::class, 'employer_id', 'user_id');
     }
 
+    public function office()
+    {
+        // "I belong to one user (the employer)"
+        return $this->belongsTo(Office::class, 'employer_id', 'user_id');
+    }
+
+    public function user()
+    {
+        // "I belong to one user (the employer)"
+        return $this->belongsTo(User::class, 'employer_id', 'user_id');
+    }
+
     public function salaryMin()
     {
         // "I belong to one user (the employer)"

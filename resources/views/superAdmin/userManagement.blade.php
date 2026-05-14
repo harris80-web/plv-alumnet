@@ -16,7 +16,7 @@
         <div>
             <h2 class="flex justify-center font-bold">Employer management</h2>
             @foreach ($employers as $employer)
-            <?php if ($employer->user->user_active == 0) {; ?>
+            
 
                 <div class="flex gap-4 border-2 border-gray-300 rounded-lg p-4 mb-4">
                     <div>{{ $loop->iteration }}</div>
@@ -48,7 +48,7 @@
                     </form>
 
                 </div>
-            <?php }; ?>
+           
             @endforeach
 
         </div>
@@ -583,14 +583,14 @@ $current_page = 'user_management';
                                 </tr>
                             </thead>
                             @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
+                            <div class="alert alert-danger">
+                                <ul>
+                                    @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                            @endif
                             <tbody class="divide-y divide-slate-100">
                                 @forelse ($alumni as $alumnus)
                                 @php

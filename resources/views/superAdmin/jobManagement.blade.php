@@ -55,11 +55,11 @@
 <?php $current_page = 'job_management'; ?>
 
 @php
-    $pending_jobs = $jobPostings->where('job_approved', 0);
-    $approved_jobs = $jobPostings->where('job_approved', 1);
-    $total_jobs = $jobPostings->count();
-    $pending_count = $pending_jobs->count();
-    $approved_count = $approved_jobs->count();
+$pending_jobs = $jobPostings->where('job_approved', 0);
+$approved_jobs = $allJobs->where('job_approved', 1);
+$total_jobs = $jobPostings->count();
+$pending_count = $pending_jobs->count();
+$approved_count = $approved_jobs->count();
 @endphp
 
 <!DOCTYPE html>
@@ -226,59 +226,63 @@
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             @forelse ($pending_jobs as $j)
-                                                        <tr class="hover:bg-slate-50/80 transition-colors">
-                                                            <td class="font-medium text-black border-r border-slate-100">{{ $loop->iteration }}</td>
-                                                            <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_title }}
-                                                            </td>
-                                                            <td class="font-medium text-black border-r border-slate-100">
-                                                                {{ $j->job_posting_company }}</td>
-                                                            <td class="font-medium text-black border-r border-slate-100">
-                                                                {{ $j->job_posting_address }}</td>
-                                                            <td class="font-medium text-black border-r border-slate-100">
-                                                                {{ $j->employer->user->user_first_name }} {{ $j->employer->user->user_last_name }}
-                                                            </td>
-                                                            <td class="font-medium text-black border-r border-slate-100">
-                                                                {{ $j->job_posting_employment_type }}</td>
-                                                            <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_setup }}
-                                                            </td>
-                                                            <td class="font-medium text-black border-r border-slate-100">
-                                                                @foreach ($j->programs as $program)
-                                                                    {{ $program->program_name }}<br>
-                                                                @endforeach
-                                                            </td>
-                                                            <td class="border-r border-slate-100">
-                                                                <span
-                                                                    class="px-2 py-1 rounded-full border text-[7px] font-bold bg-amber-100 text-amber-600 border-amber-200 inline-block">
-                                                                     PENDING
-                                                                </span>
-                                                            </td>
-                                                            <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_date }}
-                                                            <td class="font-medium text-black border-r border-slate-100">{{ $j->job_closing_date }}
-                                                            </td>
-                                                            <td class="text-center relative">
-                                                                <div class="inline-block text-left relative">
-                                                                    <button
-                                                                        class="menu-button p-1.5 hover:bg-slate-100 rounded-full transition-colors">
-                                                                        <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                                                    </button>
-                                                                    <div
-                                                                        class="action-dropdown bg-white border border-slate-200 rounded-md shadow-xl">
-                                                                        <div class="py-1">
-                                                                            <form action="{{ route('jobPosting.approve', $j->job_posting_id) }}"
-                                                                                method="POST" class="w-full">
-                                                                                @csrf
-                                                                                <button type="submit"
-                                                                                    class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-green-50">
-                                                                                    <i data-lucide="check-circle"
-                                                                                        class="w-4 h-4 mr-3 text-green-500"></i> Approve
-                                                                                </button>
-                                                                            </form>
-                                                                            <button
-                                                                                onclick="openConfirmAction(<?= $j['id'] ?>, 'decline', '<?= htmlspecialchars($j['title']) ?>')"
-                                                                                class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                                                <i data-lucide="x-circle" class="w-4 h-4 mr-3"></i> Decline
-                                                                            </button>
-                                                                            <button onclick="openViewModal({{ $j->job_posting_id }}, {{ json_encode([
+                           
+                            <tr class="hover:bg-slate-50/80 transition-colors">
+                                <td class="font-medium text-black border-r border-slate-100">{{ $loop->iteration }}</td>
+                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_title }}
+                                </td>
+                                <td class="font-medium text-black border-r border-slate-100">
+                                    {{ $j->job_posting_company }}
+                                </td>
+                                <td class="font-medium text-black border-r border-slate-100">
+                                    {{ $j->job_posting_address }}
+                                </td>
+                                <td class="font-medium text-black border-r border-slate-100">
+                                    {{ $j->employer->user->user_first_name }} {{ $j->employer->user->user_last_name }}
+                                </td>
+                                <td class="font-medium text-black border-r border-slate-100">
+                                    {{ $j->job_posting_employment_type }}
+                                </td>
+                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_setup }}
+                                </td>
+                                <td class="font-medium text-black border-r border-slate-100">
+                                    @foreach ($j->programs as $program)
+                                    {{ $program->program_name }}<br>
+                                    @endforeach
+                                </td>
+                                <td class="border-r border-slate-100">
+                                    <span
+                                        class="px-2 py-1 rounded-full border text-[7px] font-bold bg-amber-100 text-amber-600 border-amber-200 inline-block">
+                                        PENDING
+                                    </span>
+                                </td>
+                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_date }}
+                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_closing_date }}
+                                </td>
+                                <td class="text-center relative">
+                                    <div class="inline-block text-left relative">
+                                        <button
+                                            class="menu-button p-1.5 hover:bg-slate-100 rounded-full transition-colors">
+                                            <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
+                                        </button>
+                                        <div
+                                            class="action-dropdown bg-white border border-slate-200 rounded-md shadow-xl">
+                                            <div class="py-1">
+                                                <form action="{{ route('jobPosting.approve', $j->job_posting_id) }}"
+                                                    method="POST" class="w-full">
+                                                    @csrf
+                                                    <button type="submit"
+                                                        class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-green-50">
+                                                        <i data-lucide="check-circle"
+                                                            class="w-4 h-4 mr-3 text-green-500"></i> Approve
+                                                    </button>
+                                                </form>
+                                                <button
+                                                    onclick="openConfirmAction(<?= $j['id'] ?>, 'decline', '<?= htmlspecialchars($j['title']) ?>')"
+                                                    class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                    <i data-lucide="x-circle" class="w-4 h-4 mr-3"></i> Decline
+                                                </button>
+                                                <button onclick="openViewModal({{ $j->job_posting_id }}, {{ json_encode([
                                     'title' => $j->job_posting_title,
                                     'posted' => $j->created_at,
                                     'company' => $j->job_posting_company,
@@ -291,19 +295,19 @@
                                     'description' => $j->job_posting_description,
                                     'status' => 'Pending',
                                 ]) }})"
-                                                                                class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 border-t border-slate-100">
-                                                                                <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View
-                                                                            </button>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
+                                                    class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 border-t border-slate-100">
+                                                    <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
                             @empty
-                                <tr>
-                                    <td colspan="10" class="text-center py-8 text-slate-400 text-sm">No pending job posts.
-                                    </td>
-                                </tr>
+                            <tr>
+                                <td colspan="10" class="text-center py-8 text-slate-400 text-sm">No pending job posts.
+                                </td>
+                            </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -321,6 +325,14 @@
                         class="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:border-[#C73D1A] transition-all flex-shrink-0">
                         <i data-lucide="filter" class="w-4 h-4"></i>
                     </button>
+                    <div class="flex justify-end p-4">
+                        <button
+                            onclick="openPostJobModal()"
+                            class="flex items-center gap-2 bg-[#1D264F] hover:bg-blue-900 text-white px-6 py-2.5 rounded-lg font-bold text-sm tracking-widest shadow-lg transition-all transform hover:scale-105 active:scale-95">
+                            <i class="fas fa-plus text-xs"></i>
+                            <span>POST A NEW JOB</span>
+                        </button>
+                    </div>
                     <button onclick="exportCSV()"
                         class="flex-shrink-0 flex items-center gap-2 px-5 py-2 bg-[#C73D1A] hover:bg-[#a83215] text-white text-xs font-bold rounded-lg transition-all uppercase">
                         <i data-lucide="download" class="w-4 h-4"></i> EXPORT CSV
@@ -348,59 +360,62 @@
                                         class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
                                 <th class="border-r border-slate-700">Status <i data-lucide="chevron-down"
                                         class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-                                        <th class="border-r border-slate-700">Posting Date</th>
+                                <th class="border-r border-slate-700">Posting Date</th>
                                 <th class="border-r border-slate-700">Closing Date</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100" id="jobs-tbody">
                             @forelse ($approved_jobs as $j)
-                                                        <tr class="hover:bg-slate-50/80 transition-colors"
-                                                        
-                                                            data-title="{{ strtolower($j->job_posting_title) }}"
-                                                            data-company="{{ strtolower($j->job_posting_company) }}"
-                                                            data-type="{{ $j->job_posting_employment_type }}"
-                                                            data-setup="{{ $j->job_posting_setup }}"
-                                                            data-program="{{ $j->programs->pluck('program_name')->join(', ') }}"
-                                                            data-datetime="{{ $j->created_at }}" data-closing="{{ $j->job_closing_date }}">
-                                                            <td class="font-medium text-black border-r border-slate-100">{{ $loop->iteration }}</td>
-                                                            <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_title }}
-                                                            </td>
-                                                            <td class="font-medium text-black border-r border-slate-100">
-                                                                {{ $j->job_posting_company }}</td>
-                                                            <td class="font-medium text-black border-r border-slate-100">
-                                                                {{ $j->job_posting_address }}</td>
-                                                            <td class="font-medium text-black border-r border-slate-100">
-                                                                {{ $j->employer->user->user_first_name }} {{ $j->employer->user->user_last_name }}
-                                                            </td>
-                                                            <td class="font-medium text-black border-r border-slate-100">
-                                                                {{ $j->job_posting_employment_type }}</td>
-                                                            <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_setup }}
-                                                            </td>
-                                                            <td class="font-medium text-black border-r border-slate-100">
-                                                                @foreach ($j->programs as $program)
-                                                                    {{ $program->program_name }}<br>
-                                                                @endforeach
-                                                            </td>
-                                                            <td class="border-r border-slate-100">
-                                                                <span
-                                                                    class="px-2 py-1 rounded-full border text-[6px] font-semibold bg-green-100 text-green-600 border-green-200 inline-block whitespace-nowrap">
-                                                                     APPROVED
-                                                                </span>
-                                                            </td>
-                                                            <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_date }}
-                                                            <td class="font-medium text-black border-r border-slate-100">{{ $j->job_closing_date }}
-                                                            </td>
-                                                            <td class="text-center relative">
-                                                                <div class="inline-block text-left relative">
-                                                                    <button
-                                                                        class="menu-button p-1.5 hover:bg-slate-100 rounded-full transition-colors">
-                                                                        <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                                                    </button>
-                                                                    <div
-                                                                        class="action-dropdown bg-white border border-slate-200 rounded-md shadow-xl">
-                                                                        <div class="py-1">
-                                                                            <button onclick="openViewModal({{ $j->job_posting_id }}, {{ json_encode([
+                            <tr class="hover:bg-slate-50/80 transition-colors"
+
+                                data-title="{{ strtolower($j->job_posting_title) }}"
+                                data-company="{{ strtolower($j->job_posting_company) }}"
+                                data-type="{{ $j->job_posting_employment_type }}"
+                                data-setup="{{ $j->job_posting_setup }}"
+                                data-program="{{ $j->programs->pluck('program_name')->join(', ') }}"
+                                data-datetime="{{ $j->created_at }}" data-closing="{{ $j->job_closing_date }}">
+                                <td class="font-medium text-black border-r border-slate-100">{{ $loop->iteration }}</td>
+                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_title }}
+                                </td>
+                                <td class="font-medium text-black border-r border-slate-100">
+                                    {{ $j->job_posting_company }}
+                                </td>
+                                <td class="font-medium text-black border-r border-slate-100">
+                                    {{ $j->job_posting_address }}
+                                </td>
+                                <td class="font-medium text-black border-r border-slate-100">
+                                    {{ $j->employer->user->user_first_name }} {{ $j->employer->user->user_last_name }}
+                                </td>
+                                <td class="font-medium text-black border-r border-slate-100">
+                                    {{ $j->job_posting_employment_type }}
+                                </td>
+                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_setup }}
+                                </td>
+                                <td class="font-medium text-black border-r border-slate-100">
+                                    @foreach ($j->programs as $program)
+                                    {{ $program->program_name }}<br>
+                                    @endforeach
+                                </td>
+                                <td class="border-r border-slate-100">
+                                    <span
+                                        class="px-2 py-1 rounded-full border text-[6px] font-semibold bg-green-100 text-green-600 border-green-200 inline-block whitespace-nowrap">
+                                        APPROVED
+                                    </span>
+                                </td>
+                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_date }}
+                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_closing_date }}
+                                </td>
+                                <td class="text-center relative">
+                                    <div class="inline-block text-left relative">
+                                        <button
+                                            class="menu-button p-1.5 hover:bg-slate-100 rounded-full transition-colors">
+                                            <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
+                                        </button>
+                                        <div
+                                            class="action-dropdown bg-white border border-slate-200 rounded-md shadow-xl">
+                                            <div class="py-1">
+                                                <button onclick="openViewModal({{ $j->job_posting_id }}, {{ json_encode([
                                     'title' => $j->job_posting_title,
                                     'posted' => $j->created_at,
                                     'company' => $j->job_posting_company,
@@ -413,24 +428,24 @@
                                     'description' => $j->job_posting_description,
                                     'status' => 'Approved',
                                 ]) }})"
-                                                                                class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50">
-                                                                                <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View
-                                                                            </button>
-                                                                            <button
-                                                                                onclick="openConfirmAction(<?= $j['id'] ?>, 'delete', '<?= htmlspecialchars($j['title']) ?>')"
-                                                                                class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                                                <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i> Delete
-                                                                            </button>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
+                                                    class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50">
+                                                    <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View
+                                                </button>
+                                                <button
+                                                    onclick="openConfirmAction(<?= $j['id'] ?>, 'delete', '<?= htmlspecialchars($j['title']) ?>')"
+                                                    class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                    <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i> Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
                             @empty
-                                <tr>
-                                    <td colspan="10" class="text-center py-8 text-slate-400 text-sm">No approved job posts.
-                                    </td>
-                                </tr>
+                            <tr>
+                                <td colspan="10" class="text-center py-8 text-slate-400 text-sm">No approved job posts.
+                                </td>
+                            </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -608,6 +623,151 @@
             </button>
         </div>
     </div>
+    <div id="postJobModal" class="fixed inset-0 z-[110] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+
+        <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col min-h-[600px]">
+
+            <form action="{{ route('jobPosting.addJobPost', ['id' => $users->user_id]) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+
+                <button type="button" onclick="closePostModal()" class="absolute top-11 right-8 text-gray-300 hover:text-gray-500 transition-colors z-10">
+                    <i class="fas fa-times-circle text-2xl"></i>
+                </button>
+
+                <div class="w-full pt-12 text-center">
+                    <h2 class="inline-block text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent tracking-tight">
+                        POST A NEW JOB
+                    </h2>
+                </div>
+
+                <div class="flex flex-col md:flex-row flex-1">
+
+                    <!-- IMAGE UPLOAD -->
+                    <div class="md:w-1/3 flex flex-col items-center justify-center p-8 bg-white">
+                        <div id="imageFrame" class="w-full aspect-square border-4 border-[#1D264F] rounded-[2rem] flex flex-col items-center justify-center p-2 shadow-sm relative overflow-hidden">
+
+                            <div id="uploadPlaceholder" class="flex flex-col items-center justify-center">
+                                <i class="fas fa-upload text-6xl text-[#1D264F] mb-4"></i>
+                                <button type="button" onclick="document.getElementById('jobImageInput').click()" class="bg-[#1D264F] text-white px-8 py-2 rounded-full font-bold text-xs tracking-widest hover:bg-[#0E0F3B] transition-colors">
+                                    UPLOAD
+                                </button>
+                            </div>
+
+                            <img id="jobImagePreview" src="#" class="hidden w-full h-full object-cover rounded-[1.6rem]" />
+
+                            <input type="file" name="job_posting_image" id="jobImageInput" accept="image/*" class="hidden" onchange="previewJobImage(this)">
+
+                            <button id="changeImgBtn" type="button" onclick="document.getElementById('jobImageInput').click()" class="hidden absolute bottom-4 bg-white/80 backdrop-blur-sm text-[#1D264F] px-4 py-1 rounded-full font-bold text-[10px] hover:bg-white transition-all">
+                                CHANGE IMAGE
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- FORM FIELDS -->
+                    <div class="md:w-2/3 p-10 pt-6 space-y-4">
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Job Title <span class="text-red-500">*</span></label>
+                                <input type="text" name="job_posting_title" placeholder="e.g., Senior Full Stack Developer"
+                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Business Name <span class="text-red-500">*</span></label>
+                                <input type="text" name="job_posting_company" placeholder="Enter the registered name"
+                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Business Address <span class="text-red-500">*</span></label>
+                            <input type="text" name="job_posting_address" placeholder="Enter business address"
+                                class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Job Type <span class="text-red-500">*</span></label>
+                                <select name="job_posting_employment_type"
+                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em_1em]">
+                                    <option>Select Type (e.g., Full-time)</option>
+                                    <option>Full-Time</option>
+                                    <option>Part-Time</option>
+                                    <option>Freelance</option>
+                                </select>
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Job Setup <span class="text-red-500">*</span></label>
+                                <select name="job_posting_setup"
+                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] appearance-none">
+                                    <option>Select Setup (e.g., Remote)</option>
+                                    <option>Remote</option>
+                                    <option>On-Site</option>
+                                    <option>Hybrid</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- COURSE -->
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Recommended Course/Program <span class="text-red-500">*</span></label>
+
+                            <div id="course-input-container" class="space-y-2">
+                                <div class="flex items-center gap-3 course-row">
+                                    <select name="program[]"
+                                        class="flex-1 border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white w-full ">
+                                        <option selected disabled>Select Undergraduate Program</option>
+                                        @foreach ($programs as $program)
+                                        <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
+                                        @endforeach
+                                    </select>
+
+                                    <button type="button" onclick="addCourseField()"
+                                        class="bg-[#1D264F] text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#0E0F3B] transition-colors">
+                                        <i class="fas fa-plus text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <p id="course-limit-msg" class="text-[9px] text-gray-400 italic hidden">
+                                Maximum of 3 programs reached.
+                            </p>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Job Description <span class="text-red-500">*</span></label>
+                            <textarea name="job_posting_description" rows="4"
+                                class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]"></textarea>
+                        </div>
+
+                        <div class="w-1/2 space-y-1">
+                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Closing / Validity Date <span class="text-red-500">*</span></label>
+                            <input type="date" name="job_closing_date"
+                                class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] text-gray-400">
+                        </div>
+
+                        <!-- ACTION BUTTONS -->
+                        <div class="flex justify-end gap-4 mt-8">
+                            <button type="button" onclick="closePostModal()"
+                                class="px-10 py-2 border-2 border-[#1D264F] text-[#1D264F] rounded-md font-bold text-sm hover:bg-[#0E0F3B] hover:text-white transition-colors">
+                                CANCEL
+                            </button>
+
+                            <button type="submit"
+                                onclick="handleJobSubmit(event)"
+                                class="px-12 py-2 bg-[#0E0F3B] text-white rounded-md font-bold text-sm hover:bg-blue-900 transition-colors">
+                                POST
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -615,6 +775,94 @@
             initMenuButtons();
             document.getElementById('search-input').addEventListener('input', applyFilters);
         });
+
+        //POST A NEW JOB MODAL
+        function openPostJobModal() {
+            const modal = document.getElementById('postJobModal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePostModal() {
+            const modal = document.getElementById('postJobModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Ensure clicking outside the modal content closes it
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('postJobModal');
+            if (e.target === modal) {
+                closePostModal();
+            }
+        });
+
+        //POST A NEW JOB MODAL - UPLOAD DOCUMENT
+        function previewJobImage(input) {
+            const frame = document.getElementById('imageFrame');
+            const placeholder = document.getElementById('uploadPlaceholder');
+            const preview = document.getElementById('jobImagePreview');
+            const changeBtn = document.getElementById('changeImgBtn');
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    // Set image source
+                    preview.src = e.target.result;
+
+                    // Show image and "Change" button, hide placeholder
+                    preview.classList.remove('hidden');
+                    changeBtn.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+
+                    // Remove padding from frame to make image full-size
+                    frame.classList.remove('p-6');
+                    frame.classList.add('p-0');
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        //POST A NEW JOB MODAL - ADD COURSE/PROGRAM INPUT FIELD
+        function addCourseField() {
+            const container = document.getElementById('course-input-container');
+            const rows = container.getElementsByClassName('course-row');
+
+            if (rows.length < 3) {
+                // Clone the first row
+                const newRow = rows[0].cloneNode(true);
+
+                // Reset the selection in the new row
+                const select = newRow.querySelector('select');
+                select.selectedIndex = 0;
+
+                // Change the button on the NEW row to a "minus" button
+                const btn = newRow.querySelector('button');
+                btn.innerHTML = '<i class="fas fa-minus text-xs"></i>';
+                btn.classList.replace('bg-[#1D264F]', 'bg-red-500');
+                btn.setAttribute('onclick', 'removeCourseField(this)');
+
+                // Append the row
+                container.appendChild(newRow);
+
+                // Hide add button on the original row if limit is reached
+                if (rows.length === 3) {
+                    document.getElementById('course-limit-msg').classList.remove('hidden');
+                    document.getElementById('add-course-btn').classList.add('opacity-50', 'pointer-events-none');
+                }
+            }
+        }
+
+        function removeCourseField(button) {
+            const row = button.closest('.course-row');
+            row.remove();
+
+            // Re-enable the add button and hide limit message
+            document.getElementById('course-limit-msg').classList.add('hidden');
+            document.getElementById('add-course-btn').classList.remove('opacity-50', 'pointer-events-none');
+        }
 
         function initMenuButtons() {
             document.querySelectorAll('.menu-button').forEach(btn => {
@@ -761,7 +1009,7 @@
                 'Approved': 'bg-green-100 text-green-600 border-green-200',
                 'Declined': 'bg-red-100 text-red-600 border-red-200',
                 'Pending': 'bg-amber-100 text-amber-600 border-amber-200',
-            }[data.status] || 'bg-slate-100 text-slate-500 border-slate-200';
+            } [data.status] || 'bg-slate-100 text-slate-500 border-slate-200';
 
             document.getElementById('modalContent').innerHTML = `
             <div class="space-y-4 text-sm text-[#0E0F3B]">

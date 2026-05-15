@@ -187,9 +187,7 @@ class UserController extends Controller
 
         if (Auth::attempt(['user_email' => $validated['user_email'], 'password' => $validated['user_password']], true)) {
             // Authentication passed...
-            if (Auth::User()->user_role == 'admin' && Auth::User()->user_active == true) {
-                return redirect()->intended('/admin/dashboard');
-            } else if (Auth::User()->user_role == 'super_admin' && Auth::User()->user_active == true) {
+            if ((Auth::User()->user_role == 'super_admin' || Auth::User()->user_role == 'admin') && Auth::User()->user_active == true) {
                 $jobPlacementCount = DB::table('job_applications')
                     ->where('application_status', 'hired')
                     ->count();

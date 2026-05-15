@@ -74,7 +74,6 @@
                 <h2>{{ $job->job_posting_title }}</h2>
                 <p><strong>Company:</strong> {{ $job->job_posting_company }}</p>
                 <p><strong>Location:</strong> {{ $job->job_posting_address }}</p>
-                <p><strong>Posted by:</strong> {{ $job->employer->user->user_first_name }} {{ $job->employer->user->user_last_name }}</p>
                 <p><strong>Job type:</strong> {{ $job->job_posting_employment_type }}</p>
                 <p><strong>Job setup:</strong> {{ $job->job_posting_setup }}</p>
                 <p><strong>Description:</strong> {{ $job->job_posting_description }}</p>
@@ -239,7 +238,9 @@
             </button>
         </div>
         @endif
-
+        <div class="{{ session('noResume', 'hidden') }} bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+            <h3>You must have a resume in your profile to apply for jobs.</h3>
+        </div>
         <div id="job-list" class="space-y-6">
             <!--JOB POST CONTAINER -->
             @if ($errors->any())
@@ -367,9 +368,9 @@
 
                     <div class="mt-4 flex items-center justify-between text-xs text-gray-500 border-t pt-4">
                         <div class="flex items-center">
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode($job->employer->user->user_first_name . ' ' . $job->employer->user->user_last_name) }}&background=random"
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode($job->user->user_first_name . ' ' . $job->user->user_last_name) }}&background=random"
                                 class="w-6 h-6 rounded-full mr-2">
-                            <span>Posted by <span class="font-bold text-black">{{ $job->employer->user->user_first_name }} {{ $job->employer->user->user_last_name }}</span></span>
+                            <span>Posted by <span class="font-bold text-black">{{ $job->user->user_first_name }} {{ $job->user->user_last_name }}</span></span>
                         </div>
 
                         @if (auth()->user()->user_role === 'alumni' && $job->applicants->contains(auth()->user()->alumnus->user_id))
@@ -534,7 +535,7 @@
 
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-[#1D264F] uppercase">Business Name <span class="text-red-500">*</span></label>
-                                <input type="text" name="job_posting_company" placeholder="{{ $user->employer->employer_company_name ?? 'e.g., ABC Corporation' }}" value="{{ $user->employer_company_name }}" disabled
+                                <input type="text" name="job_posting_company" value="{{ Auth::user()->employer_company_name }}" readonly 
                                     class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
                             </div>
                         </div>

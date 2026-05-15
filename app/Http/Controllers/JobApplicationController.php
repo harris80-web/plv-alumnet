@@ -72,6 +72,10 @@ class JobApplicationController extends Controller
             $alumniId = Auth::id();
         }
 
+        if (Auth::user()->alumnus->alumnus_resume == null) {
+            return redirect()->back()->with('noResume', 'flex');
+        }
+
 
         // Check if the user has already applied for this job
         $existingApplication = JobApplication::where('alumnus_id', $alumniId)

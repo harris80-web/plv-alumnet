@@ -11,7 +11,7 @@ class JobPosting extends Model
 
     protected $fillable = [
         'job_posting_id',
-        'employer_id',
+        'user_id',
         'job_posting_title',
         'job_posting_company',
         'job_posting_address',
@@ -26,19 +26,19 @@ class JobPosting extends Model
     public function employer()
     {
         // "I belong to one user (the employer)"
-        return $this->belongsTo(Employer::class, 'employer_id', 'user_id');
+        return $this->belongsTo(Employer::class, 'user_id', 'user_id');
     }
 
     public function office()
     {
         // "I belong to one user (the employer)"
-        return $this->belongsTo(Office::class, 'employer_id', 'user_id');
+        return $this->belongsTo(Office::class, 'user_id', 'user_id');
     }
 
     public function user()
     {
         // "I belong to one user (the employer)"
-        return $this->belongsTo(User::class, 'employer_id', 'user_id');
+        return $this->belongsTo(User::class, 'user_id', 'user_id');
     }
 
     public function salaryMin()

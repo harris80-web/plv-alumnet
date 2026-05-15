@@ -21,7 +21,7 @@
             <h2>{{ $job->job_posting_title }}</h2>
             <p><strong>Company:</strong> {{ $job->job_posting_company }}</p>
             <p><strong>Location:</strong> {{ $job->job_posting_address }}</p>
-            <p><strong>Posted by:</strong> {{ $job->employer->user->user_first_name }} {{ $job->employer->user->user_last_name }}</p>
+            <p><strong>Posted by:</strong> {{ $job->user->user_first_name }} {{ $job->user->user_last_name }}</p>
             <p><strong>Job type:</strong> {{ $job->job_posting_employment_type }}</p>
             <p><strong>Job setup:</strong> {{ $job->job_posting_setup }}</p>
             <p><strong>Recommended program:</strong>
@@ -56,7 +56,7 @@
 
 @php
 $pending_jobs = $jobPostings->where('job_approved', 0);
-$approved_jobs = $allJobs->where('job_approved', 1);
+$approved_jobs = $jobPostings->where('job_approved', 1);
 $total_jobs = $jobPostings->count();
 $pending_count = $pending_jobs->count();
 $approved_count = $approved_jobs->count();
@@ -202,6 +202,15 @@ $approved_count = $approved_jobs->count();
                 <div class="bg-white rounded-lg shadow-sm border border-slate-200 mb-6 w-full">
                     <table class="jobs-table">
                         <thead class="bg-[#0E0F3B] text-white">
+                            @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <ul>
+                                    @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                            @endif
                             <tr>
                                 <th class="border-r border-slate-700">ID</th>
                                 <th class="border-r border-slate-700">Job Title</th>
@@ -226,7 +235,7 @@ $approved_count = $approved_jobs->count();
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             @forelse ($pending_jobs as $j)
-                           
+
                             <tr class="hover:bg-slate-50/80 transition-colors">
                                 <td class="font-medium text-black border-r border-slate-100">{{ $loop->iteration }}</td>
                                 <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_title }}
@@ -238,7 +247,7 @@ $approved_count = $approved_jobs->count();
                                     {{ $j->job_posting_address }}
                                 </td>
                                 <td class="font-medium text-black border-r border-slate-100">
-                                    {{ $j->employer->user->user_first_name }} {{ $j->employer->user->user_last_name }}
+                                    {{ $j->user->user_first_name }} {{ $j->user->user_last_name }}
                                 </td>
                                 <td class="font-medium text-black border-r border-slate-100">
                                     {{ $j->job_posting_employment_type }}
@@ -287,7 +296,7 @@ $approved_count = $approved_jobs->count();
                                     'posted' => $j->created_at,
                                     'company' => $j->job_posting_company,
                                     'location' => $j->job_posting_address,
-                                    'posted_by' => $j->employer->user->user_first_name . ' ' . $j->employer->user->user_last_name,
+                                    'posted_by' => $j->user->user_first_name . ' ' . $j->user->user_last_name,
                                     'type' => $j->job_posting_employment_type,
                                     'setup' => $j->job_posting_setup,
                                     'program' => $j->programs->pluck('program_name')->join(', '),
@@ -385,7 +394,7 @@ $approved_count = $approved_jobs->count();
                                     {{ $j->job_posting_address }}
                                 </td>
                                 <td class="font-medium text-black border-r border-slate-100">
-                                    {{ $j->employer->user->user_first_name }} {{ $j->employer->user->user_last_name }}
+                                    {{ $j->user->user_first_name }} {{ $j->user->user_last_name }}
                                 </td>
                                 <td class="font-medium text-black border-r border-slate-100">
                                     {{ $j->job_posting_employment_type }}
@@ -420,7 +429,7 @@ $approved_count = $approved_jobs->count();
                                     'posted' => $j->created_at,
                                     'company' => $j->job_posting_company,
                                     'location' => $j->job_posting_address,
-                                    'posted_by' => $j->employer->user->user_first_name . ' ' . $j->employer->user->user_last_name,
+                                    'posted_by' => $j->user->user_first_name . ' ' . $j->user->user_last_name,
                                     'type' => $j->job_posting_employment_type,
                                     'setup' => $j->job_posting_setup,
                                     'program' => $j->programs->pluck('program_name')->join(', '),

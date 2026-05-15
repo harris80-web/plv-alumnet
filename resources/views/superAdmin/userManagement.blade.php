@@ -373,6 +373,7 @@ $current_page = 'user_management';
 
             <div class="flex-1 overflow-y-auto p-8">
 
+                @if (Auth::user()->user_role == 'super_admin')
                 <!-- ==================== ADMIN TAB ==================== -->
                 <div id="content-admin" class="tab-content active">
                     <!-- ==================== METRIC CARDS ==================== -->
@@ -477,6 +478,8 @@ $current_page = 'user_management';
                     </div>
                 </div>
                 <!-- END ADMIN TAB -->
+                @endif
+
 
                 <!-- ==================== ALUMNI TAB ==================== -->
                 <div id="content-alumni" class="tab-content">

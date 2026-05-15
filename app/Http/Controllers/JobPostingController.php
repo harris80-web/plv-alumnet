@@ -126,7 +126,7 @@ class JobPostingController extends Controller
                     'job_posting_description' => $validated['job_posting_description'],
                     'job_closing_date' => $validated['job_closing_date'],
                     'job_posting_setup' => $validated['job_posting_setup'],
-                    'employer_id' => $id,
+                    'user_id' => $id,
                 ]);
                 $jobPost->programs()->attach($selectedPrograms);
             });
@@ -138,12 +138,17 @@ class JobPostingController extends Controller
             return back()->withErrors($e->getMessage());
         }
 
-        return redirect()->route('jobPosting.jobBoard')->with('success', 'Job posting added successfully!');
+        if(Auth::user()->user_role === 'employer') {
+            return redirect()->route('jobPosting.jobBoard')->with('success', 'Job posting added successfully!');
+        } else {
+            return redirect()->route('jobPosting.jobManagement')->with('success', 'Job posting added successfully!');
+        }
+        
     }
 
     public function showMyJobPosts($id)
     {
-        $jobPostings = JobPosting::where('employer_id', $id)->get();
+        $jobPostings = JobPosting::where('user_id', $id)->get();
         $programs = Program::all();
         $users = Auth::user();
         return view('general.jobPostings', compact('jobPostings', 'programs', 'users'));
@@ -202,14 +207,30 @@ class JobPostingController extends Controller
             return back()->withErrors(['error' => 'Failed to upload job posting image. Please try again.']);
         }
 
-        return redirect()->route('jobPosting.myJobPosts', ['id' => $job->employer_id]);
+        return redirect()->route('jobPosting.myJobPosts', ['id' => $job->user_id]);
     }
 
     public function showJobManagement()
     {
-        $jobPostings = JobPosting::latest()->get();
         $programs = Program::all();
         $users = Auth::user();
+
+        $user = Auth::user();
+        $query = JobPosting::query()->with('user');
+
+        if ($user->user_role === 'super_admin') {
+            // Super Admin sees jobs from Employers and Admins
+            $query->whereHas('user', function ($q) {
+                $q->whereIn('user_role', ['employer', 'admin']);
+            });
+        } elseif ($user->user_role === 'admin') {
+            // Admin sees jobs from Employers and Super Admins
+            $query->whereHas('user', function ($q) {
+                $q->whereIn('user_role', ['employer', 'super_admin']);
+            });
+        }
+
+        $jobPostings = $query->latest()->get();
         return view('superAdmin.jobManagement', compact('jobPostings', 'programs', 'users'));
     }
 

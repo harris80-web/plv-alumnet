@@ -489,7 +489,7 @@
 
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-[#1D264F] uppercase">Business Name <span class="text-red-500">*</span></label>
-                                <input type="text" name="job_posting_company" placeholder="Enter the registered name"
+                                <input type="text" name="job_posting_company" value="@if ($users->user_role == 'alumni'){{ $users->employer_company_name }}@else{{ $users->employer->employer_company_name }}@endif" readonly 
                                     class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
                             </div>
                         </div>

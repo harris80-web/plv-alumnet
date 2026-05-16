@@ -70,27 +70,11 @@ class JobPostingController extends Controller
 
     public function showJobBoard()
     {
-        $allJobs = JobPosting::all();
+        $jobPostings = JobPosting::all();
         $programs = Program::all();
         $applications = Auth::user()->alumnus ? Auth::user()->alumnus->appliedJobs->pluck('job_id')->toArray() : [];
-
         $user = Auth::user();
-        $query = JobPosting::query()->with('user');
-
-        if ($user->user_role === 'super_admin') {
-            // Super Admin sees jobs from Employers and Admins
-            $query->whereHas('user', function ($q) {
-                $q->whereIn('user_role', ['employer', 'admin']);
-            });
-        } elseif ($user->user_role === 'admin') {
-            // Admin sees jobs from Employers and Super Admins
-            $query->whereHas('user', function ($q) {
-                $q->whereIn('user_role', ['employer', 'super_admin']);
-            });
-        }
-
-        $jobPostings = $query->get();
-        return view('general.jobBoard', compact('jobPostings', 'programs', 'user', 'applications', 'allJobs'));
+        return view('general.jobBoard', compact('jobPostings', 'programs', 'user', 'applications'));
     }
 
     public function addJobPost(Request $request, $id)

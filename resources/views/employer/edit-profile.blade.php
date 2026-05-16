@@ -13,8 +13,6 @@
         rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
         rel="stylesheet">
-    @vite('resources/css/app.css')
-    @vite('resources/js/app.js')
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/PLV-AlumNet LOGO.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -98,7 +96,10 @@
                                     <input type="text" name="user_last_name" placeholder="Last Name" class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-lg font-medium text-black focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400">
                                 </div>
                                 <div>
-                                    <select name="user_suffix" class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-lg font-medium text-black focus:border-[#C73D1A] focus:ring-0 outline-none transition bg-white">
+                                    <select
+                                        name="user_suffix"
+                                        class="w-full h-10 px-4 border border-[#0E0F3B] rounded-lg text-lg font-medium text-gray-400 focus:border-[#C73D1A] focus:ring-0 outline-none transition bg-white"
+                                        onchange="this.classList.remove('text-gray-400'); this.classList.add('text-black')">
                                         <option value="" disabled selected>Suffix</option>
                                         <option value="Jr.">Jr.</option>
                                         <option value="Sr.">Sr.</option>
@@ -133,7 +134,7 @@
 
                 <section class="bg-white rounded-3xl border border-gray-100 shadow-md p-10 flex flex-col items-center">
                     <h2 class="text-2xl font-bold mb-8 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
-                        Edit Business Details
+                        Edit Company Details
                     </h2>
 
                     <div class="w-40 h-40 flex flex-col items-center justify-center mb-4 border border-[#0E0F3B] border-dashed rounded-2xl bg-slate-50 hover:bg-slate-100 transition cursor-pointer"
@@ -144,11 +145,11 @@
                         <span class="text-[10px] font-bold text-[#0E0F3B] uppercase mt-2">Update Logo</span>
                         <input type="file" name="employer_company_logo" id="companyLogoInput" accept="image/*" class="hidden">
                     </div>
-                    <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mb-8">Business Logo</p>
+                    <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mb-8">Company Logo</p>
 
                     <div class="w-full mb-8">
                         <input type="text" name="employer_company_name" placeholder="Enter registered business name..." class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400 text-center">
-                        <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mt-1 text-center">Business Name</p>
+                        <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mt-1 text-center">Company Name</p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4 w-full">
@@ -161,15 +162,23 @@
                             <p class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-tighter leading-none mt-2">Company Size</p>
                         </div>
                         <div>
-                            <select type="text" name="employer_industry" placeholder="E.G. TECHNOLOGY" class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-gray-800 text-md font-medium uppercase focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400 text-center">
+                            <select
+                                name="employer_industry"
+                                id="employer_industry"
+                                class="w-full h-[39px] px-4  border border-[#0E0F3B] rounded-lg text-gray-400 text-md font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition text-center"
+                                onchange="this.classList.remove('text-gray-400'); this.classList.add('text-gray-800')">
                                 <option value="" disabled selected>Select Industry</option>
+
                                 @foreach($industries as $industry)
-                                    <option value="{{ $industry->industry_id }}" {{ old('employer_industry') == $industry->industry_id ? 'selected' : '' }}>
-                                        {{ $industry->industry_name }}
-                                    </option>
+                                <option value="{{ $industry->industry_id }}">
+                                    {{ $industry->industry_name }}
+                                </option>
                                 @endforeach
                             </select>
-                            <p class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-tighter leading-none mt-2">Industry / Sector</p>
+
+                            <p class="text-[10px] uppercase font-bold text-[#C73D1A] tracking-tighter leading-none mt-2">
+                                Industry / Sector
+                            </p>
                         </div>
                         <div>
                             <input type="url" name="employer_website_url" placeholder="www.website.com" class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-gray-800 text-md font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400 text-center">
@@ -180,11 +189,11 @@
 
             </div>
 
-            <div class="mt-8 flex gap-4 w-full max-w-6xl justify-end">
-                <button class="px-8 py-3 rounded-xl border border-[#0E0F3B]  text-[#0E0F3B] font-bold hover:bg-[#0E0F3B] hover:text-white transition uppercase text-xs tracking-widest">
+            <div class="mt-8 flex gap-4 w-full max-w-6xl justify-end font-[Montserrat]">
+                <button class="px-8 py-3 rounded-lg  border border-[#0E0F3B]  text-[#0E0F3B] font-semibold hover:bg-[#0E0F3B] hover:text-white transition uppercase text-xs">
                     Cancel
                 </button>
-                <button class="px-10 py-3 rounded-xl bg-[#0D0D2B] text-white font-bold hover:bg-blue-900 transition uppercase text-xs tracking-widest shadow-lg">
+                <button class="px-8 py-3 rounded-lg bg-[#0D0D2B] text-white font-semibold hover:bg-blue-900 transition uppercase text-xs shadow-lg">
                     Save Changes
                 </button>
             </div>

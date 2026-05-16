@@ -54,29 +54,29 @@
 
                 <div class="text-center space-y-6">
                     <div>
-                        <h3 class="text-2xl font-extrabold text-black">
+                        <h3 class="text-2xl font-bold text-[#0E0F3B]">
                             {{ $user->user_first_name }} {{ $user->user_last_name }}
                         </h3>
-                        <p class="text-[11px] font-bold text-[#12123B] uppercase tracking-tighter">Employer Name</p>
+                        <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter">Employer Name</p>
                     </div>
 
                     <div>
                         <p class="text-lg font-medium text-gray-800">
                             {{ $user->employer->employer_position ?? 'Not provided' }}
                         </p>
-                        <p class="text-[11px] font-bold text-[#12123B] uppercase tracking-tighter">Employer Position</p>
+                        <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter">Employer Position</p>
                     </div>
 
                     <div class="space-y-4 pt-4">
                         <div>
                             <p class="text-gray-800 font-medium">{{ $user->user_email }}</p>
-                            <p class="text-[11px] font-bold text-[#12123B] uppercase tracking-tighter">Email</p>
+                            <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter">Email</p>
                         </div>
                         <div>
                             <p class="text-gray-800 font-medium">
                                 {{ $user->user_number ?? 'Not provided' }}
                             </p>
-                            <p class="text-[11px] font-bold text-[#12123B] uppercase tracking-tighter">Contact Number</p>
+                            <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter">Contact Number</p>
                         </div>
                     </div>
                 </div>
@@ -85,7 +85,7 @@
             <!-- BUSINESS DETAILS -->
             <section class="bg-white rounded-3xl border border-gray-100 shadow-md p-10 flex flex-col items-center">
                 <h2 class="text-2xl font-bold mb-8 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
-                    Business Details
+                    Company Details
                 </h2>
 
                 <div class="w-40 h-40 flex flex-col items-center justify-center mb-4">
@@ -104,13 +104,13 @@
                     </svg>
                     @endif
                 </div>
-                <p class="text-[11px] font-bold text-[#12123B] uppercase tracking-tighter mb-8">Business Logo</p>
+                <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mb-8">Company Logo</p>
 
                 <div class="text-center mb-10">
-                    <h3 class="text-3xl font-bold text-black">
+                    <h3 class="text-3xl font-semibold text-[#0E0F3B] ">
                         {{ $user->employer->employer_company_name ?? 'Not provided' }}
                     </h3>
-                    <p class="text-[11px] font-bold text-[#12123B] uppercase tracking-tighter">Business Name</p>
+                    <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter">Company Name</p>
                 </div>
 
                 <!-- REPLACE the entire grid div WITH: -->
@@ -119,19 +119,19 @@
                             <p class="text-gray-800 font-semibold">
                                 {{ $user->employer->employer_year_established ?? 'Not provided' }}
                             </p>
-                            <p class="text-[10px] font-bold text-[#12123B] uppercase tracking-tighter leading-none">Year Established</p>
+                            <p class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-tighter leading-none">Year Established</p>
                         </div>
                         <div>
                             <p class="text-gray-800 font-semibold">
                                 {{ $user->employer->employer_company_size ?? 'Not provided' }}
                             </p>
-                            <p class="text-[10px] font-bold text-[#12123B] uppercase tracking-tighter leading-none">Company/Business Size</p>
+                            <p class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-tighter leading-none">Company/Business Size</p>
                         </div>
                         <div>
                             <p class="text-gray-800 font-semibold uppercase">
                                 {{ $user->employer->industry->industry_name ?? 'None' }}
                             </p>
-                            <p class="text-[10px] font-bold text-[#12123B] uppercase tracking-tighter leading-none">Industry / Sector</p>
+                            <p class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-tighter leading-none">Industry / Sector</p>
                         </div>
                         <div>
                             @if ($user->employer->employer_website_url)
@@ -139,9 +139,9 @@
                                 {{ $user->employer->employer_website_url }}
                             </a>
                             @else
-                            <p class="text-gray-800 font-semibold">Not provided</p>
+                            <p class="text-gray-800 font-semibold">Not provided</p>phpphp
                             @endif
-                            <p class="text-[10px] font-bold text-[#12123B] uppercase tracking-tighter leading-none">Official Website URL</p>
+                            <p class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-tighter leading-none">Official Website URL</p>
                         </div>
                     </div>
             </section>

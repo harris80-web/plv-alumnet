@@ -187,41 +187,42 @@ class UserController extends Controller
 
         if (Auth::attempt(['user_email' => $validated['user_email'], 'password' => $validated['user_password']], true)) {
             // Authentication passed...
-            if ((Auth::User()->user_role == 'super_admin' || Auth::User()->user_role == 'admin') && Auth::User()->user_active == true) {
-                $jobPlacementCount = DB::table('job_applications')
-                    ->where('application_status', 'hired')
-                    ->count();
-                $jobApplicationCount = DB::table('job_applications')
-                    ->count();
-                $jobPlacementRate = $jobApplicationCount > 0 ? ($jobPlacementCount / $jobApplicationCount) * 100 : 0;
-                $stats = [
-                    'jobPlacementRate' => round($jobPlacementRate, 2),
-                    'activeJobs' => DB::table('job_postings')
-                        ->where('job_approved', true)
-                        ->where('job_closing_date', '>', now())
-                        ->count(),
-                    'industryPartners' => DB::table('users')
-                        ->where('user_active', true)
-                        ->where('user_role', 'employer')
-                        ->count(),
-                    'alumniUsers' => DB::table('users')
-                        ->where('user_active', true)
-                        ->where('user_role', 'alumni')
-                        ->count()
-                ];
-                return view('superAdmin.dashboard', compact('stats'));
-            } else if (Auth::User()->user_role == 'registrar' && Auth::User()->user_active == true) {
-                return redirect()->intended('/registrar/dashboard');
-            } else if (Auth::User()->user_role == 'employer' && Auth::User()->user_active == true) {
-                return redirect()->intended('/employer/dashboard');
-            } else if (Auth::User()->user_role == 'alumni' && Auth::User()->user_active == true) {
-                $testimonials = Testimonial::all()->where('testimonial_post', true);
-                return view('/alumni/dashboard', compact('testimonials'));
-            } else if (Auth::User()->user_active == false) {
-                return redirect()->route('auth.login')->withErrors('error', 'Your account is not yet approved or the account is deactivated. Please wait for the administrator to approve your account or contact them for reactivating your account.');
-            } else {
-                return redirect()->route('auth.login')->withErrors('error', 'Your account role is not recognized. Please contact the administrator.');
-            }
+            // if ((Auth::User()->user_role == 'super_admin' || Auth::User()->user_role == 'admin') && Auth::User()->user_active == true) {
+            //     $jobPlacementCount = DB::table('job_applications')
+            //         ->where('application_status', 'hired')
+            //         ->count();
+            //     $jobApplicationCount = DB::table('job_applications')
+            //         ->count();
+            //     $jobPlacementRate = $jobApplicationCount > 0 ? ($jobPlacementCount / $jobApplicationCount) * 100 : 0;
+            //     $stats = [
+            //         'jobPlacementRate' => round($jobPlacementRate, 2),
+            //         'activeJobs' => DB::table('job_postings')
+            //             ->where('job_approved', true)
+            //             ->where('job_closing_date', '>', now())
+            //             ->count(),
+            //         'industryPartners' => DB::table('users')
+            //             ->where('user_active', true)
+            //             ->where('user_role', 'employer')
+            //             ->count(),
+            //         'alumniUsers' => DB::table('users')
+            //             ->where('user_active', true)
+            //             ->where('user_role', 'alumni')
+            //             ->count()
+            //     ];
+            //     return view('superAdmin.dashboard', compact('stats'));
+            // } else if (Auth::User()->user_role == 'registrar' && Auth::User()->user_active == true) {
+            //     return redirect()->intended('/registrar/dashboard');
+            // } else if (Auth::User()->user_role == 'employer' && Auth::User()->user_active == true) {
+            //     return redirect()->intended('/employer/dashboard');
+            // } else if (Auth::User()->user_role == 'alumni' && Auth::User()->user_active == true) {
+            //     $testimonials = Testimonial::all()->where('testimonial_post', true);
+            //     return view('/alumni/dashboard', compact('testimonials'));
+            // } else if (Auth::User()->user_active == false) {
+            //     return redirect()->route('auth.login')->withErrors('error', 'Your account is not yet approved or the account is deactivated. Please wait for the administrator to approve your account or contact them for reactivating your account.');
+            // } else {
+            //     return redirect()->route('auth.login')->withErrors('error', 'Your account role is not recognized. Please contact the administrator.');
+            // }
+            return redirect()->route('users.dashboardRedirect');
         } else {
             return back()->withErrors(['user_password' => 'invalid password'])->onlyInput('user_email');
         }

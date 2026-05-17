@@ -73,8 +73,6 @@
     <title>Dashboard | PLV-AlumNet</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/PLV-AlumNet LOGO.png') }}">
-    @vite('resources/css/app.css')
-    @vite('resources/js/app.js')
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
@@ -327,8 +325,6 @@
             scrollbar-width: none;
             /* Firefox */
         }
-    </style>
-
     </style>
 </head>
 

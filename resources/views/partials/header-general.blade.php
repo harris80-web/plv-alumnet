@@ -29,7 +29,7 @@
             </a>
             
             <a href="{{ route('general.about') }}"
-                class="{{ $current_page === 'about' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; }}">
+                class="{{ $current_page === 'about' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; ?>">
                 ABOUT
             </a>
 

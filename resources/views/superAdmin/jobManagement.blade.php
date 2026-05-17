@@ -261,11 +261,11 @@ $approved_count = $approved_jobs->count();
                                 </td>
                                 <td class="border-r border-slate-100">
                                     <span
-                                        class="px-2 py-1 rounded-full border text-[7px] font-bold bg-amber-100 text-amber-600 border-amber-200 inline-block">
+                                        class="px-2 py-1 rounded-full border text-[7px] font-bold bg-amber-100 text-amber-600 border-amber-200 inline-block whitespace-nowrap ">
                                         PENDING
                                     </span>
                                 </td>
-                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_date }}
+                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_date }} </td>
                                 <td class="font-medium text-black border-r border-slate-100">{{ $j->job_closing_date }}
                                 </td>
                                 <td class="text-center relative">
@@ -331,7 +331,7 @@ $approved_count = $approved_jobs->count();
                             class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A] transition-all">
                     </div>
                     <button onclick="toggleSidebar('filter-sidebar')"
-                        class="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:border-[#C73D1A] transition-all flex-shrink-0">
+                        class="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:border-[#C73D1A] transition-all shrink-0">
                         <i data-lucide="filter" class="w-4 h-4"></i>
                     </button>
                     <div class="flex justify-end p-4">
@@ -343,7 +343,7 @@ $approved_count = $approved_jobs->count();
                         </button>
                     </div>
                     <button onclick="exportCSV()"
-                        class="flex-shrink-0 flex items-center gap-2 px-5 py-2 bg-[#C73D1A] hover:bg-[#a83215] text-white text-xs font-bold rounded-lg transition-all uppercase">
+                        class="shrink-0 flex items-center gap-2 px-5 py-2 bg-[#C73D1A] hover:bg-[#a83215] text-white text-xs font-bold rounded-lg transition-all uppercase">
                         <i data-lucide="download" class="w-4 h-4"></i> EXPORT CSV
                     </button>
                 </div>
@@ -412,7 +412,7 @@ $approved_count = $approved_jobs->count();
                                         APPROVED
                                     </span>
                                 </td>
-                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_date }}
+                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_date }}</td>
                                 <td class="font-medium text-black border-r border-slate-100">{{ $j->job_closing_date }}
                                 </td>
                                 <td class="text-center relative">

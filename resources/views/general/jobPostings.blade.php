@@ -373,10 +373,10 @@
                     <div>
                         <h2 class="text-3xl font-bold text-[#1D264F] uppercase tracking-tighter">JOB TITLE</h2>
                         <div class="flex items-center text-gray-600 mt-1 space-x-4">
-                            <p class="font-semibold text-lg">Business Name</p>
+                            <p class="font-semibold text-lg">Company Name</p>
                             <span class="flex items-center text-sm"><i class="far fa-calendar-alt mr-2"></i> Posted 2 days ago</span>
                         </div>
-                        <p class="text-gray-500 font-medium">Business Address</p>
+                        <p class="text-gray-500 font-medium">Company Address</p>
                     </div>
 
                     <div class="relative">
@@ -488,15 +488,15 @@
                             </div>
 
                             <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Business Name <span class="text-red-500">*</span></label>
+                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Company Name <span class="text-red-500">*</span></label>
                                 <input type="text" name="job_posting_company" value="@if ($users->user_role == 'alumni'){{ $users->employer_company_name }}@else{{ $users->employer->employer_company_name }}@endif" readonly 
                                     class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
                             </div>
                         </div>
 
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Business Address <span class="text-red-500">*</span></label>
-                            <input type="text" name="job_posting_address" placeholder="Enter business address"
+                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Company Address <span class="text-red-500">*</span></label>
+                            <input type="text" name="job_posting_address" placeholder="Enter Company address"
                                 class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
                         </div>
 
@@ -628,14 +628,14 @@
                             </div>
 
                             <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Business Name <span class="text-red-500">*</span></label>
+                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Company Name <span class="text-red-500">*</span></label>
                                 <input type="text" name="job_posting_company" value="{{ $job->job_posting_company }}"
                                     class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
                             </div>
                         </div>
 
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Business Address <span class="text-red-500">*</span></label>
+                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Company Address <span class="text-red-500">*</span></label>
                             <input type="text" name="job_posting_address" value="{{ $job->job_posting_address }}"
                                 class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
                         </div>

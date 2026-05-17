@@ -437,6 +437,7 @@ $current_page = 'user_management';
                             </thead>
                             <tbody class="divide-y divide-slate-100 text-center">
                                 @forelse ($admins as $admin)
+                                @if ($admin->user->user_role == "admin")
                                 <tr class="hover:bg-slate-50/80 transition-colors font-medium">
                                     <td class="px-4 py-4 text-black border-r border-slate-100">{{ $admin->user->user_last_name }}</td>
                                     <td class="px-4 py-4 text-black border-r border-slate-100">{{ $admin->user->user_first_name }}</td>
@@ -460,14 +461,28 @@ $current_page = 'user_management';
                                                     <button class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 transition-colors">
                                                         <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View Profile
                                                     </button>
-                                                    <button class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                    <button onclick="" class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                                         <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i> Delete Profile
                                                     </button>
+
                                                 </div>
+
+                                            </div>
+                                            <div id="delete-message">
+                                                <form action="{{ route('offices.deleteAdmin', $admin->user_id) }}" method="POST">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <input type="text" name="delete-reason" placeholder="Enter reason...">
+                                                    <input type="submit" value="Delete">
+                                                </form>
                                             </div>
                                         </div>
+
                                     </td>
+
                                 </tr>
+                                @endif
+
                                 @empty
                                 <tr>
                                     <td colspan="9" class="px-4 py-8 text-center text-slate-400 text-sm">No admins found.</td>

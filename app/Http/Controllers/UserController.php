@@ -19,7 +19,7 @@ use App\Models\Industry;
 use App\Models\Testimonial;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
-
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
@@ -457,4 +457,6 @@ class UserController extends Controller
         $user = Auth::user();
         return view('superAdmin.profile', compact('user'));
     }
+
+    
 }

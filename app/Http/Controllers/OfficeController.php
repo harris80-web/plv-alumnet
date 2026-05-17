@@ -6,6 +6,7 @@ use App\Models\Office;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class OfficeController extends Controller
@@ -112,5 +113,26 @@ class OfficeController extends Controller
 
         return redirect()->route('user.profile')
             ->with('success', 'Profile updated successfully!');
+    }
+
+    public function deleteAdmin(Request $request, $id)
+    {
+        $admin = Office::findOrFail($id);
+
+        $validated = $request->validate([
+            'delete-reason' => 'required|string|max:255',
+        ]);
+
+        if ($admin->user->user_role != 'admin') {
+            return back()->withErrors('error', 'The specified user is not an admin.');
+        }
+
+        // Log the deletion reason (you can also store this in a database table if needed)
+        Log::info("Admin with ID {$admin->user_id}: {$admin->user_first_name} {$admin->user_last_name} deleted. Reason: {$validated['delete-reason']}");
+
+        // Soft delete the admin
+        $admin->delete();
+
+        return back()->with('success', 'Admin deleted successfully!');
     }
 }

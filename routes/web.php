@@ -192,6 +192,7 @@ Route::resource('messages', MessageController::class);
 
 Route::resource('offices', OfficeController::class);
 Route::put('/offices/updateProfile/{office}', [OfficeController::class, 'updateOfficeProfile'])->name('offices.updateProfile');
+Route::delete('/admin/delete/{id}', [OfficeController::class, 'deleteAdmin'])->name('offices.deleteAdmin');
 
 Route::resource('password-reset-tokens', PasswordResetTokenController::class);
 Route::get('/forgotPasswordForm', [PasswordResetTokenController::class, 'index'])->name('passReset.forgotPassword');

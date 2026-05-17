@@ -18,6 +18,7 @@ return new class extends Migration
             $table->timestamp('office_created_at')->nullable();
             $table->date('office_birth_date')->nullable();
             $table->timestamp('office_last_log')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

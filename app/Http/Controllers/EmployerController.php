@@ -6,6 +6,7 @@ use App\Models\Employer;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class EmployerController extends Controller
@@ -158,5 +159,27 @@ class EmployerController extends Controller
         }
 
         return redirect()->route('user.profile')->with('success', 'Profile updated successfully.');
+    }
+
+    public function deactivateEmployer(Request $request, $id)
+    {
+        $Employer = Employer::where('user_id', $id)->firstOrFail();
+
+        $validated = $request->validate([
+            'deactivate-reason' => 'required|string|max:255',
+        ]);
+
+        Log::info("Employer with ID {$Employer->user->user_id}: {$Employer->user->user_first_name} {$Employer->user->user_last_name} deactivated. Reason: {$validated['deactivate-reason']}");
+
+        try{
+            $Employer->user->update([
+                'user_active' => false,
+            ]);
+        }
+        catch(\Exception $e){
+            return back()->with('error', 'An error occurred while deactivating the Employer. Please try again later.');
+        }
+
+        return back()->with('success', 'Employer deactivated successfully!');
     }
 }

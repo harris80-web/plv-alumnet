@@ -611,6 +611,7 @@ $current_page = 'user_management';
                             @endif
                             <tbody class="divide-y divide-slate-100">
                                 @forelse ($alumni as $alumnus)
+                                
                                 @php
                                 $status = $alumnus->user->user_active ? 'Active' : 'Deactivated';
                                 $statusClass = $alumnus->user->user_active
@@ -670,9 +671,19 @@ $current_page = 'user_management';
                                                     @endif
                                                 </div>
                                             </div>
+                                            <div id="delete-message">
+                                                <form action="{{ route('alumni.deactivateAlumnus', $alumnus->user_id) }}" method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <input type="text" name="deactivate-reason" placeholder="Enter reason...">
+                                                    <input type="submit" value="Deactivate">
+                                                </form>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
+                                
+
                                 @empty
                                 <tr>
                                     <td colspan="11" class="px-4 py-8 text-center text-slate-400 text-sm">No alumni found.</td>
@@ -849,7 +860,16 @@ $current_page = 'user_management';
                                                             Deactivate Account
                                                         </button>
                                                     </div>
+                                                    
                                                 </div>
+                                                <div id="delete-message">
+                                                <form action="{{ route('employers.deactivateEmployer', $employer->user_id) }}" method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <input type="text" name="deactivate-reason" placeholder="Enter reason...">
+                                                    <input type="submit" value="Deactivate">
+                                                </form>
+                                            </div>
                                             </div>
                                         </td>
                                     </tr>

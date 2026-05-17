@@ -150,14 +150,13 @@ Route::group(['middleware' => 'alumni'], function () {
 
 
 //resource routes
-Route::resource('alumni', AlumnusController::class);
 Route::get('/alumni/profile', [AlumnusController::class, 'showAlumniProfile'])->name('alumni.profile');
 Route::put('/alumni/updateProfile/{alumnus}', [AlumnusController::class, 'updateAlumniProfile'])->name('alumni.updateProfile');
+Route::put('/alumni/deactivate/{id}', [AlumnusController::class, 'deactivateAlumnus'])->name('alumni.deactivateAlumnus');
+Route::resource('alumni', AlumnusController::class);
 
 
 Route::resource('announcements', AnnouncementController::class);
-
-Route::resource('job-postings', JobPostingController::class);
 
 Route::resource('chat-tickets', ChatTicketController::class);
 
@@ -165,6 +164,7 @@ Route::resource('conversations', ConversationController::class);
 
 Route::resource('employers', EmployerController::class);
 Route::put('/employers/updateProfile/{employer}', [EmployerController::class, 'updateEmployerProfile'])->name('employers.updateProfile');
+Route::put('/employer/deactivate/{id}', [EmployerController::class, 'deactivateEmployer'])->name('employers.deactivateEmployer');
 
 Route::resource('events', EventController::class);
 
@@ -216,7 +216,7 @@ Route::put('/postTestimonial/{id}', [TestimonialController::class, 'postTestimon
 Route::resource('testimonials', TestimonialController::class);
 Route::get('/testimonialManagement', [TestimonialController::class, 'showTestimonials'])->name('testimonials.manage');
 
-Route::resource('users', UserController::class);
+
 Route::post('/users/storeEmployer', [UserController::class, 'storeEmployer'])->name('users.storeEmployer');
 Route::post('/users/login', [UserController::class, 'login'])->name('users.login');
 Route::post('/users/approve/{id}', [UserController::class, 'approveEmployer'])->name('users.approveEmployer');
@@ -224,3 +224,4 @@ Route::post('/users/addAlumnus', [UserController::class, 'addAlumnus'])->name('u
 Route::post('/users/addAdmin', [UserController::class, 'addAdmin'])->name('users.addAdmin');
 Route::get('/showChangePassword', [UserController::class, 'showChangePassword'])->name('users.showChangePassword');
 Route::put('/changePassword', [UserController::class, 'changePassword'])->name('users.changePassword');
+Route::resource('users', UserController::class);

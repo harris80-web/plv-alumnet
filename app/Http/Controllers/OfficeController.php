@@ -128,7 +128,7 @@ class OfficeController extends Controller
         }
 
         // Log the deletion reason (you can also store this in a database table if needed)
-        Log::info("Admin with ID {$admin->user_id}: {$admin->user_first_name} {$admin->user_last_name} deleted. Reason: {$validated['delete-reason']}");
+        Log::info("Admin with ID {$admin->user->user_id}: {$admin->user->user_first_name} {$admin->user->user_last_name} deleted. Reason: {$validated['delete-reason']}");
 
         // Soft delete the admin
         $admin->delete();

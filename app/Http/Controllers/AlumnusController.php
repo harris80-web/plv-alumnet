@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 
@@ -142,5 +143,27 @@ class AlumnusController extends Controller
         }
 
         return redirect()->route('user.profile')->with('success', 'Alumni profile updated successfully.');
+    }
+
+    public function deactivateAlumnus(Request $request, $id)
+    {
+        $alumnus = Alumnus::where('user_id', $id)->firstOrFail();
+
+        $validated = $request->validate([
+            'deactivate-reason' => 'required|string|max:255',
+        ]);
+
+        Log::info("Alumnus with ID {$alumnus->user->user_id}: {$alumnus->user->user_first_name} {$alumnus->user->user_last_name} deactivated. Reason: {$validated['deactivate-reason']}");
+
+        try{
+            $alumnus->user->update([
+                'user_active' => false,
+            ]);
+        }
+        catch(\Exception $e){
+            return back()->with('error', 'An error occurred while deactivating the alumnus. Please try again later.');
+        }
+
+        return back()->with('success', 'Alumnus deactivated successfully!');
     }
 }

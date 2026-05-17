@@ -71,7 +71,7 @@ class JobPostingController extends Controller
 
     public function showJobBoard()
     {
-        $jobPostings = JobPosting::all();
+        $jobPostings = JobPosting::active()->latest()->get();
         $programs = Program::all();
         $applications = Auth::user()->alumnus ? Auth::user()->alumnus->appliedJobs->pluck('job_id')->toArray() : [];
         $user = Auth::user();
@@ -133,7 +133,7 @@ class JobPostingController extends Controller
 
     public function showMyJobPosts($id)
     {
-        $jobPostings = JobPosting::where('user_id', $id)->get();
+        $jobPostings = JobPosting::where('user_id', $id)->latest()->get();
         $programs = Program::all();
         $users = Auth::user();
         return view('general.jobPostings', compact('jobPostings', 'programs', 'users'));

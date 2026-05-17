@@ -21,7 +21,7 @@ return new class extends Migration
             $table->enum('job_posting_setup', ['On-Site', 'Remote', 'Hybrid']);
             $table->text('job_posting_description');
             $table->date('job_posting_date')->default(now()->toDateString());
-            $table->date('job_closing_date');
+            $table->date('job_closing_date')->nullable();
             $table->text('job_posting_image')->nullable();
             $table->boolean('job_approved')->default(false);
             $table->softDeletes();

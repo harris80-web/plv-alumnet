@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -11,7 +12,7 @@ class JobPosting extends Model
     //
     use SoftDeletes;
     protected $primaryKey = 'job_posting_id';
-    public $incrementing = false; 
+    public $incrementing = true; 
     protected $keyType = 'int';
     protected $dates = ['deleted_at'];
 
@@ -28,6 +29,18 @@ class JobPosting extends Model
         'job_approved',
         'job_posting_image',
     ];
+
+    public function scopeActive($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('job_closing_date', '>=', Carbon::today());
+        });
+    }
+
+    public function scopeExpired($query)
+    {
+        return $query->where('closing_date', '<', Carbon::today());
+    }
 
     public function employer()
     {

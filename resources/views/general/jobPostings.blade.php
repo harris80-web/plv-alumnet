@@ -333,6 +333,15 @@
                             <img src="https://ui-avatars.com/api/?name={{ urlencode($job->employer->user->user_first_name . ' ' . $job->employer->user->user_last_name) }}&background=random"
                                 class="w-6 h-6 rounded-full mr-2">
                             <span>Posted by <span class="font-bold text-black">{{ $job->employer->user->user_first_name }} {{ $job->employer->user->user_last_name }}</span></span>
+                            @if($job->job_closing_date && \Carbon\Carbon::parse($job->job_closing_date)->isPast())
+                            <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded">
+                                Down (Expired on {{ \Carbon\Carbon::parse($job->job_closing_date)->format('M d, Y') }})
+                            </span>
+                            @else
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                                Active
+                            </span>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -489,7 +498,7 @@
 
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-[#1D264F] uppercase">Company Name <span class="text-red-500">*</span></label>
-                                <input type="text" name="job_posting_company" value="@if ($users->user_role == 'alumni'){{ $users->employer_company_name }}@else{{ $users->employer->employer_company_name }}@endif" readonly 
+                                <input type="text" name="job_posting_company" value="@if ($users->user_role == 'alumni'){{ $users->employer_company_name }}@else{{ $users->employer->employer_company_name }}@endif" readonly
                                     class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
                             </div>
                         </div>

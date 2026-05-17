@@ -337,12 +337,16 @@
                                 <i class="fas fa-check-circle"></i> APPLIED
                             </button>
                             @else
-                            <button
+                            <form action="{{ route('jobApplication.apply', $job->job_posting_id) }}" method="POST">
+                                @csrf
+                                <button
                                 data-action="{{ route('jobApplication.apply', $job->job_posting_id) }}"
                                 onclick="handleApplyClick(this)"
                                 class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white px-8 py-2 rounded-md font-bold text-sm transition-colors">
                                 APPLY
                             </button>
+                            </form>
+                            
                             @endif
                             @endif
 

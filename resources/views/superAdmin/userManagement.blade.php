@@ -733,11 +733,11 @@ $current_page = 'user_management';
                             <table class="w-full text-left text-[10px]">
                                 <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                                     <tr>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Last Name <i data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">First Name</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Middle Name</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700"><i data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Business Name</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Full Name</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Industry</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Official Website URL</th>
                                         <th class="px-4 py-4 font-semibold text-center">Actions</th>
                                     </tr>
@@ -745,11 +745,11 @@ $current_page = 'user_management';
                                 <tbody class="divide-y divide-slate-100">
                                     @forelse ($employers->filter(fn($e) => !$e->user->user_active) as $employer)
                                     <tr class="hover:bg-slate-50/80 transition-colors text-center">
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->user->user_last_name }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->user->user_first_name }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->user->user_middle_name }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->user->user_email }}</td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $loop->iteration }}</td>
                                         <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->employer_company_name }}</td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->user->user_first_name }} {{ $employer->user->user_middle_name }} {{ $employer->user->user_last_name }}</td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->user->user_email }}</td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->industry->industry_name ?? 'N/A' }}</td>
                                         <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->employer_website_url ?? 'N/A' }}</td>
                                         <td class="px-4 py-3 text-center relative">
                                             <div class="inline-block text-left">
@@ -806,14 +806,13 @@ $current_page = 'user_management';
                             <table class="w-full text-left text-[10px]">
                                 <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                                     <tr>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Last Name</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">First Name</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Middle Name</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Suffix</th>
+                                       <th class="px-4 py-4 font-semibold border-r border-slate-700"><i data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Business Name</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Full Name</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Contact No.</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Company Name</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Industry / Sector</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Industry</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Contact</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Official Website URL</th>
                                         <th class="px-4 py-4 font-semibold text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -821,14 +820,13 @@ $current_page = 'user_management';
                                 <tbody class="divide-y divide-slate-100">
                                     @forelse ($employers->filter(fn($e) => $e->user->user_active) as $employer)
                                     <tr class="hover:bg-slate-50/80 transition-colors text-center">
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->user->user_last_name }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->user->user_first_name }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->user->user_middle_name }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->user->user_suffix ?? '' }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->user->user_email }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->employer_contact_number ?? 'N/A' }}</td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $loop->iteration }}</td>
                                         <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->employer_company_name }}</td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->user->user_first_name }} {{ $employer->user->user_middle_name }} {{ $employer->user->user_last_name }} {{ $employer->user->user_suffix ?? '' }}</td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->user->user_email }}</td>
                                         <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->industry->industry_name ?? 'N/A' }}</td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->employer_contact_number ?? 'N/A' }}</td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->employer_website_url ?? 'N/A' }}</td>
                                         <td class="px-4 py-3 text-center relative">
                                             <div class="inline-block text-left">
                                                 <button class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">

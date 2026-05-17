@@ -71,7 +71,7 @@ class JobPostingController extends Controller
 
     public function showJobBoard()
     {
-        $jobPostings = JobPosting::active()->latest()->get();
+        $jobPostings = JobPosting::active()->latest('updated_at')->get();
         $programs = Program::all();
         $applications = Auth::user()->alumnus ? Auth::user()->alumnus->appliedJobs->pluck('job_id')->toArray() : [];
         $user = Auth::user();

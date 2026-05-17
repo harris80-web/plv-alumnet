@@ -264,7 +264,7 @@ $current_page = 'user_management';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management | PLV-AlumNet</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/x-icon" href="assets/PLV-AlumNet LOGO.png">
+    <link rel="icon" type="image/x-icon" href="{{ asset('assets/PLV-AlumNet LOGO.png') }}">
     @vite('resources/css/app.css')
     @vite('resources/js/app.js')
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -537,13 +537,13 @@ $current_page = 'user_management';
 
                                 <!-- Dropdown Menu -->
                                 <div id="dropdownMenu"
-                                    class="hidden absolute left-0 mt-2 w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50 ">
+                                    class="hidden absolute left-0 mt-2 w-48 origin-top-left rounded-md bg-white shadow-lg focus:outline-none z-50 ">
                                     <div class="py-1">
                                         <!-- Option 1: Manual Add -->
                                         <button onclick="openAddModal()"
                                             class="flex items-center gap-2 px-4 py-2 text-sm text-[#0E0F3B] hover:bg-gray-100 w-full text-left">
                                             <i data-lucide="user-plus" class="w-4 h-4"></i>
-                                            Add Manually
+                                            Add Alumni
                                         </button>
 
                                         <!-- Option 2: Import CSV -->

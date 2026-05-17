@@ -73,9 +73,9 @@ $title = $pageTitles[$currentPage] ?? 'Super Admin Panel';
         </button>
 
         <div id="notification-menu"
-            class="hidden absolute right-10 top-14 w-80 bg-white rounded-xl shadow-2xl border border-slate-100 z-50 overflow-hidden">
+            class="hidden absolute right-10 top-14 w-80 bg-white rounded-xl shadow-2xl border-b border-slate-200 z-50 overflow-hidden">
 
-            <div class="flex items-center px-4 py-3 text-sm font-semibold border-b">
+            <div class="flex items-center px-4 py-3 text-sm font-semibold border-b border-slate-200">
                 <span class="flex-1 text-[#0E0F3B]">Notifications</span>
                 <div class="flex items-center gap-3">
                     <button onclick="clearNotifications()"
@@ -90,11 +90,11 @@ $title = $pageTitles[$currentPage] ?? 'Super Admin Panel';
             </div>
 
             <div id="notif-list" class="max-h-64 overflow-y-auto text-sm">
-                <div class="px-4 py-3 hover:bg-slate-50 cursor-pointer border-b">
+                <div class="px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-200">
                     <div class="font-medium text-slate-700">New employer registered</div>
                     <div class="text-xs text-slate-400">2 mins ago</div>
                 </div>
-                <div class="px-4 py-3 hover:bg-slate-50 cursor-pointer border-b">
+                <div class="px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-200">
                     <div class="font-medium text-slate-700">New Job post is now pending for approval</div>
                     <div class="text-xs text-slate-400">10 mins ago</div>
                 </div>
@@ -112,7 +112,7 @@ $title = $pageTitles[$currentPage] ?? 'Super Admin Panel';
             </div>
 
             <div onclick="expandNotifications(event)"
-                class="text-center text-xs py-2 border-t hover:bg-slate-50 cursor-pointer transition">
+                class="text-center text-xs py-2 border-t border-slate-200 hover:bg-slate-50 cursor-pointer transition">
                 View all notifications
             </div>
         </div>
@@ -126,7 +126,7 @@ $title = $pageTitles[$currentPage] ?? 'Super Admin Panel';
         <div id="header-settings-menu"
             class="hidden absolute right-0 top-14 w-56 bg-white rounded-xl shadow-2xl border border-slate-100 z-50 overflow-hidden">
 
-            <div class="flex items-center gap-3 px-4 py-3 border-b">
+            <div class="flex items-center gap-3 px-4 py-3 border-b border-slate-200">
                 <div class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center">
                     <i data-lucide="user" class="w-5 h-5 text-slate-500"></i>
                 </div>

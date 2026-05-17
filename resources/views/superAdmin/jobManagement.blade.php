@@ -280,10 +280,10 @@ $approved_count = $approved_jobs->count();
                                                 <form action="{{ route('jobPosting.approve', $j->job_posting_id) }}"
                                                     method="POST" class="w-full">
                                                     @csrf
-                                                    <button type="submit"
+                                                    <button type="button"
+                                                        onclick="openApprovalModal(this)"
                                                         class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-green-50">
-                                                        <i data-lucide="check-circle"
-                                                            class="w-4 h-4 mr-3 text-green-500"></i> Approve
+                                                        <i data-lucide="check-circle" class="w-4 h-4 mr-3 text-green-500"></i> Approve
                                                     </button>
                                                 </form>
                                                 <button
@@ -337,7 +337,7 @@ $approved_count = $approved_jobs->count();
                     <div class="flex justify-end p-4">
                         <button
                             onclick="openPostJobModal()"
-                            class="flex items-center gap-2 bg-[#1D264F] hover:bg-blue-900 text-white px-5 py-2 rounded-lg font-bold text-sm tracking-widest shadow-lg transition-all transform hover:scale-105 active:scale-95">
+                            class="flex items-center gap-2 bg-[#1D264F] hover:bg-blue-900 text-white px-4 py-2 rounded-lg font-bold text-xs tracking-widest shadow-lg transition-all">
                             <i class="fas fa-plus text-xs"></i>
                             <span>POST A NEW JOB</span>
                         </button>
@@ -468,7 +468,7 @@ $approved_count = $approved_jobs->count();
 
     <!-- View Job Modal -->
     <div id="viewJobModal"
-        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/60  backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
             <div class="relative h-32 bg-slate-800 flex items-end p-6 overflow-hidden">
                 <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=80"
@@ -632,6 +632,8 @@ $approved_count = $approved_jobs->count();
             </button>
         </div>
     </div>
+
+    <!-- Post a new job modal -->
     <div id="postJobModal" class="fixed inset-0 z-[110] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
 
         <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col min-h-[600px]">
@@ -775,6 +777,31 @@ $approved_count = $approved_jobs->count();
                 </div>
 
             </form>
+        </div>
+    </div>
+
+
+    <!--JOB APPROVAL CONFIRMATION MODAL-->
+    <!-- Confirmation Modal -->
+    <div id="approvalModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50">
+        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
+            <div class="flex flex-col items-center text-center">
+                <div class="flex items-center justify-center w-14 h-14 rounded-full bg-green-100 mb-4">
+                    <i data-lucide="check-circle" class="w-7 h-7 text-green-500"></i>
+                </div>
+                <h2 class="text-lg font-semibold text-[#0E0F3B] mb-1">Confirm Approval</h2>
+                <p class="text-sm text-gray-500 mb-6">Are you sure you want to approve this request? This action cannot be undone.</p>
+                <div class="flex gap-3 w-full">
+                    <button onclick="closeApprovalModal()"
+                        class="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition">
+                        Cancel
+                    </button>
+                    <button onclick="submitApproval()"
+                        class="flex-1 px-4 py-2 rounded-lg bg-green-500 text-white text-sm font-medium hover:bg-green-600 transition">
+                        Yes, Approve
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1062,12 +1089,14 @@ $approved_count = $approved_jobs->count();
             }
 
             document.getElementById('viewJobModal').classList.remove('hidden');
+            modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
             if (window.lucide) lucide.createIcons();
         }
 
         function closeViewModal() {
             document.getElementById('viewJobModal').classList.add('hidden');
+            document.getElementById('viewJobModal').style.display = 'none';
             document.body.style.overflow = 'auto';
         }
 
@@ -1148,6 +1177,36 @@ $approved_count = $approved_jobs->count();
                 }
             });
         }
+
+        //JOB APPROVAL MODAL JS
+        let approvalForm = null;
+
+        function openApprovalModal(btn) {
+            approvalForm = btn.closest('form');
+            const modal = document.getElementById('approvalModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeApprovalModal() {
+            const modal = document.getElementById('approvalModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            approvalForm = null;
+        }
+
+        function submitApproval() {
+            if (approvalForm) {
+                approvalForm.submit();
+            }
+            closeApprovalModal();
+        }
+
+        // Close on backdrop click
+        document.getElementById('approvalModal').addEventListener('click', function(e) {
+            if (e.target === this) closeApprovalModal();
+        });
     </script>
 
 </body>

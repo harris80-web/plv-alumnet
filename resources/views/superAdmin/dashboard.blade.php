@@ -484,23 +484,14 @@
                 </div>
 
                 <!-- Row 2: 4 chart cards -->
-                <div class="grid grid-cols-4 gap-4 mb-4">
+                <div class="grid grid-cols-2 gap-4 mb-4">
 
-                    <!-- Alumni Registration -->
+                    <!-- Employment Status Breakdown -->
                     <div class="chart-card">
-                        <div class="card-title">Alumni <span>Registration</span></div>
-                        <div class="card-sub">Total number of alumni who registered each month</div>
-                        <div style="margin-top:10px; height:130px;">
-                            <canvas id="chartRegistration"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Networking Activity -->
-                    <div class="chart-card">
-                        <div class="card-title">Alumni <span>Networking Activity</span></div>
-                        <div class="card-sub">Monthly connections & messages — Jan to Jun 2025</div>
-                        <div style="margin-top:10px; height:130px;">
-                            <canvas id="chartNetworking"></canvas>
+                        <div class="card-title">Employment Status Breakdown</div>
+                        <div class="card-sub">Overall distribution of all alumni and their employment status</div>
+                        <div style="margin-top:10px; height:160px;">
+                            <canvas id="chartStatus"></canvas>
                         </div>
                     </div>
 
@@ -541,20 +532,10 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Employer Approval Status -->
-                    <div class="chart-card">
-                        <div class="card-title">Employer Approval Status</div>
-                        <div class="card-sub">Alumni account verification overview</div>
-                        <div style="margin-top:10px; height:140px;">
-                            <canvas id="chartApproval"></canvas>
-                        </div>
-                    </div>
-
                 </div>
 
                 <!-- Row 3: 3 chart cards -->
-                <div class="grid grid-cols-3 gap-4 mb-4">
+                <div class="grid grid-cols-2 gap-4 mb-4">
 
                     <!-- Job Placement Rate per Batch -->
                     <div class="chart-card">
@@ -565,15 +546,7 @@
                         </div>
                     </div>
 
-                    <!-- Employment Status Breakdown -->
-                    <div class="chart-card">
-                        <div class="card-title">Employment Status Breakdown</div>
-                        <div class="card-sub">Overall distribution of all alumni and their employment status</div>
-                        <div style="margin-top:10px; height:160px;">
-                            <canvas id="chartStatus"></canvas>
-                        </div>
-                    </div>
-
+            
                     <!-- Job-to-Degree Alignment -->
                     <div class="chart-card">
                         <div class="card-title">Job-to-Degree Alignment by Program/Course</div>
@@ -586,7 +559,15 @@
                 </div>
 
                 <!-- Row 4: Alumni ID Reports + Recent Activity -->
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
+                     <!-- Networking Activity -->
+                    <div class="chart-card">
+                        <div class="card-title">Alumni <span>Networking Activity</span></div>
+                        <div class="card-sub">Monthly connections & messages — Jan to Jun 2025</div>
+                        <div style="margin-top:10px; height:130px;">
+                            <canvas id="chartNetworking"></canvas>
+                        </div>
+                    </div>
 
                     <!-- Alumni ID & Yearbook Reports -->
                     <div class="chart-card">
@@ -647,67 +628,20 @@
 
 
     <script>
-        lucide.createIcons();
+    lucide.createIcons();
 
-        const fontDef = {
-            family: 'Montserrat',
-            size: 10
-        };
-        const gridColor = 'rgba(0,0,0,0.05)';
-        Chart.defaults.font = fontDef;
-        Chart.defaults.color = '#6b7280';
+    const fontDef = { family: 'Montserrat', size: 10 };
+    const gridColor = 'rgba(0,0,0,0.05)';
+    Chart.defaults.font = fontDef;
+    Chart.defaults.color = '#6b7280';
 
-        // 1. Alumni Registration — line
-        new Chart(document.getElementById('chartRegistration'), {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                datasets: [{
-                    label: 'Registered',
-                    data: [12, 18, 14, 22, 30, 28, 20, 25, 32, 27, 19, 22],
-                    borderColor: '#e05c00',
-                    backgroundColor: 'rgba(224,92,0,.1)',
-                    borderWidth: 2,
-                    pointRadius: 2,
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            color: gridColor
-                        },
-                        ticks: {
-                            font: fontDef
-                        }
-                    },
-                    y: {
-                        grid: {
-                            color: gridColor
-                        },
-                        ticks: {
-                            font: fontDef
-                        }
-                    }
-                }
-            }
-        });
-
-        // 2. Networking Activity — dual line
-        new Chart(document.getElementById('chartNetworking'), {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                datasets: [{
+    // 1. Networking Activity — dual line
+    new Chart(document.getElementById('chartNetworking'), {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [
+                {
                     label: 'Connections',
                     data: [120, 180, 160, 230, 290, 340],
                     borderColor: '#e05c00',
@@ -727,77 +661,32 @@
                     fill: true,
                     tension: 0.4
                 }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top',
-                        labels: {
-                            font: fontDef,
-                            boxWidth: 10
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            color: gridColor
-                        },
-                        ticks: {
-                            font: fontDef
-                        }
-                    },
-                    y: {
-                        grid: {
-                            color: gridColor
-                        },
-                        ticks: {
-                            font: fontDef
-                        }
-                    }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: { font: fontDef, boxWidth: 10 }
                 }
-            }
-        });
-
-        // 3. Employer Approval Status — donut
-        new Chart(document.getElementById('chartApproval'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Approved', 'Pending', 'Rejected'],
-                datasets: [{
-                    data: [72, 18, 10],
-                    backgroundColor: ['#16a34a', '#e05c00', '#dc2626'],
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'right',
-                        labels: {
-                            font: fontDef,
-                            boxWidth: 10
-                        }
-                    }
-                },
-                cutout: '65%'
+            scales: {
+                x: { grid: { color: gridColor }, ticks: { font: fontDef } },
+                y: { grid: { color: gridColor }, ticks: { font: fontDef } }
             }
-        });
+        }
+    });
 
-        // 4. Job Placement Rate per Batch — stacked bar
-        new Chart(document.getElementById('chartPlacement'), {
-            type: 'bar',
-            data: {
-                labels: ['2022', '2023', '2024', '2025', '2026'],
-                datasets: [{
+    // 2. Job Placement Rate per Batch — stacked bar
+    new Chart(document.getElementById('chartPlacement'), {
+        type: 'bar',
+        data: {
+            labels: ['2022', '2023', '2024', '2025', '2026'],
+            datasets: [
+                {
                     label: 'Unemployed',
                     data: [30, 25, 28, 35, 20],
                     backgroundColor: '#e05c00'
@@ -807,197 +696,142 @@
                     data: [70, 75, 72, 65, 80],
                     backgroundColor: '#1a3a6e'
                 }
-                ]
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: { font: fontDef, boxWidth: 10 }
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'bottom',
-                        labels: {
-                            font: fontDef,
-                            boxWidth: 10
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        stacked: true,
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            font: fontDef
-                        }
-                    },
-                    y: {
-                        stacked: true,
-                        grid: {
-                            color: gridColor
-                        },
-                        max: 100,
-                        ticks: {
-                            font: fontDef,
-                            callback: v => v + '%'
-                        }
-                    }
+            scales: {
+                x: { stacked: true, grid: { display: false }, ticks: { font: fontDef } },
+                y: {
+                    stacked: true,
+                    grid: { color: gridColor },
+                    max: 100,
+                    ticks: { font: fontDef, callback: v => v + '%' }
                 }
             }
-        });
+        }
+    });
 
-        // 5. Employment Status Breakdown — donut
-        new Chart(document.getElementById('chartStatus'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Employed', 'Unemployed'],
-                datasets: [{
-                    data: [68, 32],
-                    backgroundColor: ['#1a3a6e', '#94a3b8'],
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
+    // 3. Employment Status Breakdown — doughnut
+    new Chart(document.getElementById('chartStatus'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Employed', 'Unemployed'],
+            datasets: [{
+                data: [68, 32],
+                backgroundColor: ['#1a3a6e', '#94a3b8'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: { font: fontDef, boxWidth: 10 }
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'bottom',
-                        labels: {
-                            font: fontDef,
-                            boxWidth: 10
-                        }
-                    }
+            cutout: '60%'
+        }
+    });
+
+    // 4. Job-to-Degree Alignment — horizontal bar
+    new Chart(document.getElementById('chartAlignment'), {
+        type: 'bar',
+        data: {
+            labels: ['BSEd', 'BSA', 'BSBA', 'BSIT', 'BSCE', 'BSPSYCH', 'BSEE'],
+            datasets: [{
+                label: 'Alignment %',
+                data: [88, 92, 74, 85, 91, 67, 78],
+                backgroundColor: '#e05c00',
+                borderRadius: 3
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    grid: { color: gridColor },
+                    max: 100,
+                    ticks: { font: fontDef, callback: v => v + '%' }
                 },
-                cutout: '60%'
+                y: { grid: { display: false }, ticks: { font: fontDef } }
             }
-        });
+        }
+    });
 
-        // 6. Job-to-Degree Alignment — horizontal bar
-        new Chart(document.getElementById('chartAlignment'), {
-            type: 'bar',
-            data: {
-                labels: ['BSEd', 'BSN', 'BSBA', 'BSIT', 'BSCS', 'BSPSYCH', 'BSEE'],
-                datasets: [{
-                    label: 'Alignment %',
-                    data: [88, 92, 74, 85, 91, 67, 78],
-                    backgroundColor: '#e05c00',
-                    borderRadius: 3
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            color: gridColor
-                        },
-                        max: 100,
-                        ticks: {
-                            font: fontDef,
-                            callback: v => v + '%'
-                        }
-                    },
-                    y: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            font: fontDef
-                        }
+    // 5. Alumni ID Status — doughnut (pie)
+    new Chart(document.getElementById('chartAlumniID'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Not Yet Claimed', 'Pending', 'Claimed'],
+            datasets: [{
+                data: [1500, 5973, 6842],
+                backgroundColor: ['#dc2626', '#e05c00', '#16a34a'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        font: { family: 'Montserrat', size: 9 },
+                        boxWidth: 8
                     }
                 }
-            }
-        });
-
-        // 7. Alumni ID Status — bar
-        new Chart(document.getElementById('chartAlumniID'), {
-            type: 'bar',
-            data: {
-                labels: ['Not Registered', 'Registered', 'Distributed'],
-                datasets: [{
-                    data: [1500, 5973, 6842],
-                    backgroundColor: ['#dc2626', '#e05c00', '#16a34a'],
-                    borderRadius: 3
-                }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            font: {
-                                family: 'Montserrat',
-                                size: 9
-                            }
-                        }
-                    },
-                    y: {
-                        grid: {
-                            color: gridColor
-                        },
-                        ticks: {
-                            font: {
-                                family: 'Montserrat',
-                                size: 9
-                            }
-                        }
+            cutout: '55%'
+        }
+    });
+
+    // 6. Yearbook Distribution — doughnut (pie)
+    new Chart(document.getElementById('chartYearbook'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Claimed', 'Pending', 'Not Claimed'],
+            datasets: [{
+                data: [53.4, 14.6, 32],
+                backgroundColor: ['#16a34a', '#e05c00', '#dc2626'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        font: { family: 'Montserrat', size: 9 },
+                        boxWidth: 8
                     }
                 }
-            }
-        });
-
-        // 8. Yearbook Distribution — donut
-        new Chart(document.getElementById('chartYearbook'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Distributed', 'Pending', 'Not Claimed'],
-                datasets: [{
-                    data: [53.4, 14.6, 32],
-                    backgroundColor: ['#16a34a', '#e05c00', '#94a3b8'],
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'bottom',
-                        labels: {
-                            font: {
-                                family: 'Montserrat',
-                                size: 9
-                            },
-                            boxWidth: 8
-                        }
-                    }
-                },
-                cutout: '55%'
-            }
-        });
-    </script>
+            cutout: '55%'
+        }
+    });
+</script>
 
 </body>
 

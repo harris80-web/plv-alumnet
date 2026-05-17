@@ -286,11 +286,12 @@ $approved_count = $approved_jobs->count();
                                                         <i data-lucide="check-circle" class="w-4 h-4 mr-3 text-green-500"></i> Approve
                                                     </button>
                                                 </form>
-                                                <button
+                                                <button type="button"
                                                     onclick="openConfirmAction(<?= $j['id'] ?>, 'decline', '<?= htmlspecialchars($j['title']) ?>')"
                                                     class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                                     <i data-lucide="x-circle" class="w-4 h-4 mr-3"></i> Decline
                                                 </button>
+
                                                 <button onclick="openViewModal({{ $j->job_posting_id }}, {{ json_encode([
                                     'title' => $j->job_posting_title,
                                     'posted' => $j->created_at,
@@ -309,6 +310,13 @@ $approved_count = $approved_jobs->count();
                                                 </button>
                                             </div>
                                         </div>
+                                        <form action="{{ route('jobPosting.decline', $j->job_posting_id) }}"
+                                            method="POST" class="w-full">
+                                            @csrf
+                                            <input type="text" name="decline-reason" placeholder="Enter reason...">
+                                            <input type="submit" value="decline">
+
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -446,6 +454,15 @@ $approved_count = $approved_jobs->count();
                                                     <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i> Delete
                                                 </button>
                                             </div>
+
+                                        </div>
+                                        <div id="delete-message">
+                                            <form action="{{ route('jobPosting.delete', $j->job_posting_id) }}" method="POST">
+                                                @csrf
+                                                @method('DELETE')
+                                                <input type="text" name="delete-reason" placeholder="Enter reason...">
+                                                <input type="submit" value="Delete">
+                                            </form>
                                         </div>
                                     </div>
                                 </td>

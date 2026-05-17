@@ -187,6 +187,8 @@ Route::get('/myJobPosts/{id}', [JobPostingController::class, 'showMyJobPosts'])-
 Route::post('/editJobPost/{id}', [JobPostingController::class, 'editJobPost'])->name('jobPosting.editJobPost');
 Route::get('/jobManagement', [JobPostingController::class, 'showJobManagement'])->name('jobPosting.jobManagement');
 Route::post('/approveJobPost/{id}', [JobPostingController::class, 'approveJobPost'])->name('jobPosting.approve');
+Route::post('/declineJobPost/{id}', [JobPostingController::class, 'declineJobPost'])->name('jobPosting.decline');
+Route::delete('/deleteJobPost/{id}', [JobPostingController::class, 'deleteJobPost'])->name('jobPosting.delete');
 
 Route::resource('messages', MessageController::class);
 

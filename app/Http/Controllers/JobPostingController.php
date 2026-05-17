@@ -7,6 +7,7 @@ use App\Models\Program;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -223,5 +224,34 @@ class JobPostingController extends Controller
         $job = JobPosting::findOrFail($id);
         $job->update(['job_approved' => true]);
         return redirect()->route('jobPosting.jobManagement')->with('success', 'Job posting approved successfully!');
+    }
+
+    public function declineJobPost(Request $request, $id)
+    {
+        $job = JobPosting::findOrFail($id);
+
+        $validated = $request->validate([
+            'decline-reason' => 'required|string|max:255',
+        ]);
+        Log::info("Job posting with ID {$job->job_posting_id}, from: {$job->user->user_first_name} {$job->user->user_last_name} declined. Reason: {$validated['decline-reason']}");
+
+        $job->delete();
+        return redirect()->route('jobPosting.jobManagement')->with('success', 'Job posting declined successfully!');
+    }
+
+     public function deleteJobPost(Request $request, $id)
+    {
+        $job = JobPosting::findOrFail($id);
+
+        $validated = $request->validate([
+            'delete-reason' => 'required|string|max:255',
+        ]);
+
+        // Log the deletion reason (you can also store this in a database table if needed)
+        Log::info("Job posting with ID {$job->job_posting_id}, from: {$job->user->user_first_name} {$job->user->user_last_name} deleted. Reason: {$validated['delete-reason']}");
+
+        $job->delete();
+
+        return back()->with('success', 'Job posting deleted successfully!');
     }
 }

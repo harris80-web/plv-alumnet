@@ -3,11 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 class JobPosting extends Model
 {
     //
+    use SoftDeletes;
     protected $primaryKey = 'job_posting_id';
+    public $incrementing = false; 
+    protected $keyType = 'int';
+    protected $dates = ['deleted_at'];
 
     protected $fillable = [
         'job_posting_id',

@@ -24,6 +24,7 @@ return new class extends Migration
             $table->date('job_closing_date');
             $table->text('job_posting_image')->nullable();
             $table->boolean('job_approved')->default(false);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

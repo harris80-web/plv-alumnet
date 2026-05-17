@@ -26,7 +26,10 @@ class DatabaseSeeder extends Seeder
             SectionSeeder::class,
             SuperAdminSeeder::class,
             AlumnusSeeder::class,
-            EmployerSeeder::class,  
+            EmployerSeeder::class,
+            AdminSeeder::class,
+            JobSeeder::class,
+            TestimonialSeeder::class,  
             // You can add more seeders here later (e.g., UserSeeder)
         ]);
     }

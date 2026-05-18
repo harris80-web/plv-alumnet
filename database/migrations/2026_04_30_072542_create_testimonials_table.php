@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('alumni', 'user_id')->onDelete('cascade');
             $table->text('testimonial_body');
             $table->boolean('testimonial_post')->default(false);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

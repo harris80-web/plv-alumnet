@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Testimonial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TestimonialController extends Controller
 {
@@ -108,6 +109,16 @@ class TestimonialController extends Controller
 
         $testimonial->testimonial_post = true;
         $testimonial->save();
+
+        return back()->with('success', 'Status updated successfully!');
+    }
+    public function deleteTestimonial($id)
+    {
+        $testimonial = Testimonial::findOrFail($id);
+
+        Log::info("Admin with ID {$testimonial->testimonial_id}: {$testimonial->alumnus->user->user_first_name} {$testimonial->alumnus->user->user_last_name} deleted. Message: {$testimonial->testimonial_body}");
+
+        $testimonial->delete();
 
         return back()->with('success', 'Status updated successfully!');
     }

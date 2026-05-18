@@ -662,7 +662,14 @@
                 btnBg: 'bg-red-600',
                 btnText: 'Yes, Delete',
                 onConfirm: () => {
-                    window.location.href = 'admin_delete_testimonial.php?id=' + id;
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = "{{ url('deleteTestimonial') }}/" + id; // adjust to your actual route
+                    form.innerHTML = `
+                    <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="_method" value="DELETE">`;
+                    document.body.appendChild(form);
+                    form.submit();
                 }
             });
         }

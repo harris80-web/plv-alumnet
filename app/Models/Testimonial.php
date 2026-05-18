@@ -3,11 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 class Testimonial extends Model
 {
     //
+     use SoftDeletes;
     protected $primaryKey = 'testimonial_id';
+    public $incrementing = true; 
+    protected $keyType = 'int';
+    protected $dates = ['deleted_at'];
 
     protected $fillable = [
         'user_id',

@@ -23,13 +23,13 @@
             <img src="{{ asset('assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png') }}" alt="" class="h-8 w-30">
         </div>
         <nav class="flex items-center justify-center gap-10 text-white flex-1 font-medium text-sm">
-            <a href="{{ route('users.dashboardRedirect') }}"
-                class="{{ $current_page === 'users.dashboardRedirect' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+            <a href="{{ route('general.home') }}"
+                class="{{ request()->routeIs('general.home') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                 HOME
             </a>
-            
+
             <a href="{{ route('general.about') }}"
-                class="{{ $current_page === 'about' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; ?>">
+                class="{{ request()->routeIs('general.about') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                 ABOUT
             </a>
 
@@ -50,14 +50,14 @@
 
             <div class="flex gap-4 p-8 justify-self-end">
                 <a href="{{ route('auth.register') }}"
-                    class="px-6 py-2 border-2 border-white text-white font-semibold rounded-lg hover:border-[#ED7A07] hover:bg-[#ED7A07] hover:text-white transition-all">
-                    SIGN UP
-                </a>
+                class="px-6 py-2 border-2 border-white text-white font-semibold rounded-lg hover:border-[#ED7A07] hover:bg-[#ED7A07] hover:text-white transition-all">
+                SIGN UP
+            </a>
 
-                <a href="{{ route('auth.login') }}"
-                    class="px-6 py-2 bg-white text-[#0E0F3B] font-semibold rounded-lg hover:bg-[#0E0F3B] hover:border-2 border-[#ED7A07] hover:text-[#ED7A07] transition-colors">
-                    LOGIN
-                </a>
+            <a href="{{ route('auth.login') }}"
+                class="px-6 py-2 bg-white text-[#0E0F3B] font-semibold rounded-lg hover:bg-[#0E0F3B] hover:border-2 border-[#ED7A07] hover:text-[#ED7A07] transition-colors">
+                LOGIN
+            </a>
             </div>
 
 

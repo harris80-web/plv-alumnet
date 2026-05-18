@@ -167,6 +167,18 @@ $approved_count = $approved_jobs->count();
         th .sort-icon {
             opacity: 0.55;
         }
+
+
+        #postJobModal>div {
+            overflow-y: auto;
+            max-height: 90vh;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        #postJobModal>div::-webkit-scrollbar {
+            display: none;
+        }
     </style>
 </head>
 
@@ -202,15 +214,6 @@ $approved_count = $approved_jobs->count();
                 <div class="bg-white rounded-lg shadow-sm border border-slate-200 mb-6 w-full">
                     <table class="jobs-table">
                         <thead class="bg-[#0E0F3B] text-white">
-                            @if ($errors->any())
-                            <div class="alert alert-danger">
-                                <ul>
-                                    @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                            @endif
                             <tr>
                                 <th class="border-r border-slate-700">ID</th>
                                 <th class="border-r border-slate-700">Job Title</th>
@@ -274,8 +277,7 @@ $approved_count = $approved_jobs->count();
                                             class="menu-button p-1.5 hover:bg-slate-100 rounded-full transition-colors">
                                             <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
                                         </button>
-                                        <div
-                                            class="action-dropdown bg-white border border-slate-200 rounded-md shadow-xl">
+                                        <div class="action-dropdown bg-white border border-slate-200 rounded-md shadow-xl">
                                             <div class="py-1">
                                                 <form action="{{ route('jobPosting.approve', $j->job_posting_id) }}"
                                                     method="POST" class="w-full">
@@ -287,36 +289,29 @@ $approved_count = $approved_jobs->count();
                                                     </button>
                                                 </form>
                                                 <button type="button"
-                                                    onclick="openConfirmAction(<?= $j['id'] ?>, 'decline', '<?= htmlspecialchars($j['title']) ?>')"
+                                                    onclick="openDeclineNotesModal({{ $j->job_posting_id }}, '{{ addslashes($j->job_posting_title) }}')"
                                                     class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                                     <i data-lucide="x-circle" class="w-4 h-4 mr-3"></i> Decline
                                                 </button>
 
                                                 <button onclick="openViewModal({{ $j->job_posting_id }}, {{ json_encode([
-                                    'title' => $j->job_posting_title,
-                                    'posted' => $j->created_at,
-                                    'company' => $j->job_posting_company,
-                                    'location' => $j->job_posting_address,
-                                    'posted_by' => $j->user->user_first_name . ' ' . $j->user->user_last_name,
-                                    'type' => $j->job_posting_employment_type,
-                                    'setup' => $j->job_posting_setup,
-                                    'program' => $j->programs->pluck('program_name')->join(', '),
-                                    'closing' => $j->job_closing_date,
-                                    'description' => $j->job_posting_description,
-                                    'status' => 'Pending',
-                                ]) }})"
+                                                                                            'title' => $j->job_posting_title,
+                                                                                            'posted' => $j->created_at,
+                                                                                            'company' => $j->job_posting_company,
+                                                                                            'location' => $j->job_posting_address,
+                                                                                            'posted_by' => $j->user->user_first_name . ' ' . $j->user->user_last_name,
+                                                                                            'type' => $j->job_posting_employment_type,
+                                                                                            'setup' => $j->job_posting_setup,
+                                                                                            'program' => $j->programs->pluck('program_name')->join(', '),
+                                                                                            'closing' => $j->job_closing_date,
+                                                                                            'description' => $j->job_posting_description,
+                                                                                            'status' => 'Pending',
+                                                                                        ]) }})"
                                                     class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 border-t border-slate-100">
                                                     <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View
                                                 </button>
                                             </div>
                                         </div>
-                                        <form action="{{ route('jobPosting.decline', $j->job_posting_id) }}"
-                                            method="POST" class="w-full">
-                                            @csrf
-                                            <input type="text" name="decline-reason" placeholder="Enter reason...">
-                                            <input type="submit" value="decline">
-
-                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -429,40 +424,30 @@ $approved_count = $approved_jobs->count();
                                             class="menu-button p-1.5 hover:bg-slate-100 rounded-full transition-colors">
                                             <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
                                         </button>
-                                        <div
-                                            class="action-dropdown bg-white border border-slate-200 rounded-md shadow-xl">
+                                        <div class="action-dropdown bg-white border border-slate-200 rounded-md shadow-xl">
                                             <div class="py-1">
                                                 <button onclick="openViewModal({{ $j->job_posting_id }}, {{ json_encode([
-                                    'title' => $j->job_posting_title,
-                                    'posted' => $j->created_at,
-                                    'company' => $j->job_posting_company,
-                                    'location' => $j->job_posting_address,
-                                    'posted_by' => $j->user->user_first_name . ' ' . $j->user->user_last_name,
-                                    'type' => $j->job_posting_employment_type,
-                                    'setup' => $j->job_posting_setup,
-                                    'program' => $j->programs->pluck('program_name')->join(', '),
-                                    'closing' => $j->job_closing_date,
-                                    'description' => $j->job_posting_description,
-                                    'status' => 'Approved',
-                                ]) }})"
+                                                                                                    'title' => $j->job_posting_title,
+                                                                                                    'posted' => $j->created_at,
+                                                                                                    'company' => $j->job_posting_company,
+                                                                                                    'location' => $j->job_posting_address,
+                                                                                                    'posted_by' => $j->user->user_first_name . ' ' . $j->user->user_last_name,
+                                                                                                    'type' => $j->job_posting_employment_type,
+                                                                                                    'setup' => $j->job_posting_setup,
+                                                                                                    'program' => $j->programs->pluck('program_name')->join(', '),
+                                                                                                    'closing' => $j->job_closing_date,
+                                                                                                    'description' => $j->job_posting_description,
+                                                                                                    'status' => 'Approved',
+                                                                                                ]) }})"
                                                     class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50">
                                                     <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View
                                                 </button>
-                                                <button
-                                                    onclick="openConfirmAction(<?= $j['id'] ?>, 'delete', '<?= htmlspecialchars($j['title']) ?>')"
+                                                <button type="button"
+                                                    onclick="openDeleteModal({{ $j->job_posting_id }}, '{{ addslashes($j->job_posting_title) }}', '{{ route('jobPosting.delete', $j->job_posting_id) }}')"
                                                     class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                                     <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i> Delete
                                                 </button>
                                             </div>
-
-                                        </div>
-                                        <div id="delete-message">
-                                            <form action="{{ route('jobPosting.delete', $j->job_posting_id) }}" method="POST">
-                                                @csrf
-                                                @method('DELETE')
-                                                <input type="text" name="delete-reason" placeholder="Enter reason...">
-                                                <input type="submit" value="Delete">
-                                            </form>
                                         </div>
                                     </div>
                                 </td>
@@ -651,148 +636,215 @@ $approved_count = $approved_jobs->count();
     </div>
 
     <!-- Post a new job modal -->
-    <div id="postJobModal" class="fixed inset-0 z-[110] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="postJobModal" class="fixed inset-0 z-[110] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3">
 
-        <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col min-h-[600px]">
+        <div class="bg-white w-full max-w-3xl rounded-[1.8rem] shadow-2xl relative">
 
             <form action="{{ route('jobPosting.addJobPost', ['id' => $users->user_id]) }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
-                <button type="button" onclick="closePostModal()" class="absolute top-11 right-8 text-gray-300 hover:text-gray-500 transition-colors z-10">
+                <!-- CLOSE -->
+                <button type="button" onclick="closePostModal()"
+                    class="absolute top-5 right-5 text-gray-300 hover:text-gray-500 transition-colors z-10">
                     <i class="fas fa-times-circle text-2xl"></i>
                 </button>
 
-                <div class="w-full pt-12 text-center">
-                    <h2 class="inline-block text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent tracking-tight">
+                <!-- TITLE -->
+                <div class="w-full pt-6 text-center">
+                    <h2 class="inline-block text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent tracking-tight">
                         POST A NEW JOB
                     </h2>
                 </div>
 
-                <div class="flex flex-col md:flex-row flex-1">
+                <!-- CONTENT -->
+                <div class="p-5 text-sm">
 
-                    <!-- IMAGE UPLOAD -->
-                    <div class="md:w-1/3 flex flex-col items-center justify-center p-8 bg-white">
-                        <div id="imageFrame" class="w-full aspect-square border-4 border-[#1D264F] rounded-[2rem] flex flex-col items-center justify-center p-2 shadow-sm relative overflow-hidden">
+                    <!-- TOP GRID -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                            <div id="uploadPlaceholder" class="flex flex-col items-center justify-center">
-                                <i class="fas fa-upload text-6xl text-[#1D264F] mb-4"></i>
-                                <button type="button" onclick="document.getElementById('jobImageInput').click()" class="bg-[#1D264F] text-white px-8 py-2 rounded-full font-bold text-xs tracking-widest hover:bg-[#0E0F3B] transition-colors">
-                                    UPLOAD
-                                </button>
-                            </div>
+                        <!-- LEFT -->
+                        <div class="space-y-2">
 
-                            <img id="jobImagePreview" src="#" class="hidden w-full h-full object-cover rounded-[1.6rem]" />
-
-                            <input type="file" name="job_posting_image" id="jobImageInput" accept="image/*" class="hidden" onchange="previewJobImage(this)">
-
-                            <button id="changeImgBtn" type="button" onclick="document.getElementById('jobImageInput').click()" class="hidden absolute bottom-4 bg-white/80 backdrop-blur-sm text-[#1D264F] px-4 py-1 rounded-full font-bold text-[10px] hover:bg-white transition-all">
-                                CHANGE IMAGE
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- FORM FIELDS -->
-                    <div class="md:w-2/3 p-10 pt-6 space-y-4">
-
-                        <div class="grid grid-cols-2 gap-4">
+                            <!-- JOB TITLE -->
                             <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Job Title <span class="text-red-500">*</span></label>
-                                <input type="text" name="job_posting_title" placeholder="e.g., Senior Full Stack Developer"
-                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
+                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">
+                                    Job Title <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" name="job_posting_title"
+                                    placeholder="e.g., Senior Full Stack Developer"
+                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#C73D1A]">
                             </div>
 
+                            <!-- BUSINESS NAME -->
                             <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Business Name <span class="text-red-500">*</span></label>
-                                <input type="text" name="job_posting_company" placeholder="Enter the registered name"
-                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
-                            </div>
-                        </div>
-
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Business Address <span class="text-red-500">*</span></label>
-                            <input type="text" name="job_posting_address" placeholder="Enter business address"
-                                class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Job Type <span class="text-red-500">*</span></label>
-                                <select name="job_posting_employment_type"
-                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em_1em]">
-                                    <option>Select Type (e.g., Full-time)</option>
-                                    <option>Full-Time</option>
-                                    <option>Part-Time</option>
-                                    <option>Freelance</option>
-                                </select>
+                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">
+                                    Business Name <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" name="job_posting_company"
+                                    placeholder="Enter the registered name"
+                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#C73D1A]">
                             </div>
 
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Job Setup <span class="text-red-500">*</span></label>
-                                <select name="job_posting_setup"
-                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] appearance-none">
-                                    <option>Select Setup (e.g., Remote)</option>
-                                    <option>Remote</option>
-                                    <option>On-Site</option>
-                                    <option>Hybrid</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- COURSE -->
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Recommended Course/Program <span class="text-red-500">*</span></label>
-
-                            <div id="course-input-container" class="space-y-2">
-                                <div class="flex items-center gap-3 course-row">
-                                    <select name="program[]"
-                                        class="flex-1 border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white w-full ">
-                                        <option selected disabled>Select Undergraduate Program</option>
-                                        @foreach ($programs as $program)
-                                        <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
-                                        @endforeach
+                            <!-- TYPE + SETUP -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-bold text-[#1D264F] uppercase">
+                                        Job Type <span class="text-red-500">*</span>
+                                    </label>
+                                    <select name="job_posting_employment_type"
+                                        class="w-full border border-[#0E0F3B] rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#C73D1A] appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em_1em]">
+                                        <option>Select Type (e.g., Full-time)</option>
+                                        <option>Full-Time</option>
+                                        <option>Part-Time</option>
+                                        <option>Freelance</option>
                                     </select>
+                                </div>
 
-                                    <button type="button" onclick="addCourseField()"
-                                        class="bg-[#1D264F] text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#0E0F3B] transition-colors">
-                                        <i class="fas fa-plus text-xs"></i>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-bold text-[#1D264F] uppercase">
+                                        Job Setup <span class="text-red-500">*</span>
+                                    </label>
+                                    <select name="job_posting_setup"
+                                        class="w-full border border-[#0E0F3B] rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#C73D1A] appearance-none">
+                                        <option>Select Setup (e.g., Remote)</option>
+                                        <option>Remote</option>
+                                        <option>On-Site</option>
+                                        <option>Hybrid</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- ADDRESS -->
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">
+                                    Business Address <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" name="job_posting_address"
+                                    placeholder="Enter business address"
+                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#C73D1A]">
+                            </div>
+
+                            <!-- DATE -->
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">
+                                    Closing / Validity Date <span class="text-red-500">*</span>
+                                </label>
+                                <input type="date" name="job_closing_date"
+                                    class="w-full border border-[#0E0F3B] uppercase rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#C73D1A] text-gray-400"
+                                    onchange="this.classList.remove('text-gray-400'); this.classList.add('text-black');">
+                            </div>
+
+                        </div>
+
+                        <!-- RIGHT -->
+                        <div class="space-y-2">
+
+                            <!-- IMAGE -->
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">
+                                    Upload Image <span class="text-red-500">*</span>
+                                </label>
+
+                                <div id="imageFrame"
+                                    class="w-full h-[150px] border-2 border-dashed border-[#1D264F] rounded-2xl flex flex-col items-center justify-center bg-[#F8FAFC] relative overflow-hidden">
+
+                                    <div id="uploadPlaceholder"
+                                        class="flex flex-col items-center justify-center text-center px-4">
+                                        <div class="w-12 h-12 rounded-full bg-[#1D264F] flex items-center justify-center mb-2 shadow-md">
+                                            <i class="fas fa-cloud-upload-alt text-white text-lg"></i>
+                                        </div>
+                                        <p class="text-[11px] text-gray-500 mb-2">Upload job image</p>
+                                        <button type="button" onclick="document.getElementById('jobImageInput').click()"
+                                            class="bg-[#0E0F3B] text-white px-4 py-1.5 rounded-lg font-semibold text-[10px] tracking-wide hover:bg-blue-900 transition-all shadow-sm">
+                                            CHOOSE FILE
+                                        </button>
+                                    </div>
+
+                                    <img id="jobImagePreview" src="#" class="hidden w-full h-full object-cover" />
+
+                                    <input type="file" name="job_posting_image" id="jobImageInput"
+                                        accept="image/*" class="hidden" onchange="previewJobImage(this)">
+
+                                    <button id="changeImgBtn" type="button"
+                                        onclick="document.getElementById('jobImageInput').click()"
+                                        class="hidden absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm text-[#1D264F] px-3 py-1 rounded-lg font-bold text-[9px] hover:bg-white transition-all shadow-md">
+                                        CHANGE IMAGE
                                     </button>
                                 </div>
                             </div>
 
-                            <p id="course-limit-msg" class="text-[9px] text-gray-400 italic hidden">
-                                Maximum of 3 programs reached.
-                            </p>
+                            <!-- COURSE -->
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">
+                                    Recommended Course/Program <span class="text-red-500">*</span>
+                                </label>
+
+                                <div id="course-input-container" class="space-y-2">
+                                    <div class="flex items-center gap-2 course-row">
+                                        <select name="program[]"
+                                            class="flex-1 border border-[#0E0F3B] rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#C73D1A] bg-white w-full">
+                                            <option selected disabled>Select Undergraduate Program</option>
+                                            @foreach ($programs as $program)
+                                            <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
+                                            @endforeach
+                                        </select>
+
+                                        <button type="button" onclick="addCourseField()"
+                                            class="bg-[#1D264F] text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#0E0F3B] transition-colors shadow-sm">
+                                            <i class="fas fa-plus text-[10px]"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <p id="course-limit-msg" class="text-[9px] text-gray-400 italic hidden">
+                                    Maximum of 3 programs reached.
+                                </p>
+                            </div>
+
                         </div>
-
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Job Description <span class="text-red-500">*</span></label>
-                            <textarea name="job_posting_description" rows="4"
-                                class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]"></textarea>
-                        </div>
-
-                        <div class="w-1/2 space-y-1">
-                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Closing / Validity Date <span class="text-red-500">*</span></label>
-                            <input type="date" name="job_closing_date"
-                                class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] text-gray-400">
-                        </div>
-
-                        <!-- ACTION BUTTONS -->
-                        <div class="flex justify-end gap-4 mt-8">
-                            <button type="button" onclick="closePostModal()"
-                                class="px-10 py-2 border-2 border-[#1D264F] text-[#1D264F] rounded-md font-bold text-sm hover:bg-[#0E0F3B] hover:text-white transition-colors">
-                                CANCEL
-                            </button>
-
-                            <button type="submit"
-                                onclick="handleJobSubmit(event)"
-                                class="px-12 py-2 bg-[#0E0F3B] text-white rounded-md font-bold text-sm hover:bg-blue-900 transition-colors">
-                                POST
-                            </button>
-                        </div>
-
                     </div>
-                </div>
 
+                    <!-- DESCRIPTION -->
+                    <div class="space-y-1 mt-4">
+                        <label class="text-[10px] font-bold text-[#1D264F] uppercase">
+                            Job Description <span class="text-red-500">*</span>
+                        </label>
+                        <textarea name="job_posting_description" rows="3"
+                            placeholder="Describe the roles, responsibilities, and specific skills required for this position..."
+                            class="w-full border border-[#0E0F3B] rounded-xl px-3 py-2 text-xs resize-none focus:outline-none focus:border-[#C73D1A]"></textarea>
+                    </div>
+
+                    <div id="adminModalErrors" class="hidden flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-5 py-4 mt-5 mb-7 shadow-sm">
+                        <i class="fas fa-circle-exclamation mt-0.5 text-red-500 text-base shrink-0"></i>
+                        <ul id="adminModalErrorList" class="text-xs space-y-0.5 list-disc list-inside text-red-600"></ul>
+                    </div>
+
+                    @if ($errors->any())
+                    <div style="display: flex; gap: 12px; background: var(--color-background-danger); border: 0.5px solid var(--color-border-danger); border-radius: var(--border-radius-md); padding: 12px 16px; margin-bottom: 1rem;">
+                        <i data-lucide="alert-circle" style="width: 18px; height: 18px; color: var(--color-text-danger); flex-shrink: 0; margin-top: 1px;"></i>
+                        <div>
+                            <ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 2px;">
+                                @foreach ($errors->all() as $error)
+                                <li style="font-size: 13px; color: var(--color-text-danger);">{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- BUTTONS -->
+                    <div class="flex justify-end gap-3 mt-5">
+                        <button type="button" onclick="closePostModal()"
+                            class="px-6 py-2 border-2 border-[#1D264F] text-[#1D264F] rounded-lg font-bold text-xs hover:bg-[#0E0F3B] hover:text-white transition-colors">
+                            CANCEL
+                        </button>
+                        <button type="button" onclick="handleJobSubmit()"
+                            class="px-7 py-2 bg-[#0E0F3B] text-white rounded-lg font-bold text-xs hover:bg-blue-900 transition-colors shadow-md">
+                            POST
+                        </button>
+                    </div>
+
+                </div>
             </form>
         </div>
     </div>
@@ -818,6 +870,104 @@ $approved_count = $approved_jobs->count();
                         Yes, Approve
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!--DECLINE JOB MODAL WITH NOTES/REASON-->
+    <form id="declineForm" action="" method="POST" class="hidden">
+        @csrf
+        <input type="hidden" name="decline-reason" id="declineReasonInput">
+    </form>
+
+    <!-- Decline Notes Modal -->
+    <div id="declineNotesModal" class="fixed inset-0 z-[200] flex items-center justify-center invisible transition-all duration-300">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDeclineNotesModal()"></div>
+        <div id="declineNotesContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
+            <div class="p-8">
+                <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="x-circle" class="w-8 h-8 text-red-500"></i>
+                </div>
+                <h3 class="text-[#0E0F3B] text-xl font-bold mb-1 text-center">Decline Job Post</h3>
+                <p id="declineNotesJobTitle" class="text-slate-400 text-xs text-center mb-5"></p>
+                <label class="text-xs font-bold text-[#0E0F3B] uppercase tracking-wider block mb-2">
+                    Reason for Declining <span class="text-red-500">*</span>
+                </label>
+                <textarea id="declineNotesText" rows="4"
+                    placeholder="Enter your notes or reason for declining this job post..."
+                    class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 resize-none transition-all"></textarea>
+                <p id="declineNotesError" class="text-red-500 text-xs mt-1 hidden">
+                    Please provide a reason before declining.
+                </p>
+            </div>
+            <div class="px-8 pb-8 flex gap-3">
+                <button onclick="closeDeclineNotesModal()"
+                    class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all uppercase">
+                    Cancel
+                </button>
+                <button onclick="submitDecline()"
+                    class="flex-1 py-2.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-all uppercase">
+                    Yes, Decline
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POST JOB CONFIRMATION MODAL (admin) -->
+    <div id="postConfirmModal" class="fixed inset-0 z-[210] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-paper-plane text-[#1D46A4] text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold text-[#0E0F3B] mb-2">Post this Job?</h2>
+            <p class="text-gray-500 text-sm mb-6">Please confirm that all job details are correct before submitting.</p>
+            <div class="flex gap-3">
+                <button onclick="cancelAdminPostConfirm()" class="flex-1 border border-gray-300 text-gray-600 py-2.5 rounded-lg font-bold text-sm hover:bg-gray-100 transition-colors">
+                    CANCEL
+                </button>
+                <button onclick="confirmAdminPostJob()" class="flex-1 bg-[#0E0F3B] text-white py-2.5 rounded-lg font-bold text-sm hover:bg-[#1D46A4] transition-colors">
+                    YES, POST IT
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Hidden Delete Form --}}
+    <form id="deleteForm" action="" method="POST" class="hidden">
+        @csrf
+        @method('DELETE')
+        <input type="hidden" name="delete-reason" id="deleteReasonInput">
+    </form>
+
+    {{-- Delete Modal --}}
+    <div id="deleteModal" class="fixed inset-0 z-[200] flex items-center justify-center invisible transition-all duration-300">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDeleteModal()"></div>
+        <div id="deleteModalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
+            <div class="p-8">
+                <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="trash-2" class="w-8 h-8 text-red-500"></i>
+                </div>
+                <h3 class="text-[#0E0F3B] text-xl font-bold mb-1 text-center">Delete Job Post</h3>
+                <p id="deleteModalJobTitle" class="text-slate-400 text-xs text-center mb-5"></p>
+                <label class="text-xs font-bold text-[#0E0F3B] uppercase tracking-wider block mb-2">
+                    Reason for Deleting <span class="text-red-500">*</span>
+                </label>
+                <textarea id="deleteReasonText" rows="4"
+                    placeholder="Enter your reason for deleting this job post..."
+                    class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 resize-none transition-all"></textarea>
+                <p id="deleteReasonError" class="text-red-500 text-xs mt-1 hidden">
+                    Please provide a reason before deleting.
+                </p>
+            </div>
+            <div class="px-8 pb-8 flex gap-3">
+                <button onclick="closeDeleteModal()"
+                    class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all uppercase">
+                    Cancel
+                </button>
+                <button onclick="submitDelete()"
+                    class="flex-1 py-2.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-all uppercase">
+                    Yes, Delete
+                </button>
             </div>
         </div>
     </div>
@@ -1224,6 +1374,142 @@ $approved_count = $approved_jobs->count();
         document.getElementById('approvalModal').addEventListener('click', function(e) {
             if (e.target === this) closeApprovalModal();
         });
+
+
+        //JOB DECLINE NOTES MODAL
+        let _declineId = '',
+            _declineTitle = '';
+
+        function openDeclineNotesModal(id, title) {
+            _declineId = id;
+            _declineTitle = title;
+            document.getElementById('declineNotesText').value = '';
+            document.getElementById('declineNotesError').classList.add('hidden');
+            document.getElementById('declineNotesJobTitle').textContent = title;
+
+            const modal = document.getElementById('declineNotesModal');
+            const content = document.getElementById('declineNotesContent');
+            modal.classList.remove('invisible');
+            setTimeout(() => content.classList.remove('scale-95'), 10);
+            lucide.createIcons();
+        }
+
+        function closeDeclineNotesModal() {
+            const content = document.getElementById('declineNotesContent');
+            content.classList.add('scale-95');
+            setTimeout(() => document.getElementById('declineNotesModal').classList.add('invisible'), 200);
+        }
+
+        function submitDecline() {
+            const notes = document.getElementById('declineNotesText').value.trim();
+            if (!notes) {
+                document.getElementById('declineNotesError').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('declineNotesError').classList.add('hidden');
+
+            // Point the hidden form to the correct Laravel route, then submit
+            const form = document.getElementById('declineForm');
+            form.action = `/job-postings/${_declineId}/decline`; // adjust to match your route('jobPosting.decline', ...)
+            document.getElementById('declineReasonInput').value = notes;
+            form.submit();
+        }
+
+        //DELETE JOB POST MODAL WITH REASON/NOTE
+        let _deleteId = '',
+            _deleteTitle = '',
+            _deleteUrl = '';
+
+        function openDeleteModal(id, title, url) {
+            _deleteId = id;
+            _deleteTitle = title;
+            _deleteUrl = url;
+            document.getElementById('deleteReasonText').value = '';
+            document.getElementById('deleteReasonError').classList.add('hidden');
+            document.getElementById('deleteModalJobTitle').textContent = title;
+
+            const modal = document.getElementById('deleteModal');
+            const content = document.getElementById('deleteModalContent');
+            modal.classList.remove('invisible');
+            setTimeout(() => content.classList.remove('scale-95'), 10);
+            lucide.createIcons();
+        }
+
+        function closeDeleteModal() {
+            const content = document.getElementById('deleteModalContent');
+            content.classList.add('scale-95');
+            setTimeout(() => document.getElementById('deleteModal').classList.add('invisible'), 200);
+        }
+
+        function submitDelete() {
+            const reason = document.getElementById('deleteReasonText').value.trim();
+            if (!reason) {
+                document.getElementById('deleteReasonError').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('deleteReasonError').classList.add('hidden');
+
+            const form = document.getElementById('deleteForm');
+            form.action = _deleteUrl;
+            document.getElementById('deleteReasonInput').value = reason;
+            form.submit();
+        }
+
+        function handleJobSubmit() {
+            const form = document.querySelector('#postJobModal form');
+            const errors = [];
+
+            const title = form.querySelector('[name="job_posting_title"]').value.trim();
+            const company = form.querySelector('[name="job_posting_company"]').value.trim();
+            const address = form.querySelector('[name="job_posting_address"]').value.trim();
+            const description = form.querySelector('[name="job_posting_description"]').value.trim();
+            const employmentType = form.querySelector('[name="job_posting_employment_type"]').value;
+            const setup = form.querySelector('[name="job_posting_setup"]').value;
+            const closingDate = form.querySelector('[name="job_closing_date"]').value;
+            const image = form.querySelector('[name="job_posting_image"]').files.length;
+            const programs = form.querySelectorAll('[name="program[]"]');
+
+            if (!title) errors.push('Job title is required.');
+            if (!company) errors.push('Business name is required.');
+            if (employmentType.startsWith('Select')) errors.push('Please select a job type.');
+            if (setup.startsWith('Select')) errors.push('Please select a job setup.');
+            if (!address) errors.push('Business address is required.');
+            if (!closingDate) errors.push('Closing / validity date is required.');
+            if (!image) errors.push('Please upload a job image.');
+            if (!description) errors.push('Job description is required.');
+
+            let programSelected = false;
+            programs.forEach(select => {
+                if (select.selectedIndex > 0) programSelected = true;
+            });
+            if (!programSelected) errors.push('Please select at least one recommended program.');
+
+            if (errors.length > 0) {
+                const errorBox = document.getElementById('adminModalErrors');
+                const errorList = document.getElementById('adminModalErrorList');
+                errorList.innerHTML = errors.map(e => `<li>${e}</li>`).join('');
+                errorBox.classList.remove('hidden');
+                errorBox.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest'
+                });
+                return;
+            }
+
+            document.getElementById('adminModalErrors').classList.add('hidden');
+            document.getElementById('postJobModal').classList.add('hidden');
+            document.getElementById('postConfirmModal').classList.remove('hidden');
+        }
+
+        function cancelAdminPostConfirm() {
+            document.getElementById('postConfirmModal').classList.add('hidden');
+            document.getElementById('postJobModal').classList.remove('hidden');
+        }
+
+        function confirmAdminPostJob() {
+            document.getElementById('postConfirmModal').classList.add('hidden');
+            document.querySelector('#postJobModal form').submit();
+        }
     </script>
 
 </body>

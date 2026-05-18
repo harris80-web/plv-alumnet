@@ -429,10 +429,10 @@
                     <div>
                         <h2 id="modal-title" class="text-3xl font-bold text-[#1D264F] uppercase tracking-tighter">JOB TITLE</h2>
                         <div class="flex items-center text-gray-600 mt-1 space-x-4">
-                            <p id="modal-company" class="font-semibold text-lg">Business Name</p>
+                            <p id="modal-company" class="font-semibold text-lg">Company Name</p>
                             <span id="modal-date" class="flex items-center text-sm"><i class="far fa-calendar-alt mr-2"></i> Posted 2 days ago</span>
                         </div>
-                        <p id="modal-address" class="text-gray-500 font-medium">Business Address</p>
+                        <p id="modal-address" class="text-gray-500 font-medium">Company Address</p>
                     </div>
 
                     <div class="relative">

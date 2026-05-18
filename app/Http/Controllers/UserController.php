@@ -139,6 +139,7 @@ class UserController extends Controller
                     // 'employer_company_id_picture_selfie' => $companyIdSelfiePath,
                     'industry_id' => 1, // Default position since we don't have this info yet
                     // 'user_id' => $user->user_id
+                    'employer_approved' => false,
                 ]);
 
                 // Handle file uploads and save paths to the database
@@ -251,9 +252,9 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
-        $user->user_active = 1;
-        $user->save();
+        $user->update(['user_active' => 1]);
 
+        $user->employer->update(['employer_approved' => 1]);
         return back()->with('success', 'Status updated successfully!');
     }
 

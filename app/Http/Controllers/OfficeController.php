@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\DeleteAdminMail;
 use App\Models\Office;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class OfficeController extends Controller
@@ -129,7 +131,7 @@ class OfficeController extends Controller
 
         // Log the deletion reason (you can also store this in a database table if needed)
         Log::info("Admin with ID {$admin->user->user_id}: {$admin->user->user_first_name} {$admin->user->user_last_name} deleted. Reason: {$validated['delete-reason']}");
-
+        Mail::to($admin->user->user_email)->send(new DeleteAdminMail($admin->user, $validated['delete-reason']));
         // Soft delete the admin
         $admin->delete();
 

@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\DeactEmployerMail;
 use App\Models\Employer;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class EmployerController extends Controller
@@ -175,6 +177,7 @@ class EmployerController extends Controller
             $Employer->user->update([
                 'user_active' => false,
             ]);
+            Mail::to($Employer->user->user_email)->send(new DeactEmployerMail($Employer->user, $validated['deactivate-reason']));
         }
         catch(\Exception $e){
             return back()->with('error', 'An error occurred while deactivating the Employer. Please try again later.');

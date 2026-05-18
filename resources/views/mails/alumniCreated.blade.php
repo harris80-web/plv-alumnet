@@ -19,7 +19,7 @@
         <li class="bg-red-500 text-white p-2"><strong>Password:</strong> {{ $password }}</li>
     </ul>
 
-    <p><a href="{{ route('users.login') }}">Click here to login</a></p>
+    <p><a href="{{ route('auth.login') }}">Click here to login</a></p>
     <p>Please change your password immediately after logging in for security.</p>
 </body>
 

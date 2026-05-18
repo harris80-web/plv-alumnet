@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\DeactAlumniMail;
 use App\Models\Alumnus;
 use Illuminate\Foundation\Auth\User;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 
@@ -159,6 +161,7 @@ class AlumnusController extends Controller
             $alumnus->user->update([
                 'user_active' => false,
             ]);
+            Mail::to($alumnus->user->user_email)->send(new DeactAlumniMail($alumnus->user, $validated['deactivate-reason']));
         }
         catch(\Exception $e){
             return back()->with('error', 'An error occurred while deactivating the alumnus. Please try again later.');

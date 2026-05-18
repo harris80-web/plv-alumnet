@@ -21,7 +21,8 @@ class Employer extends Model
         'employer_id_picture',
         'employer_id_picture_selfie',
         'employer_company_id_picture',
-        'employer_company_id_picture_selfie'
+        'employer_company_id_picture_selfie',
+        'employer_approved',
     ];
 
     public function user()

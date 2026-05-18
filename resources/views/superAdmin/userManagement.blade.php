@@ -702,13 +702,13 @@ $current_page = 'user_management';
 
                         <!-- Total Employer -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-800">{{ $employers->count() }}</p>
+                            <p class="text-2xl font-bold text-slate-800">{{ $employers->where('user_active', true)->Where('employer_approved', true)->count() }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total Employer</p>
                         </div>
 
                         <!-- Awaiting Approval -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-amber-400">{{ $employers->filter(fn($e) => !$e->user->user_active)->count() }}</p>
+                            <p class="text-2xl font-bold text-amber-400">{{ $employers->filter(fn($e) => !$e->employer_approved)->count() }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Awaiting Approval</p>
                         </div>
 
@@ -743,7 +743,7 @@ $current_page = 'user_management';
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
-                                    @forelse ($employers->filter(fn($e) => !$e->user->user_active) as $employer)
+                                    @forelse ($employers->filter(fn($e) => !$e->employer_approved) as $employer)
                                     <tr class="hover:bg-slate-50/80 transition-colors text-center">
                                         <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $loop->iteration }}</td>
                                         <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->employer_company_name }}</td>

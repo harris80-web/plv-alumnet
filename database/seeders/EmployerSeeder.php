@@ -26,6 +26,7 @@ class EmployerSeeder extends Seeder
         $user->employer()->create([
             'employer_company_name' => 'Tech Solutions Inc.',
             'industry_id' => 1,
+            'employer_approved' => true,
         ]);
     }
 }

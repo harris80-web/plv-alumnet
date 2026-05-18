@@ -683,7 +683,7 @@
                     // Create and submit a form dynamically for single toggle
                     const form = document.createElement('form');
                     form.method = 'POST';
-                    form.action = `/testimonials/${id}/post`; // adjust to your actual route
+                    form.action = "{{ url('postTestimonial') }}/" + id; // adjust to your actual route
                     form.innerHTML = `
                     <input type="hidden" name="_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="_method" value="PUT">`;

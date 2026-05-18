@@ -100,6 +100,12 @@ class TestimonialController extends Controller
     {
         $testimonial = Testimonial::findOrFail($id);
 
+        if ($testimonial->testimonial_post) {
+            $testimonial->testimonial_post = false;
+            $testimonial->save();
+            return back()->with('success', 'Status updated successfully!');
+        }
+
         $testimonial->testimonial_post = true;
         $testimonial->save();
 

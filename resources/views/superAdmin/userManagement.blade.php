@@ -720,7 +720,7 @@ $current_page = 'user_management';
 
                         <!-- Deactivated Accounts -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-[#C73D1A]">{{ $employers->filter(fn($e) => !$e->user->user_active)->count() }}</p>
+                            <p class="text-2xl font-bold text-[#C73D1A]">{{ $employers->filter(fn($e) => !$e->user->user_active && $e->employer_approved)->count() }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Deactivated Accounts</p>
                         </div>
                     </div>

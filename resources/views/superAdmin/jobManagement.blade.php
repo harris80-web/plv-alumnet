@@ -337,7 +337,7 @@ $approved_count = $approved_jobs->count();
                         class="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:border-[#C73D1A] transition-all shrink-0">
                         <i data-lucide="filter" class="w-4 h-4"></i>
                     </button>
-                    <div class="flex justify-end p-4">
+                    <div class="ml-auto flex items-center gap-3">
                         <button
                             onclick="openPostJobModal()"
                             class="flex items-center gap-2 bg-[#1D264F] hover:bg-blue-900 text-white px-4 py-2 rounded-lg font-bold text-xs tracking-widest shadow-lg transition-all">

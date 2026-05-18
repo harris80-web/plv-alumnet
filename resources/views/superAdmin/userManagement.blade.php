@@ -456,30 +456,23 @@ $current_page = 'user_management';
                                             <button class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
                                                 <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
                                             </button>
-                                            <div class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl ring-1 ring-black ring-opacity-5 z-50 hidden">
+                                            <div class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
                                                 <div class="py-1">
                                                     <button class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 transition-colors">
                                                         <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View Profile
                                                     </button>
-                                                    <button onclick="" class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                    <button
+                                                        data-route="{{ route('offices.deleteAdmin', $admin->user_id) }}"
+                                                        data-firstname="{{ $admin->user->user_first_name }}"
+                                                        data-lastname="{{ $admin->user->user_last_name }}"
+                                                        onclick="openDeleteProfileModal(this.dataset.route, this.dataset.firstname, this.dataset.lastname)"
+                                                        class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                                         <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i> Delete Profile
                                                     </button>
-
                                                 </div>
-
-                                            </div>
-                                            <div id="delete-message">
-                                                <form action="{{ route('offices.deleteAdmin', $admin->user_id) }}" method="POST">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <input type="text" name="delete-reason" placeholder="Enter reason...">
-                                                    <input type="submit" value="Delete">
-                                                </form>
                                             </div>
                                         </div>
-
                                     </td>
-
                                 </tr>
                                 @endif
 
@@ -576,12 +569,23 @@ $current_page = 'user_management';
 
                             <!-- Export Button -->
                             <button id="exportBtn" onclick="exportAlumniToCSV()"
-                                class="bg-[#C73D1A] hover:brightness-130 text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
+                                class="bg-[#C73D1A] hover:bg-[#a83215] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
                                 <i data-lucide="download" class="w-4 h-4"></i>
                                 EXPORT CSV
                             </button>
                         </div>
                     </div>
+
+                    @if ($errors->any())
+                    <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+                        <i data-lucide="circle-alert" class="w-4 h-4 text-red-500 mt-0.5 shrink-0"></i>
+                        <ul class="space-y-1">
+                            @foreach ($errors->all() as $error)
+                            <li class="text-red-600 text-xs font-medium">{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
 
                     <div class="bg-white rounded-lg shadow-sm border border-slate-200">
                         <table class="w-full text-left text-[10px]">
@@ -600,18 +604,10 @@ $current_page = 'user_management';
                                     <th class="px-3 py-4 font-semibold text-center">Action</th>
                                 </tr>
                             </thead>
-                            @if ($errors->any())
-                            <div class="alert alert-danger">
-                                <ul>
-                                    @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                            @endif
+
                             <tbody class="divide-y divide-slate-100">
                                 @forelse ($alumni as $alumnus)
-                                
+
                                 @php
                                 $status = $alumnus->user->user_active ? 'Active' : 'Deactivated';
                                 $statusClass = $alumnus->user->user_active
@@ -656,34 +652,33 @@ $current_page = 'user_management';
                                             <button class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
                                                 <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
                                             </button>
-                                            <div class="dropdown-menu absolute right-4 mt-2 w-56 origin-top-right rounded-md bg-white shadow-xl ring-1 ring-black ring-opacity-5 z-50 hidden">
+                                            <div class="dropdown-menu absolute right-4 mt-2 w-56 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
                                                 <div class="py-1">
                                                     @if ($alumnus->user->user_active)
-                                                    <button onclick="openConfirmModal('deactivate', '{{ $alumnus->user->user_last_name }}')"
+                                                    <button onclick="openDeactivateModal('{{ $alumnus->user->user_first_name }}', '{{ $alumnus->user->user_last_name }}', {{ $alumnus->user_id }})"
                                                         class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                                         <i data-lucide="user-minus" class="w-4 h-4 mr-3"></i> Deactivate Account
                                                     </button>
                                                     @else
-                                                    <button onclick="openConfirmModal('activate', '{{ $alumnus->user->user_last_name }}')"
+                                                    <button onclick="openActivateModal('{{ $alumnus->user->user_first_name }}', '{{ $alumnus->user->user_last_name }}', {{ $alumnus->user_id }})"
                                                         class="flex items-center w-full px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 transition-colors">
                                                         <i data-lucide="user-plus" class="w-4 h-4 mr-3"></i> Activate Account
                                                     </button>
                                                     @endif
                                                 </div>
                                             </div>
-                                            <div id="delete-message">
-                                                <form action="{{ route('alumni.deactivateAlumnus', $alumnus->user_id) }}" method="POST">
+                                            <div style="display:none;">
+                                                <form id="deactivateForm_{{ $alumnus->user_id }}"
+                                                    action="{{ route('alumni.deactivateAlumnus', $alumnus->user_id) }}"
+                                                    method="POST">
                                                     @csrf
                                                     @method('PUT')
-                                                    <input type="text" name="deactivate-reason" placeholder="Enter reason...">
-                                                    <input type="submit" value="Deactivate">
+                                                    <input type="hidden" name="deactivate-reason" id="deactivateReason_{{ $alumnus->user_id }}">
                                                 </form>
                                             </div>
                                         </div>
                                     </td>
                                 </tr>
-                                
-
                                 @empty
                                 <tr>
                                     <td colspan="11" class="px-4 py-8 text-center text-slate-400 text-sm">No alumni found.</td>
@@ -734,7 +729,7 @@ $current_page = 'user_management';
                                 <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                                     <tr>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700"><i data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Business Name</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Company Name</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Full Name</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Industry</th>
@@ -796,7 +791,7 @@ $current_page = 'user_management';
                                     <i data-lucide="filter" class="w-4 h-4"></i>
                                 </button>
                             </div>
-                            <button onclick="exportEmployersToCSV()" class="bg-[#C73D1A] hover:brightness-130 text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
+                            <button onclick="exportEmployersToCSV()" class="bg-[#C73D1A] hover:bg-[#a83215] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
                                 <i data-lucide="download" class="w-4 h-4"></i>
                                 EXPORT CSV
                             </button>
@@ -806,8 +801,8 @@ $current_page = 'user_management';
                             <table class="w-full text-left text-[10px]">
                                 <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                                     <tr>
-                                       <th class="px-4 py-4 font-semibold border-r border-slate-700"><i data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Business Name</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700"><i data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Company Name</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Full Name</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Industry</th>
@@ -832,7 +827,7 @@ $current_page = 'user_management';
                                                 <button class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
                                                     <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
                                                 </button>
-                                                <div class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl ring-1 ring-black ring-opacity-5 z-50 hidden">
+                                                <div class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
                                                     <div class="py-1">
                                                         <button
                                                             type="button"
@@ -858,16 +853,17 @@ $current_page = 'user_management';
                                                             Deactivate Account
                                                         </button>
                                                     </div>
-                                                    
+
                                                 </div>
-                                                <div id="delete-message">
-                                                <form action="{{ route('employers.deactivateEmployer', $employer->user_id) }}" method="POST">
-                                                    @csrf
-                                                    @method('PUT')
-                                                    <input type="text" name="deactivate-reason" placeholder="Enter reason...">
-                                                    <input type="submit" value="Deactivate">
-                                                </form>
-                                            </div>
+                                                <div style="display:none;">
+                                                    <form id="employerDeactivateForm_{{ $employer->user_id }}"
+                                                        action="{{ route('employers.deactivateEmployer', $employer->user_id) }}"
+                                                        method="POST">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <input type="hidden" name="deactivate-reason" id="employerDeactivateReason_{{ $employer->user_id }}">
+                                                    </form>
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>
@@ -963,6 +959,49 @@ $current_page = 'user_management';
         </div>
     </div>
 
+    <!-- DELETE ADMIN PROFILE HIDDEN FORM — place this outside the foreach -->
+    <div style="display:none;">
+        <form id="deleteProfileForm" method="POST">
+            @csrf
+            @method('DELETE')
+            <input type="hidden" name="delete-reason" id="deleteProfileReasonInput">
+        </form>
+    </div>
+
+    {{-- ===================== DELETE ADMIN PROFILE MODAL ===================== --}}
+    <div id="deleteProfileModal" class="fixed inset-0 z-[200] flex items-center justify-center invisible transition-all duration-300">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDeleteProfileModal()"></div>
+        <div id="deleteProfileContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
+            <div class="p-8">
+                <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="trash-2" class="w-8 h-8 text-red-500"></i>
+                </div>
+                <h3 class="text-[#0E0F3B] text-xl font-bold mb-1 text-center">Delete Admin Account</h3>
+                <p id="deleteProfileAdminName" class="text-slate-400 text-xs text-center mb-5"></p>
+                <label class="text-xs font-bold text-[#0E0F3B] uppercase tracking-wider block mb-2">
+                    Reason for Deletion <span class="text-red-500">*</span>
+                </label>
+                <textarea id="deleteProfileReason" rows="4"
+                    placeholder="Enter your reason for deleting this admin account..."
+                    class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 resize-none transition-all"></textarea>
+                <p id="deleteProfileError" class="text-red-500 text-xs mt-1 hidden">
+                    Please provide a reason before deleting.
+                </p>
+            </div>
+            <div class="px-8 pb-8 flex gap-3">
+                <button onclick="closeDeleteProfileModal()"
+                    class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all uppercase">
+                    Cancel
+                </button>
+                <button onclick="submitDeleteProfile()"
+                    class="flex-1 py-2.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-all uppercase">
+                    Yes, Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+
     <!-- ==================== ADD ALUMNI MODAL ==================== -->
     <div id="addAlumniModal" class="modal-overlay" onclick="if(event.target===this) closeModal('addAlumniModal')">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
@@ -1033,25 +1072,67 @@ $current_page = 'user_management';
     </div>
 
     <!-- ACTIVATE/DEACTIVATE ALUMNI ACCOUNT MODAL CONFIRMATION -->
-    <div id="confirmModal" class="fixed inset-0 z-[100] flex items-center justify-center invisible transition-all duration-300">
-        <div class="absolute inset-0 bg-[#0E0F3B]/40 backdrop-blur-sm" onclick="closeConfirmModal()"></div>
-
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300" id="confirmContent">
+    <!-- ===== DEACTIVATE ALUMNI MODAL ===== -->
+    <div id="deactivateAlumniModal" class="fixed inset-0 z-[100] flex items-center justify-center invisible transition-all duration-300">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDeactivateModal()"></div>
+        <div id="deactivateAlumniContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
             <div class="p-8 text-center">
-                <div id="confirmIconContainer" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i id="confirmIcon" data-lucide="alert-triangle" class="w-8 h-8"></i>
+                <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="user-minus" class="w-8 h-8 text-red-500"></i>
                 </div>
-                <h3 id="confirmTitle" class="text-[#0E0F3B] text-xl font-bold mb-2">Confirmation</h3>
-                <p id="confirmMessage" class="text-slate-500 text-sm leading-relaxed">
-                    Are you sure you want to proceed with this action?
+                <h3 class="text-[#0E0F3B] text-xl font-bold mb-1">Deactivate Account</h3>
+                <p id="deactivateAlumniName" class="text-slate-400 text-xs font-medium mb-3"></p>
+                <p class="text-slate-500 text-sm leading-relaxed mb-4">
+                    Are you sure you want to <span class="font-bold text-red-600">deactivate</span> this account?
+                </p>
+                <div class="text-left">
+                    <label class="text-xs font-bold text-[#0E0F3B] uppercase tracking-wider block mb-2">
+                        Reason for Deactivation <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="deactivateAlumniReason" rows="3"
+                        placeholder="Enter reason for deactivating this account..."
+                        class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 resize-none transition-all"></textarea>
+                    <div id="deactivateAlumniError" class="hidden mt-2 flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                        <i data-lucide="circle-alert" class="w-3.5 h-3.5 mt-0.5 shrink-0 text-red-500"></i>
+                        <span class="text-red-600 text-xs font-medium">Please provide a reason before deactivating.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="px-8 pb-8 flex gap-3">
+                <button onclick="closeDeactivateModal()"
+                    class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all uppercase">
+                    Cancel
+                </button>
+                <button id="deactivateAlumniSubmitBtn"
+                    class="flex-1 py-2.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-all uppercase">
+                    Yes, Deactivate
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ACTIVATE ALUMNI MODAL ===== -->
+    <div id="activateAlumniModal" class="fixed inset-0 z-[100] flex items-center justify-center invisible transition-all duration-300">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeActivateModal()"></div>
+        <div id="activateAlumniContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
+            <div class="p-8 text-center">
+                <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="user-plus" class="w-8 h-8 text-green-500"></i>
+                </div>
+                <h3 class="text-[#0E0F3B] text-xl font-bold mb-1">Activate Account</h3>
+                <p id="activateAlumniName" class="text-slate-400 text-xs font-medium mb-3"></p>
+                <p class="text-slate-500 text-sm leading-relaxed">
+                    Are you sure you want to <span class="font-bold text-green-600">activate</span> this account?
                 </p>
             </div>
             <div class="px-8 pb-8 flex gap-3">
-                <button onclick="closeConfirmModal()" class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all uppercase">
+                <button onclick="closeActivateModal()"
+                    class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all uppercase">
                     Cancel
                 </button>
-                <button id="confirmYesBtn" class="flex-1 py-2.5 text-white rounded-lg text-xs font-bold transition-all uppercase hover:brightness-110">
-                    Yes, Proceed
+                <button id="activateAlumniSubmitBtn"
+                    class="flex-1 py-2.5 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700 transition-all uppercase">
+                    Yes, Activate
                 </button>
             </div>
         </div>
@@ -1211,82 +1292,91 @@ $current_page = 'user_management';
     </div>
 
     <!-- ==================== VIEW EMPLOYER MODAL ==================== -->
-    <div id="viewEmployerModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 px-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden">
-            <div class="bg-[#0E0F3B] p-4 flex justify-between items-center">
-                <h2 class="text-white text-xl font-bold">View Employer</h2>
+    <div id="viewEmployerModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/60 backdrop-blur-sm px-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden">
+            <div class="bg-[#0E0F3B] px-7 py-4 flex justify-between items-center">
+                <h2 class="text-white text-lg font-bold">View Employer</h2>
                 <button onclick="closeModal()" class="text-gray-300 hover:text-white">
-                    <i data-lucide="x" class="w-6 h-6"></i>
+                    <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
-            <div class="p-6 space-y-6">
+
+            <div class="px-7 py-5 space-y-5">
+
+                <!-- ===== COMPANY DETAILS (first) ===== -->
                 <section>
-                    <h3 class="text-[#D95D39] font-bold text-sm uppercase mb-4">Employer Details</h3>
-                    <div class="flex gap-6">
-                        <div class="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center border border-gray-200 shrink-0">
-                            <i data-lucide="user-round" class="w-12 h-12 text-slate-400"></i>
+                    <h3 class="text-[#D95D39] font-bold text-xs uppercase mb-3 tracking-wider">Company Details</h3>
+                    <div class="flex gap-5">
+                        <div class="w-20 h-20 bg-blue-50 rounded-xl border border-gray-200 flex flex-col items-center justify-center shrink-0">
+                            <i data-lucide="image" class="w-7 h-7 text-green-500 mb-0.5"></i>
+                            <span class="text-[7px] text-gray-400 font-bold">BUSINESS LOGO</span>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 flex-grow">
-                            <div>
-                                <p class="text-[10px] text-gray-500 font-bold uppercase">Last Name</p>
-                                <p id="modalLastName" class="text-[#0E0F3B] font-medium">--</p>
-                            </div>
-                            <div>
-                                <p class="text-[10px] text-gray-500 font-bold uppercase">First Name</p>
-                                <p id="modalFirstName" class="text-[#0E0F3B] font-medium">--</p>
-                            </div>
-                            <div class="col-span-2">
-                                <p class="text-[10px] text-gray-500 font-bold uppercase">Middle Name</p>
-                                <p id="modalMiddleName" class="text-[#0E0F3B] font-medium">--</p>
-                            </div>
-                            <div class="col-span-2">
-                                <p class="text-[10px] text-gray-500 font-bold uppercase">Employer Position</p>
-                                <p id="modalPosition" class="text-[#0E0F3B] font-medium">--</p>
-                            </div>
-                            <div>
-                                <p class="text-[10px] text-gray-500 font-bold uppercase">Email</p>
-                                <p id="modalEmail" class="text-[#0E0F3B] font-medium break-all">--</p>
-                            </div>
-                            <div>
-                                <p class="text-[10px] text-gray-500 font-bold uppercase">Contact No.</p>
-                                <p id="modalContact" class="text-[#0E0F3B] font-medium">--</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                <section>
-                    <h3 class="text-[#D95D39] font-bold text-sm uppercase mb-4">Company Details</h3>
-                    <div class="flex gap-6">
-                        <div class="w-24 h-24 bg-blue-50 rounded-xl border border-gray-200 flex flex-col items-center justify-center shrink-0">
-                            <i data-lucide="image" class="w-8 h-8 text-green-500 mb-1"></i>
-                            <span class="text-[8px] text-gray-400 font-bold">BUSINESS LOGO</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4 flex-grow">
+                        <div class="grid grid-cols-3 gap-x-4 gap-y-3 flex-grow">
                             <div>
                                 <p class="text-[10px] text-gray-500 font-bold uppercase">Company Name</p>
-                                <p id="modalCompany" class="text-[#0E0F3B] font-medium">--</p>
+                                <p id="modalCompany" class="text-[#0E0F3B] font-medium text-sm">--</p>
                             </div>
                             <div>
                                 <p class="text-[10px] text-gray-500 font-bold uppercase">Year Established</p>
-                                <p id="modalYear" class="text-[#0E0F3B] font-medium">--</p>
+                                <p id="modalYear" class="text-[#0E0F3B] font-medium text-sm">--</p>
                             </div>
                             <div>
                                 <p class="text-[10px] text-gray-500 font-bold uppercase">Company Size</p>
-                                <p id="modalSize" class="text-[#0E0F3B] font-medium">--</p>
+                                <p id="modalSize" class="text-[#0E0F3B] font-medium text-sm">--</p>
                             </div>
                             <div>
                                 <p class="text-[10px] text-gray-500 font-bold uppercase">Industry/Sector</p>
-                                <p id="modalIndustry" class="text-[#0E0F3B] font-medium">--</p>
+                                <p id="modalIndustry" class="text-[#0E0F3B] font-medium text-sm">--</p>
                             </div>
                             <div class="col-span-2">
                                 <p class="text-[10px] text-gray-500 font-bold uppercase">Official Website URL</p>
-                                <p id="modalUrl" class="text-blue-600 font-medium">--</p>
+                                <p id="modalUrl" class="text-blue-600 font-medium text-sm">--</p>
                             </div>
                         </div>
                     </div>
                 </section>
+
+                <hr class="border-slate-100">
+
+                <!-- ===== EMPLOYER DETAILS (second) ===== -->
+                <section>
+                    <h3 class="text-[#D95D39] font-bold text-xs uppercase mb-3 tracking-wider">Employer Details</h3>
+                    <div class="flex gap-5">
+                        <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center border border-gray-200 shrink-0">
+                            <i data-lucide="user-round" class="w-10 h-10 text-slate-400"></i>
+                        </div>
+                        <div class="grid grid-cols-3 gap-x-3 gap-y-8 flex-grow">
+                            <div>
+                                <p class="text-[10px] text-gray-500 font-bold uppercase">Last Name</p>
+                                <p id="modalLastName" class="text-[#0E0F3B] font-medium text-sm">--</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-gray-500 font-bold uppercase">First Name</p>
+                                <p id="modalFirstName" class="text-[#0E0F3B] font-medium text-sm">--</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-gray-500 font-bold uppercase">Middle Name</p>
+                                <p id="modalMiddleName" class="text-[#0E0F3B] font-medium text-sm">--</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-gray-500 font-bold uppercase">Position</p>
+                                <p id="modalPosition" class="text-[#0E0F3B] font-medium text-sm">--</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-gray-500 font-bold uppercase">Email</p>
+                                <p id="modalEmail" class="text-[#0E0F3B] font-medium text-sm break-all">--</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-gray-500 font-bold uppercase">Contact No.</p>
+                                <p id="modalContact" class="text-[#0E0F3B] font-medium text-sm">--</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
             </div>
-            <div class="p-4 bg-gray-50 flex justify-end gap-3">
+
+            <div class="px-7 py-3.5 bg-gray-50 border-t border-slate-100 flex justify-end">
                 <button onclick="closeModal()" class="px-8 py-2 bg-[#0E0F3B] text-white rounded font-bold uppercase text-sm">Done</button>
             </div>
         </div>
@@ -1358,6 +1448,59 @@ $current_page = 'user_management';
                     menu.classList.add('hidden');
                 }
             }
+        }
+
+        //DELETE ADMIN MODAL JS
+        let _deleteProfileRoute = '';
+
+        // ── open modal ─────────────────────────────────────────────────────
+        function openDeleteProfileModal(route, firstName, lastName) {
+            _deleteProfileRoute = route;
+
+            document.getElementById('deleteProfileAdminName').textContent = firstName + ' ' + lastName;
+            document.getElementById('deleteProfileReason').value = '';
+            document.getElementById('deleteProfileError').classList.add('hidden');
+
+            const modal = document.getElementById('deleteProfileModal');
+            const content = document.getElementById('deleteProfileContent');
+
+            modal.classList.remove('invisible');
+            requestAnimationFrame(() => {
+                modal.classList.add('bg-black/30');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            });
+        }
+
+        // ── close modal ────────────────────────────────────────────────────
+        function closeDeleteProfileModal() {
+            const modal = document.getElementById('deleteProfileModal');
+            const content = document.getElementById('deleteProfileContent');
+
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+
+            setTimeout(() => {
+                modal.classList.add('invisible');
+            }, 300);
+        }
+
+        // ── submit ───────────────────────────────────────────────────
+        function submitDeleteProfile() {
+            const reason = document.getElementById('deleteProfileReason').value.trim();
+            const error = document.getElementById('deleteProfileError');
+
+            if (!reason) {
+                error.classList.remove('hidden');
+                return;
+            }
+
+            error.classList.add('hidden');
+
+            const form = document.getElementById('deleteProfileForm');
+            document.getElementById('deleteProfileReasonInput').value = reason;
+            form.action = _deleteProfileRoute;
+            form.submit();
         }
 
         //Alumni EXPORT CSV FUNCTION
@@ -1466,40 +1609,68 @@ $current_page = 'user_management';
             }
         }
 
-        /* ── Alumni Confirm Modal ───────────────────────────────── */
-        function openConfirmModal(action, lastName) {
-            const modal = document.getElementById('confirmModal');
-            const content = document.getElementById('confirmContent');
-            const iconContainer = document.getElementById('confirmIconContainer');
-            const icon = document.getElementById('confirmIcon');
-            const title = document.getElementById('confirmTitle');
-            const message = document.getElementById('confirmMessage');
-            const yesBtn = document.getElementById('confirmYesBtn');
+        /* ── Alumni Activate and Deactivate Modal ───────────────────────────────── */
+        /* ── Deactivate Alumni Modal ────────────────────────────── */
+        function openDeactivateModal(firstName, lastName, userId) {
+            document.getElementById('deactivateAlumniName').textContent = firstName + ' ' + lastName;
+            document.getElementById('deactivateAlumniReason').value = '';
+            document.getElementById('deactivateAlumniError').classList.add('hidden');
 
-            if (action === 'deactivate') {
-                title.innerText = "Deactivate Account";
-                message.innerHTML = `Are you sure you want to <span class="font-bold text-red-600">deactivate</span> the account of <b>${lastName}</b>?`;
-                iconContainer.className = "w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4";
-                icon.setAttribute('data-lucide', 'user-minus');
-                yesBtn.className = "flex-1 py-2.5 bg-red-600 text-white rounded-lg text-xs font-bold transition-all uppercase hover:bg-red-700";
-                yesBtn.innerText = "Yes, Deactivate";
-            } else {
-                title.innerText = "Activate Account";
-                message.innerHTML = `Are you sure you want to <span class="font-bold text-green-600">activate</span> the account of <b>${lastName}</b>?`;
-                iconContainer.className = "w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4";
-                icon.setAttribute('data-lucide', 'user-plus');
-                yesBtn.className = "flex-1 py-2.5 bg-green-600 text-white rounded-lg text-xs font-bold transition-all uppercase hover:bg-green-700";
-                yesBtn.innerText = "Yes, Activate";
-            }
+            const submitBtn = document.getElementById('deactivateAlumniSubmitBtn');
+            const newBtn = submitBtn.cloneNode(true);
+            submitBtn.parentNode.replaceChild(newBtn, submitBtn);
+            newBtn.id = 'deactivateAlumniSubmitBtn';
 
+            newBtn.onclick = function() {
+                const reason = document.getElementById('deactivateAlumniReason').value.trim();
+                const error = document.getElementById('deactivateAlumniError');
+                if (!reason) {
+                    error.classList.remove('hidden');
+                    lucide.createIcons();
+                    return;
+                }
+                error.classList.add('hidden');
+                document.getElementById('deactivateReason_' + userId).value = reason;
+                document.getElementById('deactivateForm_' + userId).submit();
+            };
+
+            const modal = document.getElementById('deactivateAlumniModal');
+            const content = document.getElementById('deactivateAlumniContent');
             lucide.createIcons();
             modal.classList.remove('invisible');
             setTimeout(() => content.classList.remove('scale-95'), 10);
         }
 
-        function closeConfirmModal() {
-            const modal = document.getElementById('confirmModal');
-            const content = document.getElementById('confirmContent');
+        function closeDeactivateModal() {
+            const modal = document.getElementById('deactivateAlumniModal');
+            const content = document.getElementById('deactivateAlumniContent');
+            content.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('invisible'), 200);
+        }
+
+        /* ── Activate Alumni Modal ──────────────────────────────── */
+        function openActivateModal(firstName, lastName, userId) {
+            document.getElementById('activateAlumniName').textContent = firstName + ' ' + lastName;
+
+            const submitBtn = document.getElementById('activateAlumniSubmitBtn');
+            const newBtn = submitBtn.cloneNode(true);
+            submitBtn.parentNode.replaceChild(newBtn, submitBtn);
+            newBtn.id = 'activateAlumniSubmitBtn';
+
+            newBtn.onclick = function() {
+                document.getElementById('activateForm_' + userId).submit();
+            };
+
+            const modal = document.getElementById('activateAlumniModal');
+            const content = document.getElementById('activateAlumniContent');
+            lucide.createIcons();
+            modal.classList.remove('invisible');
+            setTimeout(() => content.classList.remove('scale-95'), 10);
+        }
+
+        function closeActivateModal() {
+            const modal = document.getElementById('activateAlumniModal');
+            const content = document.getElementById('activateAlumniContent');
             content.classList.add('scale-95');
             setTimeout(() => modal.classList.add('invisible'), 200);
         }

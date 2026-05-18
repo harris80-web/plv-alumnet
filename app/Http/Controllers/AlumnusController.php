@@ -168,5 +168,7 @@ class AlumnusController extends Controller
         }
 
         return back()->with('success', 'Alumnus deactivated successfully!');
+
+        
     }
 }

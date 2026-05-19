@@ -173,15 +173,14 @@ class EmployerController extends Controller
 
         Log::info("Employer with ID {$Employer->user->user_id}: {$Employer->user->user_first_name} {$Employer->user->user_last_name} deactivated. Reason: {$validated['deactivate-reason']}");
 
-        try{
+        try {
             $Employer->user->update([
                 'user_active' => false,
             ]);
-            Mail::to($Employer->user->user_email)->send(new DeactEmployerMail($Employer->user, $validated['deactivate-reason']));
-        }
-        catch(\Exception $e){
+        } catch (\Exception $e) {
             return back()->with('error', 'An error occurred while deactivating the Employer. Please try again later.');
         }
+        Mail::to($Employer->user->user_email)->send(new DeactEmployerMail($Employer->user, $validated['deactivate-reason']));
 
         return back()->with('success', 'Employer deactivated successfully!');
     }

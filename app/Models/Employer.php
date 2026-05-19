@@ -8,6 +8,8 @@ class Employer extends Model
 {
     protected $primaryKey = 'user_id';
     public $incrementing = false;
+    protected $keyType = 'int';
+    protected $dates = ['deleted_at'];
 
     protected $fillable = [
         'user_id',

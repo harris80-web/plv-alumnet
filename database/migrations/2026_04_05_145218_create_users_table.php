@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('user_profile_picture', 255)->nullable();
             $table->boolean('user_active')->default(true);
             $table->rememberToken();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

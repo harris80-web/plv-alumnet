@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\RejectEmployerMail;
 use App\Models\User;
 use App\Models\Employer;
 use App\Models\Alumnus;
@@ -258,14 +259,21 @@ class UserController extends Controller
         return back()->with('success', 'Status updated successfully!');
     }
 
-    public function rejectEmployer($id)
+    public function rejectEmployer(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        $reason = request('reject-reason');
+        $validated = $request->validate([
+            'reject-reason' => 'required|string|max:255'
+        ]);
 
-        $user->employer()->delete();
-        $user->delete();
-
+        try{
+            $user->delete();
+            Mail::to($user->user_email)->send(new RejectEmployerMail($user, $validated['reject-reason']));
+        } 
+        catch(\Exception $e){
+            return back()->withErrors('error' ,$e->getMessage());
+        }
+        
         return redirect()->back()->with('success', 'Employer has been rejected and removed.');
     }
 
@@ -313,9 +321,9 @@ class UserController extends Controller
         return redirect()->route('superAdmin.userManagement')->with('success', 'Alumnus added successfully!');
     }
 
-    public function addAdmin()
+    public function addAdmin(Request $request)
     {
-        $validated = request()->validate([
+        $validated = $request->validate([
             'user_first_name' => 'required|string|max:255',
             'user_last_name' => 'required|string|max:255',
             'user_middle_name' => 'nullable|string|max:255',

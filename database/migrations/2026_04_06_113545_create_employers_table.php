@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('employer_website_url', 255)->nullable();
             $table->unsignedBigInteger('employer_company_size')->nullable();
             $table->boolean('employer_approved')->default(false);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

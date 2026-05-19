@@ -156,19 +156,6 @@ class AlumnusController extends Controller
             'deactivate-reason' => 'required|string|max:255',
         ]);
 
-        if (!$alumnus->user->user_active) {
-            try {
-                $alumnus->user->update([
-                    'user_active' => true,
-                ]);
-                Log::info("Alumnus with ID {$alumnus->user->user_id}: {$alumnus->user->user_first_name} {$alumnus->user->user_last_name} deactivated. Reason: {$request['deactivate-reason']}");
-
-                Mail::to($alumnus->user->user_email)->send(new DeactAlumniMail($alumnus->user, $request['deactivate-reason']));
-            } catch (\Exception $e) {
-                return back()->with('error', 'An error occurred while activating the alumnus. Please try again later.');
-            }
-        }
-
         try {
             $alumnus->user->update([
                 'user_active' => false,

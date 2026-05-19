@@ -94,7 +94,7 @@ class AlumnusController extends Controller
         $oldProfilePicture = $user->user_profile_picture ?? null;
         $profilePicture = null;
         if ($request->hasFile('user_profile_picture')) {
-            if( $oldProfilePicture && Storage::disk('public')->exists($oldProfilePicture)){
+            if ($oldProfilePicture && Storage::disk('public')->exists($oldProfilePicture)) {
                 Storage::disk('public')->delete($oldProfilePicture);
             }
             $profilePicture = $request->file('user_profile_picture')->store('profilePictures', 'public');
@@ -151,24 +151,34 @@ class AlumnusController extends Controller
     {
         $alumnus = Alumnus::where('user_id', $id)->firstOrFail();
 
-        $validated = $request->validate([
-            'deactivate-reason' => 'required|string|max:255',
-        ]);
+        // $validated = $request->validate([
+        //     'deactivate-reason' => 'required|string|max:255',
+        // ]);
 
-        Log::info("Alumnus with ID {$alumnus->user->user_id}: {$alumnus->user->user_first_name} {$alumnus->user->user_last_name} deactivated. Reason: {$validated['deactivate-reason']}");
+        if (!$alumnus->user->user_active) {
+            try {
+                $alumnus->user->update([
+                    'user_active' => true,
+                ]);
+                Log::info("Alumnus with ID {$alumnus->user->user_id}: {$alumnus->user->user_first_name} {$alumnus->user->user_last_name} deactivated. Reason: {$request['deactivate-reason']}");
 
-        try{
+                Mail::to($alumnus->user->user_email)->send(new DeactAlumniMail($alumnus->user, $request['deactivate-reason']));
+            } catch (\Exception $e) {
+                return back()->with('error', 'An error occurred while activating the alumnus. Please try again later.');
+            }
+        }
+
+        try {
             $alumnus->user->update([
                 'user_active' => false,
             ]);
-            Mail::to($alumnus->user->user_email)->send(new DeactAlumniMail($alumnus->user, $validated['deactivate-reason']));
-        }
-        catch(\Exception $e){
+            Log::info("Alumnus with ID {$alumnus->user->user_id}: {$alumnus->user->user_first_name} {$alumnus->user->user_last_name} deactivated. Reason: {$request['deactivate-reason']}");
+
+            Mail::to($alumnus->user->user_email)->send(new DeactAlumniMail($alumnus->user, $request['deactivate-reason']));
+        } catch (\Exception $e) {
             return back()->with('error', 'An error occurred while deactivating the alumnus. Please try again later.');
         }
 
         return back()->with('success', 'Alumnus deactivated successfully!');
-
-        
     }
 }

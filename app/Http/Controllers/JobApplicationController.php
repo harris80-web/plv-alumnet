@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ApplyJobMail;
+use App\Mail\DeclineApplicantMail;
+use App\Mail\HireApplicantMail;
+use App\Mail\ShortlistApplicantMail;
+use App\Models\Alumnus;
 use App\Models\JobApplication;
 use App\Models\JobPosting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Mail;
 
 class JobApplicationController extends Controller
 {
@@ -68,10 +73,11 @@ class JobApplicationController extends Controller
 
     public function applyJob($jobPostingId)
     {
+        $job = JobApplication::findOrFail($jobPostingId);
         if (Auth::user()->user_role == 'alumni') {
             $alumniId = Auth::id();
         }
-
+        $alumni = Alumnus::findOrFail($alumniId);
         if (Auth::user()->alumnus->alumnus_resume == null) {
             return redirect()->back()->with('noResume', 'flex');
         }
@@ -93,6 +99,7 @@ class JobApplicationController extends Controller
             'job_id' => $jobPostingId,
             'application_status' => 'pending',
         ]);
+        Mail::to($job->job->user->user_email)->send(new ApplyJobMail($job, $alumni));
 
         return redirect()->route('jobPosting.jobBoard');
     }
@@ -109,6 +116,7 @@ class JobApplicationController extends Controller
         $application = JobApplication::where('job_id', $applicationId)->first();
         $application->application_status = 'hired';
         $application->save();
+        Mail::to($application->alumnus->user->user_email)->send(new HireApplicantMail($application));
 
         return redirect()->route("jobApplication.showApplications", ["jobPostingId" => $applicationId])->with('success', 'Application status updated successfully.');
     }
@@ -118,6 +126,7 @@ class JobApplicationController extends Controller
         $application = JobApplication::where('job_id', $applicationId)->first();
         $application->application_status = 'declined';
         $application->save();
+        Mail::to($application->alumnus->user->user_email)->send(new DeclineApplicantMail($application));
 
         return redirect()->route("jobApplication.showApplications", ["jobPostingId" => $applicationId])->with('success', 'Application status updated successfully.');
     }
@@ -127,6 +136,7 @@ class JobApplicationController extends Controller
         $application = JobApplication::where('job_id', $applicationId)->first();
         $application->application_status = 'shortlisted';
         $application->save();
+        Mail::to($application->alumnus->user->user_email)->send(new ShortlistApplicantMail($application));
 
         return redirect()->route("jobApplication.showApplications", ["jobPostingId" => $applicationId])->with('success', 'Application status updated successfully.');
     }

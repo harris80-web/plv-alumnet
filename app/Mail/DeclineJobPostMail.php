@@ -13,13 +13,15 @@ use Illuminate\Queue\SerializesModels;
 class DeclineJobPostMail extends Mailable
 {
     use Queueable, SerializesModels;
+    public $job;
 
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($job)
     {
         //
+        $this->job = $job;
     }
 
     /**

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ApproveJobPostMail;
+use App\Mail\DeclineJobPostMail;
 use App\Mail\DeleteJobPostMail;
 use App\Models\JobPosting;
 use App\Models\Program;
@@ -225,6 +227,7 @@ class JobPostingController extends Controller
     {
         $job = JobPosting::findOrFail($id);
         $job->update(['job_approved' => true]);
+        Mail::to($job->employer->user->user_email)->send(new ApproveJobPostMail($job));
         return redirect()->route('jobPosting.jobManagement')->with('success', 'Job posting approved successfully!');
     }
 
@@ -236,7 +239,7 @@ class JobPostingController extends Controller
             'decline-reason' => 'required|string|max:255',
         ]);
         Log::info("Job posting with ID {$job->job_posting_id}, from: {$job->user->user_first_name} {$job->user->user_last_name} declined. Reason: {$validated['decline-reason']}");
-
+        Mail::to($job->employer->user->user_email)->send(new DeclineJobPostMail($job));
         $job->delete();
         return redirect()->route('jobPosting.jobManagement')->with('success', 'Job posting declined successfully!');
     }

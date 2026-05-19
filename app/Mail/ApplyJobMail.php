@@ -10,18 +10,20 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class ApproveJobPostMail extends Mailable
+class ApplyJobMail extends Mailable
 {
     use Queueable, SerializesModels;
     public $job;
+    public $alumni;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($job)
+    public function __construct($job, $alumni)
     {
         //
         $this->job = $job;
+        $this->alumni = $alumni;
     }
 
     /**
@@ -30,7 +32,7 @@ class ApproveJobPostMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Approve Job Post Mail',
+            subject: 'Apply Job Mail',
         );
     }
 
@@ -40,7 +42,7 @@ class ApproveJobPostMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'mails.approveJob',
+            view: 'mails.applyJob',
         );
     }
 

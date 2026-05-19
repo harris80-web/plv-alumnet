@@ -8,6 +8,8 @@
     @vite('resources/css/app.css')
     @vite('resources/js/app.js')
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&family=Poppins:wght@300;400;600;700&family=Inter:wght@400;500;700&display=swap"
@@ -87,7 +89,7 @@
                     @endif
 
                     <div>
-                        <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Business Name:</label>
+                        <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Company Name:</label>
                         <input type="text" name="employer_company_name"
                             class="w-full px-4 py-0.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A]"
                             required>

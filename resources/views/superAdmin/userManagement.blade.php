@@ -254,7 +254,7 @@
 </html>-->
 
 @php
-$current_page = 'user_management';
+    $current_page = 'user_management';
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -357,15 +357,19 @@ $current_page = 'user_management';
             @include('partials.success')
             <!-- Tabs -->
             <div class="bg-white px-8 flex gap-8 border-b border-slate-200 shrink-0 shadow-md">
-                <button id="tab-admin" class="tab-btn active py-3 px-2 flex items-center gap-2 text-sm transition-colors" onclick="switchTab('admin')">
+                <button id="tab-admin"
+                    class="tab-btn active py-3 px-2 flex items-center gap-2 text-sm transition-colors"
+                    onclick="switchTab('admin')">
                     <i data-lucide="user-cog" class="w-4 h-4"></i>
                     Admin
                 </button>
-                <button id="tab-alumni" class="tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors" onclick="switchTab('alumni')">
+                <button id="tab-alumni" class="tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors"
+                    onclick="switchTab('alumni')">
                     <i data-lucide="book-user" class="w-4 h-4"></i>
                     Alumni
                 </button>
-                <button id="tab-employer" class="tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors" onclick="switchTab('employer')">
+                <button id="tab-employer" class="tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors"
+                    onclick="switchTab('employer')">
                     <i data-lucide="building-2" class="w-4 h-4"></i>
                     Employer
                 </button>
@@ -374,118 +378,143 @@ $current_page = 'user_management';
             <div class="flex-1 overflow-y-auto p-8">
 
                 @if (Auth::user()->user_role == 'super_admin')
-                <!-- ==================== ADMIN TAB ==================== -->
-                <div id="content-admin" class="tab-content active">
-                    <!-- ==================== METRIC CARDS ==================== -->
-                    <div class="grid grid-cols-4 gap-4 mb-6">
+                    <!-- ==================== ADMIN TAB ==================== -->
+                    <div id="content-admin" class="tab-content active">
+                        <!-- ==================== METRIC CARDS ==================== -->
+                        <div class="grid grid-cols-4 gap-4 mb-6">
 
-                        <!-- Total Admins -->
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-800">{{ $admins->count() }}</p>
-                            <p class="text-xs font-medium text-slate-500 mt-1">Total Admin</p>
+                            <!-- Total Admins -->
+                            <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                                <p class="text-2xl font-bold text-slate-800">{{ $admins->count() }}</p>
+                                <p class="text-xs font-medium text-slate-500 mt-1">Total Admin</p>
+                            </div>
+
+                            <!-- Active Admins -->
+                            <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                                <p class="text-2xl font-bold text-green-500">
+                                    {{ $admins->filter(fn($a) => $a->user->user_active)->count() }}
+                                </p>
+                                <p class="text-xs font-medium text-slate-500 mt-1">Active Admin</p>
+                            </div>
+
+                            <!-- Inactive Admins -->
+                            <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                                <p class="text-2xl font-bold text-[#C73D1A]">
+                                    {{ $admins->filter(fn($a) => !$a->user->user_active)->count() }}
+                                </p>
+                                <p class="text-xs font-medium text-slate-500 mt-1">Inactive Admin</p>
+                            </div>
+
+                            <!-- Super Admin -->
+                            <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                                <p class="text-2xl font-bold text-amber-400">1</p>
+                                <p class="text-xs font-medium text-slate-500 mt-1">Super Admin</p>
+                            </div>
+
+                        </div>
+                        <!-- ==================== END METRIC CARDS ==================== -->
+
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="relative w-64">
+                                <i data-lucide="search"
+                                    class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" placeholder="Search"
+                                    class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-transparent">
+                            </div>
+                            <button onclick="document.getElementById('addAdminModal').classList.add('open')"
+                                class="bg-[#1D46A4] hover:bg-[#0E0F3B] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                ADD ADMIN
+                            </button>
                         </div>
 
-                        <!-- Active Admins -->
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-green-500">{{ $admins->filter(fn($a) => $a->user->user_active)->count() }}</p>
-                            <p class="text-xs font-medium text-slate-500 mt-1">Active Admin</p>
-                        </div>
+                        <div class="bg-white rounded-lg shadow-sm border border-slate-200">
+                            <table class="w-full text-left text-[11px]">
+                                <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
+                                    <tr>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Last Name</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">First Name</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Middle Name</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Suffix</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Address</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Account Status</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Date Created</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
+                                        <th class="px-4 py-4 font-semibold">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 text-center">
+                                    @forelse ($admins as $admin)
+                                        @if ($admin->user->user_role == "admin")
+                                            <tr class="hover:bg-slate-50/80 transition-colors font-medium">
+                                                <td class="px-4 py-4 text-black border-r border-slate-100">
+                                                    {{ $admin->user->user_last_name }}
+                                                </td>
+                                                <td class="px-4 py-4 text-black border-r border-slate-100">
+                                                    {{ $admin->user->user_first_name }}
+                                                </td>
+                                                <td class="px-4 py-4 text-black border-r border-slate-100">
+                                                    {{ $admin->user->user_middle_name }}
+                                                </td>
+                                                <td class="px-4 py-4 text-black border-r border-slate-100">
+                                                    {{ $admin->user->user_suffix }}
+                                                </td>
+                                                <td class="px-4 py-4 text-black border-r border-slate-100">
+                                                    {{ $admin->office_address }}
+                                                </td>
+                                                <td class="px-4 py-4 text-center border-r border-slate-100">
+                                                    <span
+                                                        class="{{ $admin->user->user_active ? 'status-active' : 'status-inactive' }} font-semibold">
+                                                        {{ $admin->user->user_active ? 'Active' : 'Inactive' }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-4 text-black border-r border-slate-100">
+                                                    {{ $admin->user->created_at->format('m/d/y') }}
+                                                </td>
+                                                <td class="px-4 py-4 text-black border-r border-slate-100">
+                                                    {{ $admin->user->user_email }}
+                                                </td>
+                                                <td class="px-4 py-4 text-center relative">
+                                                    <div class="inline-block text-left">
+                                                        <button
+                                                            class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                                            <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
+                                                        </button>
+                                                        <div
+                                                            class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
+                                                            <div class="py-1">
+                                                                <button
+                                                                    class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 transition-colors">
+                                                                    <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i>
+                                                                    View Profile
+                                                                </button>
+                                                                <button
+                                                                    data-route="{{ route('offices.deleteAdmin', $admin->user_id) }}"
+                                                                    data-firstname="{{ $admin->user->user_first_name }}"
+                                                                    data-lastname="{{ $admin->user->user_last_name }}"
+                                                                    onclick="openDeleteProfileModal(this.dataset.route, this.dataset.firstname, this.dataset.lastname)"
+                                                                    class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                                    <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i> Delete
+                                                                    Profile
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endif
 
-                        <!-- Inactive Admins -->
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-[#C73D1A]">{{ $admins->filter(fn($a) => !$a->user->user_active)->count() }}</p>
-                            <p class="text-xs font-medium text-slate-500 mt-1">Inactive Admin</p>
+                                    @empty
+                                        <tr>
+                                            <td colspan="9" class="px-4 py-8 text-center text-slate-400 text-sm">No admins
+                                                found.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
                         </div>
-
-                        <!-- Super Admin -->
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-amber-400">1</p>
-                            <p class="text-xs font-medium text-slate-500 mt-1">Super Admin</p>
-                        </div>
-
                     </div>
-                    <!-- ==================== END METRIC CARDS ==================== -->
-
-                    <div class="flex justify-between items-center mb-6">
-                        <div class="relative w-64">
-                            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input type="text"
-                                placeholder="Search"
-                                class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-transparent">
-                        </div>
-                        <button onclick="document.getElementById('addAdminModal').classList.add('open')"
-                            class="bg-[#1D46A4] hover:bg-[#0E0F3B] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
-                            <i data-lucide="plus" class="w-4 h-4"></i>
-                            ADD ADMIN
-                        </button>
-                    </div>
-
-                    <div class="bg-white rounded-lg shadow-sm border border-slate-200">
-                        <table class="w-full text-left text-[11px]">
-                            <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
-                                <tr>
-                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Last Name</th>
-                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">First Name</th>
-                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Middle Name</th>
-                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Suffix</th>
-                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Address</th>
-                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Account Status</th>
-                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Date Created</th>
-                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
-                                    <th class="px-4 py-4 font-semibold">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100 text-center">
-                                @forelse ($admins as $admin)
-                                @if ($admin->user->user_role == "admin")
-                                <tr class="hover:bg-slate-50/80 transition-colors font-medium">
-                                    <td class="px-4 py-4 text-black border-r border-slate-100">{{ $admin->user->user_last_name }}</td>
-                                    <td class="px-4 py-4 text-black border-r border-slate-100">{{ $admin->user->user_first_name }}</td>
-                                    <td class="px-4 py-4 text-black border-r border-slate-100">{{ $admin->user->user_middle_name }}</td>
-                                    <td class="px-4 py-4 text-black border-r border-slate-100">{{ $admin->user->user_suffix }}</td>
-                                    <td class="px-4 py-4 text-black border-r border-slate-100">{{ $admin->office_address }}</td>
-                                    <td class="px-4 py-4 text-center border-r border-slate-100">
-                                        <span class="{{ $admin->user->user_active ? 'status-active' : 'status-inactive' }} font-semibold">
-                                            {{ $admin->user->user_active ? 'Active' : 'Inactive' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-4 text-black border-r border-slate-100">{{ $admin->user->created_at->format('m/d/y') }}</td>
-                                    <td class="px-4 py-4 text-black border-r border-slate-100">{{ $admin->user->user_email }}</td>
-                                    <td class="px-4 py-4 text-center relative">
-                                        <div class="inline-block text-left">
-                                            <button class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                                <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                            </button>
-                                            <div class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
-                                                <div class="py-1">
-                                                    <button class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 transition-colors">
-                                                        <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View Profile
-                                                    </button>
-                                                    <button
-                                                        data-route="{{ route('offices.deleteAdmin', $admin->user_id) }}"
-                                                        data-firstname="{{ $admin->user->user_first_name }}"
-                                                        data-lastname="{{ $admin->user->user_last_name }}"
-                                                        onclick="openDeleteProfileModal(this.dataset.route, this.dataset.firstname, this.dataset.lastname)"
-                                                        class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                        <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i> Delete Profile
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endif
-
-                                @empty
-                                <tr>
-                                    <td colspan="9" class="px-4 py-8 text-center text-slate-400 text-sm">No admins found.</td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <!-- END ADMIN TAB -->
+                    <!-- END ADMIN TAB -->
                 @endif
 
 
@@ -502,19 +531,25 @@ $current_page = 'user_management';
 
                         <!-- Active Accounts -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-green-500">{{ $alumni->filter(fn($a) => $a->user->user_active)->count() }}</p>
+                            <p class="text-2xl font-bold text-green-500">
+                                {{ $alumni->filter(fn($a) => $a->user->user_active)->count() }}
+                            </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Active Accounts</p>
                         </div>
 
                         <!-- Deactivated Accounts -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-[#C73D1A]">{{ $alumni->filter(fn($a) => !$a->user->user_active)->count() }}</p>
+                            <p class="text-2xl font-bold text-[#C73D1A]">
+                                {{ $alumni->filter(fn($a) => !$a->user->user_active)->count() }}
+                            </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Deactivated Accounts</p>
                         </div>
 
                         <!-- New This Month -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-amber-400"> {{ $alumni->filter(fn($a) => $a->user->created_at->month == now()->month && $a->user->created_at->year == now()->year)->count() }}</p>
+                            <p class="text-2xl font-bold text-amber-400">
+                                {{ $alumni->filter(fn($a) => $a->user->created_at->month == now()->month && $a->user->created_at->year == now()->year)->count() }}
+                            </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">New This Month</p>
                         </div>
 
@@ -524,12 +559,13 @@ $current_page = 'user_management';
                     <div class="flex justify-between items-center mb-6">
                         <div class="flex gap-2">
                             <div class="relative w-64">
-                                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                <input type="text"
-                                    placeholder="Search"
+                                <i data-lucide="search"
+                                    class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" placeholder="Search"
                                     class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A]">
                             </div>
-                            <button onclick="toggleAlumniFilterSidebar()" class="p-2 border border-slate-200 bg-white rounded-lg hover:bg-slate-50 text-slate-500 transition-colors">
+                            <button onclick="toggleAlumniFilterSidebar()"
+                                class="p-2 border border-slate-200 bg-white rounded-lg hover:bg-slate-50 text-slate-500 transition-colors">
                                 <i data-lucide="filter" class="w-4 h-4"></i>
                             </button>
                         </div>
@@ -565,7 +601,8 @@ $current_page = 'user_management';
                             </div>
 
                             <!-- Hidden File Input for CSV -->
-                            <input type="file" id="csvFileInput" accept=".csv" class="hidden" onchange="handleFileSelect(this)">
+                            <input type="file" id="csvFileInput" accept=".csv" class="hidden"
+                                onchange="handleFileSelect(this)">
 
                             <!-- Export Button -->
                             <button id="exportBtn" onclick="exportAlumniToCSV()"
@@ -577,29 +614,33 @@ $current_page = 'user_management';
                     </div>
 
                     @if ($errors->any())
-                    <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
-                        <i data-lucide="circle-alert" class="w-4 h-4 text-red-500 mt-0.5 shrink-0"></i>
-                        <ul class="space-y-1">
-                            @foreach ($errors->all() as $error)
-                            <li class="text-red-600 text-xs font-medium">{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
+                        <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+                            <i data-lucide="circle-alert" class="w-4 h-4 text-red-500 mt-0.5 shrink-0"></i>
+                            <ul class="space-y-1">
+                                @foreach ($errors->all() as $error)
+                                    <li class="text-red-600 text-xs font-medium">{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
                     @endif
 
                     <div class="bg-white rounded-lg shadow-sm border border-slate-200">
                         <table class="w-full text-left text-[10px]">
                             <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                                 <tr>
-                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">Alumni ID No. <i data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
-                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">Last Name <i data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
+                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">Alumni ID No. <i
+                                            data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
+                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">Last Name <i
+                                            data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">First Name</th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Middle Name</th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Suffix</th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Program</th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Section</th>
-                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">Batch <i data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
-                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">Email <i data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
+                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">Batch <i
+                                            data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
+                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">Email <i
+                                            data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Status</th>
                                     <th class="px-3 py-4 font-semibold text-center">Action</th>
                                 </tr>
@@ -608,81 +649,100 @@ $current_page = 'user_management';
                             <tbody class="divide-y divide-slate-100">
                                 @forelse ($alumni as $alumnus)
 
-                                @php
-                                $status = $alumnus->user->user_active ? 'Active' : 'Deactivated';
-                                $statusClass = $alumnus->user->user_active
-                                ? 'bg-green-100 text-green-700 border-green-200'
-                                : 'bg-red-100 text-red-700 border-red-200';
-                                @endphp
-                                <tr class="hover:bg-slate-50/80 transition-colors text-center">
-                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $alumnus->alumnus_id ?? 'N/A' }}
-                                    </td>
-                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $alumnus->user->user_last_name }}
-                                    </td>
-                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $alumnus->user->user_first_name }}
-                                    </td>
-                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $alumnus->user->user_middle_name }}
-                                    </td>
-                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $alumnus->user->user_suffix ?? '' }}
-                                    </td>
-                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100 leading-tight">
-                                        {{ $alumnus->program->program_name ?? 'N/A' }}
-                                    </td>
-                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $alumnus->section->section_name ?? 'N/A' }}
-                                    </td>
-                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $alumnus->alumnus_batch }}
-                                    </td>
-                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $alumnus->user->user_email }}
-                                    </td>
-                                    <td class="px-3 py-3 border-r border-slate-100">
-                                        <span class="px-2 py-1 rounded-full border text-[9px] font-bold {{ $statusClass }}">
-                                            {{ strtoupper($status) }}
-                                        </span>
-                                    </td>
-                                    <td class="px-3 py-3 text-center relative">
-                                        <div class="inline-block text-left">
-                                            <button class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                                <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                            </button>
-                                            <div class="dropdown-menu absolute right-4 mt-2 w-56 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
-                                                <div class="py-1">
-                                                    @if ($alumnus->user->user_active)
-                                                    <button onclick="openDeactivateModal('{{ $alumnus->user->user_first_name }}', '{{ $alumnus->user->user_last_name }}', {{ $alumnus->user_id }})"
-                                                        class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                        <i data-lucide="user-minus" class="w-4 h-4 mr-3"></i> Deactivate Account
-                                                    </button>
-                                                    @else
-                                                    <button onclick="openActivateModal('{{ $alumnus->user->user_first_name }}', '{{ $alumnus->user->user_last_name }}', {{ $alumnus->user_id }})"
-                                                        class="flex items-center w-full px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 transition-colors">
-                                                        <i data-lucide="user-plus" class="w-4 h-4 mr-3"></i> Activate Account
-                                                    </button>
-                                                    @endif
+                                    @php
+                                        $status = $alumnus->user->user_active ? 'Active' : 'Deactivated';
+                                        $statusClass = $alumnus->user->user_active
+                                            ? 'bg-green-100 text-green-700 border-green-200'
+                                            : 'bg-red-100 text-red-700 border-red-200';
+                                    @endphp
+                                    <tr class="hover:bg-slate-50/80 transition-colors text-center">
+                                        <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $alumnus->alumnus_id ?? 'N/A' }}
+                                        </td>
+                                        <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $alumnus->user->user_last_name }}
+                                        </td>
+                                        <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $alumnus->user->user_first_name }}
+                                        </td>
+                                        <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $alumnus->user->user_middle_name }}
+                                        </td>
+                                        <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $alumnus->user->user_suffix ?? '' }}
+                                        </td>
+                                        <td
+                                            class="px-3 py-3 font-medium text-black border-r border-slate-100 leading-tight">
+                                            {{ $alumnus->program->program_name ?? 'N/A' }}
+                                        </td>
+                                        <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $alumnus->section->section_name ?? 'N/A' }}
+                                        </td>
+                                        <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $alumnus->alumnus_batch }}
+                                        </td>
+                                        <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $alumnus->user->user_email }}
+                                        </td>
+                                        <td class="px-3 py-3 border-r border-slate-100">
+                                            <span
+                                                class="px-2 py-1 rounded-full border text-[9px] font-bold {{ $statusClass }}">
+                                                {{ strtoupper($status) }}
+                                            </span>
+                                        </td>
+                                        <td class="px-3 py-3 text-center relative">
+                                            <div class="inline-block text-left">
+                                                <button
+                                                    class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                                    <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
+                                                </button>
+                                                <div
+                                                    class="dropdown-menu absolute right-4 mt-2 w-56 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
+                                                    <div class="py-1">
+                                                        @if ($alumnus->user->user_active)
+                                                            <button
+                                                                onclick="openDeactivateModal('{{ $alumnus->user->user_first_name }}', '{{ $alumnus->user->user_last_name }}', {{ $alumnus->user_id }})"
+                                                                class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                                <i data-lucide="user-minus" class="w-4 h-4 mr-3"></i> Deactivate
+                                                                Account
+                                                            </button>
+                                                        @else
+                                                            <button
+                                                                onclick="openActivateModal('{{ $alumnus->user->user_first_name }}', '{{ $alumnus->user->user_last_name }}', {{ $alumnus->user_id }})"
+                                                                class="flex items-center w-full px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 transition-colors">
+                                                                <i data-lucide="user-plus" class="w-4 h-4 mr-3"></i> Activate
+                                                                Account
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <div style="display:none;">
+                                                    <form id="deactivateForm_{{ $alumnus->user_id }}"
+                                                        action="{{ route('alumni.deactivateAlumnus', $alumnus->user_id) }}"
+                                                        method="POST">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <input type="hidden" name="deactivate-reason"
+                                                            id="deactivateReason_{{ $alumnus->user_id }}">
+                                                    </form>
+
+                                                    <form id="activateForm_{{ $alumnus->user_id }}"
+                                                        action="{{ route('alumni.activateAlumnus', $alumnus->user_id) }}"
+                                                        method="POST">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <input type="hidden" name="activate-reason"
+                                                            id="activateReason_{{ $alumnus->user_id }}">
+                                                    </form>
                                                 </div>
                                             </div>
-                                            <div style="display:none;">
-                                                <form id="deactivateForm_{{ $alumnus->user_id }}"
-                                                    action="{{ route('alumni.deactivateAlumnus', $alumnus->user_id) }}"
-                                                    method="POST">
-                                                    @csrf
-                                                    @method('PUT')
-                                                    <input type="hidden" name="deactivate-reason" id="deactivateReason_{{ $alumnus->user_id }}">
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </tr>
                                 @empty
-                                <tr>
-                                    <td colspan="11" class="px-4 py-8 text-center text-slate-400 text-sm">No alumni found.</td>
-                                </tr>
+                                    <tr>
+                                        <td colspan="11" class="px-4 py-8 text-center text-slate-400 text-sm">No alumni
+                                            found.</td>
+                                    </tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -697,25 +757,33 @@ $current_page = 'user_management';
 
                         <!-- Total Employer -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-800">{{ $employers->where('user_active', true)->Where('employer_approved', true)->count() }}</p>
+                            <p class="text-2xl font-bold text-slate-800">
+                                {{ $employers->where('user_active', true)->Where('employer_approved', true)->count() }}
+                            </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total Employer</p>
                         </div>
 
                         <!-- Awaiting Approval -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-amber-400">{{ $employers->filter(fn($e) => !$e->employer_approved)->count() }}</p>
+                            <p class="text-2xl font-bold text-amber-400">
+                                {{ $employers->filter(fn($e) => !$e->employer_approved)->count() }}
+                            </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Awaiting Approval</p>
                         </div>
 
                         <!-- Active Accounts -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-green-500">{{ $employers->filter(fn($e) => $e->user->user_active)->count() }}</p>
+                            <p class="text-2xl font-bold text-green-500">
+                                {{ $employers->filter(fn($e) => $e->user->user_active)->count() }}
+                            </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Active Employers</p>
                         </div>
 
                         <!-- Deactivated Accounts -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-[#C73D1A]">{{ $employers->filter(fn($e) => !$e->user->user_active && $e->employer_approved)->count() }}</p>
+                            <p class="text-2xl font-bold text-[#C73D1A]">
+                                {{ $employers->filter(fn($e) => !$e->user->user_active && $e->employer_approved)->count() }}
+                            </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Deactivated Accounts</p>
                         </div>
                     </div>
@@ -728,49 +796,108 @@ $current_page = 'user_management';
                             <table class="w-full text-left text-[10px]">
                                 <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                                     <tr>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700"><i data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700"><i
+                                                data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i>
+                                        </th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Company Name</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Full Name</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Industry</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Official Website URL</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Official Website
+                                            URL</th>
                                         <th class="px-4 py-4 font-semibold text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
                                     @forelse ($employers->filter(fn($e) => !$e->employer_approved) as $employer)
-                                    <tr class="hover:bg-slate-50/80 transition-colors text-center">
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $loop->iteration }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->employer_company_name }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->user->user_first_name }} {{ $employer->user->user_middle_name }} {{ $employer->user->user_last_name }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->user->user_email }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->industry->industry_name ?? 'N/A' }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->employer_website_url ?? 'N/A' }}</td>
-                                        <td class="px-4 py-3 text-center relative">
-                                            <div class="inline-block text-left">
-                                                <button class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                                    <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                                </button>
-                                                <div class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl ring-1 ring-black ring-opacity-5 z-50 hidden">
-                                                    <div class="py-1">
-                                                        <form action="{{ route('users.approveEmployer', $employer->user_id) }}" method="POST">
-                                                            @csrf
-                                                            <button type="submit" class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-emerald-50 transition-colors whitespace-nowrap">
-                                                                <i data-lucide="check-circle" class="w-4 h-4 mr-3 text-emerald-500"></i> Approve Employer
+                                        <tr class="hover:bg-slate-50/80 transition-colors text-center">
+                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                                {{ $loop->iteration }}
+                                            </td>
+                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                                {{ $employer->employer_company_name }}
+                                            </td>
+                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                                {{ $employer->user->user_first_name }}
+                                                {{ $employer->user->user_middle_name }}
+                                                {{ $employer->user->user_last_name }}
+                                            </td>
+                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                                {{ $employer->user->user_email }}
+                                            </td>
+                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                                {{ $employer->industry->industry_name ?? 'N/A' }}
+                                            </td>
+                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                                {{ $employer->employer_website_url ?? 'N/A' }}
+                                            </td>
+                                            <td class="px-4 py-3 text-center relative">
+                                                <div class="inline-block text-left">
+                                                    <button
+                                                        class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                                        <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
+                                                    </button>
+                                                    <div
+                                                        class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl ring-1 ring-black ring-opacity-5 z-50 hidden">
+                                                        <div class="py-1">
+                                                            <!-- <form
+                                                                                        action="{{ route('users.approveEmployer', $employer->user_id) }}"
+                                                                                        method="POST">
+                                                                                        @csrf
+                                                                                        <button type="submit"
+                                                                                            class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-emerald-50 transition-colors whitespace-nowrap">
+                                                                                            <i data-lucide="check-circle"
+                                                                                                class="w-4 h-4 mr-3 text-emerald-500"></i> Approve
+                                                                                            Employer
+                                                                                        </button>
+                                                                                    </form>
+                                                                                    <button
+                                                                                        onclick="openEmployerConfirm('reject', '{{ $employer->employer_company_name }}')"
+                                                                                        class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-orange-50 transition-colors whitespace-nowrap">
+                                                                                        <i data-lucide="x-circle"
+                                                                                            class="w-4 h-4 mr-3 text-orange-500"></i> Reject
+                                                                                        Employer
+                                                                                    </button> -->
+                                                            <button
+                                                                onclick="openEmployerConfirm('approve', '{{ $employer->employer_company_name }}', {{ $employer->user_id }})"
+                                                                class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-emerald-50 transition-colors whitespace-nowrap">
+                                                                <i data-lucide="check-circle"
+                                                                    class="w-4 h-4 mr-3 text-emerald-500"></i> Approve
+                                                                Employer
                                                             </button>
+                                                            <button
+                                                                onclick="openEmployerConfirm('reject', '{{ $employer->employer_company_name }}', {{ $employer->user_id }})"
+                                                                class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-orange-50 transition-colors whitespace-nowrap">
+                                                                <i data-lucide="x-circle"
+                                                                    class="w-4 h-4 mr-3 text-orange-500"></i> Reject
+                                                                Employer
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div style="display:none;">
+                                                        <form id="approveEmployerForm_{{ $employer->user_id }}"
+                                                            action="{{ route('users.approveEmployer', $employer->user_id) }}"
+                                                            method="POST">
+                                                            @csrf
                                                         </form>
-                                                        <button onclick="openEmployerConfirm('reject', '{{ $employer->employer_company_name }}')" class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-orange-50 transition-colors whitespace-nowrap">
-                                                            <i data-lucide="x-circle" class="w-4 h-4 mr-3 text-orange-500"></i> Reject Employer
-                                                        </button>
+
+                                                        <form id="rejectEmployerForm_{{ $employer->user_id }}"
+                                                            action="{{ route('users.rejectEmployer', $employer->user_id) }}"
+                                                            method="POST">
+                                                            @csrf
+                                                            @method('PUT')
+                                                            <input type="hidden" name="reject-reason"
+                                                                id="rejectEmployerReason_{{ $employer->user_id }}">
+                                                        </form>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                            </td>
+                                        </tr>
                                     @empty
-                                    <tr>
-                                        <td colspan="7" class="px-4 py-8 text-center text-slate-400 text-sm">No employers awaiting approval.</td>
-                                    </tr>
+                                        <tr>
+                                            <td colspan="7" class="px-4 py-8 text-center text-slate-400 text-sm">No
+                                                employers awaiting approval.</td>
+                                        </tr>
                                     @endforelse
                                 </tbody>
                             </table>
@@ -782,16 +909,18 @@ $current_page = 'user_management';
                         <div class="flex justify-between items-center mb-3">
                             <div class="flex gap-2">
                                 <div class="relative w-64">
-                                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                    <input type="text"
-                                        placeholder="Search by Company Name"
+                                    <i data-lucide="search"
+                                        class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    <input type="text" placeholder="Search by Company Name"
                                         class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A]">
                                 </div>
-                                <button onclick="toggleEmployerFilter()" class="p-2 border border-slate-200 bg-white rounded-lg hover:bg-slate-50 text-slate-500 transition-colors">
+                                <button onclick="toggleEmployerFilter()"
+                                    class="p-2 border border-slate-200 bg-white rounded-lg hover:bg-slate-50 text-slate-500 transition-colors">
                                     <i data-lucide="filter" class="w-4 h-4"></i>
                                 </button>
                             </div>
-                            <button onclick="exportEmployersToCSV()" class="bg-[#C73D1A] hover:bg-[#a83215] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
+                            <button onclick="exportEmployersToCSV()"
+                                class="bg-[#C73D1A] hover:bg-[#a83215] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
                                 <i data-lucide="download" class="w-4 h-4"></i>
                                 EXPORT CSV
                             </button>
@@ -801,76 +930,100 @@ $current_page = 'user_management';
                             <table class="w-full text-left text-[10px]">
                                 <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                                     <tr>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700"><i data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700"><i
+                                                data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i>
+                                        </th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Company Name</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Full Name</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Industry</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Contact</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Official Website URL</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Official Website
+                                            URL</th>
                                         <th class="px-4 py-4 font-semibold text-center">Actions</th>
                                     </tr>
                                 </thead>
 
                                 <tbody class="divide-y divide-slate-100">
                                     @forelse ($employers->filter(fn($e) => $e->user->user_active) as $employer)
-                                    <tr class="hover:bg-slate-50/80 transition-colors text-center">
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $loop->iteration }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->employer_company_name }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->user->user_first_name }} {{ $employer->user->user_middle_name }} {{ $employer->user->user_last_name }} {{ $employer->user->user_suffix ?? '' }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->user->user_email }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->industry->industry_name ?? 'N/A' }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->employer_contact_number ?? 'N/A' }}</td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $employer->employer_website_url ?? 'N/A' }}</td>
-                                        <td class="px-4 py-3 text-center relative">
-                                            <div class="inline-block text-left">
-                                                <button class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                                    <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                                </button>
-                                                <div class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
-                                                    <div class="py-1">
-                                                        <button
-                                                            type="button"
-                                                            class="view-modal-btn flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 transition-colors"
-                                                            data-last-name="{{ $employer->user->user_last_name }}"
-                                                            data-first-name="{{ $employer->user->user_first_name }}"
-                                                            data-middle-name="{{ $employer->user->user_middle_name }}"
-                                                            data-suffix="{{ $employer->user->user_suffix ?? '' }}"
-                                                            data-email="{{ $employer->user->user_email }}"
-                                                            data-contact="{{ $employer->employer_contact_number ?? 'N/A' }}"
-                                                            data-company="{{ $employer->employer_company_name }}"
-                                                            data-industry="{{ $employer->industry->industry_name ?? 'N/A' }}"
-                                                            data-position="{{ $employer->employer_position ?? 'N/A' }}"
-                                                            data-year="{{ $employer->employer_year_established ?? 'N/A' }}"
-                                                            data-size="{{ $employer->employer_company_size ?? 'N/A' }}"
-                                                            data-url="{{ $employer->employer_website_url ?? 'N/A' }}">
-                                                            <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i>
-                                                            View Employer
-                                                        </button>
-                                                        <hr class="my-1 border-slate-100">
-                                                        <button class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                            <i data-lucide="user-minus" class="w-4 h-4 mr-3"></i>
-                                                            Deactivate Account
-                                                        </button>
-                                                    </div>
+                                        <tr class="hover:bg-slate-50/80 transition-colors text-center">
+                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                                {{ $loop->iteration }}
+                                            </td>
+                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                                {{ $employer->employer_company_name }}
+                                            </td>
+                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                                {{ $employer->user->user_first_name }}
+                                                {{ $employer->user->user_middle_name }}
+                                                {{ $employer->user->user_last_name }}
+                                                {{ $employer->user->user_suffix ?? '' }}
+                                            </td>
+                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                                {{ $employer->user->user_email }}
+                                            </td>
+                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                                {{ $employer->industry->industry_name ?? 'N/A' }}
+                                            </td>
+                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                                {{ $employer->employer_contact_number ?? 'N/A' }}
+                                            </td>
+                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                                {{ $employer->employer_website_url ?? 'N/A' }}
+                                            </td>
+                                            <td class="px-4 py-3 text-center relative">
+                                                <div class="inline-block text-left">
+                                                    <button
+                                                        class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                                        <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
+                                                    </button>
+                                                    <div
+                                                        class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
+                                                        <div class="py-1">
+                                                            <button type="button"
+                                                                class="view-modal-btn flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 transition-colors"
+                                                                data-last-name="{{ $employer->user->user_last_name }}"
+                                                                data-first-name="{{ $employer->user->user_first_name }}"
+                                                                data-middle-name="{{ $employer->user->user_middle_name }}"
+                                                                data-suffix="{{ $employer->user->user_suffix ?? '' }}"
+                                                                data-email="{{ $employer->user->user_email }}"
+                                                                data-contact="{{ $employer->employer_contact_number ?? 'N/A' }}"
+                                                                data-company="{{ $employer->employer_company_name }}"
+                                                                data-industry="{{ $employer->industry->industry_name ?? 'N/A' }}"
+                                                                data-position="{{ $employer->employer_position ?? 'N/A' }}"
+                                                                data-year="{{ $employer->employer_year_established ?? 'N/A' }}"
+                                                                data-size="{{ $employer->employer_company_size ?? 'N/A' }}"
+                                                                data-url="{{ $employer->employer_website_url ?? 'N/A' }}">
+                                                                <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i>
+                                                                View Employer
+                                                            </button>
+                                                            <hr class="my-1 border-slate-100">
+                                                            <button
+                                                                class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                                <i data-lucide="user-minus" class="w-4 h-4 mr-3"></i>
+                                                                Deactivate Account
+                                                            </button>
+                                                        </div>
 
+                                                    </div>
+                                                    <div style="display:none;">
+                                                        <form id="employerDeactivateForm_{{ $employer->user_id }}"
+                                                            action="{{ route('employers.deactivateEmployer', $employer->user_id) }}"
+                                                            method="POST">
+                                                            @csrf
+                                                            @method('PUT')
+                                                            <input type="hidden" name="deactivate-reason"
+                                                                id="employerDeactivateReason_{{ $employer->user_id }}">
+                                                        </form>
+                                                    </div>
                                                 </div>
-                                                <div style="display:none;">
-                                                    <form id="employerDeactivateForm_{{ $employer->user_id }}"
-                                                        action="{{ route('employers.deactivateEmployer', $employer->user_id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <input type="hidden" name="deactivate-reason" id="employerDeactivateReason_{{ $employer->user_id }}">
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                            </td>
+                                        </tr>
                                     @empty
-                                    <tr>
-                                        <td colspan="9" class="px-4 py-8 text-center text-slate-400 text-sm">No approved employers yet.</td>
-                                    </tr>
+                                        <tr>
+                                            <td colspan="9" class="px-4 py-8 text-center text-slate-400 text-sm">No approved
+                                                employers yet.</td>
+                                        </tr>
                                     @endforelse
                                 </tbody>
                             </table>
@@ -890,7 +1043,8 @@ $current_page = 'user_management';
                 @csrf
                 <div class="bg-[#0E0F3B] px-8 py-5 flex justify-between items-center">
                     <h2 class="text-white text-lg font-bold">Admin Management</h2>
-                    <button type="button" onclick="closeModal('addAdminModal')" class="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
+                    <button type="button" onclick="closeModal('addAdminModal')"
+                        class="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -900,47 +1054,66 @@ $current_page = 'user_management';
                         <p class="text-[10px] font-bold text-[#C73D1A] uppercase">Personal Information</p>
                     </div>
                     <div class="flex items-center gap-4">
-                        <label for="user_first_name" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">First Name:</label>
-                        <input type="text" name="user_first_name" placeholder="Enter First Name here" required class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
+                        <label for="user_first_name" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">First
+                            Name:</label>
+                        <input type="text" name="user_first_name" placeholder="Enter First Name here" required
+                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
                     </div>
                     <div class="flex items-center gap-4">
-                        <label for="user_middle_name" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Middle Name:</label>
-                        <input type="text" name="user_middle_name" placeholder="Enter Middle Name here" class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
+                        <label for="user_middle_name" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Middle
+                            Name:</label>
+                        <input type="text" name="user_middle_name" placeholder="Enter Middle Name here"
+                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
                     </div>
                     <div class="flex items-center gap-4">
-                        <label for="user_last_name" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Last Name:</label>
-                        <input type="text" name="user_last_name" placeholder="Enter Last Name here" required class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
+                        <label for="user_last_name" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Last
+                            Name:</label>
+                        <input type="text" name="user_last_name" placeholder="Enter Last Name here" required
+                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
                     </div>
                     <div class="flex items-center gap-4">
-                        <label for="user_suffix" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Suffix:</label>
-                        <input type="text" name="user_suffix" placeholder="e.g. Jr., III" class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
+                        <label for="user_suffix"
+                            class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Suffix:</label>
+                        <input type="text" name="user_suffix" placeholder="e.g. Jr., III"
+                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
                     </div>
                     <div class="flex items-center gap-4">
-                        <label for="office_address" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Address:</label>
-                        <input type="text" name="office_address" placeholder="Enter Address here" required class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
+                        <label for="office_address"
+                            class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Address:</label>
+                        <input type="text" name="office_address" placeholder="Enter Address here" required
+                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
                     </div>
 
                     <div class="pt-2 pb-1 border-b border-slate-100">
                         <p class="text-[10px] font-bold text-[#C73D1A] uppercase">Account Details</p>
                     </div>
                     <div class="flex items-center gap-4">
-                        <label for="user_email" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Email:</label>
-                        <input type="email" name="user_email" placeholder="Enter Email here" required class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
+                        <label for="user_email"
+                            class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Email:</label>
+                        <input type="email" name="user_email" placeholder="Enter Email here" required
+                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
                     </div>
                     <div class="flex items-center gap-4">
-                        <label for="user_password" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Password:</label>
+                        <label for="user_password"
+                            class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Password:</label>
                         <div class="flex-1 relative group">
-                            <input type="password" name="user_password" id="adminPass" placeholder="••••••••" required class="w-full px-3 py-1.5 border border-[#0E0F3B] group-hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
-                            <button type="button" onclick="togglePassword('adminPass', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#C73D1A]">
+                            <input type="password" name="user_password" id="adminPass" placeholder="••••••••" required
+                                class="w-full px-3 py-1.5 border border-[#0E0F3B] group-hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
+                            <button type="button" onclick="togglePassword('adminPass', this)"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#C73D1A]">
                                 <i data-lucide="eye" class="w-4 h-4"></i>
                             </button>
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
-                        <label for="user_password_confirmation" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Confirm Password:</label>
+                        <label for="user_password_confirmation"
+                            class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Confirm Password:</label>
                         <div class="flex-1 relative group">
-                            <input type="password" name="user_password_confirmation" id="adminConfirmPass" placeholder="••••••••" required class="w-full px-3 py-1.5 border border-[#0E0F3B] group-hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
-                            <button type="button" onclick="togglePassword('adminConfirmPass', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#C73D1A]">
+                            <input type="password" name="user_password_confirmation" id="adminConfirmPass"
+                                placeholder="••••••••" required
+                                class="w-full px-3 py-1.5 border border-[#0E0F3B] group-hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
+                            <button type="button" onclick="togglePassword('adminConfirmPass', this)"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#C73D1A]">
                                 <i data-lucide="eye" class="w-4 h-4"></i>
                             </button>
                         </div>
@@ -948,10 +1121,12 @@ $current_page = 'user_management';
                 </div>
 
                 <div class="px-8 pb-7 flex justify-end gap-4">
-                    <button type="button" onclick="closeModal('addAdminModal')" class="px-8 py-2 border-2 border-[#0E0F3B] text-[#0E0F3B] rounded-lg text-sm font-bold hover:bg-[#0E0F3B] hover:text-white transition-all uppercase">
+                    <button type="button" onclick="closeModal('addAdminModal')"
+                        class="px-8 py-2 border-2 border-[#0E0F3B] text-[#0E0F3B] rounded-lg text-sm font-bold hover:bg-[#0E0F3B] hover:text-white transition-all uppercase">
                         Cancel
                     </button>
-                    <button type="submit" class="px-8 py-2 bg-[#0E0F3B] hover:bg-blue-900 text-white rounded-lg text-sm font-bold transition-colors uppercase">
+                    <button type="submit"
+                        class="px-8 py-2 bg-[#0E0F3B] hover:bg-blue-900 text-white rounded-lg text-sm font-bold transition-colors uppercase">
                         Add Admin
                     </button>
                 </div>
@@ -969,9 +1144,11 @@ $current_page = 'user_management';
     </div>
 
     {{-- ===================== DELETE ADMIN PROFILE MODAL ===================== --}}
-    <div id="deleteProfileModal" class="fixed inset-0 z-[200] flex items-center justify-center invisible transition-all duration-300">
+    <div id="deleteProfileModal"
+        class="fixed inset-0 z-[200] flex items-center justify-center invisible transition-all duration-300">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDeleteProfileModal()"></div>
-        <div id="deleteProfileContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
+        <div id="deleteProfileContent"
+            class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
             <div class="p-8">
                 <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
                     <i data-lucide="trash-2" class="w-8 h-8 text-red-500"></i>
@@ -1009,7 +1186,8 @@ $current_page = 'user_management';
                 @csrf
                 <div class="bg-[#0E0F3B] px-8 py-5 flex justify-between items-center">
                     <h2 class="text-white text-lg font-bold">Alumni Management</h2>
-                    <button type="button" onclick="closeModal('addAlumniModal')" class="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
+                    <button type="button" onclick="closeModal('addAlumniModal')"
+                        class="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -1017,53 +1195,63 @@ $current_page = 'user_management';
                 <div class="px-8 py-6 space-y-4">
                     <div class="flex items-center gap-4">
                         <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">First Name:</label>
-                        <input type="text" name="user_first_name" placeholder="Enter First Name here" required class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
+                        <input type="text" name="user_first_name" placeholder="Enter First Name here" required
+                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                     </div>
                     <div class="flex items-center gap-4">
                         <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Middle Name:</label>
-                        <input type="text" name="user_middle_name" placeholder="Enter Middle Name here" class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
+                        <input type="text" name="user_middle_name" placeholder="Enter Middle Name here"
+                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                     </div>
                     <div class="flex items-center gap-4">
                         <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Last Name:</label>
-                        <input type="text" name="user_last_name" placeholder="Enter Last Name here" required class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
+                        <input type="text" name="user_last_name" placeholder="Enter Last Name here" required
+                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                     </div>
                     <div class="flex items-center gap-4">
                         <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Suffix:</label>
-                        <input type="text" name="user_suffix" placeholder="e.g. Jr., III" class="w-44 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
+                        <input type="text" name="user_suffix" placeholder="e.g. Jr., III"
+                            class="w-44 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                     </div>
                     <div class="flex items-center gap-4">
                         <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Program:</label>
-                        <select name="program_id" required class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white transition-all truncate w-full">
+                        <select name="program_id" required
+                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white transition-all truncate w-full">
                             <option value="" disabled selected>Select Undergraduate Program</option>
                             @foreach ($programs as $program)
-                            <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
+                                <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="flex items-center gap-4">
                         <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Batch:</label>
-                        <input type="number" name="alumnus_batch" placeholder="Enter Batch here" required class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
+                        <input type="number" name="alumnus_batch" placeholder="Enter Batch here" required
+                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                     </div>
                     <div class="flex items-center gap-4">
                         <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Section:</label>
-                        <select name="section_id" required class="w-44 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white transition-all">
+                        <select name="section_id" required
+                            class="w-44 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white transition-all">
                             <option value="" disabled selected>Select Section here</option>
                             @foreach ($sections as $section)
-                            <option value="{{ $section->section_id }}">{{ $section->section_name }}</option>
+                                <option value="{{ $section->section_id }}">{{ $section->section_name }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="flex items-center gap-4">
                         <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Email:</label>
-                        <input type="email" name="user_email" placeholder="Enter Email here" required class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
+                        <input type="email" name="user_email" placeholder="Enter Email here" required
+                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                     </div>
                 </div>
 
                 <div class="px-8 pb-7 flex justify-end gap-4">
-                    <button type="button" onclick="closeModal('addAlumniModal')" class="px-8 py-2 border-2 border-[#0E0F3B] text-[#0E0F3B] rounded-lg text-sm font-bold hover:bg-[#0E0F3B] hover:text-white transition-all uppercase">
+                    <button type="button" onclick="closeModal('addAlumniModal')"
+                        class="px-8 py-2 border-2 border-[#0E0F3B] text-[#0E0F3B] rounded-lg text-sm font-bold hover:bg-[#0E0F3B] hover:text-white transition-all uppercase">
                         CANCEL
                     </button>
-                    <button type="submit" class="px-8 py-2 bg-[#0E0F3B] hover:bg-blue-900 text-white rounded-lg text-sm font-bold transition-all uppercase">
+                    <button type="submit"
+                        class="px-8 py-2 bg-[#0E0F3B] hover:bg-blue-900 text-white rounded-lg text-sm font-bold transition-all uppercase">
                         ADD ALUMNI
                     </button>
                 </div>
@@ -1073,9 +1261,11 @@ $current_page = 'user_management';
 
     <!-- ACTIVATE/DEACTIVATE ALUMNI ACCOUNT MODAL CONFIRMATION -->
     <!-- ===== DEACTIVATE ALUMNI MODAL ===== -->
-    <div id="deactivateAlumniModal" class="fixed inset-0 z-[100] flex items-center justify-center invisible transition-all duration-300">
+    <div id="deactivateAlumniModal"
+        class="fixed inset-0 z-[100] flex items-center justify-center invisible transition-all duration-300">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDeactivateModal()"></div>
-        <div id="deactivateAlumniContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
+        <div id="deactivateAlumniContent"
+            class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
             <div class="p-8 text-center">
                 <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
                     <i data-lucide="user-minus" class="w-8 h-8 text-red-500"></i>
@@ -1092,9 +1282,11 @@ $current_page = 'user_management';
                     <textarea id="deactivateAlumniReason" rows="3"
                         placeholder="Enter reason for deactivating this account..."
                         class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 resize-none transition-all"></textarea>
-                    <div id="deactivateAlumniError" class="hidden mt-2 flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    <div id="deactivateAlumniError"
+                        class="hidden mt-2 flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
                         <i data-lucide="circle-alert" class="w-3.5 h-3.5 mt-0.5 shrink-0 text-red-500"></i>
-                        <span class="text-red-600 text-xs font-medium">Please provide a reason before deactivating.</span>
+                        <span class="text-red-600 text-xs font-medium">Please provide a reason before
+                            deactivating.</span>
                     </div>
                 </div>
             </div>
@@ -1112,9 +1304,11 @@ $current_page = 'user_management';
     </div>
 
     <!-- ===== ACTIVATE ALUMNI MODAL ===== -->
-    <div id="activateAlumniModal" class="fixed inset-0 z-[100] flex items-center justify-center invisible transition-all duration-300">
+    <div id="activateAlumniModal"
+        class="fixed inset-0 z-[100] flex items-center justify-center invisible transition-all duration-300">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeActivateModal()"></div>
-        <div id="activateAlumniContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
+        <div id="activateAlumniContent"
+            class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
             <div class="p-8 text-center">
                 <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
                     <i data-lucide="user-plus" class="w-8 h-8 text-green-500"></i>
@@ -1142,10 +1336,12 @@ $current_page = 'user_management';
     <div id="filterSidebar" class="fixed inset-0 z-50 invisible transition-all duration-300">
         <div class="absolute inset-0 bg-black/20 backdrop-blur-sm" onclick="toggleAlumniFilterSidebar()"></div>
 
-        <div id="sidebarPanel" class="absolute right-0 top-0 h-full w-80 bg-white shadow-2xl translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+        <div id="sidebarPanel"
+            class="absolute right-0 top-0 h-full w-80 bg-white shadow-2xl translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
             <div class="px-6 py-5 flex justify-between items-center border-b border-slate-100">
                 <h2 class="text-[#0E0F3B] text-xl font-bold">Filter by</h2>
-                <button onclick="toggleAlumniFilterSidebar()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <button onclick="toggleAlumniFilterSidebar()"
+                    class="text-slate-400 hover:text-slate-600 transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
@@ -1153,23 +1349,28 @@ $current_page = 'user_management';
             <div class="flex-1 overflow-y-auto px-6 py-6 space-y-5">
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-[#0E0F3B]">Alumni ID No.</label>
-                    <input type="text" placeholder="Enter Alumni ID No." class="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
+                    <input type="text" placeholder="Enter Alumni ID No."
+                        class="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-[#0E0F3B]">Last Name</label>
-                    <input type="text" placeholder="Enter Last Name" class="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
+                    <input type="text" placeholder="Enter Last Name"
+                        class="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-[#0E0F3B]">First Name</label>
-                    <input type="text" placeholder="Enter First Name" class="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
+                    <input type="text" placeholder="Enter First Name"
+                        class="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-[#0E0F3B]">Middle Name</label>
-                    <input type="text" placeholder="Enter Middle Name" class="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
+                    <input type="text" placeholder="Enter Middle Name"
+                        class="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-[#0E0F3B]">Program</label>
-                    <select class="w-full px-3 py-2 border border-slate-200 rounded text-sm text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white">
+                    <select
+                        class="w-full px-3 py-2 border border-slate-200 rounded text-sm text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white">
                         <option selected disabled>Select Undergraduate Program</option>
                         <option>Bachelor of Arts in Communication</option>
                         <option>Bachelor of Early Childhood Education</option>
@@ -1196,7 +1397,8 @@ $current_page = 'user_management';
                 </div>
                 <div class="space-y-1.5 border-b border-slate-100 pb-5">
                     <label class="text-xs font-bold text-[#0E0F3B]">Batch</label>
-                    <select class="w-full px-3 py-2 border border-slate-200 rounded text-sm text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white">
+                    <select
+                        class="w-full px-3 py-2 border border-slate-200 rounded text-sm text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white">
                         <option selected disabled>Select Batch</option>
                         <option>2024</option>
                         <option>2023</option>
@@ -1206,11 +1408,13 @@ $current_page = 'user_management';
                     <p class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-wider">Account Status</p>
                     <div class="space-y-2">
                         <label class="flex items-center gap-3 cursor-pointer group">
-                            <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-[#0E0F3B] focus:ring-[#0E0F3B]">
+                            <input type="checkbox"
+                                class="w-4 h-4 rounded border-slate-300 text-[#0E0F3B] focus:ring-[#0E0F3B]">
                             <span class="text-sm font-bold text-[#0E0F3B] group-hover:text-slate-600">Active</span>
                         </label>
                         <label class="flex items-center gap-3 cursor-pointer group border-b border-slate-100 pb-4">
-                            <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-[#0E0F3B] focus:ring-[#0E0F3B]">
+                            <input type="checkbox"
+                                class="w-4 h-4 rounded border-slate-300 text-[#0E0F3B] focus:ring-[#0E0F3B]">
                             <span class="text-sm font-bold text-[#0E0F3B] group-hover:text-slate-600">Deactivated</span>
                         </label>
                     </div>
@@ -1218,7 +1422,8 @@ $current_page = 'user_management';
             </div>
 
             <div class="p-6">
-                <button class="w-full py-3 bg-[#0E0F3B] hover:brightness-110 text-white rounded font-bold text-xs tracking-widest uppercase transition-all">
+                <button
+                    class="w-full py-3 bg-[#0E0F3B] hover:brightness-110 text-white rounded font-bold text-xs tracking-widest uppercase transition-all">
                     Apply Filter
                 </button>
             </div>
@@ -1226,7 +1431,8 @@ $current_page = 'user_management';
     </div>
 
     <!-- ==================== EMPLOYER FILTER SIDEBAR ==================== -->
-    <div id="employerFilterSidebar" class="fixed inset-y-0 right-0 w-80 bg-white shadow-2xl z-[100] transform translate-x-full transition-transform duration-300 ease-in-out border-l border-slate-200">
+    <div id="employerFilterSidebar"
+        class="fixed inset-y-0 right-0 w-80 bg-white shadow-2xl z-[100] transform translate-x-full transition-transform duration-300 ease-in-out border-l border-slate-200">
         <div class="flex flex-col h-full">
             <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
                 <h2 class="text-[#0E0F3B] text-xl font-bold">Filter by</h2>
@@ -1237,54 +1443,80 @@ $current_page = 'user_management';
             <div class="flex-1 overflow-y-auto p-6 space-y-5">
                 <div>
                     <label class="block text-xs font-bold text-[#0E0F3B] mb-1">Last Name</label>
-                    <input type="text" placeholder="Enter Last Name" class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all">
+                    <input type="text" placeholder="Enter Last Name"
+                        class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-[#0E0F3B] mb-1">First Name</label>
-                    <input type="text" placeholder="Enter First Name" class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all">
+                    <input type="text" placeholder="Enter First Name"
+                        class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-[#0E0F3B] mb-1">Middle Name</label>
-                    <input type="text" placeholder="Enter Middle Name" class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all">
+                    <input type="text" placeholder="Enter Middle Name"
+                        class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-[#0E0F3B] mb-1">Company Name</label>
-                    <input type="text" placeholder="Enter Company Name" class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all">
+                    <input type="text" placeholder="Enter Company Name"
+                        class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-[#0E0F3B] mb-1">Industry/Sector</label>
-                    <input type="text" placeholder="Enter Industry/Sector" class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all placeholder:text-slate-400 text-[#0E0F3B]">
+                    <input type="text" placeholder="Enter Industry/Sector"
+                        class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all placeholder:text-slate-400 text-[#0E0F3B]">
                 </div>
             </div>
             <div class="p-6 bg-white border-t border-slate-100">
-                <button class="w-full py-3 bg-[#0E0F3B] text-white rounded font-bold text-xs uppercase tracking-widest hover:bg-[#1a1b4d] transition-all">
+                <button
+                    class="w-full py-3 bg-[#0E0F3B] text-white rounded font-bold text-xs uppercase tracking-widest hover:bg-[#1a1b4d] transition-all">
                     Apply Filter
                 </button>
             </div>
         </div>
     </div>
 
-    <div id="employerFilterBackdrop" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[90] hidden transition-opacity duration-300 opacity-0" onclick="toggleEmployerFilter()"></div>
+    <div id="employerFilterBackdrop"
+        class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[90] hidden transition-opacity duration-300 opacity-0"
+        onclick="toggleEmployerFilter()"></div>
 
     <!-- ==================== APPROVE/REJECT EMPLOYER MODAL ==================== -->
-    <div id="employerConfirmModal" class="fixed inset-0 z-[100] flex items-center justify-center invisible transition-all duration-300">
+    <div id="employerConfirmModal"
+        class="fixed inset-0 z-[100] flex items-center justify-center invisible transition-all duration-300">
         <div class="absolute inset-0 bg-[#0E0F3B]/40 backdrop-blur-sm" onclick="closeEmployerConfirm()"></div>
 
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300" id="employerConfirmContent">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300"
+            id="employerConfirmContent">
             <div class="p-8 text-center">
-                <div id="empConfirmIconBox" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div id="empConfirmIconBox"
+                    class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i id="empConfirmIcon" data-lucide="help-circle" class="w-8 h-8"></i>
                 </div>
                 <h3 id="empConfirmTitle" class="text-[#0E0F3B] text-xl font-bold mb-2 tracking-tight">Confirmation</h3>
                 <p id="empConfirmMessage" class="text-slate-500 text-sm leading-relaxed px-2">
                     Are you sure you want to proceed?
                 </p>
+                <div id="empRejectReasonBox" class="hidden text-left mt-4 px-2">
+                    <label class="text-xs font-bold text-[#0E0F3B] uppercase tracking-wider block mb-2">
+                        Reason for Rejection <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="empRejectReasonText" rows="3"
+                        placeholder="Enter reason for rejecting this employer..."
+                        class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 resize-none transition-all"></textarea>
+                    <div id="empRejectReasonError"
+                        class="hidden mt-2 flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                        <i data-lucide="circle-alert" class="w-3.5 h-3.5 mt-0.5 shrink-0 text-red-500"></i>
+                        <span class="text-red-600 text-xs font-medium">Please provide a reason before rejecting.</span>
+                    </div>
+                </div>
             </div>
             <div class="px-8 pb-8 flex gap-3">
-                <button onclick="closeEmployerConfirm()" class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all uppercase">
+                <button onclick="closeEmployerConfirm()"
+                    class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all uppercase">
                     Cancel
                 </button>
-                <button id="empConfirmYesBtn" class="flex-1 py-2.5 text-white rounded-lg text-xs font-bold transition-all uppercase hover:brightness-110">
+                <button id="empConfirmYesBtn"
+                    class="flex-1 py-2.5 text-white rounded-lg text-xs font-bold transition-all uppercase hover:brightness-110">
                     Yes, Proceed
                 </button>
             </div>
@@ -1292,7 +1524,8 @@ $current_page = 'user_management';
     </div>
 
     <!-- ==================== VIEW EMPLOYER MODAL ==================== -->
-    <div id="viewEmployerModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/60 backdrop-blur-sm px-4">
+    <div id="viewEmployerModal"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/60 backdrop-blur-sm px-4">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden">
             <div class="bg-[#0E0F3B] px-7 py-4 flex justify-between items-center">
                 <h2 class="text-white text-lg font-bold">View Employer</h2>
@@ -1307,7 +1540,8 @@ $current_page = 'user_management';
                 <section>
                     <h3 class="text-[#D95D39] font-bold text-xs uppercase mb-3 tracking-wider">Company Details</h3>
                     <div class="flex gap-5">
-                        <div class="w-20 h-20 bg-blue-50 rounded-xl border border-gray-200 flex flex-col items-center justify-center shrink-0">
+                        <div
+                            class="w-20 h-20 bg-blue-50 rounded-xl border border-gray-200 flex flex-col items-center justify-center shrink-0">
                             <i data-lucide="image" class="w-7 h-7 text-green-500 mb-0.5"></i>
                             <span class="text-[7px] text-gray-400 font-bold">BUSINESS LOGO</span>
                         </div>
@@ -1342,7 +1576,8 @@ $current_page = 'user_management';
                 <section>
                     <h3 class="text-[#D95D39] font-bold text-xs uppercase mb-3 tracking-wider">Employer Details</h3>
                     <div class="flex gap-5">
-                        <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center border border-gray-200 shrink-0">
+                        <div
+                            class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center border border-gray-200 shrink-0">
                             <i data-lucide="user-round" class="w-10 h-10 text-slate-400"></i>
                         </div>
                         <div class="grid grid-cols-3 gap-x-3 gap-y-8 flex-grow">
@@ -1377,7 +1612,8 @@ $current_page = 'user_management';
             </div>
 
             <div class="px-7 py-3.5 bg-gray-50 border-t border-slate-100 flex justify-end">
-                <button onclick="closeModal()" class="px-8 py-2 bg-[#0E0F3B] text-white rounded font-bold uppercase text-sm">Done</button>
+                <button onclick="closeModal()"
+                    class="px-8 py-2 bg-[#0E0F3B] text-white rounded font-bold uppercase text-sm">Done</button>
             </div>
         </div>
     </div>
@@ -1441,7 +1677,7 @@ $current_page = 'user_management';
         }
 
         // Optional: Close dropdown if user clicks outside of it
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             if (!event.target.closest('#alumniDropdown')) {
                 const menu = document.getElementById('dropdownMenu');
                 if (!menu.classList.contains('hidden')) {
@@ -1621,7 +1857,7 @@ $current_page = 'user_management';
             submitBtn.parentNode.replaceChild(newBtn, submitBtn);
             newBtn.id = 'deactivateAlumniSubmitBtn';
 
-            newBtn.onclick = function() {
+            newBtn.onclick = function () {
                 const reason = document.getElementById('deactivateAlumniReason').value.trim();
                 const error = document.getElementById('deactivateAlumniError');
                 if (!reason) {
@@ -1657,7 +1893,7 @@ $current_page = 'user_management';
             submitBtn.parentNode.replaceChild(newBtn, submitBtn);
             newBtn.id = 'activateAlumniSubmitBtn';
 
-            newBtn.onclick = function() {
+            newBtn.onclick = function () {
                 document.getElementById('activateForm_' + userId).submit();
             };
 
@@ -1693,29 +1929,63 @@ $current_page = 'user_management';
         }
 
         /* ── Employer Confirm Modal ─────────────────────────────── */
-        function openEmployerConfirm(action, companyName) {
+        let _rejectEmployerUserId = null;
+
+        function openEmployerConfirm(action, companyName, userId) {
             const modal = document.getElementById('employerConfirmModal');
             const content = document.getElementById('employerConfirmContent');
             const iconBox = document.getElementById('empConfirmIconBox');
             const icon = document.getElementById('empConfirmIcon');
             const title = document.getElementById('empConfirmTitle');
             const message = document.getElementById('empConfirmMessage');
+            const rejectBox = document.getElementById('empRejectReasonBox');
+            const rejectText = document.getElementById('empRejectReasonText');
+            const rejectError = document.getElementById('empRejectReasonError');
+
+            // Reset reject fields every open
+            rejectBox.classList.add('hidden');
+            rejectText.value = '';
+            rejectError.classList.add('hidden');
+
+            // Clone yes button to remove stale listeners
             const yesBtn = document.getElementById('empConfirmYesBtn');
+            const newBtn = yesBtn.cloneNode(true);
+            yesBtn.parentNode.replaceChild(newBtn, yesBtn);
+            newBtn.id = 'empConfirmYesBtn';
 
             if (action === 'approve') {
                 title.innerText = "Approve Employer";
                 message.innerHTML = `Are you sure you want to <span class="font-bold text-emerald-600">approve</span> <b>${companyName}</b>?`;
                 iconBox.className = "w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4 text-emerald-600";
                 icon.setAttribute('data-lucide', 'check-circle');
-                yesBtn.className = "flex-1 py-2.5 bg-emerald-600 text-white rounded-lg text-xs font-bold transition-all uppercase hover:bg-emerald-700";
-                yesBtn.innerText = "Yes, Approve";
+                newBtn.className = "flex-1 py-2.5 bg-emerald-600 text-white rounded-lg text-xs font-bold transition-all uppercase hover:bg-emerald-700";
+                newBtn.innerText = "Yes, Approve";
+
+                newBtn.onclick = function () {
+                    document.getElementById('approveEmployerForm_' + userId).submit();
+                };
+
             } else {
+                _rejectEmployerUserId = userId;
                 title.innerText = "Reject Employer";
                 message.innerHTML = `Are you sure you want to <span class="font-bold text-orange-600">reject</span> <b>${companyName}</b>?`;
                 iconBox.className = "w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4 text-orange-600";
                 icon.setAttribute('data-lucide', 'x-circle');
-                yesBtn.className = "flex-1 py-2.5 bg-orange-600 text-white rounded-lg text-xs font-bold transition-all uppercase hover:bg-orange-700";
-                yesBtn.innerText = "Yes, Reject";
+                newBtn.className = "flex-1 py-2.5 bg-orange-600 text-white rounded-lg text-xs font-bold transition-all uppercase hover:bg-orange-700";
+                newBtn.innerText = "Yes, Reject";
+                rejectBox.classList.remove('hidden');
+
+                newBtn.onclick = function () {
+                    const reason = rejectText.value.trim();
+                    if (!reason) {
+                        rejectError.classList.remove('hidden');
+                        lucide.createIcons();
+                        return;
+                    }
+                    rejectError.classList.add('hidden');
+                    document.getElementById('rejectEmployerReason_' + _rejectEmployerUserId).value = reason;
+                    document.getElementById('rejectEmployerForm_' + _rejectEmployerUserId).submit();
+                };
             }
 
             lucide.createIcons();
@@ -1727,16 +1997,17 @@ $current_page = 'user_management';
             const modal = document.getElementById('employerConfirmModal');
             const content = document.getElementById('employerConfirmContent');
             content.classList.add('scale-95');
+            document.getElementById('empRejectReasonBox').classList.add('hidden');
             setTimeout(() => modal.classList.add('invisible'), 200);
         }
 
         /* ── View Employer Modal ────────────────────────────────── */
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const modal = document.getElementById('viewEmployerModal');
             const viewButtons = document.querySelectorAll('.view-modal-btn');
 
             viewButtons.forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', function () {
                     const fields = {
                         'modalLastName': 'data-last-name',
                         'modalFirstName': 'data-first-name',

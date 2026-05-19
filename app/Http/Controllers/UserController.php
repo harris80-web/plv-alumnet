@@ -258,6 +258,17 @@ class UserController extends Controller
         return back()->with('success', 'Status updated successfully!');
     }
 
+    public function rejectEmployer($id)
+    {
+        $user = User::findOrFail($id);
+        $reason = request('reject-reason');
+
+        $user->employer()->delete();
+        $user->delete();
+
+        return redirect()->back()->with('success', 'Employer has been rejected and removed.');
+    }
+
     public function addAlumnus(Request $request)
     {
         $validated = $request->validate([
@@ -299,7 +310,7 @@ class UserController extends Controller
             return back()->withErrors($e->getMessage());
         }
 
-        return redirect()->route('superAdmin.dashboard')->with('success', 'Alumnus added successfully!');
+        return redirect()->route('superAdmin.userManagement')->with('success', 'Alumnus added successfully!');
     }
 
     public function addAdmin()
@@ -405,9 +416,9 @@ class UserController extends Controller
     public function changePassword(Request $request)
     {
         $validated = $request->validate([
-            'current_password'             => 'required|string|min:8',
-            'new_password'                 => 'required|string|min:8|confirmed',
-            'new_password_confirmation'    => 'required|string|min:8|same:new_password',
+            'current_password' => 'required|string|min:8',
+            'new_password' => 'required|string|min:8|confirmed',
+            'new_password_confirmation' => 'required|string|min:8|same:new_password',
         ]);
 
         $user = Auth::user();
@@ -459,5 +470,5 @@ class UserController extends Controller
         return view('superAdmin.profile', compact('user'));
     }
 
-    
+
 }

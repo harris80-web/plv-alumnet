@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ActivateAlumniMail;
 use App\Mail\DeactAlumniMail;
 use App\Models\Alumnus;
 use Illuminate\Foundation\Auth\User;
@@ -151,9 +152,9 @@ class AlumnusController extends Controller
     {
         $alumnus = Alumnus::where('user_id', $id)->firstOrFail();
 
-        // $validated = $request->validate([
-        //     'deactivate-reason' => 'required|string|max:255',
-        // ]);
+        $validated = $request->validate([
+            'deactivate-reason' => 'required|string|max:255',
+        ]);
 
         if (!$alumnus->user->user_active) {
             try {
@@ -180,5 +181,27 @@ class AlumnusController extends Controller
         }
 
         return back()->with('success', 'Alumnus deactivated successfully!');
+    }
+
+    public function activateAlumnus(Request $request, $id)
+    {
+        $alumnus = Alumnus::where('user_id', $id)->firstOrFail();
+
+
+        if (!$alumnus->user->user_active) {
+            try {
+                $alumnus->user->update([
+                    'user_active' => true,
+                ]);
+                Log::info("Alumnus with ID {$alumnus->user->user_id}: {$alumnus->user->user_first_name} {$alumnus->user->user_last_name} deactivated. Reason: {$request['deactivate-reason']}");
+
+                Mail::to($alumnus->user->user_email)->send(new ActivateAlumniMail($alumnus->user));
+            } catch (\Exception $e) {
+                return back()->with('error', 'An error occurred while activating the alumnus. Please try again later.');
+            }
+            return back()->with('success', 'Alumnus activated successfully!');
+        }
+
+        return back()->with('error', 'Alumnus is already activated!');
     }
 }

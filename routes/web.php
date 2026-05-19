@@ -153,6 +153,7 @@ Route::group(['middleware' => 'alumni'], function () {
 Route::get('/alumni/profile', [AlumnusController::class, 'showAlumniProfile'])->name('alumni.profile');
 Route::put('/alumni/updateProfile/{alumnus}', [AlumnusController::class, 'updateAlumniProfile'])->name('alumni.updateProfile');
 Route::put('/alumni/deactivate/{id}', [AlumnusController::class, 'deactivateAlumnus'])->name('alumni.deactivateAlumnus');
+Route::put('/alumni/activate/{id}', [AlumnusController::class, 'activateAlumnus'])->name('alumni.activateAlumnus');
 Route::resource('alumni', AlumnusController::class);
 
 
@@ -223,6 +224,7 @@ Route::get('/testimonialManagement', [TestimonialController::class, 'showTestimo
 Route::post('/users/storeEmployer', [UserController::class, 'storeEmployer'])->name('users.storeEmployer');
 Route::post('/users/login', [UserController::class, 'login'])->name('users.login');
 Route::post('/users/approve/{id}', [UserController::class, 'approveEmployer'])->name('users.approveEmployer');
+Route::put('/users/reject/{id}', [UserController::class, 'rejectEmployer'])->name('users.rejectEmployer');
 Route::post('/users/addAlumnus', [UserController::class, 'addAlumnus'])->name('users.addAlumnus');
 Route::post('/users/addAdmin', [UserController::class, 'addAdmin'])->name('users.addAdmin');
 Route::get('/showChangePassword', [UserController::class, 'showChangePassword'])->name('users.showChangePassword');

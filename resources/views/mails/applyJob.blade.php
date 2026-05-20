@@ -11,7 +11,7 @@
 
 <body>
     <h1 class="text-2xl font-bold">Job Application</h1>
-    <p>Hello, {{ $job->job->user->user_first_name }} {{ $job->job->user->user_last_name }}!</p>
+    <p>Hello, {{ $job->user->user_first_name }} {{ $job->user->user_last_name }}!</p>
     <p>An alumni ({{ $alumni->user->user_first_name }} {{ $alumni->user->user_last_name }}) applied for your post</p>
 </body>
 </html>

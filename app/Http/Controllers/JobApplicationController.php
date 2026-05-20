@@ -73,7 +73,7 @@ class JobApplicationController extends Controller
 
     public function applyJob($jobPostingId)
     {
-        $job = JobApplication::findOrFail($jobPostingId);
+        $job = JobPosting::findOrFail($jobPostingId);
         if (Auth::user()->user_role == 'alumni') {
             $alumniId = Auth::id();
         }
@@ -99,7 +99,7 @@ class JobApplicationController extends Controller
             'job_id' => $jobPostingId,
             'application_status' => 'pending',
         ]);
-        Mail::to($job->job->user->user_email)->send(new ApplyJobMail($job, $alumni));
+        Mail::to($job->user->user_email)->send(new ApplyJobMail($job, $alumni));
 
         return redirect()->route('jobPosting.jobBoard');
     }

@@ -177,11 +177,12 @@ class EmployerController extends Controller
             $Employer->user->update([
                 'user_active' => false,
             ]);
+            Mail::to($Employer->user->user_email)->send(new DeactEmployerMail($Employer->user, $validated['deactivate-reason']));
+
         } catch (\Exception $e) {
             return back()->with('error', 'An error occurred while deactivating the Employer. Please try again later.');
         }
-        Mail::to($Employer->user->user_email)->send(new DeactEmployerMail($Employer->user, $validated['deactivate-reason']));
-
+        
         return back()->with('success', 'Employer deactivated successfully!');
     }
 }

@@ -119,25 +119,26 @@ class OfficeController extends Controller
 
     public function deleteAdmin(Request $request, $id)
     {
-        $admin = Office::where('user_id',$id)->firstOrFail();
-
+        $admin = User::where('user_id', $id)->firstOrFail();
+        
         $validated = $request->validate([
             'delete-reason' => 'required|string|max:255',
         ]);
 
-        if ($admin->user->user_role != 'admin') {
-            return back()->withErrors('errors', 'The specified user is not an admin.');
+        if ($admin->user_role != 'admin') {
+            return back()->withErrors('error', 'The specified user is not an admin.');
         }
 
         try {
             // Log the deletion reason (you can also store this in a database table if needed)
-            Log::info("Admin with ID {$admin->user->user_id}: {$admin->user->user_first_name} {$admin->user->user_last_name} deleted. Reason: {$validated['delete-reason']}");
-            Mail::to($admin->user->user_email)->send(new DeleteAdminMail($admin->user, $validated['delete-reason']));
+            Log::info("Admin with ID {$admin->user_id}: {$admin->user_first_name} {$admin->user_last_name} deleted. Reason: {$validated['delete-reason']}");
+            Mail::to($admin->user_email)->send(new DeleteAdminMail($admin, $validated['delete-reason']));
             // Soft delete the admin
+            $admin->office->delete();
             $admin->delete();
-            $admin->user->delete();
         } catch (\Exception $e) {
-            return back()->with('errors', $e->getMessage());
+            
+            return back()->with('error', $e->getMessage());
         }
 
 

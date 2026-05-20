@@ -54,15 +54,7 @@
         </div>
         <br><br><br>
         <div>
-            @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
+            
             <h2 class="font-bold">Alumni management</h2>
             <div>
                 <form action="{{ route('users.addAlumnus') }}" method="POST">
@@ -156,15 +148,7 @@
         </div>
         <br><br><br>
         <div>
-            @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
+           
             <h2 class="font-bold">Admin management</h2>
             <div>
                 <form action="{{ route('users.addAdmin') }}" method="POST">
@@ -489,7 +473,7 @@ $current_page = 'user_management';
                                                         View Profile
                                                     </button>
                                                     <button
-                                                        data-route="{{ $admin->user_id }}"
+                                                        data-route="{{ route('offices.deleteAdmin', $admin->user_id) }}"
                                                         data-firstname="{{ $admin->user->user_first_name }}"
                                                         data-lastname="{{ $admin->user->user_last_name }}"
                                                         onclick="openDeleteProfileModal(this.dataset.route, this.dataset.firstname, this.dataset.lastname)"
@@ -497,12 +481,9 @@ $current_page = 'user_management';
                                                         <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i> Delete
                                                         Profile
                                                     </button>
-
                                                 </div>
                                             </div>
-
                                         </div>
-
                                     </td>
                                     @if ($errors->any())
                                     <div class="alert alert-danger">
@@ -513,14 +494,6 @@ $current_page = 'user_management';
                                         </ul>
                                     </div>
                                     @endif
-                                    <div style="display:none;" id="deleteAdminForm">
-                                        <form id="deleteProfileForm" action="{{ route('offices.deleteAdmin', $admin->user_id) }}" method="POST">
-                                            @csrf
-                                            @method('DELETE')
-                                            <input type="text" name="delete-reason" id="deleteProfileReasonInput" placeholder="iwdhiwhdiwd">
-                                            <input type="submit" value="delete">
-                                        </form>
-                                    </div>
                                 </tr>
                                 @endif
 
@@ -901,23 +874,17 @@ $current_page = 'user_management';
                                                         @csrf
                                                     </form>
 
-
+                                                    <form id="rejectEmployerForm_{{ $employer->user_id }}"
+                                                        action="{{ route('users.rejectEmployer', $employer->user_id) }}"
+                                                        method="POST">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <input type="hidden" name="reject-reason"
+                                                            id="rejectEmployerReason_{{ $employer->user_id }}">
+                                                    </form>
                                                 </div>
                                             </div>
                                         </td>
-                                        
-                                        <div style="display:none;" id="rejectingEmployerForm">
-                                            <form style="display:none;" id="rejectEmployerForm_{{ $employer->user_id }}"
-                                                action="{{ route('users.rejectEmployer', $employer->user_id) }}"
-                                                method="POST">
-                                                @csrf
-                                                @method('DELETE')
-                                                <input type="text" name="reject-reason"
-                                                    id="rejectEmployerReason_{{ $employer->user_id }}">
-                                                <input type="submit" value="reject">
-                                            </form>
-                                        </div>
-
                                     </tr>
                                     @empty
                                     <tr>
@@ -1166,7 +1133,6 @@ $current_page = 'user_management';
             @csrf
             @method('DELETE')
             <input type="hidden" name="delete-reason" id="deleteProfileReasonInput">
-            <input type="submit" value="delete">
         </form>
     </div>
 
@@ -1714,26 +1680,25 @@ $current_page = 'user_management';
         }
 
         //DELETE ADMIN MODAL JS
-        let _deleteProfileRoute;
+        let _deleteProfileRoute = '';
 
         // ── open modal ─────────────────────────────────────────────────────
         function openDeleteProfileModal(route, firstName, lastName) {
             _deleteProfileRoute = route;
 
-            // document.getElementById('deleteProfileAdminName').textContent = firstName + ' ' + lastName;
-            // document.getElementById('deleteProfileReason').value = '';
-            // document.getElementById('deleteProfileError').classList.add('hidden');
-            document.getElementById('deleteAdminForm').style.display = "flex";
+            document.getElementById('deleteProfileAdminName').textContent = firstName + ' ' + lastName;
+            document.getElementById('deleteProfileReason').value = '';
+            document.getElementById('deleteProfileError').classList.add('hidden');
 
-            // const modal = document.getElementById('deleteProfileModal');
-            // const content = document.getElementById('deleteProfileContent');
+            const modal = document.getElementById('deleteProfileModal');
+            const content = document.getElementById('deleteProfileContent');
 
-            // modal.classList.remove('invisible');
-            // requestAnimationFrame(() => {
-            //     modal.classList.add('bg-black/30');
-            //     content.classList.remove('scale-95');
-            //     content.classList.add('scale-100');
-            // });
+            modal.classList.remove('invisible');
+            requestAnimationFrame(() => {
+                modal.classList.add('bg-black/30');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            });
         }
 
         // ── close modal ────────────────────────────────────────────────────
@@ -1763,7 +1728,7 @@ $current_page = 'user_management';
 
             const form = document.getElementById('deleteProfileForm');
             document.getElementById('deleteProfileReasonInput').value = reason;
-            form.action = "{{ url('admin/delete') }}/" + _deleteProfileRoute;
+            form.action = _deleteProfileRoute;
             form.submit();
         }
 
@@ -1994,27 +1959,26 @@ $current_page = 'user_management';
                 };
 
             } else {
-                document.getElementById('rejectingEmployerForm').style.display = "flex";
-                // _rejectEmployerUserId = userId;
-                // title.innerText = "Reject Employer";
-                // message.innerHTML = `Are you sure you want to <span class="font-bold text-orange-600">reject</span> <b>${companyName}</b>?`;
-                // iconBox.className = "w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4 text-orange-600";
-                // icon.setAttribute('data-lucide', 'x-circle');
-                // newBtn.className = "flex-1 py-2.5 bg-orange-600 text-white rounded-lg text-xs font-bold transition-all uppercase hover:bg-orange-700";
-                // newBtn.innerText = "Yes, Reject";
-                // rejectBox.classList.remove('hidden');
+                _rejectEmployerUserId = userId;
+                title.innerText = "Reject Employer";
+                message.innerHTML = `Are you sure you want to <span class="font-bold text-orange-600">reject</span> <b>${companyName}</b>?`;
+                iconBox.className = "w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4 text-orange-600";
+                icon.setAttribute('data-lucide', 'x-circle');
+                newBtn.className = "flex-1 py-2.5 bg-orange-600 text-white rounded-lg text-xs font-bold transition-all uppercase hover:bg-orange-700";
+                newBtn.innerText = "Yes, Reject";
+                rejectBox.classList.remove('hidden');
 
-                // newBtn.onclick = function() {
-                //     const reason = rejectText.value.trim();
-                //     if (!reason) {
-                //         rejectError.classList.remove('hidden');
-                //         lucide.createIcons();
-                //         return;
-                //     }
-                //     rejectError.classList.add('hidden');
-                //     document.getElementById('rejectEmployerReason_' + _rejectEmployerUserId).value = reason;
-                //     document.getElementById('rejectEmployerForm_' + _rejectEmployerUserId).submit();
-                // };
+                newBtn.onclick = function() {
+                    const reason = rejectText.value.trim();
+                    if (!reason) {
+                        rejectError.classList.remove('hidden');
+                        lucide.createIcons();
+                        return;
+                    }
+                    rejectError.classList.add('hidden');
+                    document.getElementById('rejectEmployerReason_' + _rejectEmployerUserId).value = reason;
+                    document.getElementById('rejectEmployerForm_' + _rejectEmployerUserId).submit();
+                };
             }
 
             lucide.createIcons();

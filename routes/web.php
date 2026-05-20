@@ -224,7 +224,7 @@ Route::get('/testimonialManagement', [TestimonialController::class, 'showTestimo
 Route::post('/users/storeEmployer', [UserController::class, 'storeEmployer'])->name('users.storeEmployer');
 Route::post('/users/login', [UserController::class, 'login'])->name('users.login');
 Route::post('/users/approve/{id}', [UserController::class, 'approveEmployer'])->name('users.approveEmployer');
-Route::put('/users/reject/{id}', [UserController::class, 'rejectEmployer'])->name('users.rejectEmployer');
+Route::delete('/users/reject/{id}', [UserController::class, 'rejectEmployer'])->name('users.rejectEmployer');
 Route::post('/users/addAlumnus', [UserController::class, 'addAlumnus'])->name('users.addAlumnus');
 Route::post('/users/addAdmin', [UserController::class, 'addAdmin'])->name('users.addAdmin');
 Route::get('/showChangePassword', [UserController::class, 'showChangePassword'])->name('users.showChangePassword');

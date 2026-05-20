@@ -3,11 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Alumnus extends Model
 {
+    use SoftDeletes;
     protected $primaryKey = 'user_id';
     public $incrementing = false;
+    protected $keyType = 'int';
+    protected $dates = ['deleted_at'];
 
     protected $fillable = [
         'program_id',

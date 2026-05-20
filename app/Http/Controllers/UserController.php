@@ -261,7 +261,7 @@ class UserController extends Controller
 
     public function rejectEmployer(Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        $user = Employer::findOrFail($id);
 
         $validated = $request->validate([
             'reject-reason' => 'required|string|max:255'
@@ -269,12 +269,13 @@ class UserController extends Controller
 
         try {
             // Send email FIRST bago i-delete
-            Mail::to($user->user_email)->send(new RejectEmployerMail($user, $validated['reject-reason']));
+            Mail::to($user->user->user_email)->send(new RejectEmployerMail($user, $validated['reject-reason']));
 
             // Delete after successful email
             $user->delete();
+            $user->user->delete();
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            return back()->with('errors', $e->getMessage());
         }
 
         return redirect()->back()->with('success', 'Employer has been rejected and removed.');

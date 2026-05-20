@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employer extends Model
 {
+    use SoftDeletes;
     protected $primaryKey = 'user_id';
     public $incrementing = false;
     protected $keyType = 'int';

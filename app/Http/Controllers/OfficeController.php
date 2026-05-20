@@ -119,14 +119,14 @@ class OfficeController extends Controller
 
     public function deleteAdmin(Request $request, $id)
     {
-        $admin = User::findOrFail($id);
+        $admin = Office::where('user_id',$id)->firstOrFail();
 
         $validated = $request->validate([
             'delete-reason' => 'required|string|max:255',
         ]);
 
-        if ($admin->user_role != 'admin') {
-            return back()->withErrors('error', 'The specified user is not an admin.');
+        if ($admin->user->user_role != 'admin') {
+            return back()->withErrors('errors', 'The specified user is not an admin.');
         }
 
         try {
@@ -135,8 +135,9 @@ class OfficeController extends Controller
             Mail::to($admin->user->user_email)->send(new DeleteAdminMail($admin->user, $validated['delete-reason']));
             // Soft delete the admin
             $admin->delete();
+            $admin->user->delete();
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            return back()->with('errors', $e->getMessage());
         }
 
 

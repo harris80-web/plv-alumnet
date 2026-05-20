@@ -26,6 +26,7 @@ return new class extends Migration
             $table->boolean('alumnus_is_public')->default(true);
             $table->string('alumnus_resume', 255)->nullable();
             $table->boolean('alumnus_change_password')->default(false);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

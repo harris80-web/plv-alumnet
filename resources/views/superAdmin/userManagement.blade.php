@@ -254,7 +254,7 @@
 </html>-->
 
 @php
-    $current_page = 'user_management';
+$current_page = 'user_management';
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -378,143 +378,163 @@
             <div class="flex-1 overflow-y-auto p-8">
 
                 @if (Auth::user()->user_role == 'super_admin')
-                    <!-- ==================== ADMIN TAB ==================== -->
-                    <div id="content-admin" class="tab-content active">
-                        <!-- ==================== METRIC CARDS ==================== -->
-                        <div class="grid grid-cols-4 gap-4 mb-6">
+                <!-- ==================== ADMIN TAB ==================== -->
+                <div id="content-admin" class="tab-content active">
+                    <!-- ==================== METRIC CARDS ==================== -->
+                    <div class="grid grid-cols-4 gap-4 mb-6">
 
-                            <!-- Total Admins -->
-                            <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                                <p class="text-2xl font-bold text-slate-800">{{ $admins->count() }}</p>
-                                <p class="text-xs font-medium text-slate-500 mt-1">Total Admin</p>
-                            </div>
-
-                            <!-- Active Admins -->
-                            <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                                <p class="text-2xl font-bold text-green-500">
-                                    {{ $admins->filter(fn($a) => $a->user->user_active)->count() }}
-                                </p>
-                                <p class="text-xs font-medium text-slate-500 mt-1">Active Admin</p>
-                            </div>
-
-                            <!-- Inactive Admins -->
-                            <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                                <p class="text-2xl font-bold text-[#C73D1A]">
-                                    {{ $admins->filter(fn($a) => !$a->user->user_active)->count() }}
-                                </p>
-                                <p class="text-xs font-medium text-slate-500 mt-1">Inactive Admin</p>
-                            </div>
-
-                            <!-- Super Admin -->
-                            <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                                <p class="text-2xl font-bold text-amber-400">1</p>
-                                <p class="text-xs font-medium text-slate-500 mt-1">Super Admin</p>
-                            </div>
-
-                        </div>
-                        <!-- ==================== END METRIC CARDS ==================== -->
-
-                        <div class="flex justify-between items-center mb-6">
-                            <div class="relative w-64">
-                                <i data-lucide="search"
-                                    class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                <input type="text" placeholder="Search"
-                                    class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-transparent">
-                            </div>
-                            <button onclick="document.getElementById('addAdminModal').classList.add('open')"
-                                class="bg-[#1D46A4] hover:bg-[#0E0F3B] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
-                                <i data-lucide="plus" class="w-4 h-4"></i>
-                                ADD ADMIN
-                            </button>
+                        <!-- Total Admins -->
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                            <p class="text-2xl font-bold text-slate-800">{{ $admins->count() }}</p>
+                            <p class="text-xs font-medium text-slate-500 mt-1">Total Admin</p>
                         </div>
 
-                        <div class="bg-white rounded-lg shadow-sm border border-slate-200">
-                            <table class="w-full text-left text-[11px]">
-                                <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
-                                    <tr>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Last Name</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">First Name</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Middle Name</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Suffix</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Address</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Account Status</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Date Created</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
-                                        <th class="px-4 py-4 font-semibold">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100 text-center">
-                                    @forelse ($admins as $admin)
-                                        @if ($admin->user->user_role == "admin")
-                                            <tr class="hover:bg-slate-50/80 transition-colors font-medium">
-                                                <td class="px-4 py-4 text-black border-r border-slate-100">
-                                                    {{ $admin->user->user_last_name }}
-                                                </td>
-                                                <td class="px-4 py-4 text-black border-r border-slate-100">
-                                                    {{ $admin->user->user_first_name }}
-                                                </td>
-                                                <td class="px-4 py-4 text-black border-r border-slate-100">
-                                                    {{ $admin->user->user_middle_name }}
-                                                </td>
-                                                <td class="px-4 py-4 text-black border-r border-slate-100">
-                                                    {{ $admin->user->user_suffix }}
-                                                </td>
-                                                <td class="px-4 py-4 text-black border-r border-slate-100">
-                                                    {{ $admin->office_address }}
-                                                </td>
-                                                <td class="px-4 py-4 text-center border-r border-slate-100">
-                                                    <span
-                                                        class="{{ $admin->user->user_active ? 'status-active' : 'status-inactive' }} font-semibold">
-                                                        {{ $admin->user->user_active ? 'Active' : 'Inactive' }}
-                                                    </span>
-                                                </td>
-                                                <td class="px-4 py-4 text-black border-r border-slate-100">
-                                                    {{ $admin->user->created_at->format('m/d/y') }}
-                                                </td>
-                                                <td class="px-4 py-4 text-black border-r border-slate-100">
-                                                    {{ $admin->user->user_email }}
-                                                </td>
-                                                <td class="px-4 py-4 text-center relative">
-                                                    <div class="inline-block text-left">
-                                                        <button
-                                                            class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                                            <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                                        </button>
-                                                        <div
-                                                            class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
-                                                            <div class="py-1">
-                                                                <button
-                                                                    class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 transition-colors">
-                                                                    <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i>
-                                                                    View Profile
-                                                                </button>
-                                                                <button
-                                                                    data-route="{{ route('offices.deleteAdmin', $admin->user_id) }}"
-                                                                    data-firstname="{{ $admin->user->user_first_name }}"
-                                                                    data-lastname="{{ $admin->user->user_last_name }}"
-                                                                    onclick="openDeleteProfileModal(this.dataset.route, this.dataset.firstname, this.dataset.lastname)"
-                                                                    class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                                    <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i> Delete
-                                                                    Profile
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endif
-
-                                    @empty
-                                        <tr>
-                                            <td colspan="9" class="px-4 py-8 text-center text-slate-400 text-sm">No admins
-                                                found.</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                        <!-- Active Admins -->
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                            <p class="text-2xl font-bold text-green-500">
+                                {{ $admins->filter(fn($a) => $a->user->user_active)->count() }}
+                            </p>
+                            <p class="text-xs font-medium text-slate-500 mt-1">Active Admin</p>
                         </div>
+
+                        <!-- Inactive Admins -->
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                            <p class="text-2xl font-bold text-[#C73D1A]">
+                                {{ $admins->filter(fn($a) => !$a->user->user_active)->count() }}
+                            </p>
+                            <p class="text-xs font-medium text-slate-500 mt-1">Inactive Admin</p>
+                        </div>
+
+                        <!-- Super Admin -->
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                            <p class="text-2xl font-bold text-amber-400">1</p>
+                            <p class="text-xs font-medium text-slate-500 mt-1">Super Admin</p>
+                        </div>
+
                     </div>
-                    <!-- END ADMIN TAB -->
+                    <!-- ==================== END METRIC CARDS ==================== -->
+
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="relative w-64">
+                            <i data-lucide="search"
+                                class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" placeholder="Search"
+                                class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-transparent">
+                        </div>
+                        <button onclick="document.getElementById('addAdminModal').classList.add('open')"
+                            class="bg-[#1D46A4] hover:bg-[#0E0F3B] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            ADD ADMIN
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm border border-slate-200">
+                        <table class="w-full text-left text-[11px]">
+                            <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
+                                <tr>
+                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Last Name</th>
+                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">First Name</th>
+                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Middle Name</th>
+                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Suffix</th>
+                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Address</th>
+                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Account Status</th>
+                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Date Created</th>
+                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
+                                    <th class="px-4 py-4 font-semibold">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-center">
+                                @forelse ($admins as $admin)
+                                @if ($admin->user->user_role == "admin")
+                                <tr class="hover:bg-slate-50/80 transition-colors font-medium">
+                                    <td class="px-4 py-4 text-black border-r border-slate-100">
+                                        {{ $admin->user->user_last_name }}
+                                    </td>
+                                    <td class="px-4 py-4 text-black border-r border-slate-100">
+                                        {{ $admin->user->user_first_name }}
+                                    </td>
+                                    <td class="px-4 py-4 text-black border-r border-slate-100">
+                                        {{ $admin->user->user_middle_name }}
+                                    </td>
+                                    <td class="px-4 py-4 text-black border-r border-slate-100">
+                                        {{ $admin->user->user_suffix }}
+                                    </td>
+                                    <td class="px-4 py-4 text-black border-r border-slate-100">
+                                        {{ $admin->office_address }}
+                                    </td>
+                                    <td class="px-4 py-4 text-center border-r border-slate-100">
+                                        <span
+                                            class="{{ $admin->user->user_active ? 'status-active' : 'status-inactive' }} font-semibold">
+                                            {{ $admin->user->user_active ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-4 text-black border-r border-slate-100">
+                                        {{ $admin->user->created_at->format('m/d/y') }}
+                                    </td>
+                                    <td class="px-4 py-4 text-black border-r border-slate-100">
+                                        {{ $admin->user->user_email }}
+                                    </td>
+                                    <td class="px-4 py-4 text-center relative">
+                                        <div class="inline-block text-left">
+                                            <button
+                                                class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                                <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
+                                            </button>
+                                            <div
+                                                class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
+                                                <div class="py-1">
+                                                    <button
+                                                        class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 transition-colors">
+                                                        <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i>
+                                                        View Profile
+                                                    </button>
+                                                    <button
+                                                        data-route="{{ $admin->user_id }}"
+                                                        data-firstname="{{ $admin->user->user_first_name }}"
+                                                        data-lastname="{{ $admin->user->user_last_name }}"
+                                                        onclick="openDeleteProfileModal(this.dataset.route, this.dataset.firstname, this.dataset.lastname)"
+                                                        class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                        <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i> Delete
+                                                        Profile
+                                                    </button>
+
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                    </td>
+                                    @if ($errors->any())
+                                    <div class="alert alert-danger">
+                                        <ul>
+                                            @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                    @endif
+                                    <div style="display:none;" id="deleteAdminForm">
+                                        <form id="deleteProfileForm" action="{{ route('offices.deleteAdmin', $admin->user_id) }}" method="POST">
+                                            @csrf
+                                            @method('DELETE')
+                                            <input type="text" name="delete-reason" id="deleteProfileReasonInput" placeholder="iwdhiwhdiwd">
+                                            <input type="submit" value="delete">
+                                        </form>
+                                    </div>
+                                </tr>
+                                @endif
+
+                                @empty
+                                <tr>
+                                    <td colspan="9" class="px-4 py-8 text-center text-slate-400 text-sm">No admins
+                                        found.</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- END ADMIN TAB -->
                 @endif
 
 
@@ -614,14 +634,14 @@
                     </div>
 
                     @if ($errors->any())
-                        <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
-                            <i data-lucide="circle-alert" class="w-4 h-4 text-red-500 mt-0.5 shrink-0"></i>
-                            <ul class="space-y-1">
-                                @foreach ($errors->all() as $error)
-                                    <li class="text-red-600 text-xs font-medium">{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
+                    <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+                        <i data-lucide="circle-alert" class="w-4 h-4 text-red-500 mt-0.5 shrink-0"></i>
+                        <ul class="space-y-1">
+                            @foreach ($errors->all() as $error)
+                            <li class="text-red-600 text-xs font-medium">{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
                     @endif
 
                     <div class="bg-white rounded-lg shadow-sm border border-slate-200">
@@ -649,100 +669,100 @@
                             <tbody class="divide-y divide-slate-100">
                                 @forelse ($alumni as $alumnus)
 
-                                    @php
-                                        $status = $alumnus->user->user_active ? 'Active' : 'Deactivated';
-                                        $statusClass = $alumnus->user->user_active
-                                            ? 'bg-green-100 text-green-700 border-green-200'
-                                            : 'bg-red-100 text-red-700 border-red-200';
-                                    @endphp
-                                    <tr class="hover:bg-slate-50/80 transition-colors text-center">
-                                        <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $alumnus->alumnus_id ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $alumnus->user?->user_last_name }}
-                                        </td>
-                                        <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $alumnus->user?->user_first_name }}
-                                        </td>
-                                        <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $alumnus->user?->user_middle_name }}
-                                        </td>
-                                        <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $alumnus->user?->user_suffix ?? '' }}
-                                        </td>
-                                        <td
-                                            class="px-3 py-3 font-medium text-black border-r border-slate-100 leading-tight">
-                                            {{ $alumnus->program->program_name ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $alumnus->section->section_name ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $alumnus->alumnus_batch }}
-                                        </td>
-                                        <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $alumnus->user?->user_email }}
-                                        </td>
-                                        <td class="px-3 py-3 border-r border-slate-100">
-                                            <span
-                                                class="px-2 py-1 rounded-full border text-[9px] font-bold {{ $statusClass }}">
-                                                {{ strtoupper($status) }}
-                                            </span>
-                                        </td>
-                                        <td class="px-3 py-3 text-center relative">
-                                            <div class="inline-block text-left">
-                                                <button
-                                                    class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                                    <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                                </button>
-                                                <div
-                                                    class="dropdown-menu absolute right-4 mt-2 w-56 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
-                                                    <div class="py-1">
-                                                        @if ($alumnus->user->user_active)
-                                                            <button
-                                                                onclick="openDeactivateModal('{{ $alumnus->user->user_first_name }}', '{{ $alumnus->user->user_last_name }}', {{ $alumnus->user_id }})"
-                                                                class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                                <i data-lucide="user-minus" class="w-4 h-4 mr-3"></i> Deactivate
-                                                                Account
-                                                            </button>
-                                                        @else
-                                                            <button
-                                                                onclick="openActivateModal('{{ $alumnus->user->user_first_name }}', '{{ $alumnus->user->user_last_name }}', {{ $alumnus->user_id }})"
-                                                                class="flex items-center w-full px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 transition-colors">
-                                                                <i data-lucide="user-plus" class="w-4 h-4 mr-3"></i> Activate
-                                                                Account
-                                                            </button>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                                <div style="display:none;">
-                                                    <form id="deactivateForm_{{ $alumnus->user_id }}"
-                                                        action="{{ route('alumni.deactivateAlumnus', $alumnus->user_id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <input type="hidden" name="deactivate-reason"
-                                                            id="deactivateReason_{{ $alumnus->user_id }}">
-                                                    </form>
-
-                                                    <form id="activateForm_{{ $alumnus->user_id }}"
-                                                        action="{{ route('alumni.activateAlumnus', $alumnus->user_id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <input type="hidden" name="activate-reason"
-                                                            id="activateReason_{{ $alumnus->user_id }}">
-                                                    </form>
+                                @php
+                                $status = $alumnus->user->user_active ? 'Active' : 'Deactivated';
+                                $statusClass = $alumnus->user->user_active
+                                ? 'bg-green-100 text-green-700 border-green-200'
+                                : 'bg-red-100 text-red-700 border-red-200';
+                                @endphp
+                                <tr class="hover:bg-slate-50/80 transition-colors text-center">
+                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                        {{ $alumnus->alumnus_id ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                        {{ $alumnus->user?->user_last_name }}
+                                    </td>
+                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                        {{ $alumnus->user?->user_first_name }}
+                                    </td>
+                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                        {{ $alumnus->user?->user_middle_name }}
+                                    </td>
+                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                        {{ $alumnus->user?->user_suffix ?? '' }}
+                                    </td>
+                                    <td
+                                        class="px-3 py-3 font-medium text-black border-r border-slate-100 leading-tight">
+                                        {{ $alumnus->program->program_name ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                        {{ $alumnus->section->section_name ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                        {{ $alumnus->alumnus_batch }}
+                                    </td>
+                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                        {{ $alumnus->user?->user_email }}
+                                    </td>
+                                    <td class="px-3 py-3 border-r border-slate-100">
+                                        <span
+                                            class="px-2 py-1 rounded-full border text-[9px] font-bold {{ $statusClass }}">
+                                            {{ strtoupper($status) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-3 py-3 text-center relative">
+                                        <div class="inline-block text-left">
+                                            <button
+                                                class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                                <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
+                                            </button>
+                                            <div
+                                                class="dropdown-menu absolute right-4 mt-2 w-56 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
+                                                <div class="py-1">
+                                                    @if ($alumnus->user->user_active)
+                                                    <button
+                                                        onclick="openDeactivateModal('{{ $alumnus->user->user_first_name }}', '{{ $alumnus->user->user_last_name }}', {{ $alumnus->user_id }})"
+                                                        class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                        <i data-lucide="user-minus" class="w-4 h-4 mr-3"></i> Deactivate
+                                                        Account
+                                                    </button>
+                                                    @else
+                                                    <button
+                                                        onclick="openActivateModal('{{ $alumnus->user->user_first_name }}', '{{ $alumnus->user->user_last_name }}', {{ $alumnus->user_id }})"
+                                                        class="flex items-center w-full px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 transition-colors">
+                                                        <i data-lucide="user-plus" class="w-4 h-4 mr-3"></i> Activate
+                                                        Account
+                                                    </button>
+                                                    @endif
                                                 </div>
                                             </div>
-                                        </td>
-                                    </tr>
+                                            <div style="display:none;">
+                                                <form id="deactivateForm_{{ $alumnus->user_id }}"
+                                                    action="{{ route('alumni.deactivateAlumnus', $alumnus->user_id) }}"
+                                                    method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <input type="hidden" name="deactivate-reason"
+                                                        id="deactivateReason_{{ $alumnus->user_id }}">
+                                                </form>
+
+                                                <form id="activateForm_{{ $alumnus->user_id }}"
+                                                    action="{{ route('alumni.activateAlumnus', $alumnus->user_id) }}"
+                                                    method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <input type="hidden" name="activate-reason"
+                                                        id="activateReason_{{ $alumnus->user_id }}">
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
                                 @empty
-                                    <tr>
-                                        <td colspan="11" class="px-4 py-8 text-center text-slate-400 text-sm">No alumni
-                                            found.</td>
-                                    </tr>
+                                <tr>
+                                    <td colspan="11" class="px-4 py-8 text-center text-slate-400 text-sm">No alumni
+                                        found.</td>
+                                </tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -810,37 +830,37 @@
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
                                     @forelse ($employers->filter(fn($e) => !$e->employer_approved) as $employer)
-                                        <tr class="hover:bg-slate-50/80 transition-colors text-center">
-                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $loop->iteration }}
-                                            </td>
-                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $employer->employer_company_name }}
-                                            </td>
-                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $employer->user?->user_first_name }}
-                                                {{ $employer->user?->user_middle_name }}
-                                                {{ $employer->user?->user_last_name }}
-                                            </td>
-                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $employer->user?->user_email }}
-                                            </td>
-                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $employer->industry?->industry_name ?? 'N/A' }}
-                                            </td>
-                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $employer->employer_website_url ?? 'N/A' }}
-                                            </td>
-                                            <td class="px-4 py-3 text-center relative">
-                                                <div class="inline-block text-left">
-                                                    <button
-                                                        class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                                        <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                                    </button>
-                                                    <div
-                                                        class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl ring-1 ring-black ring-opacity-5 z-50 hidden">
-                                                        <div class="py-1">
-                                                            <!-- <form
+                                    <tr class="hover:bg-slate-50/80 transition-colors text-center">
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $loop->iteration }}
+                                        </td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $employer->employer_company_name }}
+                                        </td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $employer->user?->user_first_name }}
+                                            {{ $employer->user?->user_middle_name }}
+                                            {{ $employer->user?->user_last_name }}
+                                        </td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $employer->user?->user_email }}
+                                        </td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $employer->industry?->industry_name ?? 'N/A' }}
+                                        </td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $employer->employer_website_url ?? 'N/A' }}
+                                        </td>
+                                        <td class="px-4 py-3 text-center relative">
+                                            <div class="inline-block text-left">
+                                                <button
+                                                    class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                                    <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
+                                                </button>
+                                                <div
+                                                    class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl ring-1 ring-black ring-opacity-5 z-50 hidden">
+                                                    <div class="py-1">
+                                                        <!-- <form
                                                                                         action="{{ route('users.approveEmployer', $employer->user_id) }}"
                                                                                         method="POST">
                                                                                         @csrf
@@ -858,46 +878,52 @@
                                                                                             class="w-4 h-4 mr-3 text-orange-500"></i> Reject
                                                                                         Employer
                                                                                     </button> -->
-                                                            <button
-                                                                onclick="openEmployerConfirm('approve', '{{ $employer->employer_company_name }}', {{ $employer->user_id }})"
-                                                                class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-emerald-50 transition-colors whitespace-nowrap">
-                                                                <i data-lucide="check-circle"
-                                                                    class="w-4 h-4 mr-3 text-emerald-500"></i> Approve
-                                                                Employer
-                                                            </button>
-                                                            <button
-                                                                onclick="openEmployerConfirm('reject', '{{ $employer->employer_company_name }}', {{ $employer->user_id }})"
-                                                                class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-orange-50 transition-colors whitespace-nowrap">
-                                                                <i data-lucide="x-circle"
-                                                                    class="w-4 h-4 mr-3 text-orange-500"></i> Reject
-                                                                Employer
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div style="display:none;">
-                                                        <form id="approveEmployerForm_{{ $employer->user_id }}"
-                                                            action="{{ route('users.approveEmployer', $employer->user_id) }}"
-                                                            method="POST">
-                                                            @csrf
-                                                        </form>
-
-                                                        <form id="rejectEmployerForm_{{ $employer->user_id }}"
-                                                            action="{{ route('users.rejectEmployer', $employer->user_id) }}"
-                                                            method="POST">
-                                                            @csrf
-                                                            @method('PUT')
-                                                            <input type="hidden" name="reject-reason"
-                                                                id="rejectEmployerReason_{{ $employer->user_id }}">
-                                                        </form>
+                                                        <button
+                                                            onclick="openEmployerConfirm('approve', '{{ $employer->employer_company_name }}', {{ $employer->user_id }})"
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-emerald-50 transition-colors whitespace-nowrap">
+                                                            <i data-lucide="check-circle"
+                                                                class="w-4 h-4 mr-3 text-emerald-500"></i> Approve
+                                                            Employer
+                                                        </button>
+                                                        <button
+                                                            onclick="openEmployerConfirm('reject', '{{ $employer->employer_company_name }}', {{ $employer->user_id }})"
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-orange-50 transition-colors whitespace-nowrap">
+                                                            <i data-lucide="x-circle"
+                                                                class="w-4 h-4 mr-3 text-orange-500"></i> Reject
+                                                            Employer
+                                                        </button>
                                                     </div>
                                                 </div>
-                                            </td>
-                                        </tr>
+                                                <div style="display:none;">
+                                                    <form id="approveEmployerForm_{{ $employer->user_id }}"
+                                                        action="{{ route('users.approveEmployer', $employer->user_id) }}"
+                                                        method="POST">
+                                                        @csrf
+                                                    </form>
+
+
+                                                </div>
+                                            </div>
+                                        </td>
+                                        
+                                        <div style="display:none;" id="rejectingEmployerForm">
+                                            <form style="display:none;" id="rejectEmployerForm_{{ $employer->user_id }}"
+                                                action="{{ route('users.rejectEmployer', $employer->user_id) }}"
+                                                method="POST">
+                                                @csrf
+                                                @method('DELETE')
+                                                <input type="text" name="reject-reason"
+                                                    id="rejectEmployerReason_{{ $employer->user_id }}">
+                                                <input type="submit" value="reject">
+                                            </form>
+                                        </div>
+
+                                    </tr>
                                     @empty
-                                        <tr>
-                                            <td colspan="7" class="px-4 py-8 text-center text-slate-400 text-sm">No
-                                                employers awaiting approval.</td>
-                                        </tr>
+                                    <tr>
+                                        <td colspan="7" class="px-4 py-8 text-center text-slate-400 text-sm">No
+                                            employers awaiting approval.</td>
+                                    </tr>
                                     @endforelse
                                 </tbody>
                             </table>
@@ -946,84 +972,84 @@
 
                                 <tbody class="divide-y divide-slate-100">
                                     @forelse ($employers->filter(fn($e) => $e->user?->user_active) as $employer)
-                                        <tr class="hover:bg-slate-50/80 transition-colors text-center">
-                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $loop->iteration }}
-                                            </td>
-                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $employer->employer_company_name }}
-                                            </td>
-                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $employer->user?->user_first_name }}
-                                                {{ $employer->user?->user_middle_name }}
-                                                {{ $employer->user?->user_last_name }}
-                                                {{ $employer->user?->user_suffix ?? '' }}
-                                            </td>
-                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $employer->user?->user_email }}
-                                            </td>
-                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $employer->industry->industry_name ?? 'N/A' }}
-                                            </td>
-                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $employer->employer_contact_number ?? 'N/A' }}
-                                            </td>
-                                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $employer->employer_website_url ?? 'N/A' }}
-                                            </td>
-                                            <td class="px-4 py-3 text-center relative">
-                                                <div class="inline-block text-left">
-                                                    <button
-                                                        class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                                        <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                                    </button>
-                                                    <div
-                                                        class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
-                                                        <div class="py-1">
-                                                            <button type="button"
-                                                                class="view-modal-btn flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 transition-colors"
-                                                                data-last-name="{{ $employer->user->user_last_name }}"
-                                                                data-first-name="{{ $employer->user->user_first_name }}"
-                                                                data-middle-name="{{ $employer->user->user_middle_name }}"
-                                                                data-suffix="{{ $employer->user->user_suffix ?? '' }}"
-                                                                data-email="{{ $employer->user->user_email }}"
-                                                                data-contact="{{ $employer->employer_contact_number ?? 'N/A' }}"
-                                                                data-company="{{ $employer->employer_company_name }}"
-                                                                data-industry="{{ $employer->industry->industry_name ?? 'N/A' }}"
-                                                                data-position="{{ $employer->employer_position ?? 'N/A' }}"
-                                                                data-year="{{ $employer->employer_year_established ?? 'N/A' }}"
-                                                                data-size="{{ $employer->employer_company_size ?? 'N/A' }}"
-                                                                data-url="{{ $employer->employer_website_url ?? 'N/A' }}">
-                                                                <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i>
-                                                                View Employer
-                                                            </button>
-                                                            <hr class="my-1 border-slate-100">
-                                                            <button
-                                                                class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                                <i data-lucide="user-minus" class="w-4 h-4 mr-3"></i>
-                                                                Deactivate Account
-                                                            </button>
-                                                        </div>
+                                    <tr class="hover:bg-slate-50/80 transition-colors text-center">
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $loop->iteration }}
+                                        </td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $employer->employer_company_name }}
+                                        </td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $employer->user?->user_first_name }}
+                                            {{ $employer->user?->user_middle_name }}
+                                            {{ $employer->user?->user_last_name }}
+                                            {{ $employer->user?->user_suffix ?? '' }}
+                                        </td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $employer->user?->user_email }}
+                                        </td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $employer->industry->industry_name ?? 'N/A' }}
+                                        </td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $employer->employer_contact_number ?? 'N/A' }}
+                                        </td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                            {{ $employer->employer_website_url ?? 'N/A' }}
+                                        </td>
+                                        <td class="px-4 py-3 text-center relative">
+                                            <div class="inline-block text-left">
+                                                <button
+                                                    class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                                    <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
+                                                </button>
+                                                <div
+                                                    class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
+                                                    <div class="py-1">
+                                                        <button type="button"
+                                                            class="view-modal-btn flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 transition-colors"
+                                                            data-last-name="{{ $employer->user->user_last_name }}"
+                                                            data-first-name="{{ $employer->user->user_first_name }}"
+                                                            data-middle-name="{{ $employer->user->user_middle_name }}"
+                                                            data-suffix="{{ $employer->user->user_suffix ?? '' }}"
+                                                            data-email="{{ $employer->user->user_email }}"
+                                                            data-contact="{{ $employer->employer_contact_number ?? 'N/A' }}"
+                                                            data-company="{{ $employer->employer_company_name }}"
+                                                            data-industry="{{ $employer->industry->industry_name ?? 'N/A' }}"
+                                                            data-position="{{ $employer->employer_position ?? 'N/A' }}"
+                                                            data-year="{{ $employer->employer_year_established ?? 'N/A' }}"
+                                                            data-size="{{ $employer->employer_company_size ?? 'N/A' }}"
+                                                            data-url="{{ $employer->employer_website_url ?? 'N/A' }}">
+                                                            <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i>
+                                                            View Employer
+                                                        </button>
+                                                        <hr class="my-1 border-slate-100">
+                                                        <button
+                                                            class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                            <i data-lucide="user-minus" class="w-4 h-4 mr-3"></i>
+                                                            Deactivate Account
+                                                        </button>
+                                                    </div>
 
-                                                    </div>
-                                                    <div style="display:none;">
-                                                        <form id="employerDeactivateForm_{{ $employer->user_id }}"
-                                                            action="{{ route('employers.deactivateEmployer', $employer->user_id) }}"
-                                                            method="POST">
-                                                            @csrf
-                                                            @method('PUT')
-                                                            <input type="hidden" name="deactivate-reason"
-                                                                id="employerDeactivateReason_{{ $employer->user_id }}">
-                                                        </form>
-                                                    </div>
                                                 </div>
-                                            </td>
-                                        </tr>
+                                                <div style="display:none;">
+                                                    <form id="employerDeactivateForm_{{ $employer->user_id }}"
+                                                        action="{{ route('employers.deactivateEmployer', $employer->user_id) }}"
+                                                        method="POST">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <input type="hidden" name="deactivate-reason"
+                                                            id="employerDeactivateReason_{{ $employer->user_id }}">
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
                                     @empty
-                                        <tr>
-                                            <td colspan="9" class="px-4 py-8 text-center text-slate-400 text-sm">No approved
-                                                employers yet.</td>
-                                        </tr>
+                                    <tr>
+                                        <td colspan="9" class="px-4 py-8 text-center text-slate-400 text-sm">No approved
+                                            employers yet.</td>
+                                    </tr>
                                     @endforelse
                                 </tbody>
                             </table>
@@ -1140,6 +1166,7 @@
             @csrf
             @method('DELETE')
             <input type="hidden" name="delete-reason" id="deleteProfileReasonInput">
+            <input type="submit" value="delete">
         </form>
     </div>
 
@@ -1219,7 +1246,7 @@
                             class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white transition-all truncate w-full">
                             <option value="" disabled selected>Select Undergraduate Program</option>
                             @foreach ($programs as $program)
-                                <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
+                            <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -1234,7 +1261,7 @@
                             class="w-44 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white transition-all">
                             <option value="" disabled selected>Select Section here</option>
                             @foreach ($sections as $section)
-                                <option value="{{ $section->section_id }}">{{ $section->section_name }}</option>
+                            <option value="{{ $section->section_id }}">{{ $section->section_name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -1677,7 +1704,7 @@
         }
 
         // Optional: Close dropdown if user clicks outside of it
-        window.onclick = function (event) {
+        window.onclick = function(event) {
             if (!event.target.closest('#alumniDropdown')) {
                 const menu = document.getElementById('dropdownMenu');
                 if (!menu.classList.contains('hidden')) {
@@ -1687,25 +1714,26 @@
         }
 
         //DELETE ADMIN MODAL JS
-        let _deleteProfileRoute = '';
+        let _deleteProfileRoute;
 
         // ── open modal ─────────────────────────────────────────────────────
         function openDeleteProfileModal(route, firstName, lastName) {
             _deleteProfileRoute = route;
 
-            document.getElementById('deleteProfileAdminName').textContent = firstName + ' ' + lastName;
-            document.getElementById('deleteProfileReason').value = '';
-            document.getElementById('deleteProfileError').classList.add('hidden');
+            // document.getElementById('deleteProfileAdminName').textContent = firstName + ' ' + lastName;
+            // document.getElementById('deleteProfileReason').value = '';
+            // document.getElementById('deleteProfileError').classList.add('hidden');
+            document.getElementById('deleteAdminForm').style.display = "flex";
 
-            const modal = document.getElementById('deleteProfileModal');
-            const content = document.getElementById('deleteProfileContent');
+            // const modal = document.getElementById('deleteProfileModal');
+            // const content = document.getElementById('deleteProfileContent');
 
-            modal.classList.remove('invisible');
-            requestAnimationFrame(() => {
-                modal.classList.add('bg-black/30');
-                content.classList.remove('scale-95');
-                content.classList.add('scale-100');
-            });
+            // modal.classList.remove('invisible');
+            // requestAnimationFrame(() => {
+            //     modal.classList.add('bg-black/30');
+            //     content.classList.remove('scale-95');
+            //     content.classList.add('scale-100');
+            // });
         }
 
         // ── close modal ────────────────────────────────────────────────────
@@ -1735,7 +1763,7 @@
 
             const form = document.getElementById('deleteProfileForm');
             document.getElementById('deleteProfileReasonInput').value = reason;
-            form.action = _deleteProfileRoute;
+            form.action = "{{ url('admin/delete') }}/" + _deleteProfileRoute;
             form.submit();
         }
 
@@ -1857,7 +1885,7 @@
             submitBtn.parentNode.replaceChild(newBtn, submitBtn);
             newBtn.id = 'deactivateAlumniSubmitBtn';
 
-            newBtn.onclick = function () {
+            newBtn.onclick = function() {
                 const reason = document.getElementById('deactivateAlumniReason').value.trim();
                 const error = document.getElementById('deactivateAlumniError');
                 if (!reason) {
@@ -1893,7 +1921,7 @@
             submitBtn.parentNode.replaceChild(newBtn, submitBtn);
             newBtn.id = 'activateAlumniSubmitBtn';
 
-            newBtn.onclick = function () {
+            newBtn.onclick = function() {
                 document.getElementById('activateForm_' + userId).submit();
             };
 
@@ -1961,31 +1989,32 @@
                 newBtn.className = "flex-1 py-2.5 bg-emerald-600 text-white rounded-lg text-xs font-bold transition-all uppercase hover:bg-emerald-700";
                 newBtn.innerText = "Yes, Approve";
 
-                newBtn.onclick = function () {
+                newBtn.onclick = function() {
                     document.getElementById('approveEmployerForm_' + userId).submit();
                 };
 
             } else {
-                _rejectEmployerUserId = userId;
-                title.innerText = "Reject Employer";
-                message.innerHTML = `Are you sure you want to <span class="font-bold text-orange-600">reject</span> <b>${companyName}</b>?`;
-                iconBox.className = "w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4 text-orange-600";
-                icon.setAttribute('data-lucide', 'x-circle');
-                newBtn.className = "flex-1 py-2.5 bg-orange-600 text-white rounded-lg text-xs font-bold transition-all uppercase hover:bg-orange-700";
-                newBtn.innerText = "Yes, Reject";
-                rejectBox.classList.remove('hidden');
+                document.getElementById('rejectingEmployerForm').style.display = "flex";
+                // _rejectEmployerUserId = userId;
+                // title.innerText = "Reject Employer";
+                // message.innerHTML = `Are you sure you want to <span class="font-bold text-orange-600">reject</span> <b>${companyName}</b>?`;
+                // iconBox.className = "w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4 text-orange-600";
+                // icon.setAttribute('data-lucide', 'x-circle');
+                // newBtn.className = "flex-1 py-2.5 bg-orange-600 text-white rounded-lg text-xs font-bold transition-all uppercase hover:bg-orange-700";
+                // newBtn.innerText = "Yes, Reject";
+                // rejectBox.classList.remove('hidden');
 
-                newBtn.onclick = function () {
-                    const reason = rejectText.value.trim();
-                    if (!reason) {
-                        rejectError.classList.remove('hidden');
-                        lucide.createIcons();
-                        return;
-                    }
-                    rejectError.classList.add('hidden');
-                    document.getElementById('rejectEmployerReason_' + _rejectEmployerUserId).value = reason;
-                    document.getElementById('rejectEmployerForm_' + _rejectEmployerUserId).submit();
-                };
+                // newBtn.onclick = function() {
+                //     const reason = rejectText.value.trim();
+                //     if (!reason) {
+                //         rejectError.classList.remove('hidden');
+                //         lucide.createIcons();
+                //         return;
+                //     }
+                //     rejectError.classList.add('hidden');
+                //     document.getElementById('rejectEmployerReason_' + _rejectEmployerUserId).value = reason;
+                //     document.getElementById('rejectEmployerForm_' + _rejectEmployerUserId).submit();
+                // };
             }
 
             lucide.createIcons();
@@ -2002,12 +2031,12 @@
         }
 
         /* ── View Employer Modal ────────────────────────────────── */
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const modal = document.getElementById('viewEmployerModal');
             const viewButtons = document.querySelectorAll('.view-modal-btn');
 
             viewButtons.forEach(button => {
-                button.addEventListener('click', function () {
+                button.addEventListener('click', function() {
                     const fields = {
                         'modalLastName': 'data-last-name',
                         'modalFirstName': 'data-first-name',

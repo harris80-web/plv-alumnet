@@ -24,6 +24,6 @@ class JobApplication extends Model
     public function alumnus()
     {
         // "I belong to one user (the employer)"
-        return $this->belongsTo(Alumnus::class, 'alumnus_id', 'alumnus_id');
+        return $this->belongsTo(Alumnus::class, 'alumnus_id', 'user_id');
     }
 }

@@ -30,15 +30,15 @@
                     </div>
                     <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
                         <h2>First name:</h2>
-                        <p>{{ $employer->user->user_first_name }}</p>
+                        <p>{{ $employer->user?->user_first_name }}</p>
                     </div>
                     <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
                         <h2>Last name:</h2>
-                        <p>{{ $employer->user->user_last_name }}</p>
+                        <p>{{ $employer->user?->user_last_name }}</p>
                     </div>
                     <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
                         <h2>Email:</h2>
-                        <p>{{ $employer->user->user_email }}</p>
+                        <p>{{ $employer->user?->user_email }}</p>
                     </div>
                     <form action="{{ route('users.approveEmployer', $employer->user_id) }}" method="POST">
                         @csrf
@@ -532,7 +532,7 @@
                         <!-- Active Accounts -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-green-500">
-                                {{ $alumni->filter(fn($a) => $a->user->user_active)->count() }}
+                                {{ $alumni->filter(fn($a) => $a->user?->user_active)->count() }}
                             </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Active Accounts</p>
                         </div>
@@ -540,7 +540,7 @@
                         <!-- Deactivated Accounts -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-[#C73D1A]">
-                                {{ $alumni->filter(fn($a) => !$a->user->user_active)->count() }}
+                                {{ $alumni->filter(fn($a) => !$a->user?->user_active)->count() }}
                             </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Deactivated Accounts</p>
                         </div>
@@ -548,7 +548,7 @@
                         <!-- New This Month -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-amber-400">
-                                {{ $alumni->filter(fn($a) => $a->user->created_at->month == now()->month && $a->user->created_at->year == now()->year)->count() }}
+                                {{ $alumni->filter(fn($a) => $a->user?->created_at->month == now()->month && $a->user->created_at->year == now()->year)->count() }}
                             </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">New This Month</p>
                         </div>
@@ -660,16 +660,16 @@
                                             {{ $alumnus->alumnus_id ?? 'N/A' }}
                                         </td>
                                         <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $alumnus->user->user_last_name }}
+                                            {{ $alumnus->user?->user_last_name }}
                                         </td>
                                         <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $alumnus->user->user_first_name }}
+                                            {{ $alumnus->user?->user_first_name }}
                                         </td>
                                         <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $alumnus->user->user_middle_name }}
+                                            {{ $alumnus->user?->user_middle_name }}
                                         </td>
                                         <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $alumnus->user->user_suffix ?? '' }}
+                                            {{ $alumnus->user?->user_suffix ?? '' }}
                                         </td>
                                         <td
                                             class="px-3 py-3 font-medium text-black border-r border-slate-100 leading-tight">
@@ -682,7 +682,7 @@
                                             {{ $alumnus->alumnus_batch }}
                                         </td>
                                         <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $alumnus->user->user_email }}
+                                            {{ $alumnus->user?->user_email }}
                                         </td>
                                         <td class="px-3 py-3 border-r border-slate-100">
                                             <span
@@ -774,7 +774,7 @@
                         <!-- Active Accounts -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-green-500">
-                                {{ $employers->filter(fn($e) => $e->user->user_active)->count() }}
+                                {{ $employers->filter(fn($e) => $e->user?->user_active)->count() }}
                             </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Active Employers</p>
                         </div>
@@ -782,7 +782,7 @@
                         <!-- Deactivated Accounts -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-[#C73D1A]">
-                                {{ $employers->filter(fn($e) => !$e->user->user_active && $e->employer_approved)->count() }}
+                                {{ $employers->filter(fn($e) => !$e->user?->user_active && $e->employer_approved)->count() }}
                             </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Deactivated Accounts</p>
                         </div>
@@ -818,15 +818,15 @@
                                                 {{ $employer->employer_company_name }}
                                             </td>
                                             <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $employer->user->user_first_name }}
-                                                {{ $employer->user->user_middle_name }}
-                                                {{ $employer->user->user_last_name }}
+                                                {{ $employer->user?->user_first_name }}
+                                                {{ $employer->user?->user_middle_name }}
+                                                {{ $employer->user?->user_last_name }}
                                             </td>
                                             <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $employer->user->user_email }}
+                                                {{ $employer->user?->user_email }}
                                             </td>
                                             <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $employer->industry->industry_name ?? 'N/A' }}
+                                                {{ $employer->industry?->industry_name ?? 'N/A' }}
                                             </td>
                                             <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
                                                 {{ $employer->employer_website_url ?? 'N/A' }}
@@ -945,7 +945,7 @@
                                 </thead>
 
                                 <tbody class="divide-y divide-slate-100">
-                                    @forelse ($employers->filter(fn($e) => $e->user->user_active) as $employer)
+                                    @forelse ($employers->filter(fn($e) => $e->user?->user_active) as $employer)
                                         <tr class="hover:bg-slate-50/80 transition-colors text-center">
                                             <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
                                                 {{ $loop->iteration }}
@@ -954,13 +954,13 @@
                                                 {{ $employer->employer_company_name }}
                                             </td>
                                             <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $employer->user->user_first_name }}
-                                                {{ $employer->user->user_middle_name }}
-                                                {{ $employer->user->user_last_name }}
-                                                {{ $employer->user->user_suffix ?? '' }}
+                                                {{ $employer->user?->user_first_name }}
+                                                {{ $employer->user?->user_middle_name }}
+                                                {{ $employer->user?->user_last_name }}
+                                                {{ $employer->user?->user_suffix ?? '' }}
                                             </td>
                                             <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                                {{ $employer->user->user_email }}
+                                                {{ $employer->user?->user_email }}
                                             </td>
                                             <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
                                                 {{ $employer->industry->industry_name ?? 'N/A' }}

@@ -54,7 +54,15 @@
         </div>
         <br><br><br>
         <div>
-            
+            @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
             <h2 class="font-bold">Alumni management</h2>
             <div>
                 <form action="{{ route('users.addAlumnus') }}" method="POST">
@@ -148,7 +156,15 @@
         </div>
         <br><br><br>
         <div>
-           
+            @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
             <h2 class="font-bold">Admin management</h2>
             <div>
                 <form action="{{ route('users.addAdmin') }}" method="POST">
@@ -398,6 +414,7 @@ $current_page = 'user_management';
                     </div>
                     <!-- ==================== END METRIC CARDS ==================== -->
 
+
                     <div class="flex justify-between items-center mb-6">
                         <div class="relative w-64">
                             <i data-lucide="search"
@@ -405,13 +422,23 @@ $current_page = 'user_management';
                             <input type="text" placeholder="Search"
                                 class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-transparent">
                         </div>
+
                         <button onclick="document.getElementById('addAdminModal').classList.add('open')"
                             class="bg-[#1D46A4] hover:bg-[#0E0F3B] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
                             <i data-lucide="plus" class="w-4 h-4"></i>
                             ADD ADMIN
                         </button>
                     </div>
-
+                    @if ($errors->any())
+                    <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+                        <i data-lucide="circle-alert" class="w-4 h-4 text-red-500 mt-0.5 shrink-0"></i>
+                        <ul class="space-y-1">
+                            @foreach ($errors->all() as $error)
+                            <li class="text-red-600 text-xs font-medium">{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
                     <div class="bg-white rounded-lg shadow-sm border border-slate-200">
                         <table class="w-full text-left text-[11px]">
                             <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
@@ -485,15 +512,6 @@ $current_page = 'user_management';
                                             </div>
                                         </div>
                                     </td>
-                                    @if ($errors->any())
-                                    <div class="alert alert-danger">
-                                        <ul>
-                                            @foreach ($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
-                                    @endif
                                 </tr>
                                 @endif
 

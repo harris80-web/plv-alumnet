@@ -1410,7 +1410,8 @@ $approved_count = $approved_jobs->count();
 
             // Point the hidden form to the correct Laravel route, then submit
             const form = document.getElementById('declineForm');
-            form.action = `/job-postings/${_declineId}/decline`; // adjust to match your route('jobPosting.decline', ...)
+
+            form.action = `{{ url('declineJobPost') }}/` + _declineId; // adjust to match your route('jobPosting.decline', ...)
             document.getElementById('declineReasonInput').value = notes;
             form.submit();
         }

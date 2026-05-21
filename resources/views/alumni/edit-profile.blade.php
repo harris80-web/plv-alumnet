@@ -179,9 +179,9 @@
         </form>
     </main>
 
-    <div id="menuOverlay" class="fixed inset-0 bg-black/50 z-[60] hidden transition-opacity duration-300"></div>
+    <div id="menuOverlay1" class="fixed inset-0 bg-black/50 z-[60] hidden transition-opacity duration-300"></div>
 
-    <div id="notificationPopup" class="fixed top-20 right-[250px] w-72 bg-white rounded-xl shadow-2xl z-[70] hidden transform origin-top-right transition-all duration-300 scale-95 opacity-0">
+    <div id="notificationPopup1" class="fixed top-20 right-[250px] w-72 bg-white rounded-xl shadow-2xl z-[70] hidden transform origin-top-right transition-all duration-300 scale-95 opacity-0">
         <div class="p-4 border-b flex justify-between items-center">
             <h3 class="text-[#0E0F3B] font-bold">Notifications</h3>
             <button onclick="toggleNotifications()" class="text-gray-400 hover:text-gray-600">
@@ -196,7 +196,7 @@
         </div>
     </div>
 
-    <div id="userSidebar" class="fixed top-0 right-0 h-full w-80 bg-white z-[70] shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out">
+    <div id="userSidebar1" class="fixed top-0 right-0 h-full w-80 bg-white z-[70] shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out">
         <div class="p-6 relative flex flex-col h-full">
             <button onclick="toggleSidebar()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600">
                 <i class="fa-solid fa-xmark text-xl"></i>
@@ -236,15 +236,12 @@
 
 <script>
     //TRIGGER FOR ALERT NOTIFICATION AND USER PROFILE SIDE BAR
-    const sidebar = document.getElementById('userSidebar');
-    const notification = document.getElementById('notificationPopup');
-    const overlay = document.getElementById('menuOverlay');
 
     function toggleSidebar() {
-        sidebar.classList.toggle('translate-x-full');
-        overlay.classList.toggle('hidden');
+        document.getElementById('userSidebar1').classList.toggle('translate-x-full');
+        document.getElementById('menuOverlay1').classList.toggle('hidden');
         // Close notifications if sidebar opens
-        notification.classList.add('hidden');
+        document.getElementById('notificationPopup1').classList.add('hidden');
     }
 
     function toggleNotifications() {

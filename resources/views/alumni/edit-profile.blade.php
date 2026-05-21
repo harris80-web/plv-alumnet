@@ -19,8 +19,7 @@
 
 <style>
     .HeroSection {
-        background:
-            url("{{ asset('assets/heroSectionBackground.png') }}");
+        background: url("{{ asset('assets/heroSectionBackground.png') }}");
         background-size: cover;
         background-position: center;
     }
@@ -46,9 +45,15 @@
             @if ($errors->any())
             <div class="alert alert-danger">
                 <ul>
-                    @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
+                    @if ($errors->any())
+                    <div class="bg-red-50 border border-red-300 border-l-4 border-l-red-600 rounded-md px-4 py-3 mb-4">
+                        <ul class="list-disc list-inside text-red-700 text-sm space-y-1">
+                            @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
                 </ul>
             </div>
             @endif
@@ -87,19 +92,19 @@
                 <div class="md:col-span-9">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-y-6 gap-x-6">
                         <div>
-                            <p class="text-xs font-bold text-orange-600 uppercase">Last Name</p>
+                            <p class="text-xs font-semibold text-orange-600 uppercase">Last Name</p>
                             <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->user_last_name }}</h3>
                         </div>
                         <div>
-                            <p class="text-xs font-bold text-orange-600 uppercase">First Name</p>
+                            <p class="text-xs font-semibold text-orange-600 uppercase">First Name</p>
                             <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->user_first_name }}</h3>
                         </div>
                         <div>
-                            <p class="text-xs font-bold text-orange-600 uppercase">Middle Name</p>
+                            <p class="text-xs font-semibold text-orange-600 uppercase">Middle Name</p>
                             <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->user_middle_name }}</h3>
                         </div>
                         <div>
-                            <p class="text-xs font-bold text-orange-600 uppercase">Suffix</p>
+                            <p class="text-xs font-semibold text-orange-600 uppercase">Suffix</p>
                             <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->user_suffix }}</h3>
                         </div>
 
@@ -226,7 +231,7 @@
     </div>
 
     @include('partials.footer-alumni')
-    
+
 </body>
 
 <script>
@@ -268,7 +273,6 @@
 
     //user profile view image/upload image
     function togglePhotoOptions(event) {
-
         event.stopPropagation();
         const menu = document.getElementById('photoOptions');
         menu.classList.toggle('hidden');

@@ -1010,6 +1010,7 @@ $current_page = 'user_management';
                                                         </button>
                                                         <hr class="my-1 border-slate-100">
                                                         <button
+                                                            onclick="openEmployerDeactivateModal('{{ $employer->user->user_first_name }}', '{{ $employer->user->user_last_name }}', {{ $employer->user_id }})"
                                                             class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                                             <i data-lucide="user-minus" class="w-4 h-4 mr-3"></i>
                                                             Deactivate Account
@@ -1626,6 +1627,49 @@ $current_page = 'user_management';
                 <button onclick="closeModal()"
                     class="px-8 py-2 bg-[#0E0F3B] text-white rounded font-bold uppercase text-sm">Done</button>
             </div>
+
+        </div>
+    </div>
+
+    <!-- ===== DEACTIVATE EMPLOYER MODAL ===== -->
+    <div id="deactivateEmployerModal"
+        class="fixed inset-0 z-[100] flex items-center justify-center invisible transition-all duration-300">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeEmployerDeactivateModal()"></div>
+        <div id="deactivateEmployerContent"
+            class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
+            <div class="p-8 text-center">
+                <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="user-minus" class="w-8 h-8 text-red-500"></i>
+                </div>
+                <h3 class="text-[#0E0F3B] text-xl font-bold mb-1">Deactivate Account</h3>
+                <p id="deactivateEmployerName" class="text-slate-400 text-xs font-medium mb-3"></p>
+                <p class="text-slate-500 text-sm leading-relaxed mb-4">
+                    Are you sure you want to <span class="font-bold text-red-600">deactivate</span> this account?
+                </p>
+                <div class="text-left">
+                    <label class="text-xs font-bold text-[#0E0F3B] uppercase tracking-wider block mb-2">
+                        Reason for Deactivation <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="deactivateEmployerReason" rows="3"
+                        placeholder="Enter reason for deactivating this account..."
+                        class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 resize-none transition-all"></textarea>
+                    <div id="deactivateEmployerError"
+                        class="hidden mt-2 flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                        <i data-lucide="circle-alert" class="w-3.5 h-3.5 mt-0.5 shrink-0 text-red-500"></i>
+                        <span class="text-red-600 text-xs font-medium">Please provide a reason before deactivating.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="px-8 pb-8 flex gap-3">
+                <button onclick="closeEmployerDeactivateModal()"
+                    class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all uppercase">
+                    Cancel
+                </button>
+                <button id="deactivateEmployerSubmitBtn"
+                    class="flex-1 py-2.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-all uppercase">
+                    Yes, Deactivate
+                </button>
+            </div>
         </div>
     </div>
 
@@ -2045,7 +2089,45 @@ $current_page = 'user_management';
                     if (dropdown) dropdown.classList.add('hidden');
                 });
             });
-        });
+        }); /* ── Employer Deactivate Modal ──────────────────────────── */
+        function openEmployerDeactivateModal(firstName, lastName, userId) {
+            const modal = document.getElementById('deactivateEmployerModal');
+            const content = document.getElementById('deactivateEmployerContent');
+
+            document.getElementById('deactivateEmployerName').textContent = firstName + ' ' + lastName;
+            document.getElementById('deactivateEmployerReason').value = '';
+            document.getElementById('deactivateEmployerError').classList.add('hidden');
+
+            // Clone submit button to remove any stale listeners
+            const submitBtn = document.getElementById('deactivateEmployerSubmitBtn');
+            const newBtn = submitBtn.cloneNode(true);
+            submitBtn.parentNode.replaceChild(newBtn, submitBtn);
+            newBtn.id = 'deactivateEmployerSubmitBtn';
+
+            newBtn.onclick = function() {
+                const reason = document.getElementById('deactivateEmployerReason').value.trim();
+                const error = document.getElementById('deactivateEmployerError');
+                if (!reason) {
+                    error.classList.remove('hidden');
+                    lucide.createIcons();
+                    return;
+                }
+                error.classList.add('hidden');
+                document.getElementById('employerDeactivateReason_' + userId).value = reason;
+                document.getElementById('employerDeactivateForm_' + userId).submit();
+            };
+
+            lucide.createIcons();
+            modal.classList.remove('invisible');
+            setTimeout(() => content.classList.remove('scale-95'), 10);
+        }
+
+        function closeEmployerDeactivateModal() {
+            const modal = document.getElementById('deactivateEmployerModal');
+            const content = document.getElementById('deactivateEmployerContent');
+            content.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('invisible'), 200);
+        }
     </script>
 
 </body>

@@ -314,7 +314,7 @@
                 <div class="flex-shrink-0">
                     <div class="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center">
                         @if ($testimonial->alumnus->user->user_profile_picture)
-                            <img src="{{ asset($testimonial->alumnus->user->user_profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover rounded-full">
+                            <img src="{{ asset('storage/' . $testimonial->alumnus->user->user_profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover rounded-full">
                         @else
                         <i class="fa-solid fa-user text-3xl text-white"></i>
                         @endif

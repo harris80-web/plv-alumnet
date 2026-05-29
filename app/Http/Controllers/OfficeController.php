@@ -134,6 +134,7 @@ class OfficeController extends Controller
             Log::info("Admin with ID {$admin->user_id}: {$admin->user_first_name} {$admin->user_last_name} deleted. Reason: {$validated['delete-reason']}");
             Mail::to($admin->user_email)->send(new DeleteAdminMail($admin, $validated['delete-reason']));
             // Soft delete the admin
+            $admin->update(['user_active' => false]);
             $admin->office->delete();
             $admin->delete();
         } catch (\Exception $e) {

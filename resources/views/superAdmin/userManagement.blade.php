@@ -400,7 +400,7 @@ $current_page = 'user_management';
                         <!-- Inactive Admins -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-[#C73D1A]">
-                                {{ $admins->filter(fn($a) => !$a->user->user_active)->count() }}
+                                {{ $admins->filter(fn($a) => $a->user->user_active == 0)->count() }}
                             </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Inactive Admin</p>
                         </div>
@@ -769,7 +769,7 @@ $current_page = 'user_management';
                         <!-- Total Employer -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-slate-800">
-                                {{ $employers->where('user_active', true)->Where('employer_approved', true)->count() }}
+                                {{ $employers->count() }}
                             </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total Employer</p>
                         </div>

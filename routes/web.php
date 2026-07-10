@@ -21,13 +21,14 @@ use App\Http\Controllers\SectionController;
 use App\Http\Controllers\SeminarController;
 use App\Http\Controllers\TestimonialController;
 use App\Http\Controllers\UserController;
-
+use App\Models\Testimonial;
 
 //outside of session routes
 
 //general
 Route::get('/', function () {
-    return view('/general/home');
+    $testimonials = Testimonial::where('testimonial_post', true)->latest()->get();
+    return view('general.home', compact('testimonials'));
 })->name('general.home');
 
 Route::get('/about', function () {
@@ -215,6 +216,8 @@ Route::resource('seminars', SeminarController::class);
 
 Route::post('/submitTestimonial/{id}', [TestimonialController::class, 'submitTestimonial'])->name('testimonials.submit');
 Route::put('/testimonials/bulk-post', [TestimonialController::class, 'bulkPost'])->name('testimonials.bulkPost');
+Route::put('/testimonials/bulk-hide', [TestimonialController::class, 'bulkHide'])->name('testimonials.bulkHide');
+Route::put('/testimonials/bulk-delete', [TestimonialController::class, 'bulkDelete'])->name('testimonials.bulkDelete');
 Route::put('/postTestimonial/{id}', [TestimonialController::class, 'postTestimonial'])->name('testimonials.post');
 Route::delete('/deleteTestimonial/{id}', [TestimonialController::class, 'deleteTestimonial'])->name('testimonials.delete');
 Route::resource('testimonials', TestimonialController::class);

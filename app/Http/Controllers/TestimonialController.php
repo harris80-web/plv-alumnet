@@ -129,4 +129,18 @@ class TestimonialController extends Controller
         Testimonial::whereIn('testimonial_id', $ids)->update(['testimonial_post' => true]);
         return back()->with('success', 'Selected testimonials published successfully!');
     }
+
+    public function bulkHide(Request $request)
+    {
+        $ids = explode(',', $request->input('ids'));
+        Testimonial::whereIn('testimonial_id', $ids)->update(['testimonial_post' => false]);
+        return back()->with('success', 'Selected testimonials hidden successfully!');
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        $ids = explode(',', $request->input('ids'));
+        Testimonial::whereIn('testimonial_id', $ids)->update(['testimonial_post' => false]);
+        return back()->with('success', 'Selected testimonials hidden successfully!');
+    }
 }

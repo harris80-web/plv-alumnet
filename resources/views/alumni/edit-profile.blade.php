@@ -19,8 +19,7 @@
 
 <style>
     .HeroSection {
-        background:
-            url("{{ asset('assets/heroSectionBackground.png') }}");
+        background: url("{{ asset('assets/heroSectionBackground.png') }}");
         background-size: cover;
         background-position: center;
     }
@@ -46,9 +45,15 @@
             @if ($errors->any())
             <div class="alert alert-danger">
                 <ul>
-                    @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
+                    @if ($errors->any())
+                    <div class="bg-red-50 border border-red-300 border-l-4 border-l-red-600 rounded-md px-4 py-3 mb-4">
+                        <ul class="list-disc list-inside text-red-700 text-sm space-y-1">
+                            @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
                 </ul>
             </div>
             @endif
@@ -87,19 +92,19 @@
                 <div class="md:col-span-9">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-y-6 gap-x-6">
                         <div>
-                            <p class="text-xs font-bold text-orange-600 uppercase">Last Name</p>
+                            <p class="text-xs font-semibold text-orange-600 uppercase">Last Name</p>
                             <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->user_last_name }}</h3>
                         </div>
                         <div>
-                            <p class="text-xs font-bold text-orange-600 uppercase">First Name</p>
+                            <p class="text-xs font-semibold text-orange-600 uppercase">First Name</p>
                             <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->user_first_name }}</h3>
                         </div>
                         <div>
-                            <p class="text-xs font-bold text-orange-600 uppercase">Middle Name</p>
+                            <p class="text-xs font-semibold text-orange-600 uppercase">Middle Name</p>
                             <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->user_middle_name }}</h3>
                         </div>
                         <div>
-                            <p class="text-xs font-bold text-orange-600 uppercase">Suffix</p>
+                            <p class="text-xs font-semibold text-orange-600 uppercase">Suffix</p>
                             <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->user_suffix }}</h3>
                         </div>
 
@@ -174,9 +179,9 @@
         </form>
     </main>
 
-    <div id="menuOverlay" class="fixed inset-0 bg-black/50 z-[60] hidden transition-opacity duration-300"></div>
+    <div id="menuOverlay1" class="fixed inset-0 bg-black/50 z-[60] hidden transition-opacity duration-300"></div>
 
-    <div id="notificationPopup" class="fixed top-20 right-[250px] w-72 bg-white rounded-xl shadow-2xl z-[70] hidden transform origin-top-right transition-all duration-300 scale-95 opacity-0">
+    <div id="notificationPopup1" class="fixed top-20 right-[250px] w-72 bg-white rounded-xl shadow-2xl z-[70] hidden transform origin-top-right transition-all duration-300 scale-95 opacity-0">
         <div class="p-4 border-b flex justify-between items-center">
             <h3 class="text-[#0E0F3B] font-bold">Notifications</h3>
             <button onclick="toggleNotifications()" class="text-gray-400 hover:text-gray-600">
@@ -191,7 +196,7 @@
         </div>
     </div>
 
-    <div id="userSidebar" class="fixed top-0 right-0 h-full w-80 bg-white z-[70] shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out">
+    <div id="userSidebar1" class="fixed top-0 right-0 h-full w-80 bg-white z-[70] shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out">
         <div class="p-6 relative flex flex-col h-full">
             <button onclick="toggleSidebar()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600">
                 <i class="fa-solid fa-xmark text-xl"></i>
@@ -226,20 +231,17 @@
     </div>
 
     @include('partials.footer-alumni')
-    
+
 </body>
 
 <script>
     //TRIGGER FOR ALERT NOTIFICATION AND USER PROFILE SIDE BAR
-    const sidebar = document.getElementById('userSidebar');
-    const notification = document.getElementById('notificationPopup');
-    const overlay = document.getElementById('menuOverlay');
 
     function toggleSidebar() {
-        sidebar.classList.toggle('translate-x-full');
-        overlay.classList.toggle('hidden');
+        document.getElementById('userSidebar1').classList.toggle('translate-x-full');
+        document.getElementById('menuOverlay1').classList.toggle('hidden');
         // Close notifications if sidebar opens
-        notification.classList.add('hidden');
+        document.getElementById('notificationPopup1').classList.add('hidden');
     }
 
     function toggleNotifications() {
@@ -268,7 +270,6 @@
 
     //user profile view image/upload image
     function togglePhotoOptions(event) {
-
         event.stopPropagation();
         const menu = document.getElementById('photoOptions');
         menu.classList.toggle('hidden');

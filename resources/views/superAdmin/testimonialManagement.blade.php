@@ -733,7 +733,7 @@
                     btnBg: 'bg-green-600',
                     btnText: 'Yes, Publish',
                     onConfirm: () => {
-                        document.getElementById('bulk-ids').value = ids.join(',');
+                        document.getElementById('bulk-ids1').value = ids.join(',');
                         document.getElementById('bulk-publish-form').submit();
                     }
                 },
@@ -746,7 +746,8 @@
                     btnBg: 'bg-[#0E0F3B]',
                     btnText: 'Yes, Hide',
                     onConfirm: () => {
-                        window.location.href = 'admin_bulk_testimonial.php?action=hide&ids=' + ids.join(',');
+                        document.getElementById('bulk-ids2').value = ids.join(',');
+                        document.getElementById('bulk-hide-form').submit();
                     }
                 },
                 delete: {
@@ -758,7 +759,8 @@
                     btnBg: 'bg-red-600',
                     btnText: 'Yes, Delete',
                     onConfirm: () => {
-                        window.location.href = 'admin_bulk_testimonial.php?action=delete&ids=' + ids.join(',');
+                        document.getElementById('bulk-ids3').value = ids.join(',');
+                        document.getElementById('bulk-delete-form').submit();
                     }
                 }
             };
@@ -779,7 +781,19 @@
     <form id="bulk-publish-form" action="{{ route('testimonials.bulkPost') }}" method="POST" class="hidden">
         @csrf
         @method('PUT')
-        <input type="hidden" name="ids" id="bulk-ids">
+        <input type="hidden" name="ids" id="bulk-ids1">
+    </form>
+
+    <form id="bulk-hide-form" action="{{ route('testimonials.bulkHide') }}" method="POST" class="hidden">
+        @csrf
+        @method('PUT')
+        <input type="hidden" name="ids" id="bulk-ids2">
+    </form>
+
+    <form id="bulk-delete-form" action="{{ route('testimonials.bulkDelete') }}" method="POST" class="hidden">
+        @csrf
+        @method('PUT')
+        <input type="hidden" name="ids" id="bulk-ids3">
     </form>
 </body>
 

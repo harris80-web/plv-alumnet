@@ -27,6 +27,7 @@ class EmployerSeeder extends Seeder
             'employer_company_name' => 'Tech Solutions Inc.',
             'industry_id' => 1,
             'employer_approved' => true,
+            'employer_company_document' => 'companyDocuments/tech_solutions_inc.pdf',
         ]);
     }
 }

@@ -17,7 +17,7 @@ class EmployerMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (Auth::check()) {
-            if (Auth::user()->user_role !== 'employer') {
+            if (Auth::user()->user_role == 'employer') {
                 return $next($request);
             } else {
                 Auth::logout();

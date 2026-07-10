@@ -25,6 +25,7 @@ return new class extends Migration
             $table->year('employer_year_established')->nullable();
             $table->string('employer_website_url', 255)->nullable();
             $table->unsignedBigInteger('employer_company_size')->nullable();
+            $table->string('employer_company_document', 255);
             $table->boolean('employer_approved')->default(false);
             $table->softDeletes();
             $table->timestamps();

@@ -111,6 +111,17 @@
                         @endif
                     </div>
 
+                    <div>
+                        <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Document:</label>
+                        <input type="file" name="employer_company_document" accept="application/pdf"
+                            class="w-full px-4 py-0.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                        @if($errors->has('employer_company_document'))
+                            <div class="alert alert-danger">
+                                {{ $errors->first('employer_company_document') }}
+                            </div>
+                        @endif
+                    </div>
+
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">First Name:</label>

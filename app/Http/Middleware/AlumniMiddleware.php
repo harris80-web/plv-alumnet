@@ -17,7 +17,7 @@ class AlumniMiddleware
     public function handle(Request $request, Closure $next): Response
     {
        if (Auth::check()) {
-            if (Auth::user()->user_role !== 'alumni') {
+            if (Auth::user()->user_role == 'alumni') {
                 return $next($request);
             } else {
                 Auth::logout();

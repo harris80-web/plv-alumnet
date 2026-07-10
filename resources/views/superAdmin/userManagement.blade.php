@@ -814,6 +814,7 @@ $current_page = 'user_management';
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Full Name</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Industry</th>
+                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Document</th>
                                         <th class="px-4 py-4 font-semibold border-r border-slate-700">Official Website
                                             URL</th>
                                         <th class="px-4 py-4 font-semibold text-center">Actions</th>
@@ -838,6 +839,11 @@ $current_page = 'user_management';
                                         </td>
                                         <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
                                             {{ $employer->industry?->industry_name ?? 'N/A' }}
+                                        </td>
+                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                            <a href="{{ asset('storage/' . $employer->employer_company_document) }}" target="_blank" class="text-blue-500 hover:underline">
+                                                {{ asset('storage/' . $employer->employer_company_document) ? 'View Document' : 'Not Uploaded' }}
+                                            </a>
                                         </td>
                                         <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
                                             {{ $employer->employer_website_url ?? 'N/A' }}

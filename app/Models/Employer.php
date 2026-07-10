@@ -22,6 +22,7 @@ class Employer extends Model
         'employer_year_established',
         'employer_website_url',
         'employer_company_size',
+        'employer_company_document',
         'employer_id_picture',
         'employer_id_picture_selfie',
         'employer_company_id_picture',

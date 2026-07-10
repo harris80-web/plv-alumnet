@@ -17,7 +17,7 @@ class SuperAdminMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (Auth::check()) {
-            if (Auth::user()->user_role !== 'super_admin') {
+            if (Auth::user()->user_role == 'super_admin') {
                 return $next($request);
             } else {
                 Auth::logout();

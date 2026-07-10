@@ -89,18 +89,17 @@ class UserController extends Controller
             'user_first_name' => 'required|string|max:100',
             'user_last_name' => 'required|string|max:100',
             'user_email' => 'required|email|max:100|unique:users,user_email',
-            // 'employer_id_picture' => 'required|file|mimes:jpg,png,pdf|max:20000',
+            'employer_company_document' => 'required|file|mimes:pdf|max:20000',
             // 'employer_id_picture_selfie' => 'required|file|mimes:jpg,png,pdf|max:20000',
             // 'employer_company_id_picture' => 'required|file|mimes:jpg,png,pdf|max:20000',
             // 'employer_company_id_picture_selfie' => 'required|file|mimes:jpg,png,pdf|max:20000',
             'user_password' => 'required|string|min:8'
         ]);
 
-        // $companyIdPath = null;
-        // if ($request->hasFile('employer_company_id_picture')) {
-        //     // This stores the file in storage/app/public/logos
-        //     $companyIdPath = $request->file('employer_company_id_picture')->store('companyIds', 'public');
-        // }
+        $companyDocumentPath = null;
+        if ($request->hasFile('employer_company_document')) {
+            $companyDocumentPath = $request->file('employer_company_document')->store('companyDocuments', 'public');
+        }
 
         // $companyIdSelfiePath = null;
         // if ($request->hasFile('employer_company_id_picture_selfie')) {
@@ -121,7 +120,7 @@ class UserController extends Controller
         // }
 
         try {
-            DB::transaction(function () use ($validated) {
+            DB::transaction(function () use ($validated, $companyDocumentPath) {
                 $user = User::create([
                     'user_email' => $validated['user_email'],
                     'user_password' => Hash::make($validated['user_password']),
@@ -134,6 +133,7 @@ class UserController extends Controller
                 $user->employer()->create([
                     'employer_company_name' => $validated['employer_company_name'],
                     'employer_website_url' => $validated['employer_website_url'] ?? null,
+                    'employer_company_document' => $companyDocumentPath ?? null,
                     // 'employer_id_picture' => $employerIdPath,
                     // 'employer_id_picture_selfie' => $employerIdSelfiePath,
                     // 'employer_company_id_picture' => $companyIdPath,
@@ -167,7 +167,8 @@ class UserController extends Controller
                 'user_first_name' => $e->getMessage(),
                 'user_last_name' => $e->getMessage(),
                 'employer_company_name' => $e->getMessage(),
-                'employer_website_url' => $e->getMessage()
+                'employer_website_url' => $e->getMessage(),
+                'employer_company_document' => $e->getMessage(),
             ]);
         }
 

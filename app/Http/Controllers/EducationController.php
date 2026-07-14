@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Gwa;
+use App\Models\Education;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-class GwaController extends Controller
+class EducationController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -35,7 +35,7 @@ class GwaController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Gwa $gwa)
+    public function show(Education $education)
     {
         //
     }
@@ -43,7 +43,7 @@ class GwaController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Gwa $gwa)
+    public function edit(Education $education)
     {
         //
     }
@@ -51,7 +51,7 @@ class GwaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Gwa $gwa)
+    public function update(Request $request, Education $education)
     {
         //
     }
@@ -59,7 +59,7 @@ class GwaController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Gwa $gwa)
+    public function destroy(Education $education)
     {
         //
     }

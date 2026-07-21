@@ -20,11 +20,14 @@ return new class extends Migration
                 ->onDelete('cascade');
             $table->foreignId('program_id')->constrained('programs', 'program_id');
             $table->foreignId('section_id')->constrained('sections', 'section_id');
+
             $table->boolean('alumnus_employment_status')->default(false);
+            $table->text('resume_summary')->nullable()->after('alumnus_employment_status');
+            $table->string('linkedin_url')->nullable()->after('resume_summary');
+            $table->unsignedTinyInteger('resume_completeness')->default(0);
+            
             $table->year('alumnus_batch');
-            $table->text('alumnus_skills')->nullable();
             $table->boolean('alumnus_is_public')->default(true);
-            $table->string('alumnus_resume', 255)->nullable();
             $table->boolean('alumnus_change_password')->default(false);
             $table->softDeletes();
             $table->timestamps();

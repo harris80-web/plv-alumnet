@@ -22,8 +22,8 @@ return new class extends Migration
             $table->foreignId('section_id')->constrained('sections', 'section_id');
 
             $table->boolean('alumnus_employment_status')->default(false);
-            $table->text('resume_summary')->nullable()->after('alumnus_employment_status');
-            $table->string('linkedin_url')->nullable()->after('resume_summary');
+            $table->text('resume_summary')->nullable();
+            $table->string('linkedin_url')->nullable();
             $table->unsignedTinyInteger('resume_completeness')->default(0);
             
             $table->year('alumnus_batch');

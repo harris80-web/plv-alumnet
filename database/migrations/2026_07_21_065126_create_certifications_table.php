@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('certification_name');
             $table->string('certification_from');
             $table->date('certification_date')->nullable();
-            $table->timestamps();
  
             $table->foreignId('alumnus_id')->constrained('users', 'user_id')->onDelete('cascade');
             $table->timestamps();

@@ -17,7 +17,6 @@ return new class extends Migration
             $table->unsignedBigInteger('skill_id');
             $table->boolean('is_required')->default(true); // required vs. preferred/nice-to-have
             $table->unsignedTinyInteger('weight')->default(3); // 1 (low) - 5 (critical)
-            $table->timestamps();
  
             $table->foreign('job_posting_id')->references('job_posting_id')->on('job_postings')->onDelete('cascade');
             $table->foreign('skill_id')->references('skill_id')->on('skills')->onDelete('cascade');

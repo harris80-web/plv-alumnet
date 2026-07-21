@@ -18,7 +18,6 @@ return new class extends Migration
             $table->decimal('score', 5, 2); // 0.00 - 100.00
             $table->json('score_breakdown')->nullable(); // per-criterion detail for the employer UI
             $table->timestamp('computed_at')->useCurrent();
-            $table->timestamps();
  
             $table->foreign('job_posting_id')->references('job_posting_id')->on('job_postings')->onDelete('cascade');
             $table->foreign('alumnus_id')->references('user_id')->on('alumni')->onDelete('cascade');

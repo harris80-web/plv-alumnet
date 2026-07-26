@@ -21,9 +21,18 @@ class Testimonial extends Model
         'testimonial_post',
     ];
 
+    protected $casts = [
+        'testimonial_post' => 'boolean', // whether it's approved/published
+    ];
+
     public function alumnus()
     {
         // hasMany(RelatedModel, foreignKey, localKey)
         return $this->belongsTo(Alumnus::class, 'user_id', 'user_id');
+    }
+
+    public function scopePublished($query)
+    {
+        return $query->where('testimonial_post', true);
     }
 }

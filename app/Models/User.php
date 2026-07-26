@@ -54,6 +54,21 @@ class User extends Authenticatable
         return $this->hasOne(Office::class, 'user_id', 'user_id');
     }
 
+    public function sentMessages()
+    {
+        return $this->hasMany(Message::class, 'sender_id', 'user_id');
+    }
+ 
+    public function receivedMessages()
+    {
+        return $this->hasMany(Message::class, 'receiver_id', 'user_id');
+    }
+ 
+    public function chatTickets()
+    {
+        return $this->hasMany(ChatTicket::class, 'user_id', 'user_id');
+    }
+
     public function getEmailForPasswordReset()
     {
         return $this->user_email;
@@ -63,5 +78,25 @@ class User extends Authenticatable
     public function routeNotificationForMail($notification)
     {
         return $this->user_email;
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->user_role === 'super_admin';
+    }
+ 
+    public function isAdmin(): bool
+    {
+        return $this->user_role === 'admin';
+    }
+ 
+    public function isAlumni(): bool
+    {
+        return $this->user_role === 'alumni';
+    }
+ 
+    public function isEmployer(): bool
+    {
+        return $this->user_role === 'employer';
     }
 }

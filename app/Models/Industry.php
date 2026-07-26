@@ -18,4 +18,9 @@ class Industry extends Model
         // hasMany(RelatedModel, foreignKey, localKey)
         return $this->hasMany(Employer::class, 'industry_id', 'industry_id');
     }
+
+    public function experiences()
+    {
+        return $this->hasMany(Experience::class, 'industry_id', 'industry_id');
+    }
 }

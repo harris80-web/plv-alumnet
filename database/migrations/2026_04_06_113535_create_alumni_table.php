@@ -22,9 +22,10 @@ return new class extends Migration
             $table->foreignId('section_id')->constrained('sections', 'section_id');
 
             $table->boolean('alumnus_employment_status')->default(false);
-            $table->text('resume_summary')->nullable();
+            $table->text('alumnus_resume_summary')->nullable();
+            $table->string('alumnus_resume_file_path')->nullable();
             $table->string('linkedin_url')->nullable();
-            $table->unsignedTinyInteger('resume_completeness')->default(0);
+            $table->unsignedTinyInteger('alumnus_resume_completeness')->default(0);
             
             $table->year('alumnus_batch');
             $table->boolean('alumnus_is_public')->default(true);

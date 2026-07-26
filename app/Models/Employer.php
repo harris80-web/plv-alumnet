@@ -30,6 +30,11 @@ class Employer extends Model
         'employer_approved',
     ];
 
+    protected $casts = [
+        'employer_approved' => 'boolean',
+        'employer_year_established' => 'integer',
+    ];
+
     public function user()
     {
         // "I belong to one user (the employer)"
@@ -40,5 +45,15 @@ class Employer extends Model
     {
         // "I belong to one user (the employer)"
         return $this->belongsTo(Industry::class, 'industry_id', 'industry_id');
+    }
+
+    public function jobPostings()
+    {
+        return $this->hasMany(JobPosting::class, 'user_id', 'user_id');
+    }
+ 
+    public function scopeApproved($query)
+    {
+        return $query->where('employer_approved', true);
     }
 }

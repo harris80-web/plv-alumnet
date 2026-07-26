@@ -60,16 +60,16 @@ class JobPosting extends Model
         return $this->belongsTo(User::class, 'user_id', 'user_id');
     }
 
-    public function salaryMin()
+    public function skills()
     {
-        // "I belong to one user (the employer)"
-        return $this->belongsTo(SalaryMin::class, 'salary_range_min_id', 'salary_min_id');
+        return $this->belongsToMany(Skill::class, 'job_posting_skills', 'job_posting_id', 'skill_id')
+            ->withPivot(['is_required', 'weight'])
+            ->withTimestamps();
     }
-
-    public function salaryMax()
+ 
+    public function jobPostingSkills()
     {
-        // "I belong to one user (the employer)"
-        return $this->belongsTo(SalaryMax::class, 'salary_range_max_id', 'salary_max_id');
+        return $this->hasMany(JobPostingSkill::class, 'job_posting_id', 'job_posting_id');
     }
 
     public function program()
@@ -90,5 +90,40 @@ class JobPosting extends Model
         return $this->belongsToMany(Alumnus::class, 'job_applications', 'job_id', 'alumnus_id')
             ->withPivot('application_status', 'application_date') // Allows you to access $job->pivot->status
             ->withTimestamps();
+    }
+
+    public function applications()
+    {
+        return $this->hasMany(JobApplication::class, 'job_id', 'job_posting_id');
+    }
+ 
+    public function matches()
+    {
+        return $this->hasMany(JobMatch::class, 'job_posting_id', 'job_posting_id');
+    }
+ 
+    /**
+     * Applicants ranked by their frozen application_score (fair,
+     * point-in-time ranking — not affected by later resume edits).
+     */
+    public function rankedApplicants()
+    {
+        return $this->applications()->with('alumnus.user')->orderByDesc('application_score');
+    }
+ 
+    // Scopes
+    public function scopeApproved($query)
+    {
+        return $query->where('job_approved', true);
+    }
+ 
+    public function scopeOpen($query)
+    {
+        return $query->where('job_closing_date', '>=', now()->toDateString());
+    }
+ 
+    public function scopeForProgram($query, $programId)
+    {
+        return $query->whereHas('programs', fn ($q) => $q->where('programs.program_id', $programId));
     }
 }

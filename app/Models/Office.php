@@ -15,14 +15,28 @@ class Office extends Model
     //
 
     protected $fillable = [
+        'user_id',
         'office_address',
-        'office_birth_date'
+        'office_created_at',
+        'office_birth_date',
+        'office_last_log',
+    ];
+
+    protected $casts = [
+        'office_created_at' => 'datetime',
+        'office_birth_date' => 'date',
+        'office_last_log' => 'datetime',
     ];
 
     public function user()
     {
         // "I belong to one user (the employer)"
         return $this->belongsTo(User::class, 'user_id', 'user_id');
+    }
+
+    public function chatTickets()
+    {
+        return $this->hasMany(ChatTicket::class, 'office_id', 'office_id');
     }
     
 }

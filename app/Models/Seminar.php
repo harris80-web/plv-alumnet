@@ -18,4 +18,8 @@ class Seminar extends Model
         'seminar_description',
         'seminar_image'
     ];
+
+    protected $casts = [
+        'seminar_date' => 'date',
+    ];
 }

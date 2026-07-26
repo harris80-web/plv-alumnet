@@ -16,11 +16,11 @@ return new class extends Migration
         Schema::create('experiences', function (Blueprint $table) {
             $table->id('experience_id');
             $table->foreignId('alumnus_id')->constrained('alumni', 'user_id')->onDelete('cascade');
-            $table->enum('type', ['work', 'project'])->default('work');
+            $table->enum('experience_type', ['work', 'project'])->default('work');
             $table->foreignId('industry_id')->constrained('industries', 'industry_id');
-            $table->integer('duration_months');
-            $table->string('job_title');
-            $table->text('job_description')->nullable();
+            $table->integer('experience_duration_months');
+            $table->string('experience_job_title');
+            $table->text('experience_job_description')->nullable();
             $table->timestamps();
         });
     }

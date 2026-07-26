@@ -18,4 +18,9 @@ class Section extends Model
         // hasMany(RelatedModel, foreignKey, localKey)
         return $this->hasMany(Alumnus::class, 'section_id', 'section_id');
     }
+
+    public function educations()
+    {
+        return $this->hasMany(Education::class, 'section_id', 'section_id');
+    }
 }

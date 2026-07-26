@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('skills', function (Blueprint $table) {
             $table->id('skill_id');
             $table->string('skill_name', 100)->unique();
-            $table->enum('category', ['technical', 'tool', 'language', 'soft', 'domain'])
+            $table->enum('skill_category', ['technical', 'tool', 'language', 'soft', 'domain'])
                 ->default('domain');
             $table->timestamps();
         });

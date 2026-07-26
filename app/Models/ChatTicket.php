@@ -10,9 +10,11 @@ class ChatTicket extends Model
     protected $primaryKey = 'ticket_id';
 
     protected $fillable = [
-        'user_query', 
-        'office_response', 
-        'ticket_status'
+        'user_id',
+        'office_id',
+        'user_query',
+        'office_response',
+        'ticket_status',
     ];
 
     public function user()
@@ -25,5 +27,10 @@ class ChatTicket extends Model
     {
         // "I belong to one user (the employer)"
         return $this->belongsTo(Office::class, 'office_id', 'office_id');
+    }
+
+    public function scopeOpen($query)
+    {
+        return $query->where('ticket_status', 'open');
     }
 }

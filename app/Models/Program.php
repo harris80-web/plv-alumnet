@@ -24,4 +24,9 @@ class Program extends Model
         // hasMany(RelatedModel, foreignKey, localKey)
         return $this->hasMany(JobPosting::class, 'program_id', 'program_id');
     }
+
+    public function educations()
+    {
+        return $this->hasMany(Education::class, 'program_id', 'program_id');
+    }
 }

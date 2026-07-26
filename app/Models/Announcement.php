@@ -14,4 +14,8 @@ class Announcement extends Model
         'announcement_description',
         'announcement_image'
     ];
+
+    protected $casts = [
+        'announcement_date' => 'date',
+    ];
 }

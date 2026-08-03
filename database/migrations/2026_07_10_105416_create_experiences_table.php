@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('alumnus_id')->constrained('alumni', 'user_id')->onDelete('cascade');
             $table->enum('experience_type', ['work', 'project'])->default('work');
             $table->foreignId('industry_id')->constrained('industries', 'industry_id');
-            $table->integer('experience_duration_months');
+            $table->integer('experience_duration_months')->default(0);
             $table->string('experience_job_title');
             $table->text('experience_job_description')->nullable();
             $table->timestamps();

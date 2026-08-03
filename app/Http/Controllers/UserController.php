@@ -367,6 +367,7 @@ class UserController extends Controller
     public function showProfile()
     {
         $user = Auth::user();
+        $industries = Industry::all();
         if ($user->user_role == 'admin') {
             return view('admin.profile', compact('user'));
         } else if ($user->user_role == 'super_admin') {
@@ -376,7 +377,7 @@ class UserController extends Controller
         } else if ($user->user_role == 'employer') {
             return view('employer.profile', compact('user'));
         } else if ($user->user_role == 'alumni') {
-            return view('alumni.profile', compact('user'));
+            return view('alumni.profile', compact('user', 'industries'));
         } else {
             Auth::logout();
             return redirect()->route('auth.login')->withErrors('error', 'Your account role is not recognized. Please contact the administrator.');

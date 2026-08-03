@@ -22,6 +22,10 @@ use App\Http\Controllers\SeminarController;
 use App\Http\Controllers\TestimonialController;
 use App\Http\Controllers\UserController;
 use App\Models\Testimonial;
+use App\Http\Controllers\ResumeBuilderController;
+use App\Http\Controllers\SkillSearchController;
+
+
 
 //outside of session routes
 
@@ -233,3 +237,9 @@ Route::post('/users/addAdmin', [UserController::class, 'addAdmin'])->name('users
 Route::get('/showChangePassword', [UserController::class, 'showChangePassword'])->name('users.showChangePassword');
 Route::put('/changePassword', [UserController::class, 'changePassword'])->name('users.changePassword');
 Route::resource('users', UserController::class);
+
+Route::get('/alumnus/resume', [ResumeBuilderController::class, 'view'])->name('resume.view');
+Route::get('/resume/build', [ResumeBuilderController::class, 'edit'])->name('resume.build');
+Route::post('/resume/save', [ResumeBuilderController::class, 'save'])->name('resume.save');
+
+Route::get('/skills/search', [SkillSearchController::class, 'search'])->name('skills.search');

@@ -7,13 +7,64 @@ use App\Models\Certification;
 use App\Models\Experience;
 use App\Models\Industry;
 use App\Models\Skill;
+use App\Models\User;
+use App\Services\ResumeTextParser;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Smalot\PdfParser\Parser as PdfTextParser;
 
 class ResumeBuilderController extends Controller
 {
+    /**
+     * Reads text out of an uploaded PDF and runs it through ResumeTextParser.
+     * Returns the extracted fields as JSON — nothing is saved here. The
+     * wizard prefills itself from the response so the alumnus reviews and
+     * edits before anything actually hits the database, same as any other
+     * prefill (see toResumeFormArray()).
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'resume_file' => ['required', 'file', 'mimes:pdf', 'max:5120'],
+        ]);
+
+        try {
+            $text = (new PdfTextParser())->parseFile($request->file('resume_file')->getRealPath())->getText();
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Could not read that PDF. Make sure it\'s not scanned/image-only or password-protected.',
+            ], 422);
+        }
+
+        if (trim($text) === '') {
+            return response()->json([
+                'message' => 'That PDF has no readable text (likely a scanned image). Try a different file.',
+            ], 422);
+        }
+
+        return response()->json((new ResumeTextParser())->parse($text));
+    }
+
+    /**
+     * Real, text-based PDF (not a screenshot) — renders the same data as
+     * the on-screen resume through a plain-CSS template, since dompdf
+     * doesn't run the Tailwind CDN's browser-side JIT compiler.
+     */
+    public function downloadPdf()
+    {
+        $user = User::with(['alumnus.program', 'alumnus.skills', 'alumnus.experiences.industry', 'alumnus.certifications'])
+            ->findOrFail(Auth::id());
+
+        $pdf = Pdf::loadView('alumni.resume-pdf', compact('user'));
+
+        $filename = Str::slug($user->alumnus->resumeFullName() ?: 'resume') . '-resume.pdf';
+
+        return $pdf->download($filename);
+    }
+
     /**
      * Show the resume builder, prefilled with whatever the alumnus has
      * already saved.
@@ -23,27 +74,7 @@ class ResumeBuilderController extends Controller
         $alumnus = Alumnus::with(['skills', 'experiences', 'certifications'])
             ->findOrFail(Auth::id());
 
-        $resumeData = [
-            'resume_summary' => $alumnus->alumnus_resume_summary,
-            'linkedin_url' => $alumnus->linkedin_url,
-            'resume_completeness' => $alumnus->alumnus_resume_completeness ?? 0,
-            'skills' => $alumnus->skills->map(fn ($skill) => [
-                'name' => $skill->skill_name,
-            ])->values(),
-            'experiences' => $alumnus->experiences->map(fn ($exp) => [
-                'type' => $exp->experience_type,
-                'job_title' => $exp->experience_job_title,
-                'job_description' => $exp->experience_job_description,
-                'duration_months' => $exp->experience_duration_months,
-                'industry_id' => $exp->industry_id,
-            ])->values(),
-            'certifications' => $alumnus->certifications->map(fn ($cert) => [
-                'certification_type' => $cert->certification_type,
-                'certification_name' => $cert->certification_name,
-                'certification_from' => $cert->certification_from,
-                'certification_date' => optional($cert->certification_date)->format('Y-m-d'),
-            ])->values(),
-        ];
+        $resumeData = $alumnus->toResumeFormArray();
 
         $industries = Industry::orderBy('industry_name')->get(['industry_id', 'industry_name']);
 
@@ -103,7 +134,7 @@ class ResumeBuilderController extends Controller
                 ->map(function ($name) {
                     $skill = Skill::firstOrCreate(
                         ['skill_name' => $name],
-                        ['category' => 'domain'] // safe default; admin can recategorize later
+                        ['skill_category' => 'domain'] // safe default; admin can recategorize later
                     );
                     return $skill->skill_id;
                 });
@@ -120,11 +151,13 @@ class ResumeBuilderController extends Controller
                     'experience_job_description' => $exp['job_description'] ?? null,
                     // Use ?: (not ??) here: these fields are always present
                     // in the submitted array, just possibly empty strings
-                    // when left blank in the form. ?? only catches a
-                    // missing key, not an empty value — MySQL rejects ''
-                    // for integer columns with no default, which is what
-                    // throws the "doesn't have a default value" error.
-                    'experience_duration_months' => $exp['duration_months'] ?: null,
+                    // when left blank in the form. ?? only catches a missing
+                    // key, not an empty value. `experience_duration_months`
+                    // is NOT NULL (default 0), so an explicit '' -> null
+                    // still violates the column — fall back to 0 instead.
+                    // `industry_id` is a nullable FK, so null is the correct
+                    // "not specified" value there.
+                    'experience_duration_months' => $exp['duration_months'] ?: 0,
                     'industry_id' => $exp['industry_id'] ?: null,
                 ]);
             }
@@ -142,39 +175,16 @@ class ResumeBuilderController extends Controller
             }
 
             // ---- Recompute completeness (source of truth, server-side) ----
-            $alumnus->refresh()->load(['skills', 'experiences', 'certifications']);
-            $alumnus->alumnus_resume_completeness = $this->calculateCompleteness($alumnus);
-            $alumnus->save();
+            // Alumnus::refreshResumeCompleteness() re-queries skills/experiences/
+            // certifications itself, so no need to refresh/reload first.
+            $alumnus->refreshResumeCompleteness();
         });
 
+        $alumnus = $alumnus->fresh(['skills', 'experiences', 'certifications']);
+
         return response()->json([
-            'resume_completeness' => $alumnus->fresh()->alumnus_resume_completeness,
+            'resume_completeness' => $alumnus->alumnus_resume_completeness,
+            'breakdown' => $alumnus->completenessBreakdown(),
         ]);
-    }
-
-    private function calculateCompleteness(Alumnus $alumnus): int
-    {
-        $score = 0;
-
-        if (Str::length((string) $alumnus->alumnus_resume_summary) > 40) {
-            $score += 15;
-        }
-        if (! empty($alumnus->linkedin_url)) {
-            $score += 10;
-        }
-
-        // Full credit for the section as soon as there's at least one entry
-        // — no partial credit scaled by how many they added.
-        if ($alumnus->skills->isNotEmpty()) {
-            $score += 25;
-        }
-        if ($alumnus->experiences->isNotEmpty()) {
-            $score += 30;
-        }
-        if ($alumnus->certifications->isNotEmpty()) {
-            $score += 20;
-        }
-
-        return min(100, (int) round($score));
     }
 }

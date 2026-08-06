@@ -377,7 +377,9 @@ class UserController extends Controller
         } else if ($user->user_role == 'employer') {
             return view('employer.profile', compact('user'));
         } else if ($user->user_role == 'alumni') {
-            return view('alumni.profile', compact('user', 'industries'));
+            $user->load(['alumnus.program', 'alumnus.section', 'alumnus.skills', 'alumnus.experiences.industry', 'alumnus.certifications']);
+            $resumeData = $user->alumnus->toResumeFormArray();
+            return view('alumni.profile', compact('user', 'industries', 'resumeData'));
         } else {
             Auth::logout();
             return redirect()->route('auth.login')->withErrors('error', 'Your account role is not recognized. Please contact the administrator.');
@@ -397,7 +399,9 @@ class UserController extends Controller
         } else if ($user->user_role == 'employer') {
             return view('employer.edit-profile', compact('user', 'industries'));
         } else if ($user->user_role == 'alumni') {
-            return view('alumni.edit-profile', compact('user'));
+            $user->load(['alumnus.skills', 'alumnus.experiences.industry', 'alumnus.certifications']);
+            $resumeData = $user->alumnus->toResumeFormArray();
+            return view('alumni.edit-profile', compact('user', 'industries', 'resumeData'));
         } else {
             Auth::logout();
             return redirect()->route('auth.login')->withErrors('error', 'Your account role is not recognized. Please contact the administrator.');

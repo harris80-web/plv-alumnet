@@ -112,7 +112,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 border-t pt-8">
+            <div class="grid grid-cols-1 gap-8 mt-12 border-t pt-8">
 
                 <div class="space-y-6">
                     <div>
@@ -131,31 +131,7 @@
                     </div>
                     <div>
                         <p class="text-xs font-black text-slate-900 uppercase">Skills</p>
-                        <p class="text-md text-gray-600 font-medium">{{ $user->alumnus->alumnus_skills ?? '--' }}</p>
-                    </div>
-                </div>
-
-                <div class="flex flex-col justify-start items-end space-y-3">
-                    <div class="w-full md:w-64 flex items-center justify-between">
-                        <span class="text-xs font-black text-slate-900 uppercase">Resume</span>
-                        <a href="{{ asset('storage/' . $user->alumnus->alumnus_resume) ?? '#'}}"
-                            class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white text-xs font-bold py-2 px-8 rounded shadow-md transition duration-200 uppercase w-40">
-                            View Resume
-                        </a>
-                    </div>
-
-                    <div class="w-full md:w-64 flex justify-end">
-                        <button
-                            class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white text-xs font-bold py-2 px-8 rounded shadow-md transition duration-200 uppercase w-40">
-                            View File
-                        </button>
-                    </div>
-
-                    <div class="w-full md:w-64 flex justify-end">
-                        <button
-                            class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white text-xs font-bold py-2 px-8 rounded shadow-md transition duration-200 uppercase w-40">
-                            View File
-                        </button>
+                        <p class="text-md text-gray-600 font-medium">{{ $user->alumnus->skills->pluck('skill_name')->join(', ') ?: '--' }}</p>
                     </div>
                 </div>
 
@@ -221,8 +197,29 @@
         </div>
     </div>
 
+    {{-- ===== RESUME: finished view or builder, gated by completeness ===== --}}
+    @if($user->alumnus->isResumeComplete())
+        @include('alumni.resume-preview', ['user' => $user])
+    @else
     {{-- ===== RESUME BUILDER ===== --}}
     <div class="max-w-3xl mx-auto px-4 py-8">
+
+        {{-- ===== Import an existing resume ===== --}}
+        <div class="mb-6 p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+            <p class="text-sm font-medium text-gray-700 mb-2">
+                <i class="fa-solid fa-file-import text-red-800 mr-1"></i>
+                Already have a resume? Import it to fill in the fields below automatically — you can still edit everything before saving.
+            </p>
+            <div class="flex flex-wrap items-center gap-3">
+                <input type="file" id="importResumeFile" accept="application/pdf"
+                    class="text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-red-800 file:text-white file:text-xs file:font-medium hover:file:bg-red-900">
+                <button type="button" id="importResumeBtn"
+                    class="text-sm font-medium bg-[#0E0F3B] text-white rounded px-4 py-1.5 hover:bg-[#1D46A4] disabled:opacity-50">
+                    Import from PDF
+                </button>
+                <span id="importResumeStatus" class="text-xs text-gray-500"></span>
+            </div>
+        </div>
 
         {{-- ===== Header + progress ===== --}}
         <div class="mb-6">
@@ -236,6 +233,14 @@
                 <div id="completeness-bar" class="h-full bg-red-800 rounded-full transition-all duration-300"
                     style="width:{{ $resumeData['resume_completeness'] ?? 0 }}%"></div>
             </div>
+            <ul id="completeness-breakdown" class="mt-3 space-y-1 text-xs text-gray-500">
+                @foreach($user->alumnus->completenessBreakdown() as $item)
+                    <li data-key="{{ $item['key'] }}" class="flex items-center gap-2">
+                        <i class="fa-solid {{ $item['done'] ? 'fa-circle-check text-green-600' : 'fa-circle text-gray-300' }}"></i>
+                        <span>{{ $item['label'] }}</span>
+                    </li>
+                @endforeach
+            </ul>
             <div class="flex gap-4 mt-3 text-sm">
                 <button type="button" class="step-tab font-medium text-red-800" data-step="0">1. Summary</button>
                 <button type="button" class="step-tab font-medium text-gray-400" data-step="1">2. Skills</button>
@@ -463,6 +468,7 @@
             <button type="button" class="remove-row text-sm text-red-700">Remove</button>
         </div>
     </template>
+    @endif
 
     @include('partials.footer-alumni')
 </body>
@@ -505,9 +511,10 @@
     });
 
 </script>
+@if(!$user->alumnus->isResumeComplete())
 <script>
 (function () {
-    
+
     'use strict';
 
     var currentStep = 0;
@@ -532,14 +539,9 @@
         tabs.forEach(function (t) { t.className = 'step-tab font-medium ' + (Number(t.dataset.step) <= idx ? 'text-red-800' : 'text-gray-400'); });
         btnBack.classList.toggle('hidden', idx === 0);
         btnNext.textContent = idx === totalSteps - 1 ? 'Submit resume' : 'Continue';
-
-        // Progress bar reflects how far through the wizard you are —
-        // step 0 of 4 = 0%, step 3 of 4 (the last step) = 100%.
-        var pct = Math.round((idx / (totalSteps - 1)) * 100);
-        document.getElementById('completeness-label').textContent = pct;
-        document.getElementById('completeness-bar').style.width = pct + '%';
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Deliberately no scrollTo and no touching completeness-label/bar
+        // here: switching steps shouldn't move the page, and the real
+        // completeness % only ever comes from the server (see submitForm).
     }
 
     tabs.forEach(function (t) { t.addEventListener('click', function () { showStep(Number(t.dataset.step)); }); });
@@ -707,7 +709,17 @@
             // what was actually saved, never from client-side guessing.
             document.getElementById('completeness-label').textContent = data.resume_completeness;
             document.getElementById('completeness-bar').style.width = data.resume_completeness + '%';
-            if (isFinal) window.location.href = '{{ route('resume.build') }}?saved=1';
+
+            (data.breakdown || []).forEach(function (item) {
+                var li = document.querySelector('#completeness-breakdown li[data-key="' + item.key + '"]');
+                if (!li) return;
+                li.querySelector('i').className = 'fa-solid ' + (item.done ? 'fa-circle-check text-green-600' : 'fa-circle text-gray-300');
+            });
+
+            // Reloading either lands on the finished resume view (100%) or
+            // back on this wizard with the checklist above reflecting
+            // exactly what's still missing — both server-rendered fresh.
+            if (isFinal) window.location.href = "{{ route('user.profile') }}";
         })
         .catch(function (err) {
             console.error(err);
@@ -715,8 +727,98 @@
         });
     }
 
+    /* ---- import: prefill from an uploaded PDF, nothing saved yet ---- */
+    function addExperienceRowWithData(exp) {
+        addRow('experience-row-template', 'experience-list', 'experiences');
+        var row = document.getElementById('experience-list').lastElementChild;
+        row.querySelector('input[value="' + exp.type + '"]').checked = true;
+        row.querySelector('[name$="[job_title]"]').value = exp.job_title || '';
+        row.querySelector('[name$="[job_description]"]').value = exp.job_description || '';
+        row.querySelector('[name$="[duration_months]"]').value = exp.duration_months || '';
+        if (exp.industry_id) row.querySelector('[name$="[industry_id]"]').value = exp.industry_id;
+    }
+
+    function addCertRowWithData(cert) {
+        addRow('cert-row-template', 'cert-list', 'certifications');
+        var row = document.getElementById('cert-list').lastElementChild;
+        row.querySelector('input[value="' + cert.certification_type + '"]').checked = true;
+        row.querySelector('[name$="[certification_name]"]').value = cert.certification_name || '';
+        row.querySelector('[name$="[certification_from]"]').value = cert.certification_from || '';
+        row.querySelector('[name$="[certification_date]"]').value = cert.certification_date || '';
+    }
+
+    var importBtn = document.getElementById('importResumeBtn');
+    var importFile = document.getElementById('importResumeFile');
+    var importStatus = document.getElementById('importResumeStatus');
+
+    importBtn.addEventListener('click', function () {
+        if (!importFile.files.length) {
+            importStatus.textContent = 'Choose a PDF file first.';
+            return;
+        }
+
+        importBtn.disabled = true;
+        importStatus.textContent = 'Reading your PDF...';
+
+        var formData = new FormData();
+        formData.append('resume_file', importFile.files[0]);
+        formData.append('_token', document.querySelector('#resume-form input[name="_token"]').value);
+
+        fetch('{{ route('resume.import') }}', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData,
+        })
+        .then(function (res) {
+            return res.json().then(function (data) {
+                if (!res.ok) throw new Error(data.message || 'Import failed');
+                return data;
+            });
+        })
+        .then(function (data) {
+            document.getElementById('resume_summary').value = data.resume_summary || document.getElementById('resume_summary').value;
+            document.getElementById('summary-count').textContent = document.getElementById('resume_summary').value.length;
+
+            var linkedinInput = form.querySelector('[name="linkedin_url"]');
+            if (data.linkedin_url) linkedinInput.value = data.linkedin_url;
+
+            document.getElementById('skills-list').innerHTML = '';
+            counters.skills = 0;
+            (data.skills || []).forEach(function (s) { addSkillChip(s.name); });
+
+            document.getElementById('experience-list').innerHTML = '';
+            counters.experiences = 0;
+            (data.experiences || []).forEach(addExperienceRowWithData);
+
+            document.getElementById('cert-list').innerHTML = '';
+            counters.certifications = 0;
+            (data.certifications || []).forEach(addCertRowWithData);
+
+            var found = (data.skills || []).length + (data.experiences || []).length + (data.certifications || []).length;
+            importStatus.textContent = found > 0
+                ? 'Imported — review the fields below, then save.'
+                : 'Imported, but couldn\'t find much structured data — please fill in manually.';
+            showStep(0);
+
+            // Import only fills the form — it never saves anything, so the
+            // completeness bar (which only ever moves from a real server
+            // response, see submitForm) would otherwise sit stale at
+            // whatever it was before the import. Save as a draft right
+            // away so the bar/checklist reflect what was actually imported.
+            submitForm(false);
+        })
+        .catch(function (err) {
+            console.error(err);
+            importStatus.textContent = err.message || 'Could not read that PDF.';
+        })
+        .finally(function () {
+            importBtn.disabled = false;
+        });
+    });
+
     showStep(0);
 })();
 </script>
+@endif
 
 </html>

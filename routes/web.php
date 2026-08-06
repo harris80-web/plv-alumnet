@@ -241,5 +241,7 @@ Route::resource('users', UserController::class);
 Route::get('/alumnus/resume', [ResumeBuilderController::class, 'view'])->name('resume.view');
 Route::get('/resume/build', [ResumeBuilderController::class, 'edit'])->name('resume.build');
 Route::post('/resume/save', [ResumeBuilderController::class, 'save'])->name('resume.save');
+Route::get('/resume/pdf', [ResumeBuilderController::class, 'downloadPdf'])->name('resume.pdf');
+Route::post('/resume/import', [ResumeBuilderController::class, 'import'])->name('resume.import');
 
 Route::get('/skills/search', [SkillSearchController::class, 'search'])->name('skills.search');

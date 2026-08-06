@@ -139,29 +139,14 @@
                         <label for="user_number" class="text-xs font-bold text-orange-600 uppercase block mb-1">Contact No.</label>
                         <input type="text" name="user_number" placeholder="09XXXXXXXXX" value="{{ $user->user_number }}" class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
                     </div>
-
-                    <div>
-                        <label for="alumnus_skills" class="text-xs font-bold text-orange-600 uppercase block mb-1">Skills</label>
-                        <textarea rows="4" name="alumnus_skills" placeholder="e.g. Web Development, UI/UX Design, Data Analysis..." class="w-full border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">{{ $user->alumnus->alumnus_skills }}</textarea>
-                    </div>
                 </div>
 
                 <div class="flex flex-col justify-start items-end space-y-4">
                     <div class="w-full md:w-72 flex items-center justify-between">
                         <span class="text-xs font-bold text-orange-600 uppercase">Resume</span>
-                        <label for="alumnus_resume" class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white text-xs font-bold py-2 px-8 rounded shadow-md transition duration-200 uppercase w-44">
-                            Upload Resume
-                        </label>
-                        <input type="file" name="alumnus_resume" id="alumnus_resume" class="hidden">
-                    </div>
-                    <div class="w-full md:w-72 flex justify-end">
-                        <button class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white text-xs font-bold py-2 px-8 rounded shadow-md transition duration-200 uppercase w-44">
-                            Upload File
-                        </button>
-                    </div>
-                    <div class="w-full md:w-72 flex justify-end">
-                        <button class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white text-xs font-bold py-2 px-8 rounded shadow-md transition duration-200 uppercase w-44">
-                            Upload File
+                        <button type="button" id="openResumeEditorBtn"
+                            class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white text-xs font-bold py-2 px-8 rounded shadow-md transition duration-200 uppercase w-44">
+                            Edit Resume
                         </button>
                     </div>
                 </div>
@@ -211,24 +196,27 @@
             </div>
 
             <nav class="space-y-4 flex-grow">
-                <a href="alumni_profile.php" class="flex items-center gap-4 text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white  p-3 w-full transition font-semibold rounded-sm">
+                <a href="{{ route('user.profile') }}" class="flex items-center gap-4 text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white  p-3 w-full transition font-semibold rounded-sm">
                     <i class="fa-solid fa-address-card w-6"></i> View Profile
                 </a>
-                <a href="alumni_edit.php" class="flex items-center gap-4  p-3 w-full transition font-bold bg-[#ED7A07] text-white hover:font-bold">
+                <a href="{{ route('users.editProfile') }}" class="flex items-center gap-4  p-3 w-full transition font-bold bg-[#ED7A07] text-white hover:font-bold">
                     <i class="fa-solid fa-user-pen w-6"></i> Edit Profile
                 </a>
-                <a href="alumni_change_password.php" class="flex items-center gap-4 text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white p-3 w-full transition font-regular hover:font-semibold">
+                <a href="{{ route('alumni.changePassword') }}" class="flex items-center gap-4 text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white p-3 w-full transition font-regular hover:font-semibold">
                     <i class="fa-solid fa-lock w-6"></i> Change Password
                 </a>
             </nav>
 
-            <div class="border-t pt-6">
-                <a href="logout.php" class="flex items-center gap-4 text-[#0E0F3B] hover:text-[#ED7A07] p-3 transition font-bold">
+            <form action="{{ route('user.logout') }}" method="POST" class="border-t pt-6">
+                @csrf
+                <button type="submit" class="flex items-center gap-4 text-[#0E0F3B] hover:text-[#ED7A07] p-3 transition font-bold">
                     <i class="fa-solid fa-right-from-bracket"></i> Log out
-                </a>
-            </div>
+                </button>
+            </form>
         </div>
     </div>
+
+    @include('alumni.resume-editor-modal', ['user' => $user, 'resumeData' => $resumeData, 'industries' => $industries])
 
     @include('partials.footer-alumni')
 

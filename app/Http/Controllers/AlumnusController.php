@@ -78,20 +78,10 @@ class AlumnusController extends Controller
         $validated = $request->validate([
             'user_profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'alumnus_employment_status' => 'required|boolean|max:255',
-            'alumnus_skills' => 'nullable|string',
-            'alumnus_resume' => 'nullable|mimes:pdf,doc,docx',
             'user_email' => 'required|email|unique:users,user_email,' . $user->user_id . ',user_id',
             'user_number' => 'nullable|string|max:20',
         ]);
 
-        $oldResume = $user->alumnus->alumnus_resume ?? null;
-        $resume = null;
-        if ($request->hasFile('alumnus_resume')) {
-            if ($oldResume && Storage::disk('public')->exists($oldResume)) {
-                Storage::disk('public')->delete($oldResume);
-            }
-            $resume = $request->file('alumnus_resume')->store('resumes', 'public');
-        }
         $oldProfilePicture = $user->user_profile_picture ?? null;
         $profilePicture = null;
         if ($request->hasFile('user_profile_picture')) {
@@ -102,20 +92,12 @@ class AlumnusController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($validated, $resume, $alumnus, $profilePicture) {
+            DB::transaction(function () use ($validated, $alumnus, $profilePicture) {
                 $alumni = Alumnus::where('user_id', $alumnus)->firstOrFail();
 
                 $alumni->update([
                     'alumnus_employment_status' => $validated['alumnus_employment_status'] ?? $alumni->alumnus_employment_status,
-                    'alumnus_skills' => $validated['alumnus_skills'] ?? $alumni->alumnus_skills,
                 ]);
-
-                if ($resume != null) {
-                    $alumni->update([
-                        'alumnus_resume' => $resume,
-                    ]);
-                }
-
 
                 $alumni->user->update([
 
@@ -130,19 +112,11 @@ class AlumnusController extends Controller
                 }
             });
         } catch (\Exception $e) {
-            dd([
-                'Message' => $e->getMessage(),
-                'File' => $e->getFile(),
-                'Line' => $e->getLine()
-            ]);
-            if ($resume) {
-                Storage::disk('public')->delete($resume);
-            }
             if ($profilePicture) {
                 Storage::disk('public')->delete($profilePicture);
             }
 
-            return redirect()->route('user.profile')->with('error', 'An error occurred while uploading the resume: ' . $e->getMessage());
+            return redirect()->route('user.profile')->with('error', 'An error occurred while updating your profile: ' . $e->getMessage());
         }
 
         return redirect()->route('user.profile')->with('success', 'Alumni profile updated successfully.');

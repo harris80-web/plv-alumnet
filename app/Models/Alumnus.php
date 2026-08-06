@@ -108,25 +108,143 @@ class Alumnus extends Model
         return $query->where('program_id', $programId);
     }
 
+    /**
+     * Single source of truth for both the completeness score and the visible
+     * checklist in the wizard — otherwise a threshold like "summary must be
+     * >40 chars" ends up silently withholding points with no way for the
+     * alumnus to see why they're stuck below 100%.
+     *
+     * Weighted, not equal-split — there's no builder step for `educations`
+     * (EducationController is an unwired stub), so that section is left out
+     * entirely rather than being a factor no one can ever satisfy.
+     */
+    public function completenessBreakdown(): array
+    {
+        return [
+            [
+                'key' => 'summary',
+                'label' => 'Professional summary (more than 40 characters)',
+                'done' => mb_strlen((string) $this->alumnus_resume_summary) > 40,
+                'points' => 15,
+            ],
+            [
+                'key' => 'linkedin',
+                'label' => 'LinkedIn URL',
+                'done' => !empty($this->linkedin_url),
+                'points' => 10,
+            ],
+            [
+                'key' => 'skills',
+                'label' => 'At least one skill',
+                'done' => $this->skills()->exists(),
+                'points' => 25,
+            ],
+            [
+                'key' => 'experiences',
+                'label' => 'At least one work experience or project',
+                'done' => $this->experiences()->exists(),
+                'points' => 30,
+            ],
+            [
+                'key' => 'certifications',
+                'label' => 'At least one certification, seminar, or training',
+                'done' => $this->certifications()->exists(),
+                'points' => 20,
+            ],
+        ];
+    }
+
     public function calculateResumeCompleteness(): int
     {
-        $sections = [
-            !empty($this->alumnus_resume_summary),
-            $this->educations()->exists(),
-            $this->experiences()->exists(),
-            $this->skills()->exists(),
-            $this->certifications()->exists(),
-            !empty($this->linkedin_url),
-        ];
- 
-        $filled = count(array_filter($sections));
- 
-        return (int) round(($filled / count($sections)) * 100);
+        $score = array_sum(array_map(
+            fn ($item) => $item['done'] ? $item['points'] : 0,
+            $this->completenessBreakdown()
+        ));
+
+        return min(100, (int) $score);
     }
- 
+
     public function refreshResumeCompleteness(): void
     {
         $this->alumnus_resume_completeness = $this->calculateResumeCompleteness();
         $this->save();
+    }
+
+    public function isResumeComplete(): bool
+    {
+        return $this->alumnus_resume_completeness >= 100;
+    }
+
+    /**
+     * Shape consumed by the resume builder wizard (resources/views/alumni/profile.blade.php)
+     * to prefill itself on load. Single source of truth so the profile page and the
+     * standalone resume.build route can't drift apart on field names again.
+     */
+    public function toResumeFormArray(): array
+    {
+        return [
+            'resume_summary' => $this->alumnus_resume_summary,
+            'linkedin_url' => $this->linkedin_url,
+            'resume_completeness' => $this->alumnus_resume_completeness ?? 0,
+            'skills' => $this->skills->map(fn ($skill) => [
+                'name' => $skill->skill_name,
+            ])->values(),
+            'experiences' => $this->experiences->map(fn ($exp) => [
+                'type' => $exp->experience_type,
+                'job_title' => $exp->experience_job_title,
+                'job_description' => $exp->experience_job_description,
+                'duration_months' => $exp->experience_duration_months,
+                'industry_id' => $exp->industry_id,
+            ])->values(),
+            'certifications' => $this->certifications->map(fn ($cert) => [
+                'certification_type' => $cert->certification_type,
+                'certification_name' => $cert->certification_name,
+                'certification_from' => $cert->certification_from,
+                'certification_date' => optional($cert->certification_date)->format('Y-m-d'),
+            ])->values(),
+        ];
+    }
+
+    /**
+     * Shared by the on-screen resume view and the PDF template so the two
+     * never describe the same alumnus differently.
+     */
+    public function resumeFullName(): string
+    {
+        return collect([
+            $this->user->user_first_name,
+            $this->user->user_middle_name,
+            $this->user->user_last_name,
+            $this->user->user_suffix,
+        ])->filter()->implode(' ');
+    }
+
+    public static function formatExperienceDuration(?int $months): ?string
+    {
+        $months = (int) $months;
+        if ($months <= 0) {
+            return null;
+        }
+
+        $years = intdiv($months, 12);
+        $rem = $months % 12;
+        $parts = [];
+        if ($years > 0) {
+            $parts[] = $years . ' yr' . ($years > 1 ? 's' : '');
+        }
+        if ($rem > 0) {
+            $parts[] = $rem . ' mo' . ($rem > 1 ? 's' : '');
+        }
+
+        return implode(' ', $parts);
+    }
+
+    public static function certificationTypeLabels(): array
+    {
+        return [
+            'certification' => 'Certification',
+            'seminar' => 'Seminar',
+            'training' => 'Training',
+        ];
     }
 }

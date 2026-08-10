@@ -261,12 +261,31 @@
 
             @foreach($jobPostings as $job)
             @if ($job->job_approved ==1)
-            <div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row relative hover:shadow-lg transition-shadow ">
+            <div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row relative hover:shadow-lg transition-shadow md:min-h-[340px]">
 
-                <div class="md:w-1/4 h-48 md:h-auto bg-gray-300 relative rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none overflow-hidden">
+                <div class="md:w-1/4 h-48 md:h-auto bg-gray-300 relative rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none overflow-hidden group cursor-pointer"
+                    role="button" tabindex="0" aria-label="View job details"
+                    data-title="{{ $job->job_posting_title }}"
+                    data-company="{{ $job->job_posting_company }}"
+                    data-address="{{ $job->job_posting_address }}"
+                    data-date="{{ $job->created_at->diffForHumans() }}"
+                    data-description="{{ $job->job_posting_description }}"
+                    data-type="{{ $job->job_posting_employment_type }}"
+                    data-setup="{{ $job->job_posting_setup }}"
+                    data-valid="{{ $job->job_closing_date }}"
+                    data-image="{{ asset('storage/' . $job->job_posting_image) }}"
+                    data-programs="{{ $job->programs->pluck('program_name')->implode(', ') }}"
+                    data-industry="{{ $job->industry->industry_name ?? 'Not specified' }}"
+                    onclick="openJobModal(this)"
+                    onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openJobModal(this);}">
                     <img src="{{ asset('storage/'.$job->job_posting_image) }}"
-                        class="object-cover w-full h-full opacity-60">
+                        class="object-cover w-full h-full opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-300">
                     <div class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span class="bg-white/90 text-[#1D264F] text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
+                            <i class="fas fa-eye mr-1"></i> VIEW DETAILS
+                        </span>
+                    </div>
                 </div>
 
                 <div class="p-6 flex-1 relative">
@@ -323,7 +342,18 @@
 
                     <div class="mt-4">
                         <p class="font-bold text-sm text-[#0E0F3B]">Job Description:</p>
-                        <p class="text-xs text-gray-500">{{ $job->job_posting_description }}</p>
+                        {{-- Rich text HTML (sanitized server-side on save, see
+                             JobPostingController) — a <div> here, not <p>,
+                             since the content can include block elements
+                             (headings, lists) that aren't valid inside <p>.
+                             Height is capped so a long description can't
+                             balloon the whole card — it fades out at the
+                             bottom instead of hard-clipping mid-line; the
+                             "VIEW DETAILS" button shows it in full. --}}
+                        <div class="relative max-h-[2.6rem] overflow-hidden">
+                            <div class="text-xs text-gray-500 job-description-content">{!! $job->job_posting_description !!}</div>
+                            <div class="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                        </div>
                     </div>
 
                     <div class="mt-6 flex items-center justify-between">
@@ -352,16 +382,17 @@
 
                             @php $jobImageUrl = asset('storage/' . $job->job_posting_image); @endphp
                             <button
-                                data-title="{{ addslashes($job->job_posting_title) }}"
-                                data-company="{{ addslashes($job->job_posting_company) }}"
-                                data-address="{{ addslashes($job->job_posting_address) }}"
+                                data-title="{{ $job->job_posting_title }}"
+                                data-company="{{ $job->job_posting_company }}"
+                                data-address="{{ $job->job_posting_address }}"
                                 data-date="{{ $job->created_at->diffForHumans() }}"
-                                data-description="{{ addslashes($job->job_posting_description) }}"
+                                data-description="{{ $job->job_posting_description }}"
                                 data-type="{{ $job->job_posting_employment_type }}"
                                 data-setup="{{ $job->job_posting_setup }}"
                                 data-valid="{{ $job->job_closing_date }}"
                                 data-image="{{ asset('storage/' . $job->job_posting_image) }}"
                                 data-programs="{{ $job->programs->pluck('program_name')->implode(', ') }}"
+                    data-industry="{{ $job->industry->industry_name ?? 'Not specified' }}"
                                 onclick="openJobModal(this)"
                                 class="border border-[#1D46A4] text-[#1D46A4] px-6 py-2 rounded-md font-bold text-sm hover:bg-[#1D46A4] hover:border-none hover:text-white transition-colors">VIEW DETAILS</button>
                             <div class="relative flex items-center">
@@ -451,9 +482,9 @@
                 <div class="mt-8 flex flex-col md:flex-row gap-8">
                     <div class="md:w-3/5">
                         <h3 class="font-bold text-[#0E0F3B] mb-3">Job Description:</h3>
-                        <p id="modal-description" class="text-gray-600 text-sm leading-relaxed text-justify">
+                        <div id="modal-description" class="text-gray-600 text-sm leading-relaxed text-justify job-description-content">
                             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent placerat, nulla quis aliquam fringilla, nulla elit accumsan nisi, vel feugiat massa erat vel eros. Curabitur sed massa vel leo accumsan imperdiet.
-                        </p>
+                        </div>
                     </div>
 
                     <div class="md:w-2/5 space-y-2 text-[#1D264F]">
@@ -467,6 +498,11 @@
                     <p id="modal-programs" class="text-sm leading-snug text-gray-600 mt-1">
                         BSIT - Bachelor of Science in Information Technology
                     </p>
+                </div>
+
+                <div class="pt-2 border-t border-gray-100">
+                    <p class="font-bold text-sm">Industry / Sector:</p>
+                    <p id="modal-industry" class="text-sm leading-snug text-gray-600 mt-1"></p>
                 </div>
 
                 <div class="mt-10 pt-6 border-t flex items-center justify-between">
@@ -494,9 +530,9 @@
 
     <!-- POST A NEW JOB MODAL-->
     <div id="postJobModal"
-        class="fixed inset-0 z-[110] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3">
+        class="fixed inset-0 z-[110] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 overflow-y-auto">
 
-        <div class="bg-white w-full max-w-3xl rounded-[1.8rem] shadow-2xl relative">
+        <div class="bg-white w-full max-w-3xl rounded-[1.8rem] shadow-2xl relative max-h-[90vh] overflow-y-auto my-8">
 
             <form action="{{ route('jobPosting.addJobPost', ['id' => $user->user_id]) }}"
                 method="POST"
@@ -700,6 +736,23 @@
 
                     </div>
 
+                    <!-- INDUSTRY -->
+                    <div class="space-y-1 mt-4">
+                        <label class="text-[10px] font-bold text-[#1D264F] uppercase">Industry / Sector</label>
+                        <select name="industry_id"
+                            class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white">
+                            <option value="">Select Industry</option>
+                            @foreach($industries as $industry)
+                            <option value="{{ $industry->industry_id }}">{{ $industry->industry_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- REQUIRED SKILLS -->
+                    <div class="mt-4">
+                        @include('partials.job-posting-skills-field', ['uid' => 'board-create'])
+                    </div>
+
                     <!-- DESCRIPTION -->
                     <div class="space-y-1 mt-4">
 
@@ -707,9 +760,7 @@
                             Job Description <span class="text-red-500">*</span>
                         </label>
 
-                        <textarea name="job_posting_description" rows="3" placeholder="Describe the roles, responsibilities, and specific skills required for this position..."
-                            class="w-full border border-[#0E0F3B] rounded-xl px-3 py-2 text-xs resize-none focus:outline-none focus:border-[#C73D1A]">
-                    </textarea>
+                        @include('partials.rich-text-editor', ['uid' => 'board-create', 'fieldName' => 'job_posting_description'])
                     </div>
 
                     <div id="modalErrors" class="hidden flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-5 py-4 mt-5 mb-7 shadow-sm">
@@ -896,10 +947,11 @@
         document.getElementById('modal-company').textContent = btn.dataset.company;
         document.getElementById('modal-date').innerHTML = '<i class="far fa-calendar-alt mr-2"></i> ' + btn.dataset.date;
         document.getElementById('modal-address').textContent = btn.dataset.address;
-        document.getElementById('modal-description').textContent = btn.dataset.description;
+        document.getElementById('modal-description').innerHTML = btn.dataset.description;
         document.getElementById('modal-job-type').textContent = btn.dataset.type;
         document.getElementById('modal-job-setup').textContent = btn.dataset.setup;
         document.getElementById('modal-programs').textContent = btn.dataset.programs;
+        document.getElementById('modal-industry').textContent = btn.dataset.industry;
         document.getElementById('modal-valid').innerHTML = '<i class="far fa-calendar-check mr-2"></i> Valid until: ' + btn.dataset.valid;
 
         document.getElementById('jobModal').classList.remove('hidden');

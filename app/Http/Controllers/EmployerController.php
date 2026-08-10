@@ -86,7 +86,6 @@ class EmployerController extends Controller
             'employer_company_name' => 'nullable|string',
             'employer_year_established' => 'nullable|date_format:Y',
             'employer_company_size' => 'nullable|string',
-            'employer_industry' => 'nullable|exists:industries,industry_id',
             'employer_website_url' => 'nullable|url',
         ]);
 
@@ -118,7 +117,6 @@ class EmployerController extends Controller
                     'employer_company_name' => $validated['employer_company_name'] ?? $employer->employer_company_name,
                     'employer_year_established' => $validated['employer_year_established'] ?? $employer->employer_year_established,
                     'employer_company_size' => $validated['employer_company_size'] ?? $employer->employer_company_size,
-                    'industry_id' => $validated['employer_industry'] ?? $employer->industry_id,
                     'employer_website_url' => $validated['employer_website_url'] ?? $employer->employer_website_url,
                 ]);
 

@@ -189,6 +189,7 @@ Route::post('/jobBoard/shortlistApplicant/{applicationId}', [JobApplicationContr
 Route::resource('job-postings', JobPostingController::class);
 Route::get('/jobBoard', [JobPostingController::class, 'showJobBoard'])->name('jobPosting.jobBoard');
 Route::post('/jobBoard/addJobPost/{id}', [JobPostingController::class, 'addJobPost'])->name('jobPosting.addJobPost');
+Route::post('/job-postings/upload-image', [JobPostingController::class, 'uploadDescriptionImage'])->name('jobPosting.uploadDescriptionImage');
 Route::get('/myJobPosts/{id}', [JobPostingController::class, 'showMyJobPosts'])->name('jobPosting.myJobPosts');
 Route::post('/editJobPost/{id}', [JobPostingController::class, 'editJobPost'])->name('jobPosting.editJobPost');
 Route::get('/jobManagement', [JobPostingController::class, 'showJobManagement'])->name('jobPosting.jobManagement');
@@ -243,5 +244,6 @@ Route::get('/resume/build', [ResumeBuilderController::class, 'edit'])->name('res
 Route::post('/resume/save', [ResumeBuilderController::class, 'save'])->name('resume.save');
 Route::get('/resume/pdf', [ResumeBuilderController::class, 'downloadPdf'])->name('resume.pdf');
 Route::post('/resume/import', [ResumeBuilderController::class, 'import'])->name('resume.import');
+Route::get('/resume/view/{alumnusId}', [ResumeBuilderController::class, 'viewApplicantResume'])->name('resume.viewApplicant');
 
 Route::get('/skills/search', [SkillSearchController::class, 'search'])->name('skills.search');

@@ -6,24 +6,33 @@ use App\Models\Alumnus;
 use App\Models\Certification;
 use App\Models\Experience;
 use App\Models\Industry;
+use App\Models\JobApplication;
 use App\Models\Skill;
 use App\Models\User;
+use App\Services\GeminiResumeParser;
 use App\Services\ResumeTextParser;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Smalot\PdfParser\Parser as PdfTextParser;
 
 class ResumeBuilderController extends Controller
 {
     /**
-     * Reads text out of an uploaded PDF and runs it through ResumeTextParser.
-     * Returns the extracted fields as JSON — nothing is saved here. The
-     * wizard prefills itself from the response so the alumnus reviews and
-     * edits before anything actually hits the database, same as any other
-     * prefill (see toResumeFormArray()).
+     * Reads text out of an uploaded PDF and extracts structured fields from
+     * it. Returns them as JSON — nothing is saved here. The wizard prefills
+     * itself from the response so the alumnus reviews and edits before
+     * anything actually hits the database, same as any other prefill (see
+     * toResumeFormArray()).
+     *
+     * Tries Gemini first (free tier — see GeminiResumeParser) for better
+     * accuracy across varied resume formats, and falls back to the local
+     * heuristic parser (ResumeTextParser) if no API key is configured or the
+     * request fails for any reason, so importing never hard-depends on an
+     * external service being up.
      */
     public function import(Request $request)
     {
@@ -45,7 +54,21 @@ class ResumeBuilderController extends Controller
             ], 422);
         }
 
-        return response()->json((new ResumeTextParser())->parse($text));
+        $gemini = new GeminiResumeParser();
+        $usedAi = false;
+
+        if ($gemini->isConfigured()) {
+            try {
+                $parsed = $gemini->parse($text);
+                $usedAi = true;
+            } catch (\Throwable $e) {
+                Log::warning('Gemini resume parse failed, falling back to heuristic parser: ' . $e->getMessage());
+            }
+        }
+
+        $parsed ??= (new ResumeTextParser())->parse($text);
+
+        return response()->json($parsed + ['parsed_with' => $usedAi ? 'ai' : 'heuristic']);
     }
 
     /**
@@ -55,14 +78,44 @@ class ResumeBuilderController extends Controller
      */
     public function downloadPdf()
     {
-        $user = User::with(['alumnus.program', 'alumnus.skills', 'alumnus.experiences.industry', 'alumnus.certifications'])
-            ->findOrFail(Auth::id());
-
-        $pdf = Pdf::loadView('alumni.resume-pdf', compact('user'));
-
-        $filename = Str::slug($user->alumnus->resumeFullName() ?: 'resume') . '-resume.pdf';
+        [$pdf, $filename] = $this->buildResumePdf(Auth::id());
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * Lets an employer open (not download) the resume of an alumnus who has
+     * actually applied to one of their job postings — the same PDF template
+     * as the alumnus's own download, streamed inline so it opens in the
+     * browser's PDF viewer instead of forcing a save dialog. Scoped to "has
+     * applied to my job" rather than open to any employer, since a resume
+     * is personal data that shouldn't be fetchable by guessing user ids.
+     */
+    public function viewApplicantResume($alumnusId)
+    {
+        abort_unless(Auth::check() && Auth::user()->user_role === 'employer', 403);
+
+        $hasApplied = JobApplication::where('alumnus_id', $alumnusId)
+            ->whereHas('job', fn ($q) => $q->where('user_id', Auth::id()))
+            ->exists();
+        abort_unless($hasApplied, 403);
+
+        [$pdf, $filename] = $this->buildResumePdf($alumnusId);
+
+        return $pdf->stream($filename);
+    }
+
+    private function buildResumePdf($userId): array
+    {
+        $user = User::with(['alumnus.program', 'alumnus.skills', 'alumnus.experiences.industry', 'alumnus.certifications'])
+            ->findOrFail($userId);
+
+        abort_if(($user->alumnus->alumnus_resume_completeness ?? 0) <= 0, 404);
+
+        $pdf = Pdf::loadView('alumni.resume-pdf', compact('user'));
+        $filename = Str::slug($user->alumnus->resumeFullName() ?: 'resume') . '-resume.pdf';
+
+        return [$pdf, $filename];
     }
 
     /**

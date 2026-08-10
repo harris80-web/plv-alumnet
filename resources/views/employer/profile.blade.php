@@ -128,12 +128,6 @@
                             <p class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-tighter leading-none">Company/Business Size</p>
                         </div>
                         <div>
-                            <p class="text-gray-800 font-semibold uppercase">
-                                {{ $user->employer->industry->industry_name ?? 'None' }}
-                            </p>
-                            <p class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-tighter leading-none">Industry / Sector</p>
-                        </div>
-                        <div>
                             @if ($user->employer->employer_website_url)
                             <a href="{{ $user->employer->employer_website_url }}" target="_blank" class="text-gray-800 font-semibold underline block break-all">
                                 {{ $user->employer->employer_website_url }}

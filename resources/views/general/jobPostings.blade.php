@@ -243,13 +243,33 @@
 
             @foreach($jobPostings as $job)
             <!-- JOB POST CONTAINER -->
-            <div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row overflow-hidden hover:shadow-lg transition-shadow">
+            <div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row hover:shadow-lg transition-shadow md:min-h-[340px]">
 
                 <!-- IMAGE -->
-                <div class="md:w-1/4 h-48 md:h-auto relative overflow-hidden">
+                <div class="md:w-1/4 h-48 md:h-auto relative overflow-hidden rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none group cursor-pointer"
+                    role="button" tabindex="0" aria-label="View job details"
+                    data-image="{{ asset('storage/' . $job->job_posting_image) }}"
+                    data-title="{{ $job->job_posting_title }}"
+                    data-company="{{ $job->job_posting_company }}"
+                    data-posted="{{ $job->created_at->diffForHumans() }}"
+                    data-address="{{ $job->job_posting_address }}"
+                    data-description="{{ $job->job_posting_description }}"
+                    data-type="{{ $job->job_posting_employment_type }}"
+                    data-setup="{{ $job->job_posting_setup }}"
+                    data-valid="{{ $job->job_closing_date }}"
+                    data-programs="{{ $job->programs->pluck('program_name')->implode(', ') }}"
+                    data-industry="{{ $job->industry->industry_name ?? 'Not specified' }}"
+                    data-approved="{{ $job->job_approved ? '1' : '0' }}"
+                    onclick="openMyJobViewModal(this)"
+                    onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMyJobViewModal(this);}">
                     <img src="{{ asset('storage/' . $job->job_posting_image) }}"
-                        class="object-cover w-full h-full opacity-60">
+                        class="object-cover w-full h-full opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-300">
                     <div class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span class="bg-white/90 text-[#1D264F] text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
+                            <i class="fas fa-eye mr-1"></i> VIEW DETAILS
+                        </span>
+                    </div>
                 </div>
 
                 <!-- CONTENT -->
@@ -264,10 +284,27 @@
                                 <p class="text-gray-500 text-sm">{{ $job->job_posting_address }}</p>
                             </div>
 
-                            <p class="text-xs text-gray-400 flex items-center">
-                                <i class="far fa-calendar-alt mr-1"></i> {{ $job->created_at->diffForHumans() }}
-                            </p>
+                            <div class="flex flex-col items-end gap-1">
+                                @if($job->job_approved)
+                                <span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase whitespace-nowrap">
+                                    <i class="fas fa-check-circle mr-1"></i>Approved
+                                </span>
+                                @else
+                                <span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase whitespace-nowrap">
+                                    <i class="fas fa-clock mr-1"></i>Pending Approval
+                                </span>
+                                @endif
+                                <p class="text-xs text-gray-400 flex items-center">
+                                    <i class="far fa-calendar-alt mr-1"></i> {{ $job->created_at->diffForHumans() }}
+                                </p>
+                            </div>
                         </div>
+
+                        @if(!$job->job_approved)
+                        <p class="mt-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                            <i class="fas fa-circle-info mr-1"></i> This job post is awaiting super admin approval and won't be visible on the job board yet.
+                        </p>
+                        @endif
 
                         <!-- META -->
                         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-semibold">
@@ -291,7 +328,10 @@
                         <!-- DESCRIPTION -->
                         <div class="mt-4">
                             <p class="font-bold text-sm text-[#0E0F3B]">Job Description:</p>
-                            <p class="text-gray-500 text-xs line-clamp-2">{{ $job->job_posting_description }}</p>
+                            <div class="relative max-h-[2.6rem] overflow-hidden">
+                                <div class="text-gray-500 text-xs job-description-content">{!! $job->job_posting_description !!}</div>
+                                <div class="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -309,7 +349,7 @@
                                 @if(auth()->user()->user_role === 'employer')
                                 <div class="text-sm font-bold">
                                     <p class="text-[#C73D1A]">APPLICATIONS RECEIVED: {{ $job->applicants->count() }}</p>
-                                    <p class="text-[#C73D1A]">UNREAD APPLICATIONS: {{ $job->applicants->where('pivot.is_read', 0)->count() }}</p>
+                                    <p class="text-[#C73D1A]">UNREAD APPLICATIONS: {{ $job->applicants->where('pivot.is_read', false)->count() }}</p>
                                 </div>
                                 @endif
                             </div>
@@ -364,12 +404,12 @@
 
     <!--JOB POST MODAL-->
 
-    <div id="jobModal" class="fixed inset-0 z-[100] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="jobModal" class="fixed inset-0 z-[100] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
 
-        <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl relative">
+        <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl relative max-h-[90vh] overflow-y-auto my-8">
 
             <div class="h-48 w-full relative rounded-t-3xl overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover">
+                <img id="myjob-modal-img" src="" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>
 
                 <button onclick="toggleModal()" class="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 transition-colors">
@@ -380,65 +420,42 @@
             <div class="p-8">
                 <div class="flex justify-between items-start">
                     <div>
-                        <h2 class="text-3xl font-bold text-[#1D264F] uppercase tracking-tighter">JOB TITLE</h2>
+                        <h2 id="myjob-title" class="text-3xl font-bold text-[#1D264F] uppercase tracking-tighter"></h2>
                         <div class="flex items-center text-gray-600 mt-1 space-x-4">
-                            <p class="font-semibold text-lg">Company Name</p>
-                            <span class="flex items-center text-sm"><i class="far fa-calendar-alt mr-2"></i> Posted 2 days ago</span>
+                            <p id="myjob-company" class="font-semibold text-lg"></p>
+                            <span class="flex items-center text-sm"><i class="far fa-calendar-alt mr-2"></i> Posted <span id="myjob-posted"></span></span>
                         </div>
-                        <p class="text-gray-500 font-medium">Company Address</p>
+                        <p id="myjob-address" class="text-gray-500 font-medium"></p>
                     </div>
 
-                    <div class="relative">
-                        <div id="modal-bookmark-tooltip" class="invisible opacity-0 absolute bottom-full right-0 mb-2 pointer-events-none transition-all duration-300 z-50">
-                            <div class="bg-blue-900 text-white text-[10px] py-1 px-3 rounded shadow-xl whitespace-nowrap relative">
-                                Job post saved!
-                                <div class="absolute top-full right-2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-blue-900"></div>
-                            </div>
-                        </div>
-                        <button onclick="showModalTooltip('modal-bookmark-tooltip', this)" class="text-[#1D264F] text-3xl hover:scale-110 transition-transform">
-                            <i id="modal-bookmark-icon" class="far fa-bookmark"></i>
-                        </button>
-                    </div>
+                    <span id="myjob-status" class="text-[10px] font-bold px-2 py-1 rounded-full uppercase whitespace-nowrap"></span>
                 </div>
 
                 <div class="mt-8 flex flex-col md:flex-row gap-8">
                     <div class="md:w-3/5">
                         <h3 class="font-bold text-[#0E0F3B] mb-3">Job Description:</h3>
-                        <p class="text-gray-600 text-sm leading-relaxed text-justify">
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent placerat, nulla quis aliquam fringilla, nulla elit accumsan nisi, vel feugiat massa erat vel eros. Curabitur sed massa vel leo accumsan imperdiet.
-                        </p>
+                        <div id="myjob-description" class="text-gray-600 text-sm leading-relaxed text-justify job-description-content"></div>
                     </div>
 
                     <div class="md:w-2/5 space-y-2 text-[#1D264F]">
-                        <p class="flex justify-between text-sm"><span class="font-bold">Job Type:</span> Full-Time</p>
-                        <p class="flex justify-between text-sm"><span class="font-bold">Job Setup:</span> Remote</p>
+                        <p class="flex justify-between text-sm"><span class="font-bold">Job Type:</span> <span id="myjob-type"></span></p>
+                        <p class="flex justify-between text-sm"><span class="font-bold">Job Setup:</span> <span id="myjob-setup"></span></p>
                     </div>
                 </div>
 
                 <div class="pt-2 border-t border-gray-100">
                     <p class="font-bold text-sm">Recommended Course/Program:</p>
-                    <p class="text-sm leading-snug text-gray-600 mt-1">
-                        BSIT - Bachelor of Science in Information Technology
-                    </p>
+                    <p id="myjob-program" class="text-sm leading-snug text-gray-600 mt-1"></p>
+                </div>
+
+                <div class="pt-2 border-t border-gray-100">
+                    <p class="font-bold text-sm">Industry / Sector:</p>
+                    <p id="myjob-industry" class="text-sm leading-snug text-gray-600 mt-1"></p>
                 </div>
 
                 <div class="mt-10 pt-6 border-t flex items-center justify-between">
                     <div class="text-gray-500 text-sm flex items-center font-semibold">
-                        <i class="far fa-calendar-check mr-2"></i> Valid until
-                    </div>
-
-                    <div class="flex items-center space-x-6">
-                        <div class="relative">
-                            <div id="modal-share-tooltip" class="invisible opacity-0 absolute bottom-full right-0 mb-2 pointer-events-none transition-all duration-300 z-50">
-                                <div class="bg-gray-800 text-white text-[10px] py-1 px-3 rounded shadow-xl whitespace-nowrap relative">
-                                    Link Copied!
-                                    <div class="absolute top-full right-2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-800"></div>
-                                </div>
-                            </div>
-                            <button onclick="showModalTooltip('modal-share-tooltip')" class="text-[#1D264F] text-2xl hover:scale-110 transition-transform">
-                                <i class="fas fa-share-nodes"></i>
-                            </button>
-                        </div>
+                        <i class="far fa-calendar-check mr-2"></i> Valid until <span id="myjob-valid" class="ml-1"></span>
                     </div>
                 </div>
             </div>
@@ -446,9 +463,9 @@
     </div>
 
     <!-- POST A NEW JOB MODAL-->
-    <div id="postJobModal" class="fixed inset-0 z-[110] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="postJobModal" class="fixed inset-0 z-[110] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
 
-        <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col min-h-[600px]">
+        <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl relative flex flex-col min-h-[600px] max-h-[90vh] overflow-y-auto my-8">
 
             <form class="flex flex-col flex-1" action="{{ route('jobPosting.addJobPost', ['id' => $users->user_id]) }}" method="POST" enctype="multipart/form-data">
                 @csrf
@@ -559,10 +576,23 @@
                             </p>
                         </div>
 
+                        <!-- INDUSTRY -->
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Industry / Sector</label>
+                            <select name="industry_id"
+                                class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white">
+                                <option value="">Select Industry</option>
+                                @foreach($industries as $industry)
+                                <option value="{{ $industry->industry_id }}">{{ $industry->industry_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        @include('partials.job-posting-skills-field', ['uid' => 'create'])
+
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-[#1D264F] uppercase">Job Description <span class="text-red-500">*</span></label>
-                            <textarea name="job_posting_description" rows="4"
-                                class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]"></textarea>
+                            @include('partials.rich-text-editor', ['uid' => 'create', 'fieldName' => 'job_posting_description'])
                         </div>
 
                         <div class="w-1/2 space-y-1">
@@ -593,9 +623,9 @@
 
     <!-- EDIT JOB MODAL -->
     <div id="editPostModal"
-        class="fixed inset-0 z-[999] bg-black/70 flex items-center justify-center overflow-y-auto hidden">
+        class="fixed inset-0 z-[999] bg-black/70 flex items-center justify-center overflow-y-auto hidden p-4">
 
-        <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col min-h-[600px]">
+        <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl relative flex flex-col min-h-[600px] max-h-[90vh] overflow-y-auto my-8">
 
             @foreach($jobPostings as $job)
             <form id="editForm-{{ $job->job_posting_id }}" class="flex flex-col flex-1 hidden" action="{{ route('jobPosting.editJobPost', ['id' => $job->job_posting_id]) }}" method="post" enctype="multipart/form-data">
@@ -708,9 +738,23 @@
                         </div>
 
                         <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Industry / Sector</label>
+                            <select name="industry_id"
+                                class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white">
+                                <option value="">Select Industry</option>
+                                @foreach($industries as $industry)
+                                <option value="{{ $industry->industry_id }}" {{ $job->industry_id == $industry->industry_id ? 'selected' : '' }}>
+                                    {{ $industry->industry_name }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        @include('partials.job-posting-skills-field', ['uid' => 'edit-' . $job->job_posting_id, 'selectedSkills' => $job->skills])
+
+                        <div class="space-y-1">
                             <label class="text-[10px] font-bold text-[#1D264F] uppercase">Job Description <span class="text-red-500">*</span></label>
-                            <textarea name="job_posting_description" rows="4"
-                                class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">{{ $job->job_posting_description }}</textarea>
+                            @include('partials.rich-text-editor', ['uid' => 'edit-' . $job->job_posting_id, 'fieldName' => 'job_posting_description', 'initialValue' => $job->job_posting_description])
                         </div>
 
                         <div class="w-1/2 space-y-1">
@@ -796,6 +840,32 @@
         const modal = document.getElementById('jobModal');
         modal.classList.toggle('hidden');
         document.body.style.overflow = modal.classList.contains('hidden') ? 'auto' : 'hidden';
+    }
+
+    // Clicking a job's image opens this same modal populated with that
+    // job's real data (read off the element's own data-* attributes) —
+    // a quick, read-only way to see the full post without opening Edit.
+    function openMyJobViewModal(el) {
+        document.getElementById('myjob-modal-img').src = el.dataset.image;
+        document.getElementById('myjob-title').textContent = el.dataset.title;
+        document.getElementById('myjob-company').textContent = el.dataset.company;
+        document.getElementById('myjob-posted').textContent = el.dataset.posted;
+        document.getElementById('myjob-address').textContent = el.dataset.address;
+        document.getElementById('myjob-description').innerHTML = el.dataset.description;
+        document.getElementById('myjob-type').textContent = el.dataset.type;
+        document.getElementById('myjob-setup').textContent = el.dataset.setup;
+        document.getElementById('myjob-program').textContent = el.dataset.programs;
+        document.getElementById('myjob-industry').textContent = el.dataset.industry;
+        document.getElementById('myjob-valid').textContent = el.dataset.valid;
+
+        const statusEl = document.getElementById('myjob-status');
+        const approved = el.dataset.approved === '1';
+        statusEl.textContent = approved ? 'Approved' : 'Pending Approval';
+        statusEl.className = 'text-[10px] font-bold px-2 py-1 rounded-full uppercase whitespace-nowrap ' +
+            (approved ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700');
+
+        document.getElementById('jobModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
     }
 
     window.onclick = function(event) {

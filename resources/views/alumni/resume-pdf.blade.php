@@ -3,6 +3,19 @@
     $workExperiences = $alumnus->experiences->where('experience_type', 'work');
     $projects = $alumnus->experiences->where('experience_type', 'project');
     $certTypeLabels = \App\Models\Alumnus::certificationTypeLabels();
+
+    // Embed as a base64 data URI rather than a raw filesystem path — dompdf's
+    // security options restrict local file access by default, which made a
+    // plain storage_path() silently fail to render (no error, just missing).
+    // A data URI needs no file access at render time, so it sidesteps that.
+    $photoDataUri = null;
+    if ($user->user_profile_picture) {
+        $photoFullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($user->user_profile_picture);
+        if (file_exists($photoFullPath)) {
+            $mime = mime_content_type($photoFullPath) ?: 'image/jpeg';
+            $photoDataUri = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($photoFullPath));
+        }
+    }
 @endphp
 <!DOCTYPE html>
 <html>
@@ -16,7 +29,10 @@
 
         h1 { font-size: 22px; color: #0E0F3B; text-align: center; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px; }
 
-        .header { border-bottom: 2px solid #0E0F3B; padding-bottom: 12px; margin-bottom: 18px; }
+        .header { border-bottom: 2px solid #0E0F3B; padding-bottom: 12px; margin-bottom: 18px; display: flex; align-items: center; gap: 16px; }
+        .header-text { flex: 1; }
+
+        .photo { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid #0E0F3B; }
 
         .contact { text-align: center; color: #555555; font-size: 10px; }
         .contact span { margin: 0 8px; }
@@ -47,15 +63,20 @@
 <body>
 
     <div class="header">
-        <h1>{{ $alumnus->resumeFullName() }}</h1>
-        <div class="contact">
-            <span>{{ $user->user_email }}</span>
-            @if($user->user_number)
-                <span>&bull; {{ $user->user_number }}</span>
-            @endif
-            @if($alumnus->linkedin_url)
-                <span>&bull; {{ preg_replace('~^https?://(www\.)?~i', '', $alumnus->linkedin_url) }}</span>
-            @endif
+        @if($photoDataUri)
+            <img class="photo" src="{{ $photoDataUri }}" alt="">
+        @endif
+        <div class="header-text">
+            <h1>{{ $alumnus->resumeFullName() }}</h1>
+            <div class="contact">
+                <span>{{ $user->user_email }}</span>
+                @if($user->user_number)
+                    <span>&bull; {{ $user->user_number }}</span>
+                @endif
+                @if($alumnus->linkedin_url)
+                    <span>&bull; {{ preg_replace('~^https?://(www\.)?~i', '', $alumnus->linkedin_url) }}</span>
+                @endif
+            </div>
         </div>
     </div>
 

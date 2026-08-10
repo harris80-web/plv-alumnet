@@ -17,22 +17,28 @@
         <form id="resumeEditorForm" class="p-8 md:p-12 pt-4">
             @csrf
 
-            {{-- ===== Header (name/contact are read-only here; edited on this same page) ===== --}}
-            <div class="text-center border-b-2 border-[#0E0F3B] pb-6 mb-6">
-                <h1 class="text-3xl font-bold text-[#0E0F3B] uppercase tracking-wide">
-                    {{ $user->alumnus->resumeFullName() }}
-                </h1>
-                <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-sm text-gray-600 mt-3">
-                    <span><i class="fa-solid fa-envelope text-[#ED7A07] mr-1"></i>{{ $user->user_email }}</span>
-                    @if($user->user_number)
-                        <span><i class="fa-solid fa-phone text-[#ED7A07] mr-1"></i>{{ $user->user_number }}</span>
-                    @endif
-                    <span class="flex items-center gap-1">
-                        <i class="fa-brands fa-linkedin text-[#ED7A07]"></i>
-                        <input type="url" name="linkedin_url" placeholder="linkedin.com/in/..."
-                            value="{{ $resumeData['linkedin_url'] ?? '' }}"
-                            class="border border-gray-300 rounded px-2 py-0.5 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">
-                    </span>
+            {{-- ===== Header (name/contact/photo are read-only here; edited on this same page) ===== --}}
+            <div class="flex items-center gap-6 border-b-2 border-[#0E0F3B] pb-6 mb-6">
+                @if($user->user_profile_picture)
+                    <img src="{{ asset('storage/' . $user->user_profile_picture) }}" alt="Profile Photo"
+                        class="w-20 h-20 rounded-full object-cover border-2 border-[#0E0F3B] flex-shrink-0">
+                @endif
+                <div class="flex-1 text-center">
+                    <h1 class="text-3xl font-bold text-[#0E0F3B] uppercase tracking-wide">
+                        {{ $user->alumnus->resumeFullName() }}
+                    </h1>
+                    <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-sm text-gray-600 mt-3">
+                        <span><i class="fa-solid fa-envelope text-[#ED7A07] mr-1"></i>{{ $user->user_email }}</span>
+                        @if($user->user_number)
+                            <span><i class="fa-solid fa-phone text-[#ED7A07] mr-1"></i>{{ $user->user_number }}</span>
+                        @endif
+                        <span class="flex items-center gap-1">
+                            <i class="fa-brands fa-linkedin text-[#ED7A07]"></i>
+                            <input type="url" name="linkedin_url" placeholder="linkedin.com/in/..."
+                                value="{{ $resumeData['linkedin_url'] ?? '' }}"
+                                class="border border-gray-300 rounded px-2 py-0.5 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">
+                        </span>
+                    </div>
                 </div>
             </div>
 

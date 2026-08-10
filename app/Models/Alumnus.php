@@ -17,7 +17,9 @@ class Alumnus extends Model
         'user_id',
         'program_id',
         'section_id',
+        'industry_id',
         'alumnus_employment_status',
+        'alumnus_first_job_date',
         'alumnus_resume_summary',
         'alumnus_resume_file_path',
         'linkedin_url',
@@ -31,7 +33,8 @@ class Alumnus extends Model
         'alumnus_is_public' => 'boolean',
         'alumnus_change_password' => 'boolean',
         'alumnus_resume_completeness' => 'integer',
-        'alumnus_batch' => 'integer'
+        'alumnus_batch' => 'integer',
+        'alumnus_first_job_date' => 'date',
     ];
 
     public function user()
@@ -50,6 +53,11 @@ class Alumnus extends Model
     {
         // "I belong to one user (the employer)"
         return $this->belongsTo(Section::class, 'section_id', 'section_id');
+    }
+
+    public function industry()
+    {
+        return $this->belongsTo(Industry::class, 'industry_id', 'industry_id');
     }
 
     public function educations()

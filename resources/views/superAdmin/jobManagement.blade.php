@@ -294,19 +294,23 @@ $approved_count = $approved_jobs->count();
                                                     <i data-lucide="x-circle" class="w-4 h-4 mr-3"></i> Decline
                                                 </button>
 
-                                                <button onclick="openViewModal({{ $j->job_posting_id }}, {{ json_encode([
-                                                                                            'title' => $j->job_posting_title,
-                                                                                            'posted' => $j->created_at,
-                                                                                            'company' => $j->job_posting_company,
-                                                                                            'location' => $j->job_posting_address,
-                                                                                            'posted_by' => $j->user->user_first_name . ' ' . $j->user->user_last_name,
-                                                                                            'type' => $j->job_posting_employment_type,
-                                                                                            'setup' => $j->job_posting_setup,
-                                                                                            'program' => $j->programs->pluck('program_name')->join(', '),
-                                                                                            'closing' => $j->job_closing_date,
-                                                                                            'description' => $j->job_posting_description,
-                                                                                            'status' => 'Pending',
-                                                                                        ]) }})"
+                                                @php
+                                                    $viewModalData = [
+                                                        'title' => $j->job_posting_title,
+                                                        'posted' => $j->created_at,
+                                                        'company' => $j->job_posting_company,
+                                                        'location' => $j->job_posting_address,
+                                                        'posted_by' => $j->user->user_first_name . ' ' . $j->user->user_last_name,
+                                                        'type' => $j->job_posting_employment_type,
+                                                        'setup' => $j->job_posting_setup,
+                                                        'program' => $j->programs->pluck('program_name')->join(', '),
+                                                        'industry' => $j->industry->industry_name ?? 'N/A',
+                                                        'closing' => $j->job_closing_date,
+                                                        'description' => $j->job_posting_description,
+                                                        'status' => 'Pending',
+                                                    ];
+                                                @endphp
+                                                <button onclick="openViewModal({{ $j->job_posting_id }}, @json($viewModalData))"
                                                     class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 border-t border-slate-100">
                                                     <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View
                                                 </button>
@@ -426,19 +430,23 @@ $approved_count = $approved_jobs->count();
                                         </button>
                                         <div class="action-dropdown bg-white border border-slate-200 rounded-md shadow-xl">
                                             <div class="py-1">
-                                                <button onclick="openViewModal({{ $j->job_posting_id }}, {{ json_encode([
-                                                                                                    'title' => $j->job_posting_title,
-                                                                                                    'posted' => $j->created_at,
-                                                                                                    'company' => $j->job_posting_company,
-                                                                                                    'location' => $j->job_posting_address,
-                                                                                                    'posted_by' => $j->user->user_first_name . ' ' . $j->user->user_last_name,
-                                                                                                    'type' => $j->job_posting_employment_type,
-                                                                                                    'setup' => $j->job_posting_setup,
-                                                                                                    'program' => $j->programs->pluck('program_name')->join(', '),
-                                                                                                    'closing' => $j->job_closing_date,
-                                                                                                    'description' => $j->job_posting_description,
-                                                                                                    'status' => 'Approved',
-                                                                                                ]) }})"
+                                                @php
+                                                    $viewModalData = [
+                                                        'title' => $j->job_posting_title,
+                                                        'posted' => $j->created_at,
+                                                        'company' => $j->job_posting_company,
+                                                        'location' => $j->job_posting_address,
+                                                        'posted_by' => $j->user->user_first_name . ' ' . $j->user->user_last_name,
+                                                        'type' => $j->job_posting_employment_type,
+                                                        'setup' => $j->job_posting_setup,
+                                                        'program' => $j->programs->pluck('program_name')->join(', '),
+                                                        'industry' => $j->industry->industry_name ?? 'N/A',
+                                                        'closing' => $j->job_closing_date,
+                                                        'description' => $j->job_posting_description,
+                                                        'status' => 'Approved',
+                                                    ];
+                                                @endphp
+                                                <button onclick="openViewModal({{ $j->job_posting_id }}, @json($viewModalData))"
                                                     class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50">
                                                     <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View
                                                 </button>
@@ -636,9 +644,9 @@ $approved_count = $approved_jobs->count();
     </div>
 
     <!-- Post a new job modal -->
-    <div id="postJobModal" class="fixed inset-0 z-[110] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3">
+    <div id="postJobModal" class="fixed inset-0 z-[110] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 overflow-y-auto">
 
-        <div class="bg-white w-full max-w-3xl rounded-[1.8rem] shadow-2xl relative">
+        <div class="bg-white w-full max-w-3xl rounded-[1.8rem] shadow-2xl relative max-h-[90vh] overflow-y-auto my-8">
 
             <form action="{{ route('jobPosting.addJobPost', ['id' => $users->user_id]) }}" method="POST" enctype="multipart/form-data">
                 @csrf
@@ -804,14 +812,29 @@ $approved_count = $approved_jobs->count();
                         </div>
                     </div>
 
+                    <!-- INDUSTRY -->
+                    <div class="space-y-1 mt-4">
+                        <label class="text-[13px] font-bold text-[#1e1b4b] block mb-2">Industry / Sector</label>
+                        <select name="industry_id"
+                            class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white">
+                            <option value="">Select Industry</option>
+                            @foreach($industries as $industry)
+                            <option value="{{ $industry->industry_id }}">{{ $industry->industry_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- REQUIRED SKILLS -->
+                    <div class="mt-4">
+                        @include('partials.job-posting-skills-field', ['uid' => 'management-create'])
+                    </div>
+
                     <!-- DESCRIPTION -->
                     <div class="space-y-1 mt-4">
                         <label class="text-[10px] font-bold text-[#1D264F] uppercase">
                             Job Description <span class="text-red-500">*</span>
                         </label>
-                        <textarea name="job_posting_description" rows="3"
-                            placeholder="Describe the roles, responsibilities, and specific skills required for this position..."
-                            class="w-full border border-[#0E0F3B] rounded-xl px-3 py-2 text-xs resize-none focus:outline-none focus:border-[#C73D1A]"></textarea>
+                        @include('partials.rich-text-editor', ['uid' => 'management-create', 'fieldName' => 'job_posting_description'])
                     </div>
 
                     <div id="adminModalErrors" class="hidden flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-5 py-4 mt-5 mb-7 shadow-sm">
@@ -1224,9 +1247,11 @@ $approved_count = $approved_jobs->count();
                 <p><strong>Job Type:</strong> ${data.type}</p>
                 <p><strong>Job Setup:</strong> ${data.setup}</p>
                 <p><strong>Recommended Program:</strong> ${data.program}</p>
+                <p><strong>Industry:</strong> ${data.industry ?? 'N/A'}</p>
                 <p><strong>Closing Date:</strong> ${data.closing}</p>
                 <p><strong>Status:</strong> <span class="px-2 py-1 rounded-full border text-[9px] font-bold ${statusClass}"> ${data.status.toUpperCase()}</span></p>
-                <p><strong>Description:</strong> ${data.description ?? 'N/A'}</p>
+                <div><strong>Description:</strong></div>
+                <div class="job-description-content">${data.description ?? 'N/A'}</div>
             </div>`;
 
             const approveBtn = document.getElementById('approveBtn');
@@ -1256,7 +1281,6 @@ $approved_count = $approved_jobs->count();
             }
 
             document.getElementById('viewJobModal').classList.remove('hidden');
-            modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
             if (window.lucide) lucide.createIcons();
         }

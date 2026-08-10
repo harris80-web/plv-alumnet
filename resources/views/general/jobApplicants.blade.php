@@ -173,13 +173,32 @@
     <main class="max-w-5xl mx-auto px-6 pb-12">
 
         <!-- JOB DETAILS CARD -->
-        <div class="bg-white rounded-3xl shadow-md overflow-hidden flex flex-col md:flex-row mt-4 mb-8">
+        <div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row mt-4 mb-8 md:min-h-[340px]">
 
             <!-- Image -->
-            <div class="md:w-1/4 h-48 md:h-auto relative overflow-hidden">
+            <div class="md:w-1/4 h-48 md:h-auto relative overflow-hidden rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none group cursor-pointer"
+                role="button" tabindex="0" aria-label="View job details"
+                data-image="{{ asset('storage/' . $jobPost->job_posting_image) }}"
+                data-title="{{ $jobPost->job_posting_title }}"
+                data-company="{{ $jobPost->job_posting_company }}"
+                data-posted="{{ $jobPost->created_at->diffForHumans() }}"
+                data-address="{{ $jobPost->job_posting_address }}"
+                data-description="{{ $jobPost->job_posting_description }}"
+                data-type="{{ $jobPost->job_posting_employment_type }}"
+                data-setup="{{ $jobPost->job_posting_setup }}"
+                data-valid="{{ $jobPost->job_closing_date }}"
+                data-programs="{{ $jobPost->programs->pluck('program_name')->implode(', ') }}"
+                data-industry="{{ $jobPost->industry->industry_name ?? 'Not specified' }}"
+                onclick="openJobViewModal(this)"
+                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openJobViewModal(this);}">
                 <img src="{{ asset('storage/' . $jobPost->job_posting_image) }}"
-                    class="object-cover w-full h-full opacity-60">
+                    class="object-cover w-full h-full opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-300">
                 <div class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>
+                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span class="bg-white/90 text-[#1D264F] text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
+                        <i class="fas fa-eye mr-1"></i> VIEW FULL POST
+                    </span>
+                </div>
             </div>
 
             <!-- Info -->
@@ -214,7 +233,10 @@
 
                     <div class="mt-4">
                         <p class="font-bold text-sm text-[#0E0F3B]">Job Description:</p>
-                        <p class="text-gray-500 text-xs line-clamp-2">{{ $jobPost->job_posting_description }}</p>
+                        <div class="relative max-h-[2.6rem] overflow-hidden">
+                            <div class="text-gray-500 text-xs job-description-content">{!! $jobPost->job_posting_description !!}</div>
+                            <div class="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -241,6 +263,7 @@
                             <th class="px-6 py-3 text-center font-semibold w-12">#</th>
                             <th class="px-6 py-3 text-center font-semibold">Applicant Name</th>
                             <th class="px-6 py-3 text-center font-semibold">Program</th>
+                            <th class="px-6 py-3 text-center font-semibold">Compatibility</th>
                             <th class="px-6 py-3 text-center font-semibold">Resume</th>
                             <th class="px-6 py-3 text-center font-semibold">
                                 <div class="relative inline-block">
@@ -289,10 +312,22 @@
                             </td>
 
                             <td class="px-6 py-4 text-center">
-                                @if ($applicant->alumnus_resume)
-                                <a href="{{ asset('storage/' . $applicant->alumnus_resume) }}" target="_blank"
+                                @php $score = $applicant->pivot->application_score; @endphp
+                                @if($score !== null)
+                                    <span class="text-xs font-bold px-2 py-1 rounded-full
+                                        {{ $score >= 70 ? 'bg-green-100 text-green-700' : ($score >= 40 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600') }}">
+                                        {{ $score }}%
+                                    </span>
+                                @else
+                                    <span class="text-gray-400 text-xs">&mdash;</span>
+                                @endif
+                            </td>
+
+                            <td class="px-6 py-4 text-center">
+                                @if (($applicant->alumnus_resume_completeness ?? 0) > 0)
+                                <a href="{{ route('resume.viewApplicant', $applicant->user_id) }}" target="_blank"
                                     class="bg-[#1D264F] hover:bg-[#0E0F3B] text-white text-xs font-bold px-4 py-1.5 rounded-md transition-colors inline-block">
-                                    View Document
+                                    View Resume
                                 </a>
                                 @else
                                 <span class="text-gray-400 text-xs">No resume</span>
@@ -310,19 +345,19 @@
                                         <i class="fas fa-ellipsis-v text-gray-500"></i>
                                     </button>
                                     <div class="action-dropdown">
-                                        <form action="{{ route('jobApplication.hireApplicant', $jobPost->job_posting_id) }}" method="POST">
+                                        <form action="{{ route('jobApplication.hireApplicant', $applicant->pivot->application_id) }}" method="POST">
                                             @csrf
                                             <button type="submit" class="text-green-600">
                                                 <i class="fas fa-user-check w-4"></i> Hire
                                             </button>
                                         </form>
-                                        <form action="{{ route('jobApplication.declineApplicant', $jobPost->job_posting_id) }}" method="POST">
+                                        <form action="{{ route('jobApplication.declineApplicant', $applicant->pivot->application_id) }}" method="POST">
                                             @csrf
                                             <button type="submit" class="text-red-500">
                                                 <i class="fas fa-user-times w-4"></i> Decline
                                             </button>
                                         </form>
-                                        <form action="{{ route('jobApplication.shortlistApplicant', $jobPost->job_posting_id) }}" method="POST">
+                                        <form action="{{ route('jobApplication.shortlistApplicant', $applicant->pivot->application_id) }}" method="POST">
                                             @csrf
                                             <button type="submit" class="text-yellow-600">
                                                 <i class="fas fa-star w-4"></i> Shortlist
@@ -348,11 +383,90 @@
         </div>
     </main>
 
+    <!-- JOB VIEW MODAL -->
+    <div id="jobViewModal" class="fixed inset-0 z-[100] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl relative max-h-[90vh] overflow-y-auto my-8">
+
+            <div class="h-48 w-full relative rounded-t-3xl overflow-hidden">
+                <img id="jvm-image" src="" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>
+
+                <button onclick="closeJobViewModal()" class="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 transition-colors">
+                    <i class="fas fa-times-circle text-2xl"></i>
+                </button>
+            </div>
+
+            <div class="p-8">
+                <div>
+                    <h2 id="jvm-title" class="text-3xl font-bold text-[#1D264F] uppercase tracking-tighter"></h2>
+                    <div class="flex items-center text-gray-600 mt-1 space-x-4">
+                        <p id="jvm-company" class="font-semibold text-lg"></p>
+                        <span class="flex items-center text-sm"><i class="far fa-calendar-alt mr-2"></i> Posted <span id="jvm-posted"></span></span>
+                    </div>
+                    <p id="jvm-address" class="text-gray-500 font-medium"></p>
+                </div>
+
+                <div class="mt-8 flex flex-col md:flex-row gap-8">
+                    <div class="md:w-3/5">
+                        <h3 class="font-bold text-[#0E0F3B] mb-3">Job Description:</h3>
+                        <div id="jvm-description" class="text-gray-600 text-sm leading-relaxed text-justify job-description-content"></div>
+                    </div>
+
+                    <div class="md:w-2/5 space-y-2 text-[#1D264F]">
+                        <p class="flex justify-between text-sm"><span class="font-bold">Job Type:</span> <span id="jvm-type"></span></p>
+                        <p class="flex justify-between text-sm"><span class="font-bold">Job Setup:</span> <span id="jvm-setup"></span></p>
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-gray-100">
+                    <p class="font-bold text-sm">Recommended Course/Program:</p>
+                    <p id="jvm-program" class="text-sm leading-snug text-gray-600 mt-1"></p>
+                </div>
+
+                <div class="pt-2 border-t border-gray-100">
+                    <p class="font-bold text-sm">Industry / Sector:</p>
+                    <p id="jvm-industry" class="text-sm leading-snug text-gray-600 mt-1"></p>
+                </div>
+
+                <div class="mt-10 pt-6 border-t flex items-center text-gray-500 text-sm font-semibold">
+                    <i class="far fa-calendar-check mr-2"></i> Valid until <span id="jvm-valid" class="ml-1"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @include('partials.footer-employer')
 
 </body>
 
 <script>
+    function openJobViewModal(el) {
+        document.getElementById('jvm-image').src = el.dataset.image;
+        document.getElementById('jvm-title').textContent = el.dataset.title;
+        document.getElementById('jvm-company').textContent = el.dataset.company;
+        document.getElementById('jvm-posted').textContent = el.dataset.posted;
+        document.getElementById('jvm-address').textContent = el.dataset.address;
+        document.getElementById('jvm-description').innerHTML = el.dataset.description;
+        document.getElementById('jvm-type').textContent = el.dataset.type;
+        document.getElementById('jvm-setup').textContent = el.dataset.setup;
+        document.getElementById('jvm-program').textContent = el.dataset.programs;
+        document.getElementById('jvm-industry').textContent = el.dataset.industry;
+        document.getElementById('jvm-valid').textContent = el.dataset.valid;
+
+        document.getElementById('jobViewModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeJobViewModal() {
+        document.getElementById('jobViewModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    window.addEventListener('click', function (event) {
+        const modal = document.getElementById('jobViewModal');
+        if (event.target === modal) closeJobViewModal();
+    });
+
     function toggleDropdown(btn) {
         const dropdown = btn.nextElementSibling;
         const isOpen = dropdown.classList.contains('open');

@@ -78,6 +78,8 @@ class AlumnusController extends Controller
         $validated = $request->validate([
             'user_profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'alumnus_employment_status' => 'required|boolean|max:255',
+            'industry_id' => 'nullable|exists:industries,industry_id',
+            'alumnus_first_job_date' => 'nullable|date|before_or_equal:today',
             'user_email' => 'required|email|unique:users,user_email,' . $user->user_id . ',user_id',
             'user_number' => 'nullable|string|max:20',
         ]);
@@ -97,6 +99,14 @@ class AlumnusController extends Controller
 
                 $alumni->update([
                     'alumnus_employment_status' => $validated['alumnus_employment_status'] ?? $alumni->alumnus_employment_status,
+                    'industry_id' => empty($validated['industry_id']) ? null : $validated['industry_id'],
+                    // Settable exactly once — for alumni whose job didn't
+                    // come through the system (the system itself sets this
+                    // automatically on hire, see JobApplicationController::
+                    // hireApplicant()). Once set, incoming values are
+                    // ignored rather than overwriting the real first date.
+                    'alumnus_first_job_date' => $alumni->alumnus_first_job_date
+                        ?? (empty($validated['alumnus_first_job_date']) ? null : $validated['alumnus_first_job_date']),
                 ]);
 
                 $alumni->user->update([

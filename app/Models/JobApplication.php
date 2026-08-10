@@ -15,11 +15,13 @@ class JobApplication extends Model
         'application_date',
         'application_status',
         'application_score',
+        'is_read',
     ];
 
     protected $casts = [
         'application_date' => 'datetime',
         'application_score' => 'decimal:2',
+        'is_read' => 'boolean',
     ];
 
     public function job()

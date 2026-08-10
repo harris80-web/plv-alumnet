@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Mail\ApproveJobPostMail;
 use App\Mail\DeclineJobPostMail;
 use App\Mail\DeleteJobPostMail;
+use App\Models\Industry;
 use App\Models\JobPosting;
 use App\Models\Program;
+use App\Models\Skill;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Mews\Purifier\Facades\Purifier;
 
 class JobPostingController extends Controller
 {
@@ -75,11 +78,17 @@ class JobPostingController extends Controller
 
     public function showJobBoard()
     {
-        $jobPostings = JobPosting::active()->latest('updated_at')->get();
+        $jobPostings = JobPosting::active()->with(['skills', 'programs', 'industry'])->latest('updated_at')->get();
         $programs = Program::all();
-        $applications = Auth::user()->alumnus ? Auth::user()->alumnus->appliedJobs->pluck('job_id')->toArray() : [];
+        $industries = Industry::all();
         $user = Auth::user();
-        return view('general.jobBoard', compact('jobPostings', 'programs', 'user', 'applications'));
+        $applications = [];
+
+        if ($user->alumnus) {
+            $applications = $user->alumnus->appliedJobs->pluck('job_id')->toArray();
+        }
+
+        return view('general.jobBoard', compact('jobPostings', 'programs', 'industries', 'user', 'applications'));
     }
 
     public function addJobPost(Request $request, $id)
@@ -95,6 +104,9 @@ class JobPostingController extends Controller
             'job_posting_setup' => ['required', 'string', Rule::in('On-Site', 'Remote', 'Hybrid')],
             'program' => ['required', 'array', 'max:3'],
             'program.*' => ['exists:programs,program_id'],
+            'industry_id' => ['nullable', 'exists:industries,industry_id'],
+            'skills' => ['nullable', 'array'],
+            'skills.*' => ['string', 'max:100'],
         ]);
 
 
@@ -103,21 +115,24 @@ class JobPostingController extends Controller
             $jobImagePath = $request->file('job_posting_image')->store('jobImages', 'public');
         }
         $selectedPrograms = array_unique(array_filter($request->program));
+        $description = Purifier::clean($validated['job_posting_description'], 'job_description');
 
         try {
-            DB::transaction(function () use ($validated, $jobImagePath, $id, $selectedPrograms) {
+            DB::transaction(function () use ($validated, $jobImagePath, $id, $selectedPrograms, $description) {
                 $jobPost = JobPosting::create([
                     'job_posting_image' => $jobImagePath,
                     'job_posting_title' => $validated['job_posting_title'],
                     'job_posting_company' => $validated['job_posting_company'],
                     'job_posting_address' => $validated['job_posting_address'],
                     'job_posting_employment_type' => $validated['job_posting_employment_type'],
-                    'job_posting_description' => $validated['job_posting_description'],
+                    'job_posting_description' => $description,
                     'job_closing_date' => $validated['job_closing_date'],
                     'job_posting_setup' => $validated['job_posting_setup'],
+                    'industry_id' => $validated['industry_id'] ?? null,
                     'user_id' => $id,
                 ]);
                 $jobPost->programs()->attach($selectedPrograms);
+                $this->syncJobSkills($jobPost, $validated['skills'] ?? []);
             });
         } catch (\Exception $e) {
             if ($jobImagePath) {
@@ -137,10 +152,11 @@ class JobPostingController extends Controller
 
     public function showMyJobPosts($id)
     {
-        $jobPostings = JobPosting::where('user_id', $id)->latest()->get();
+        $jobPostings = JobPosting::with(['skills', 'applicants', 'industry'])->where('user_id', $id)->latest()->get();
         $programs = Program::all();
+        $industries = Industry::all();
         $users = Auth::user();
-        return view('general.jobPostings', compact('jobPostings', 'programs', 'users'));
+        return view('general.jobPostings', compact('jobPostings', 'programs', 'industries', 'users'));
     }
 
     public function editJobPost(Request $request, $id)
@@ -157,6 +173,9 @@ class JobPostingController extends Controller
             'job_posting_setup' => 'nullable|string',
             'program' => 'required|array|max:3',
             'program.*' => 'exists:programs,program_id',
+            'industry_id' => ['nullable', 'exists:industries,industry_id'],
+            'skills' => ['nullable', 'array'],
+            'skills.*' => ['string', 'max:100'],
         ]);
 
         $oldJobImage = $job->job_posting_image ?? null;
@@ -168,20 +187,27 @@ class JobPostingController extends Controller
             $jobImage = $request->file('job_posting_image')->store('jobImages', 'public');
         }
         $selectedPrograms = array_unique(array_filter($request->program));
+        $description = isset($validated['job_posting_description'])
+            ? Purifier::clean($validated['job_posting_description'], 'job_description')
+            : null;
 
         try {
-            DB::transaction(function () use ($validated, $jobImage, $job, $selectedPrograms) {
+            DB::transaction(function () use ($validated, $jobImage, $job, $selectedPrograms, $description) {
                 $job->update([
                     'job_posting_title' => $validated['job_posting_title'] ?? $job->job_posting_title,
                     'job_posting_company' => $validated['job_posting_company'] ?? $job->job_posting_company,
                     'job_posting_address' => $validated['job_posting_address'] ?? $job->job_posting_address,
                     'job_posting_employment_type' => $validated['job_posting_employment_type'] ?? $job->job_posting_employment_type,
-                    'job_posting_description' => $validated['job_posting_description'] ?? $job->job_posting_description,
+                    'job_posting_description' => $description ?? $job->job_posting_description,
                     'job_closing_date' => $validated['job_closing_date'] ?? $job->job_closing_date,
                     'job_posting_setup' => $validated['job_posting_setup'] ?? $job->job_posting_setup,
+                    'industry_id' => array_key_exists('industry_id', $validated)
+                        ? ($validated['industry_id'] ?: null)
+                        : $job->industry_id,
                 ]);
 
                 $job->programs()->sync($selectedPrograms);
+                $this->syncJobSkills($job, $validated['skills'] ?? []);
 
                 if ($jobImage != null) {
                     $job->update([
@@ -202,6 +228,7 @@ class JobPostingController extends Controller
     public function showJobManagement()
     {
         $programs = Program::all();
+        $industries = Industry::all();
         $users = Auth::user();
 
         $user = Auth::user();
@@ -220,7 +247,7 @@ class JobPostingController extends Controller
         }
 
         $jobPostings = $query->latest()->get();
-        return view('superAdmin.jobManagement', compact('jobPostings', 'programs', 'users'));
+        return view('superAdmin.jobManagement', compact('jobPostings', 'programs', 'industries', 'users'));
     }
 
     public function approveJobPost($id)
@@ -258,5 +285,48 @@ class JobPostingController extends Controller
         $job->delete();
 
         return back()->with('success', 'Job posting deleted successfully!');
+    }
+
+    /**
+     * Replaces the job's required skills wholesale from a flat list of
+     * names — same find-or-create-by-name pattern already established in
+     * ResumeBuilderController::save() for alumni skills, so free-typed
+     * names still resolve to the shared `skills` table instead of drifting.
+     * Every skill added here is marked required with the pivot's default
+     * weight — no weighting UI, matching the literal "required skill" ask.
+     */
+    private function syncJobSkills(JobPosting $jobPost, array $skillNames): void
+    {
+        $skillIds = collect($skillNames)
+            ->map(fn ($name) => trim((string) $name))
+            ->filter()
+            ->unique(fn ($name) => mb_strtolower($name))
+            ->map(function ($name) {
+                return Skill::firstOrCreate(
+                    ['skill_name' => $name],
+                    ['skill_category' => 'domain']
+                )->skill_id;
+            });
+
+        $jobPost->skills()->sync(
+            $skillIds->mapWithKeys(fn ($skillId) => [$skillId => ['is_required' => true]])->all()
+        );
+    }
+
+    /**
+     * Image upload handler for the rich-text description editor's toolbar
+     * button (see resources/views/partials/rich-text-editor.blade.php) —
+     * Quill inserts the returned URL into the content rather than embedding
+     * the file as base64, same storage convention as job_posting_image.
+     */
+    public function uploadDescriptionImage(Request $request)
+    {
+        $request->validate([
+            'image' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:4096'],
+        ]);
+
+        $path = $request->file('image')->store('jobDescriptionImages', 'public');
+
+        return response()->json(['url' => asset('storage/' . $path)]);
     }
 }

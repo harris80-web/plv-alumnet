@@ -162,25 +162,6 @@
                             <p class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-tighter leading-none mt-2">Company Size</p>
                         </div>
                         <div>
-                            <select
-                                name="employer_industry"
-                                id="employer_industry"
-                                class="w-full h-[39px] px-4  border border-[#0E0F3B] rounded-lg text-gray-400 text-md font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition text-center"
-                                onchange="this.classList.remove('text-gray-400'); this.classList.add('text-gray-800')">
-                                <option value="" disabled selected>Select Industry</option>
-
-                                @foreach($industries as $industry)
-                                <option value="{{ $industry->industry_id }}">
-                                    {{ $industry->industry_name }}
-                                </option>
-                                @endforeach
-                            </select>
-
-                            <p class="text-[10px] uppercase font-bold text-[#C73D1A] tracking-tighter leading-none mt-2">
-                                Industry / Sector
-                            </p>
-                        </div>
-                        <div>
                             <input type="url" name="employer_website_url" placeholder="www.website.com" class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-gray-800 text-md font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400 text-center">
                             <p class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-tighter leading-none mt-2">Website URL</p>
                         </div>

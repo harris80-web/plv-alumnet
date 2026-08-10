@@ -377,9 +377,10 @@ class UserController extends Controller
         } else if ($user->user_role == 'employer') {
             return view('employer.profile', compact('user'));
         } else if ($user->user_role == 'alumni') {
-            $user->load(['alumnus.program', 'alumnus.section', 'alumnus.skills', 'alumnus.experiences.industry', 'alumnus.certifications']);
-            $resumeData = $user->alumnus->toResumeFormArray();
-            return view('alumni.profile', compact('user', 'industries', 'resumeData'));
+            // Only needed for the finished resume view now — the builder
+            // itself moved to Edit Profile (see editProfile() below).
+            $user->load(['alumnus.program', 'alumnus.section', 'alumnus.industry', 'alumnus.skills', 'alumnus.experiences.industry', 'alumnus.certifications']);
+            return view('alumni.profile', compact('user'));
         } else {
             Auth::logout();
             return redirect()->route('auth.login')->withErrors('error', 'Your account role is not recognized. Please contact the administrator.');
@@ -397,7 +398,7 @@ class UserController extends Controller
         } else if ($user->user_role == 'registrar') {
             return view('registrar.edit-profile', compact('user'));
         } else if ($user->user_role == 'employer') {
-            return view('employer.edit-profile', compact('user', 'industries'));
+            return view('employer.edit-profile', compact('user'));
         } else if ($user->user_role == 'alumni') {
             $user->load(['alumnus.skills', 'alumnus.experiences.industry', 'alumnus.certifications']);
             $resumeData = $user->alumnus->toResumeFormArray();

@@ -28,6 +28,7 @@ class JobPosting extends Model
         'job_closing_date',
         'job_approved',
         'job_posting_image',
+        'industry_id',
     ];
 
     public function scopeActive($query)
@@ -78,6 +79,11 @@ class JobPosting extends Model
         return $this->belongsTo(Program::class, 'program_id', 'program_id');
     }
 
+    public function industry()
+    {
+        return $this->belongsTo(Industry::class, 'industry_id', 'industry_id');
+    }
+
     public function programs()
     {
         // job_program is the table name, job_posting_id and program_id are the keys
@@ -87,9 +93,12 @@ class JobPosting extends Model
     public function applicants()
     {
         // Assuming your pivot table is 'applications' and links to 'alumni'
+        // Ordered by compatibility score (best match first) now that it's
+        // actually being populated — see JobApplicationController::applyJob().
         return $this->belongsToMany(Alumnus::class, 'job_applications', 'job_id', 'alumnus_id')
-            ->withPivot('application_status', 'application_date') // Allows you to access $job->pivot->status
-            ->withTimestamps();
+            ->withPivot('application_id', 'application_status', 'application_date', 'application_score', 'is_read') // Allows you to access $job->pivot->status
+            ->withTimestamps()
+            ->orderByDesc('job_applications.application_score');
     }
 
     public function applications()

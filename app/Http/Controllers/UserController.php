@@ -291,6 +291,7 @@ class UserController extends Controller
             'user_last_name' => 'required|string|max:255',
             'user_middle_name' => 'required|string|max:255',
             'user_suffix' => 'nullable|string|max:255',
+            'alumnus_gender' => 'required|in:male,female,prefer_not_to_say',
             'program_id' => 'required|exists:programs,program_id',
             'alumnus_batch' => 'required|integer|min:1900|max:' . (date('Y') + 1),
             'section_id' => 'required|exists:sections,section_id',
@@ -315,6 +316,7 @@ class UserController extends Controller
                     'program_id' => $validated['program_id'],
                     'alumnus_batch' => $validated['alumnus_batch'],
                     'section_id' => $validated['section_id'],
+                    'alumnus_gender' => $validated['alumnus_gender'],
                 ]);
 
                 Mail::to($user->user_email)->send(new AlumniCreatedMail($user, $password));

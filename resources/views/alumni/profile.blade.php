@@ -60,15 +60,15 @@
                 <div class="md:col-span-3 flex justify-center md:justify-start">
                     <div
                         class="w-40 h-40 bg-slate-900 rounded-full flex items-center justify-center border-4 border-white shadow-lg overflow-hidden">
-                        <svg class="w-25 h-25 text-white mt-8" fill="currentColor" viewBox="0 0 20 20">
-                            @if ($user->user_profile_picture)
-                                <img src="{{ asset('storage/' . $user->user_profile_picture) }}" alt="Profile Picture"
-                                    class="w-full h-full object-cover">
-                            @else
+                        @if ($user->user_profile_picture)
+                            <img src="{{ asset('storage/' . $user->user_profile_picture) }}" alt="Profile Picture"
+                                class="w-full h-full object-cover">
+                        @else
+                            <svg class="w-25 h-25 text-white mt-8" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
                                     clip-rule="evenodd" />
-                            @endif
-                        </svg>
+                            </svg>
+                        @endif
                     </div>
                 </div>
 
@@ -96,6 +96,12 @@
                         <div>
                             <p class="text-xs font-black text-slate-900 uppercase">Suffix</p>
                             <p class="text-lg text-gray-600 font-medium">{{ $user->user_suffix ?? '--' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-black text-slate-900 uppercase">Gender</p>
+                            <p class="text-lg text-gray-600 font-medium">
+                                {{ \App\Models\Alumnus::genderLabels()[$user->alumnus->alumnus_gender] ?? '--' }}
+                            </p>
                         </div>
 
                         <div>
@@ -129,9 +135,21 @@
                         </p>
                     </div>
                     <div>
+                        <p class="text-xs font-black text-slate-900 uppercase">Where I Work</p>
+                        <p class="text-md text-gray-600 font-medium">
+                            @if($user->alumnus->alumnus_workplace_undisclosed)
+                                Not disclosed
+                            @else
+                                {{ $user->alumnus->alumnus_workplace ?? 'Not specified' }}
+                            @endif
+                        </p>
+                    </div>
+                    @endif
+                    @if($user->alumnus->alumnus_first_job_date)
+                    <div>
                         <p class="text-xs font-black text-slate-900 uppercase">Date of First Job</p>
                         <p class="text-md text-gray-600 font-medium">
-                            {{ optional($user->alumnus->alumnus_first_job_date)->format('F j, Y') ?? 'Not set' }}
+                            {{ $user->alumnus->alumnus_first_job_date->format('F j, Y') }}
                         </p>
                     </div>
                     @endif

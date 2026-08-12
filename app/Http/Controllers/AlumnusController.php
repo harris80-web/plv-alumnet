@@ -78,7 +78,9 @@ class AlumnusController extends Controller
         $validated = $request->validate([
             'user_profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'alumnus_employment_status' => 'required|boolean|max:255',
-            'industry_id' => 'nullable|exists:industries,industry_id',
+            'industry_id' => 'required_if:alumnus_employment_status,1|nullable|exists:industries,industry_id',
+            'alumnus_workplace' => 'nullable|string|max:255',
+            'alumnus_workplace_undisclosed' => 'nullable|boolean',
             'alumnus_first_job_date' => 'nullable|date|before_or_equal:today',
             'user_email' => 'required|email|unique:users,user_email,' . $user->user_id . ',user_id',
             'user_number' => 'nullable|string|max:20',
@@ -97,9 +99,18 @@ class AlumnusController extends Controller
             DB::transaction(function () use ($validated, $alumnus, $profilePicture) {
                 $alumni = Alumnus::where('user_id', $alumnus)->firstOrFail();
 
+                $employed = (bool) ($validated['alumnus_employment_status'] ?? $alumni->alumnus_employment_status);
+                $workplaceUndisclosed = $employed && !empty($validated['alumnus_workplace_undisclosed']);
+
                 $alumni->update([
-                    'alumnus_employment_status' => $validated['alumnus_employment_status'] ?? $alumni->alumnus_employment_status,
-                    'industry_id' => empty($validated['industry_id']) ? null : $validated['industry_id'],
+                    'alumnus_employment_status' => $employed,
+                    'industry_id' => $employed && !empty($validated['industry_id']) ? $validated['industry_id'] : null,
+                    // Not required — alumni can share their industry without
+                    // naming the employer, or skip it entirely.
+                    'alumnus_workplace' => $employed && !$workplaceUndisclosed && !empty($validated['alumnus_workplace'])
+                        ? $validated['alumnus_workplace']
+                        : null,
+                    'alumnus_workplace_undisclosed' => $workplaceUndisclosed,
                     // Settable exactly once — for alumni whose job didn't
                     // come through the system (the system itself sets this
                     // automatically on hire, see JobApplicationController::

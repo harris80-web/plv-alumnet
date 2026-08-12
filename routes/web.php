@@ -185,6 +185,9 @@ Route::get('/jobBoard/applications/{jobPostingId}', [JobApplicationController::c
 Route::post('/jobBoard/hireApplicant/{applicationId}', [JobApplicationController::class, 'hireApplicant'])->name('jobApplication.hireApplicant');
 Route::post('/jobBoard/declineApplicant/{applicationId}', [JobApplicationController::class, 'declineApplicant'])->name('jobApplication.declineApplicant');
 Route::post('/jobBoard/shortlistApplicant/{applicationId}', [JobApplicationController::class, 'shortlistApplicant'])->name('jobApplication.shortlistApplicant');
+Route::post('/jobBoard/bulkHireApplicants/{jobPostingId}', [JobApplicationController::class, 'bulkHireApplicants'])->name('jobApplication.bulkHireApplicants');
+Route::post('/jobBoard/bulkDeclineApplicants/{jobPostingId}', [JobApplicationController::class, 'bulkDeclineApplicants'])->name('jobApplication.bulkDeclineApplicants');
+Route::post('/jobBoard/bulkShortlistApplicants/{jobPostingId}', [JobApplicationController::class, 'bulkShortlistApplicants'])->name('jobApplication.bulkShortlistApplicants');
 
 
 Route::resource('job-postings', JobPostingController::class);

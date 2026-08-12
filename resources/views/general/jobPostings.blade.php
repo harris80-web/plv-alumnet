@@ -253,6 +253,7 @@
                                 <div class="text-sm font-bold">
                                     <p class="text-[#C73D1A]">APPLICATIONS RECEIVED: {{ $job->applicants->count() }}</p>
                                     <p class="text-[#C73D1A]">UNREAD APPLICATIONS: {{ $job->applicants->where('pivot.is_read', false)->count() }}</p>
+                                    <p class="text-[#C73D1A]">HIRED: {{ $job->applicants->where('pivot.application_status', 'hired')->count() }} / {{ $job->hiring_limit }}</p>
                                 </div>
                                 @endif
                             </div>
@@ -495,10 +496,18 @@
                             @include('partials.rich-text-editor', ['uid' => 'create', 'fieldName' => 'job_posting_description'])
                         </div>
 
-                        <div class="w-1/2 space-y-1">
-                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Closing / Validity Date <span class="text-red-500">*</span></label>
-                            <input type="date" name="job_closing_date"
-                                class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] text-gray-400">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Closing / Validity Date <span class="text-red-500">*</span></label>
+                                <input type="date" name="job_closing_date"
+                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] text-gray-400">
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Hiring Limit <span class="text-red-500">*</span></label>
+                                <input type="number" name="hiring_limit" min="1" value="1" placeholder="e.g., 2"
+                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
+                            </div>
                         </div>
 
                         <!-- ACTION BUTTONS -->
@@ -657,10 +666,22 @@
                             @include('partials.rich-text-editor', ['uid' => 'edit-' . $job->job_posting_id, 'fieldName' => 'job_posting_description', 'initialValue' => $job->job_posting_description])
                         </div>
 
-                        <div class="w-1/2 space-y-1">
-                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Closing / Validity Date <span class="text-red-500">*</span></label>
-                            <input type="date" name="job_closing_date" value="{{ $job->job_closing_date }}"
-                                class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] text-gray-400">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Closing / Validity Date <span class="text-red-500">*</span></label>
+                                <input type="date" name="job_closing_date" value="{{ $job->job_closing_date }}"
+                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] text-gray-400">
+                            </div>
+
+                            @php $jobHiredCount = $job->applicants->where('pivot.application_status', 'hired')->count(); @endphp
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Hiring Limit <span class="text-red-500">*</span></label>
+                                <input type="number" name="hiring_limit" min="{{ $jobHiredCount }}" value="{{ $job->hiring_limit }}"
+                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
+                                @if($jobHiredCount > 0)
+                                <p class="text-[9px] text-gray-400">{{ $jobHiredCount }} already hired — can't go lower than that.</p>
+                                @endif
+                            </div>
                         </div>
 
                         <div class="flex justify-end gap-4 mt-10 p-5">

@@ -646,6 +646,7 @@ $current_page = 'user_management';
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">First Name</th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Middle Name</th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Suffix</th>
+                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">Gender</th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Program</th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Section</th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Batch <i
@@ -681,6 +682,9 @@ $current_page = 'user_management';
                                     </td>
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
                                         {{ $alumnus->user?->user_suffix ?? '' }}
+                                    </td>
+                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                        {{ \App\Models\Alumnus::genderLabels()[$alumnus->alumnus_gender] ?? 'N/A' }}
                                     </td>
                                     <td
                                         class="px-3 py-3 font-medium text-black border-r border-slate-100 leading-tight">
@@ -1230,6 +1234,16 @@ $current_page = 'user_management';
                         <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Suffix:</label>
                         <input type="text" name="user_suffix" placeholder="e.g. Jr., III"
                             class="w-44 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Gender:</label>
+                        <select name="alumnus_gender" required
+                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white transition-all">
+                            <option value="" disabled selected>Select Gender</option>
+                            @foreach (\App\Models\Alumnus::genderLabels() as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="flex items-center gap-4">
                         <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Program:</label>

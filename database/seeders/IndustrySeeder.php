@@ -14,14 +14,20 @@ class IndustrySeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('industries')->insert([
-            'industry_name' => 'None',
-        ]);
-        DB::table('industries')->insert([
-            'industry_name' => 'Technology',
-        ]);
-        DB::table('industries')->insert([
-            'industry_name' => 'Healthcare',
-        ]);
+        $industries = [
+            'None',
+            'Technology',
+            'Healthcare',
+            'Business & Finance',
+            'Education',
+            'Government & Public Service',
+            'Engineering & Construction',
+        ];
+
+        foreach ($industries as $industryName) {
+            DB::table('industries')->insert([
+                'industry_name' => $industryName,
+            ]);
+        }
     }
 }

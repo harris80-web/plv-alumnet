@@ -24,13 +24,14 @@ class DatabaseSeeder extends Seeder
             IndustrySeeder::class,
             ProgramSeeder::class,
             SectionSeeder::class,
+            SkillsSeeder::class, // before Alumnus/Job — both attach skills by name
             SuperAdminSeeder::class,
             AlumnusSeeder::class,
             EmployerSeeder::class,
             AdminSeeder::class,
-            JobSeeder::class,
+            JobSeeder::class, // after Employer/Industry/Program/Skills
+            JobApplicationSeeder::class, // after Alumnus/Job
             TestimonialSeeder::class,
-            SkillsSeeder::class, // Add the SkillsSeeder to the list of seeders
             // You can add more seeders here later (e.g., UserSeeder)
         ]);
     }

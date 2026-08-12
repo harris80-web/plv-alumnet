@@ -26,9 +26,14 @@ class JobPosting extends Model
         'job_posting_setup',
         'job_posting_description',
         'job_closing_date',
+        'hiring_limit',
         'job_approved',
         'job_posting_image',
         'industry_id',
+    ];
+
+    protected $casts = [
+        'hiring_limit' => 'integer',
     ];
 
     public function scopeActive($query)
@@ -125,7 +130,22 @@ class JobPosting extends Model
     {
         return $this->applications()->with('alumnus.user')->orderByDesc('application_score');
     }
- 
+
+    public function hiredApplicantsCount(): int
+    {
+        return $this->applications()->where('application_status', 'hired')->count();
+    }
+
+    /**
+     * How many more applicants this job post can still hire before
+     * hitting hiring_limit — the number bulk-hire and the per-row Hire
+     * button both get capped against.
+     */
+    public function remainingHiringSlots(): int
+    {
+        return max(0, $this->hiring_limit - $this->hiredApplicantsCount());
+    }
+
     // Scopes
     public function scopeApproved($query)
     {

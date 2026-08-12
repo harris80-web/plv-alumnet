@@ -17,9 +17,12 @@ class Alumnus extends Model
         'user_id',
         'program_id',
         'section_id',
+        'alumnus_gender',
         'industry_id',
         'alumnus_employment_status',
         'alumnus_first_job_date',
+        'alumnus_workplace',
+        'alumnus_workplace_undisclosed',
         'alumnus_resume_summary',
         'alumnus_resume_file_path',
         'linkedin_url',
@@ -32,10 +35,20 @@ class Alumnus extends Model
     protected $casts = [
         'alumnus_is_public' => 'boolean',
         'alumnus_change_password' => 'boolean',
+        'alumnus_workplace_undisclosed' => 'boolean',
         'alumnus_resume_completeness' => 'integer',
         'alumnus_batch' => 'integer',
         'alumnus_first_job_date' => 'date',
     ];
+
+    public static function genderLabels(): array
+    {
+        return [
+            'male' => 'Male',
+            'female' => 'Female',
+            'prefer_not_to_say' => 'Prefer not to say',
+        ];
+    }
 
     public function user()
     {

@@ -178,6 +178,7 @@ class JobPostingController extends Controller
             'job_posting_employment_type' => ['required', 'string', Rule::in('Full-Time', 'Part-Time', 'Freelance')],
             'job_posting_description' => ['required', 'string'],
             'job_closing_date' => ['required', 'date'],
+            'hiring_limit' => ['required', 'integer', 'min:1'],
             'job_posting_setup' => ['required', 'string', Rule::in('On-Site', 'Remote', 'Hybrid')],
             'program' => ['required', 'array', 'max:3'],
             'program.*' => ['exists:programs,program_id'],
@@ -204,6 +205,7 @@ class JobPostingController extends Controller
                     'job_posting_employment_type' => $validated['job_posting_employment_type'],
                     'job_posting_description' => $description,
                     'job_closing_date' => $validated['job_closing_date'],
+                    'hiring_limit' => $validated['hiring_limit'],
                     'job_posting_setup' => $validated['job_posting_setup'],
                     'industry_id' => $validated['industry_id'] ?? null,
                     'user_id' => $id,
@@ -278,6 +280,17 @@ class JobPostingController extends Controller
             'job_posting_employment_type' => 'nullable|string',
             'job_posting_description' => 'nullable|string',
             'job_closing_date' => 'nullable|date',
+            'hiring_limit' => [
+                'nullable',
+                'integer',
+                'min:1',
+                function ($attribute, $value, $fail) use ($job) {
+                    $hired = $job->hiredApplicantsCount();
+                    if ($value !== null && $value < $hired) {
+                        $fail("Hiring limit can't be lower than the {$hired} applicant(s) already hired for this job post.");
+                    }
+                },
+            ],
             'job_posting_setup' => 'nullable|string',
             'program' => 'required|array|max:3',
             'program.*' => 'exists:programs,program_id',
@@ -308,6 +321,7 @@ class JobPostingController extends Controller
                     'job_posting_employment_type' => $validated['job_posting_employment_type'] ?? $job->job_posting_employment_type,
                     'job_posting_description' => $description ?? $job->job_posting_description,
                     'job_closing_date' => $validated['job_closing_date'] ?? $job->job_closing_date,
+                    'hiring_limit' => $validated['hiring_limit'] ?? $job->hiring_limit,
                     'job_posting_setup' => $validated['job_posting_setup'] ?? $job->job_posting_setup,
                     'industry_id' => array_key_exists('industry_id', $validated)
                         ? ($validated['industry_id'] ?: null)

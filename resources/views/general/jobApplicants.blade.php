@@ -155,6 +155,17 @@
     @php $current_page = 'employer_job_postings'; @endphp
     @include('partials.header-employer')
     @include('partials.success')
+    @if(session('error'))
+    <div id="errorToast" class="fixed inset-0 z-[300] flex items-start justify-center pt-6 pointer-events-none">
+        <div class="pointer-events-auto flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-5 py-4 shadow-md max-w-md w-full mx-4">
+            <i class="fas fa-circle-exclamation text-red-500 text-base shrink-0"></i>
+            <p class="text-sm font-medium flex-1">{{ session('error') }}</p>
+            <button onclick="document.getElementById('errorToast').remove()" class="text-red-400 hover:text-red-600 shrink-0">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+    </div>
+    @endif
     <section class="HeroSection h-[200px] flex items-end text-white shadow-lg">
         <div class="max-w-6xl w-full my-7 ml-10">
             <h1 class="text-5xl font-bold mb-2">Welcome to PLV-AlumNet!</h1>
@@ -256,10 +267,55 @@
                 </h2>
             </div>
 
+            @php
+                $hiredCount = $jobPost->hiredApplicantsCount();
+                $remainingSlots = $jobPost->remainingHiringSlots();
+            @endphp
+
+            <div class="px-8 py-4 border-b bg-slate-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="text-xs font-semibold text-gray-600">
+                    Hiring Limit: <span class="text-[#0E0F3B]">{{ $jobPost->hiring_limit }}</span>
+                    &nbsp;&middot;&nbsp; Hired: <span class="text-green-600">{{ $hiredCount }}</span>
+                    &nbsp;&middot;&nbsp; Remaining Slots:
+                    <span class="{{ $remainingSlots > 0 ? 'text-[#C73D1A]' : 'text-red-500' }}">{{ $remainingSlots }}</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-gray-500"><span id="selectedCount">0</span> selected</span>
+
+                    <form id="bulkShortlistForm" action="{{ route('jobApplication.bulkShortlistApplicants', $jobPost->job_posting_id) }}" method="POST" class="hidden">
+                        @csrf
+                    </form>
+                    <form id="bulkDeclineForm" action="{{ route('jobApplication.bulkDeclineApplicants', $jobPost->job_posting_id) }}" method="POST" class="hidden">
+                        @csrf
+                    </form>
+                    <form id="bulkHireForm" action="{{ route('jobApplication.bulkHireApplicants', $jobPost->job_posting_id) }}" method="POST" class="hidden">
+                        @csrf
+                    </form>
+
+                    <button type="button" id="bulkShortlistBtn" disabled onclick="submitBulkAction('shortlist')"
+                        class="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-xs font-bold px-4 py-2 rounded-md transition-colors">
+                        <i class="fas fa-star mr-1"></i> Shortlist
+                    </button>
+                    <button type="button" id="bulkDeclineBtn" disabled onclick="submitBulkAction('decline')"
+                        class="bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-xs font-bold px-4 py-2 rounded-md transition-colors">
+                        <i class="fas fa-user-times mr-1"></i> Decline
+                    </button>
+                    <button type="button" id="bulkHireBtn" disabled onclick="submitBulkAction('hire')"
+                        class="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-xs font-bold px-4 py-2 rounded-md transition-colors">
+                        <i class="fas fa-user-check mr-1"></i> Hire
+                    </button>
+                </div>
+            </div>
+
             <div>
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="bg-[#1D264F] text-white text-xs uppercase tracking-wider">
+                            <th class="px-4 py-3 text-center font-semibold w-10">
+                                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)"
+                                    class="w-4 h-4 cursor-pointer" title="Select all">
+                            </th>
                             <th class="px-6 py-3 text-center font-semibold w-12">#</th>
                             <th class="px-6 py-3 text-center font-semibold">Applicant Name</th>
                             <th class="px-6 py-3 text-center font-semibold">Program</th>
@@ -295,6 +351,13 @@
                             };
                         @endphp
                         <tr data-id="{{ $index + 1 }}" data-status="{{ $status }}">
+                            <td class="px-4 py-4 text-center">
+                                @if(in_array(strtolower($status), ['pending', 'shortlisted']))
+                                <input type="checkbox" class="applicant-checkbox w-4 h-4 accent-[#1D264F] cursor-pointer"
+                                    value="{{ $applicant->pivot->application_id }}"
+                                    onchange="updateBulkActionUI()">
+                                @endif
+                            </td>
                             <td class="px-6 py-4 text-center text-gray-400 font-semibold">{{ $index + 1 }}</td>
 
                             <td class="px-6 py-4">
@@ -313,14 +376,22 @@
 
                             <td class="px-6 py-4 text-center">
                                 @php $score = $applicant->pivot->application_score; @endphp
-                                @if($score !== null)
-                                    <span class="text-xs font-bold px-2 py-1 rounded-full
-                                        {{ $score >= 70 ? 'bg-green-100 text-green-700' : ($score >= 40 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600') }}">
-                                        {{ $score }}%
-                                    </span>
-                                @else
-                                    <span class="text-gray-400 text-xs">&mdash;</span>
-                                @endif
+                                <div class="flex flex-col items-center gap-1">
+                                    @if($score !== null)
+                                        <span class="text-xs font-bold px-2 py-1 rounded-full
+                                            {{ $score >= 70 ? 'bg-green-100 text-green-700' : ($score >= 40 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600') }}">
+                                            {{ $score }}%
+                                        </span>
+                                        @if($index < 10)
+                                        <span class="text-[9px] font-bold px-2 py-0.5 rounded-full
+                                            {{ $index === 0 ? 'bg-yellow-100 text-yellow-700' : ($index < 3 ? 'bg-slate-200 text-slate-600' : 'bg-indigo-50 text-indigo-600') }}">
+                                            RANK #{{ $index + 1 }}
+                                        </span>
+                                        @endif
+                                    @else
+                                        <span class="text-gray-400 text-xs">&mdash;</span>
+                                    @endif
+                                </div>
                             </td>
 
                             <td class="px-6 py-4 text-center">
@@ -345,12 +416,18 @@
                                         <i class="fas fa-ellipsis-v text-gray-500"></i>
                                     </button>
                                     <div class="action-dropdown">
+                                        @if($remainingSlots > 0)
                                         <form action="{{ route('jobApplication.hireApplicant', $applicant->pivot->application_id) }}" method="POST">
                                             @csrf
                                             <button type="submit" class="text-green-600">
                                                 <i class="fas fa-user-check w-4"></i> Hire
                                             </button>
                                         </form>
+                                        @else
+                                        <button type="button" disabled class="text-gray-300 cursor-not-allowed" title="Hiring limit reached">
+                                            <i class="fas fa-user-check w-4"></i> Hire
+                                        </button>
+                                        @endif
                                         <form action="{{ route('jobApplication.declineApplicant', $applicant->pivot->application_id) }}" method="POST">
                                             @csrf
                                             <button type="submit" class="text-red-500">
@@ -369,7 +446,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="py-16 text-center text-gray-400">
+                            <td colspan="7" class="py-16 text-center text-gray-400">
                                 <i class="fas fa-inbox text-5xl mb-3 block"></i>
                                 <p class="font-semibold">No applicants yet.</p>
                             </td>
@@ -440,6 +517,62 @@
 </body>
 
 <script>
+    const HIRING_REMAINING_SLOTS = {{ $remainingSlots }};
+    const BULK_ACTION_FORMS = { hire: 'bulkHireForm', decline: 'bulkDeclineForm', shortlist: 'bulkShortlistForm' };
+    const BULK_ACTION_VERBS = { hire: 'hire', decline: 'decline', shortlist: 'shortlist' };
+
+    function getCheckedApplicationIds() {
+        return [...document.querySelectorAll('.applicant-checkbox:checked')].map(cb => cb.value);
+    }
+
+    function updateBulkActionUI() {
+        const count = getCheckedApplicationIds().length;
+        document.getElementById('selectedCount').textContent = count;
+        document.getElementById('bulkHireBtn').disabled = count === 0;
+        document.getElementById('bulkDeclineBtn').disabled = count === 0;
+        document.getElementById('bulkShortlistBtn').disabled = count === 0;
+
+        const allCheckboxes = document.querySelectorAll('.applicant-checkbox');
+        const selectAll = document.getElementById('selectAllCheckbox');
+        if (selectAll) {
+            selectAll.checked = allCheckboxes.length > 0 && count === allCheckboxes.length;
+        }
+    }
+
+    function toggleSelectAll(source) {
+        document.querySelectorAll('tbody tr[data-status]').forEach(row => {
+            if (row.style.display === 'none') return; // respect the current status filter
+            const cb = row.querySelector('.applicant-checkbox');
+            if (cb) cb.checked = source.checked;
+        });
+        updateBulkActionUI();
+    }
+
+    function submitBulkAction(action) {
+        const ids = getCheckedApplicationIds();
+        if (ids.length === 0) return;
+
+        if (action === 'hire' && ids.length > HIRING_REMAINING_SLOTS) {
+            alert('You can only hire ' + HIRING_REMAINING_SLOTS + ' more applicant(s) for this job post. Uncheck some and try again.');
+            return;
+        }
+
+        if (!confirm('Are you sure you want to ' + BULK_ACTION_VERBS[action] + ' ' + ids.length + ' selected applicant(s)?')) {
+            return;
+        }
+
+        const form = document.getElementById(BULK_ACTION_FORMS[action]);
+        form.querySelectorAll('input[name="application_ids[]"]').forEach(el => el.remove());
+        ids.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'application_ids[]';
+            input.value = id;
+            form.appendChild(input);
+        });
+        form.submit();
+    }
+
     function openJobViewModal(el) {
         document.getElementById('jvm-image').src = el.dataset.image;
         document.getElementById('jvm-title').textContent = el.dataset.title;

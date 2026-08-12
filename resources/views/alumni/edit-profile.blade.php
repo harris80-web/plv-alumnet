@@ -107,6 +107,12 @@
                             <p class="text-xs font-semibold text-orange-600 uppercase">Suffix</p>
                             <h3 class="text-lg font-semibold text-[#0E0F3B] uppercase">{{ $user->user_suffix }}</h3>
                         </div>
+                        <div>
+                            <p class="text-xs font-semibold text-orange-600 uppercase">Gender</p>
+                            <h3 class="text-lg font-semibold text-[#0E0F3B] uppercase">
+                                {{ \App\Models\Alumnus::genderLabels()[$user->alumnus->alumnus_gender] ?? 'Not specified' }}
+                            </h3>
+                        </div>
 
                         <div class="md:col-span-2">
                             <p class="text-xs font-bold text-orange-600 uppercase">Program</p>
@@ -134,8 +140,8 @@
                     <div id="employment-fields" class="space-y-4 {{ $user->alumnus->alumnus_employment_status ? '' : 'hidden' }}">
                         <div>
                             <label for="industry_id" class="text-xs font-bold text-orange-600 uppercase block mb-1">Industry / Sector</label>
-                            <select name="industry_id" class="w-full md:w-3/4 py-1.5 px-2 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
-                                <option value="">Not specified</option>
+                            <select name="industry_id" id="industry_id" required class="w-full md:w-3/4 py-1.5 px-2 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
+                                <option value="" disabled {{ $user->alumnus->industry_id ? '' : 'selected' }}>Select Industry / Sector</option>
                                 @foreach($industries as $industry)
                                 <option value="{{ $industry->industry_id }}" {{ $user->alumnus->industry_id == $industry->industry_id ? 'selected' : '' }}>
                                     {{ $industry->industry_name }}
@@ -144,6 +150,24 @@
                             </select>
                             <p class="text-[10px] text-gray-400 mt-1">
                                 Set automatically when you're hired through a job post here — change it yourself if your job didn't come from the system.
+                            </p>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label for="alumnus_workplace" class="text-xs font-bold text-orange-600 uppercase">Where Do You Work?</label>
+                                <button type="button" id="workplaceUndisclosedBtn" onclick="toggleWorkplaceUndisclosed()"
+                                    class="text-[10px] font-bold uppercase px-2 py-1 rounded border border-[#0E0F3B] text-[#0E0F3B] hover:bg-[#0E0F3B] hover:text-white transition shrink-0">
+                                    <span id="workplaceUndisclosedLabel">{{ $user->alumnus->alumnus_workplace_undisclosed ? 'Disclose Workplace' : "Don't Disclose" }}</span>
+                                </button>
+                            </div>
+                            <input type="hidden" name="alumnus_workplace_undisclosed" id="alumnus_workplace_undisclosed" value="{{ $user->alumnus->alumnus_workplace_undisclosed ? 1 : 0 }}">
+                            <input type="text" name="alumnus_workplace" id="alumnus_workplace" placeholder="Company / Organization name"
+                                value="{{ $user->alumnus->alumnus_workplace }}"
+                                {{ $user->alumnus->alumnus_workplace_undisclosed ? 'disabled' : '' }}
+                                class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed">
+                            <p class="text-[10px] text-gray-400 mt-1">
+                                Set automatically when you're hired through a job post here — only fill this in yourself if your job didn't come from the system. Optional, and you can mark it undisclosed and just leave your industry above set.
                             </p>
                         </div>
 
@@ -267,6 +291,20 @@
     // changes during editing (not just on initial page load).
     function toggleEmploymentFields(status) {
         document.getElementById('employment-fields').classList.toggle('hidden', status !== '1');
+    }
+
+    function toggleWorkplaceUndisclosed() {
+        const hiddenField = document.getElementById('alumnus_workplace_undisclosed');
+        const workplaceInput = document.getElementById('alumnus_workplace');
+        const label = document.getElementById('workplaceUndisclosedLabel');
+        const undisclosed = hiddenField.value !== '1';
+
+        hiddenField.value = undisclosed ? '1' : '0';
+        workplaceInput.disabled = undisclosed;
+        if (undisclosed) {
+            workplaceInput.value = '';
+        }
+        label.textContent = undisclosed ? 'Disclose Workplace' : "Don't Disclose";
     }
 
     //TRIGGER FOR ALERT NOTIFICATION AND USER PROFILE SIDE BAR

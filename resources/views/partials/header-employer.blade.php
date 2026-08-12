@@ -19,10 +19,10 @@
     ?>
 
     <header class="sticky top-0 z-50 w-full bg-[#0E0F3B] font-bold flex justify-between px-[4em] py-[1em]">
-        <div class="flex items-center gap-3 ml-10">
+        <a href="{{ route('employer.dashboard') }}" class="flex items-center gap-3 ml-10">
             <img src="{{ asset('assets/PLV-AlumNet LOGOMARK_WHITE.svg') }}" alt="Logo Mark" class="h-12 w-12">
             <img src="{{ asset('assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png') }}" alt="Letter Mark" class="h-8 w-30">
-        </div>
+        </a>
 
         <nav class="flex items-center justify-center gap-10 text-white flex-1 font-medium text-sm">
             <a href="{{ route('employer.dashboard') }}"

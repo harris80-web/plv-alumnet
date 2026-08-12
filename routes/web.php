@@ -10,6 +10,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\JobApplicationController;
+use App\Http\Controllers\JobBookmarkController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\OfficeController;
@@ -188,7 +189,9 @@ Route::post('/jobBoard/shortlistApplicant/{applicationId}', [JobApplicationContr
 
 Route::resource('job-postings', JobPostingController::class);
 Route::get('/jobBoard', [JobPostingController::class, 'showJobBoard'])->name('jobPosting.jobBoard');
+Route::get('/jobBoard/bookmarks', [JobPostingController::class, 'showBookmarks'])->name('jobPosting.bookmarks');
 Route::post('/jobBoard/addJobPost/{id}', [JobPostingController::class, 'addJobPost'])->name('jobPosting.addJobPost');
+Route::post('/jobBoard/toggleBookmark/{jobPostingId}', [JobBookmarkController::class, 'toggle'])->name('jobBookmark.toggle');
 Route::post('/job-postings/upload-image', [JobPostingController::class, 'uploadDescriptionImage'])->name('jobPosting.uploadDescriptionImage');
 Route::get('/myJobPosts/{id}', [JobPostingController::class, 'showMyJobPosts'])->name('jobPosting.myJobPosts');
 Route::post('/editJobPost/{id}', [JobPostingController::class, 'editJobPost'])->name('jobPosting.editJobPost');

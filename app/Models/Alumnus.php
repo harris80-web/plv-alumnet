@@ -106,6 +106,12 @@ class Alumnus extends Model
             ->withTimestamps();
     }
 
+    public function bookmarkedJobs()
+    {
+        return $this->belongsToMany(JobPosting::class, 'job_bookmarks', 'alumnus_id', 'job_id')
+            ->withTimestamps();
+    }
+
     public function scopePublicProfiles($query)
     {
         return $query->where('alumnus_is_public', true);

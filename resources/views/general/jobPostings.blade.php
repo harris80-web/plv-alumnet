@@ -1,88 +1,3 @@
-<!--<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    @vite('resources/css/app.css')
-    @vite('resources/js/app.js')
-</head>
-
-<body>
-    @foreach($jobPostings as $job)
-    <div>
-        <h2>{{ $job->job_posting_title }}</h2>
-        <p><strong>Company:</strong> {{ $job->job_posting_company }}</p>
-        <p><strong>Location:</strong> {{ $job->job_posting_address }}</p>
-        <p><strong>Posted by:</strong> {{ $job->employer->user->user_first_name }} {{ $job->employer->user->user_last_name }}</p>
-        <p><strong>Job type:</strong> {{ $job->job_posting_employment_type }}</p>
-        <p><strong>Job setup:</strong> {{ $job->job_posting_setup }}</p>
-        <p><strong>Recommended program:</strong> 
-        @foreach ($job->programs as $program)
-            {{ $program->program_name }}
-            <br><br>
-        @endforeach
-        </p>
-        <p><strong>Description:</strong> {{ $job->job_posting_description }}</p>
-        <p><strong>Valid until:</strong> {{ $job->job_closing_date }}</p>
-        <img src="{{ asset('storage/'.$job->job_posting_image) }}" alt="Job Image" style="max-width: 200px; max-height: 200px;">
-        <br><br><br>
-        <h2>EDIT JOB POSTING</h2>
-        <form action="{{ route('jobPosting.editJobPost', ['id' => $job->job_posting_id]) }}" method="post" enctype="multipart/form-data">
-            @csrf
-                <div>
-                    <img src="{{ asset('storage/'.$job->job_posting_image) }}" alt="Job Image" style="max-width: 200px; max-height: 200px;">
-                    <label for="job_posting_image">Job photo:</label>
-                    <input type="file" id="job_posting_image" name="job_posting_image">
-                </div>
-                <div>
-                    <label for="job_posting_title">Job title:</label>
-                    <input type="text" id="job_posting_title" name="job_posting_title" value="{{ $job->job_posting_title }}">
-                </div>
-                <div>
-                    <label for="job_posting_company">Business name:</label>
-                    <input type="text" id="job_posting_company" name="job_posting_company" value="{{ $job->job_posting_company }}">
-                </div>
-                <div>
-                    <label for="job_posting_address">Business address:</label>
-                    <input type="text" id="job_posting_address" name="job_posting_address" value="{{ $job->job_posting_address }}">
-                </div>
-                <div>
-                    <label for="job_posting_employment_type">Job type:</label>
-                    <input type="text" id="job_posting_employment_type" name="job_posting_employment_type" value="{{ $job->job_posting_employment_type }}">
-                </div>
-                <div>
-                    <label for="job_posting_setup">Job setup:</label>
-                    <input type="text" id="job_posting_setup" name="job_posting_setup" value="{{ $job->job_posting_setup }}">
-                </div>
-                <div>
-                    <label for="program">Recommended program:</label>
-                    <select name="program[]" id="">
-                        <option value="" selected hidden>Select a program</option>
-                        @foreach($programs as $program)
-                            <option value="{{ $program->program_id }}" >
-                                {{ $program->program_name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label for="job_posting_description">Job description:</label>
-                    <input type="text" id="job_posting_description" name="job_posting_description" value="{{ $job->job_posting_description }}">
-                </div>
-                <div>
-                    <label for="job_closing_date">Validity date:</label>
-                    <input type="date" id="job_closing_date" name="job_closing_date" value="{{ $job->job_closing_date }}">
-                </div>
-                <button type="submit">Save Changes</button>
-        </form>
-    </div>
-    @endforeach
-</body>
-
-</html>-->
-
 <!DOCTYPE html>
 <html lang='en'>
 
@@ -158,90 +73,78 @@
             </div>
         </div>
 
-        <!-- FILTER ROW -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <!-- SEARCH & FILTER -->
+        @php $filters = $filters ?? []; @endphp
+        <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-5 mb-8">
+            <form method="GET" action="{{ route('jobPosting.myJobPosts', ['id' => $users->user_id]) }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
 
-            <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
-                    <i class="fas fa-search"></i>
-                </span>
-                <input type="text" placeholder="Search" class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                <div class="relative">
+                    <button type="submit" class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 hover:text-[#C73D1A]">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search job title or company" class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                </div>
+
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
+                        <i class="fas fa-graduation-cap"></i>
+                    </span>
+                    <select name="program" onchange="this.form.submit()" class="w-full pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                        <option value="">Select Undergraduate Program</option>
+                        @foreach ($programs as $program)
+                        <option value="{{ $program->program_id }}" {{ (string) ($filters['program'] ?? '') === (string) $program->program_id ? 'selected' : '' }}>{{ $program->program_name }}</option>
+                        @endforeach
+                    </select>
+                    <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </span>
+                </div>
+
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
+                        <i class="fas fa-briefcase"></i>
+                    </span>
+                    <select name="job_type" onchange="this.form.submit()" class="w-full pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                        <option value="">Job Type</option>
+                        <option value="Full-Time" {{ ($filters['job_type'] ?? '') === 'Full-Time' ? 'selected' : '' }}>Full-Time</option>
+                        <option value="Part-Time" {{ ($filters['job_type'] ?? '') === 'Part-Time' ? 'selected' : '' }}>Part-Time</option>
+                        <option value="Freelance" {{ ($filters['job_type'] ?? '') === 'Freelance' ? 'selected' : '' }}>Freelance</option>
+                    </select>
+                    <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </span>
+                </div>
+
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
+                        <i class="fas fa-calendar-alt"></i>
+                    </span>
+                    <select name="date_posted" onchange="this.form.submit()" class="w-full pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                        <option value="">Date Posted</option>
+                        <option value="24h" {{ ($filters['date_posted'] ?? '') === '24h' ? 'selected' : '' }}>Last 24 Hours</option>
+                        <option value="7d" {{ ($filters['date_posted'] ?? '') === '7d' ? 'selected' : '' }}>Last 7 Days</option>
+                        <option value="30d" {{ ($filters['date_posted'] ?? '') === '30d' ? 'selected' : '' }}>Last 30 Days</option>
+                    </select>
+                    <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </span>
+                </div>
+
+            </form>
+            @if (array_filter($filters))
+            <div class="mt-3 text-right">
+                <a href="{{ route('jobPosting.myJobPosts', ['id' => $users->user_id]) }}" class="text-xs font-bold text-gray-400 hover:text-[#C73D1A]">
+                    <i class="fas fa-times mr-1"></i>CLEAR FILTERS
+                </a>
             </div>
-
-            <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
-                    <i class="fas fa-graduation-cap"></i>
-                </span>
-                <select class="w-full pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
-                    <option selected disabled>Select Undergraduate Program</option>
-
-                    <option>Bachelor of Arts in Communication</option>
-                    <option>Bachelor of Early Childhood Education</option>
-                    <option>Bachelor of Science in Accountancy</option>
-
-                    <optgroup label="BS in Business Administration">
-                        <option>BSBA - Major in Financial Management</option>
-                        <option>BSBA - Major in Human Resource Management</option>
-                        <option>BSBA - Major in Marketing Management</option>
-                    </optgroup>
-
-                    <option>BSCE - Bachelor of Science in Civil Engineering</option>
-                    <option>BSEE - Bachelor of Science in Electrical Engineering</option>
-                    <option>BSIT - Bachelor of Science in Information Technology</option>
-                    <option>Bachelor of Science in Psychology</option>
-                    <option>Bachelor of Public Administration</option>
-                    <option>Bachelor of Science in Social Work</option>
-
-                    <optgroup label="Bachelor of Secondary Education">
-                        <option>BSEd - Major in English</option>
-                        <option>BSEd - Major in Filipino</option>
-                        <option>BSEd - Major in Mathematics</option>
-                        <option>BSEd - Major in Science</option>
-                        <option>BSEd - Major in Social Studies</option>
-                    </optgroup>
-                </select>
-                <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
-                    <i class="fas fa-chevron-down text-xs"></i>
-                </span>
-            </div>
-
-            <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
-                    <i class="fas fa-briefcase"></i>
-                </span>
-                <select class="w-full pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
-                    <option>Job Type</option>
-                    <option>Full-Time</option>
-                    <option>Part-Time</option>
-                    <option>Freelance</option>
-                </select>
-                <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
-                    <i class="fas fa-chevron-down text-xs"></i>
-                </span>
-            </div>
-
-            <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
-                    <i class="fas fa-calendar-alt"></i>
-                </span>
-                <select class="w-full pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
-                    <option>Date Posted</option>
-                    <option>Last 24 Hours</option>
-                    <option>Last 7 Days</option>
-                    <option>Last 30 Days</option>
-                </select>
-                <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
-                    <i class="fas fa-chevron-down text-xs"></i>
-                </span>
-            </div>
-
+            @endif
         </div>
 
 
         <!--JOB POST CONTAINER-->
         <div id="job-list" class="space-y-6">
 
-            @foreach($jobPostings as $job)
+            @forelse($jobPostings as $job)
             <!-- JOB POST CONTAINER -->
             <div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row hover:shadow-lg transition-shadow md:min-h-[340px]">
 
@@ -386,19 +289,16 @@
                     </div>
                 </div>
             </div>
-            @endforeach
+            @empty
+            <div class="bg-white rounded-3xl shadow-md p-12 text-center text-gray-500">
+                <i class="fas fa-briefcase text-4xl mb-3 text-gray-300"></i>
+                <p class="font-semibold">No job postings match your search.</p>
+            </div>
+            @endforelse
 
         </div>
 
-
-        <!-- PAGINATION -->
-        <div class="mt-10 flex justify-center items-center gap-4 text-gray-500 text-sm">
-            <button><i class="fas fa-chevron-left"></i></button>
-            <button class="font-bold text-black">1</button>
-            <button>2</button>
-            <button>3</button>
-            <button><i class="fas fa-chevron-right"></i></button>
-        </div>
+        {{ $jobPostings->onEachSide(1)->links('partials.pagination') }}
 
     </main>
 

@@ -93,28 +93,28 @@
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-y-6 gap-x-6">
                         <div>
                             <p class="text-xs font-semibold text-orange-600 uppercase">Last Name</p>
-                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->user_last_name }}</h3>
+                            <h3 class="text-lg font-semibold text-[#0E0F3B] uppercase">{{ $user->user_last_name }}</h3>
                         </div>
                         <div>
                             <p class="text-xs font-semibold text-orange-600 uppercase">First Name</p>
-                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->user_first_name }}</h3>
+                            <h3 class="text-lg font-semibold text-[#0E0F3B] uppercase">{{ $user->user_first_name }}</h3>
                         </div>
                         <div>
                             <p class="text-xs font-semibold text-orange-600 uppercase">Middle Name</p>
-                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->user_middle_name }}</h3>
+                            <h3 class="text-lg font-semibold text-[#0E0F3B] uppercase">{{ $user->user_middle_name }}</h3>
                         </div>
                         <div>
                             <p class="text-xs font-semibold text-orange-600 uppercase">Suffix</p>
-                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->user_suffix }}</h3>
+                            <h3 class="text-lg font-semibold text-[#0E0F3B] uppercase">{{ $user->user_suffix }}</h3>
                         </div>
 
                         <div class="md:col-span-2">
                             <p class="text-xs font-bold text-orange-600 uppercase">Program</p>
-                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->alumnus->program->program_name ?? 'Not specified' }}</h3>
+                            <h3 class="text-lg font-semibold text-[#0E0F3B] uppercase">{{ $user->alumnus->program->program_name ?? 'Not specified' }}</h3>
                         </div>
                         <div class="md:col-span-2">
                             <p class="text-xs font-bold text-orange-600 uppercase">Batch</p>
-                            <h3 class="text-lg font-black text-[#0E0F3B] uppercase">{{ $user->alumnus->alumnus_batch ?? 'Not specified' }}</h3>
+                            <h3 class="text-lg font-semibold text-[#0E0F3B] uppercase">{{ $user->alumnus->alumnus_batch ?? 'Not specified' }}</h3>
                         </div>
                     </div>
                 </div>

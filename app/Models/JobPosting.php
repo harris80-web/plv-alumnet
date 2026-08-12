@@ -105,6 +105,12 @@ class JobPosting extends Model
     {
         return $this->hasMany(JobApplication::class, 'job_id', 'job_posting_id');
     }
+
+    public function bookmarkedBy()
+    {
+        return $this->belongsToMany(Alumnus::class, 'job_bookmarks', 'job_id', 'alumnus_id')
+            ->withTimestamps();
+    }
  
     public function matches()
     {

@@ -76,19 +76,96 @@ class JobPostingController extends Controller
         //
     }
 
-    public function showJobBoard()
+    public function showJobBoard(Request $request)
     {
-        $jobPostings = JobPosting::active()->with(['skills', 'programs', 'industry'])->latest('updated_at')->get();
-        $programs = Program::all();
-        $industries = Industry::all();
         $user = Auth::user();
-        $applications = [];
 
-        if ($user->alumnus) {
-            $applications = $user->alumnus->appliedJobs->pluck('job_id')->toArray();
+        $jobPostings = $this->filteredJobPostingsQuery($request)
+            ->latest('updated_at')
+            ->paginate(6)
+            ->withQueryString();
+
+        return view('general.jobBoard', $this->jobBoardViewData($request, $user, $jobPostings, 'board'));
+    }
+
+    /**
+     * Bookmarks tab of the job board — same filters/pagination/card partial
+     * as showJobBoard(), scoped down to jobs the current alumnus saved.
+     */
+    public function showBookmarks(Request $request)
+    {
+        $user = Auth::user();
+        abort_unless($user && $user->user_role === 'alumni', 403);
+
+        $jobPostings = $this->filteredJobPostingsQuery($request)
+            ->whereHas('bookmarkedBy', fn ($q) => $q->where('job_bookmarks.alumnus_id', $user->user_id))
+            ->latest('updated_at')
+            ->paginate(6)
+            ->withQueryString();
+
+        return view('general.jobBoard', $this->jobBoardViewData($request, $user, $jobPostings, 'bookmarks'));
+    }
+
+    /**
+     * Shared base query behind both the main job board and the bookmarks
+     * tab, so "search/filter" behaves identically no matter which list
+     * you're looking at.
+     */
+    private function filteredJobPostingsQuery(Request $request)
+    {
+        $query = JobPosting::active()->approved()->with(['skills', 'programs', 'industry', 'user']);
+
+        if ($search = trim((string) $request->input('search'))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('job_posting_title', 'like', "%{$search}%")
+                    ->orWhere('job_posting_company', 'like', "%{$search}%");
+            });
         }
 
-        return view('general.jobBoard', compact('jobPostings', 'programs', 'industries', 'user', 'applications'));
+        if ($programId = $request->input('program')) {
+            $query->forProgram($programId);
+        }
+
+        if ($jobType = $request->input('job_type')) {
+            $query->where('job_posting_employment_type', $jobType);
+        }
+
+        if ($datePosted = $request->input('date_posted')) {
+            $since = match ($datePosted) {
+                '24h' => now()->subDay(),
+                '7d' => now()->subDays(7),
+                '30d' => now()->subDays(30),
+                default => null,
+            };
+            if ($since) {
+                $query->where('created_at', '>=', $since);
+            }
+        }
+
+        return $query;
+    }
+
+    /**
+     * Guest-safe: showJobBoard() has no auth middleware (the public job
+     * board reuses this same view via header-general), so $user may be null
+     * and every alumni-only lookup below has to tolerate that.
+     */
+    private function jobBoardViewData(Request $request, ?\App\Models\User $user, $jobPostings, string $activeTab): array
+    {
+        $programs = Program::all();
+        $industries = Industry::all();
+
+        $appliedJobs = collect();
+        $bookmarkedIds = [];
+
+        if ($user && $user->user_role === 'alumni' && $user->alumnus) {
+            $appliedJobs = $user->alumnus->appliedJobs->keyBy('job_posting_id');
+            $bookmarkedIds = $user->alumnus->bookmarkedJobs->pluck('job_posting_id')->toArray();
+        }
+
+        $filters = $request->only(['search', 'program', 'job_type', 'date_posted']);
+
+        return compact('jobPostings', 'programs', 'industries', 'user', 'appliedJobs', 'bookmarkedIds', 'activeTab', 'filters');
     }
 
     public function addJobPost(Request $request, $id)
@@ -150,13 +227,44 @@ class JobPostingController extends Controller
         
     }
 
-    public function showMyJobPosts($id)
+    public function showMyJobPosts(Request $request, $id)
     {
-        $jobPostings = JobPosting::with(['skills', 'applicants', 'industry'])->where('user_id', $id)->latest()->get();
+        $query = JobPosting::with(['skills', 'applicants', 'industry', 'programs'])->where('user_id', $id);
+
+        if ($search = trim((string) $request->input('search'))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('job_posting_title', 'like', "%{$search}%")
+                    ->orWhere('job_posting_company', 'like', "%{$search}%");
+            });
+        }
+
+        if ($programId = $request->input('program')) {
+            $query->forProgram($programId);
+        }
+
+        if ($jobType = $request->input('job_type')) {
+            $query->where('job_posting_employment_type', $jobType);
+        }
+
+        if ($datePosted = $request->input('date_posted')) {
+            $since = match ($datePosted) {
+                '24h' => now()->subDay(),
+                '7d' => now()->subDays(7),
+                '30d' => now()->subDays(30),
+                default => null,
+            };
+            if ($since) {
+                $query->where('created_at', '>=', $since);
+            }
+        }
+
+        $jobPostings = $query->latest()->paginate(6)->withQueryString();
         $programs = Program::all();
         $industries = Industry::all();
         $users = Auth::user();
-        return view('general.jobPostings', compact('jobPostings', 'programs', 'industries', 'users'));
+        $filters = $request->only(['search', 'program', 'job_type', 'date_posted']);
+
+        return view('general.jobPostings', compact('jobPostings', 'programs', 'industries', 'users', 'filters'));
     }
 
     public function editJobPost(Request $request, $id)

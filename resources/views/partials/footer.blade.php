@@ -18,7 +18,7 @@
     <footer class="bg-[#0E0F3B] text-white flex flex-col">
         <div class="flex px-5 py-5 justify-between ">
 
-            <div class="flex gap-5 items-center font-[Montserrat] text-semibold">
+            <a href="{{ route('general.home') }}" class="flex gap-5 items-center font-[Montserrat] text-semibold">
                 <img src="{{ asset('assets/PLV-AlumNet LOGOMARK_WHITE.svg') }}" alt="" class="h-[93px] w-auto">
                 <div class="flex flex-col gap-1">
                     <img src="{{ asset('assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png') }}" alt="" class="h-12 w-60">
@@ -27,7 +27,7 @@
                     </p>
                     <p class="text-[13px]">Honoring the Past. Shaping the Future.</p>
                 </div>
-            </div>
+            </a>
 
             <div class="flex gap-4 font-[Montserrat]">
                 <div class="w-[1.5px] bg-white "></div>

@@ -1,91 +1,3 @@
-<!--<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    @vite('resources/css/app.css')
-    @vite('resources/js/app.js')
-</head>
-<body>
-    <h1>Job Board</h1>
-    <div class="job-board">
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
-        <br><br>
-        
-        <div>
-            <form action="{{ route('jobPosting.addJobPost', ['id' => $user->user_id]) }}" method="post" enctype="multipart/form-data">
-                @csrf
-                <div>
-                    <label for="job_posting_image">Job photo:</label>
-                    <input type="file" id="job_posting_image" name="job_posting_image">
-                </div>
-                <div>
-                    <label for="job_posting_title">Job title:</label>
-                    <input type="text" id="job_posting_title" name="job_posting_title">
-                </div>
-                <div>
-                    <label for="job_posting_company">Business name:</label>
-                    <input type="text" id="job_posting_company" name="job_posting_company">
-                </div>
-                <div>
-                    <label for="job_posting_address">Business address:</label>
-                    <input type="text" id="job_posting_address" name="job_posting_address">
-                </div>
-                <div>
-                    <label for="job_posting_employment_type">Job type:</label>
-                    <input type="text" id="job_posting_employment_type" name="job_posting_employment_type">
-                </div>
-                <div>
-                    <label for="job_posting_setup">Job setup:</label>
-                    <input type="text" id="job_posting_setup" name="job_posting_setup">
-                </div>
-                <div>
-                    <label for="program">Recommended program:</label>
-                    <select name="program" id="">
-                        <option value="" selected hidden>Select a program</option>
-                        @foreach($programs as $program)
-                            <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label for="job_posting_description">Job description:</label>
-                    <input type="text" id="job_posting_description" name="job_posting_description">
-                </div>
-                <div>
-                    <label for="job_closing_date">Validity date:</label>
-                    <input type="date" id="job_closing_date" name="job_closing_date">
-                </div>
-                <button type="submit">Add Job Posting</button>
-            </form>
-        </div>
-        <br><br><br>
-        @foreach($jobPostings as $job)
-            <div class="job-posting">
-                <h2>{{ $job->job_posting_title }}</h2>
-                <p><strong>Company:</strong> {{ $job->job_posting_company }}</p>
-                <p><strong>Location:</strong> {{ $job->job_posting_address }}</p>
-                <p><strong>Job type:</strong> {{ $job->job_posting_employment_type }}</p>
-                <p><strong>Job setup:</strong> {{ $job->job_posting_setup }}</p>
-                <p><strong>Description:</strong> {{ $job->job_posting_description }}</p>
-                <p><strong>Valid until:</strong> {{ $job->job_closing_date }}</p>
-                <img src="{{ asset('storage/'.$job->job_posting_image) }}" alt="Job Image" style="max-width: 200px; max-height: 200px;">
-            </div>
-        @endforeach
-    </div>
-    
-</body>
-</html>-->
-
 <!DOCTYPE html>
 <html lang='en'>
 
@@ -148,8 +60,12 @@
 <body>
     @php
     $current_page = Route::currentRouteName();
+    $activeTab ??= 'board';
+    $filters ??= [];
     @endphp
-    @if(auth()->user()->user_role === 'alumni')
+    @if (!$user)
+    @include('partials.header-general')
+    @elseif($user->user_role === 'alumni')
     @include('partials.header-alumni')
     @else
     @include('partials.header-employer')
@@ -162,13 +78,13 @@
         </div>
     </section>
 
-    @if(auth()->user()->user_role === 'alumni')
+    @if($user && $user->user_role === 'alumni')
     <nav class="bg-white border-b sticky top-0 z-10 shadow-md">
         <div class="max-w-5xl mx-auto px-4">
             <div class="flex justify-start space-x-8 uppercase text-sm font-bold tracking-wide">
-                <button class="py-4 tab-active transition-all">Job Board</button>
+                <a href="{{ route('jobPosting.jobBoard') }}" class="py-4 transition-all {{ $activeTab === 'board' ? 'tab-active' : 'text-gray-500 hover:text-orange-600' }}">Job Board</a>
                 <button class="py-4 text-gray-500 hover:text-orange-600 transition-all">My Applications</button>
-                <button class="py-4 text-gray-500 hover:text-orange-600 transition-all">Bookmarks</button>
+                <a href="{{ route('jobPosting.bookmarks') }}" class="py-4 transition-all {{ $activeTab === 'bookmarks' ? 'tab-active' : 'text-gray-500 hover:text-orange-600' }}">Bookmarks</a>
             </div>
         </div>
     </nav>
@@ -179,7 +95,9 @@
     <main class="max-w-5xl mx-auto p-6">
         <div class="w-full text-center mb-8">
             <h1 class="inline-block text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
-                @if(auth()->user()->user_role === 'alumni')
+                @if($activeTab === 'bookmarks')
+                MY BOOKMARKS
+                @elseif($user && $user->user_role === 'alumni')
                 ALUMNI CAREER HUB
                 @else
                 JOB BOARD
@@ -187,62 +105,73 @@
             </h1>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <!-- SEARCH & FILTER -->
+        <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-5 mb-8">
+            <form method="GET" action="{{ $activeTab === 'bookmarks' ? route('jobPosting.bookmarks') : route('jobPosting.jobBoard') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
 
-            <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
-                    <i class="fas fa-search"></i>
-                </span>
-                <input type="text" placeholder="Search" class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                <div class="relative">
+                    <button type="submit" class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 hover:text-[#C73D1A]">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search job title or company" class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                </div>
+
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
+                        <i class="fas fa-graduation-cap"></i>
+                    </span>
+                    <select name="program" onchange="this.form.submit()" class="w-full pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                        <option value="">Select Undergraduate Program</option>
+                        @foreach ($programs as $program)
+                        <option value="{{ $program->program_id }}" {{ (string) ($filters['program'] ?? '') === (string) $program->program_id ? 'selected' : '' }}>{{ $program->program_name }}</option>
+                        @endforeach
+                    </select>
+                    <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </span>
+                </div>
+
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
+                        <i class="fas fa-briefcase"></i>
+                    </span>
+                    <select name="job_type" onchange="this.form.submit()" class="w-full pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                        <option value="">Job Type</option>
+                        <option value="Full-Time" {{ ($filters['job_type'] ?? '') === 'Full-Time' ? 'selected' : '' }}>Full-Time</option>
+                        <option value="Part-Time" {{ ($filters['job_type'] ?? '') === 'Part-Time' ? 'selected' : '' }}>Part-Time</option>
+                        <option value="Freelance" {{ ($filters['job_type'] ?? '') === 'Freelance' ? 'selected' : '' }}>Freelance</option>
+                    </select>
+                    <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </span>
+                </div>
+
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
+                        <i class="fas fa-calendar-alt"></i>
+                    </span>
+                    <select name="date_posted" onchange="this.form.submit()" class="w-full pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                        <option value="">Date Posted</option>
+                        <option value="24h" {{ ($filters['date_posted'] ?? '') === '24h' ? 'selected' : '' }}>Last 24 Hours</option>
+                        <option value="7d" {{ ($filters['date_posted'] ?? '') === '7d' ? 'selected' : '' }}>Last 7 Days</option>
+                        <option value="30d" {{ ($filters['date_posted'] ?? '') === '30d' ? 'selected' : '' }}>Last 30 Days</option>
+                    </select>
+                    <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </span>
+                </div>
+
+            </form>
+            @if (array_filter($filters))
+            <div class="mt-3 text-right">
+                <a href="{{ $activeTab === 'bookmarks' ? route('jobPosting.bookmarks') : route('jobPosting.jobBoard') }}" class="text-xs font-bold text-gray-400 hover:text-[#C73D1A]">
+                    <i class="fas fa-times mr-1"></i>CLEAR FILTERS
+                </a>
             </div>
-
-            <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
-                    <i class="fas fa-graduation-cap"></i>
-                </span>
-                <select class="w-full pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
-                    <option selected disabled>Select Undergraduate Program</option>
-                    @foreach ($programs as $program)
-                    <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
-                    @endforeach
-                </select>
-                <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
-                    <i class="fas fa-chevron-down text-xs"></i>
-                </span>
-            </div>
-
-            <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
-                    <i class="fas fa-briefcase"></i>
-                </span>
-                <select class="w-full pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
-                    <option>Job Type</option>
-                    <option>Full-Time</option>
-                    <option>Part-Time</option>
-                    <option>Freelance</option>
-                </select>
-                <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
-                    <i class="fas fa-chevron-down text-xs"></i>
-                </span>
-            </div>
-
-            <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
-                    <i class="fas fa-calendar-alt"></i>
-                </span>
-                <select class="w-full pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
-                    <option>Date Posted</option>
-                    <option>Last 24 Hours</option>
-                    <option>Last 7 Days</option>
-                    <option>Last 30 Days</option>
-                </select>
-                <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
-                    <i class="fas fa-chevron-down text-xs"></i>
-                </span>
-            </div>
-
+            @endif
         </div>
-        @if(auth()->user()->user_role === 'employer')
+
+        @if($user && $user->user_role === 'employer')
         <div class="flex justify-end p-4">
             <button
                 onclick="openPostJobModal()"
@@ -258,186 +187,23 @@
         <div id="job-list" class="space-y-6">
             <!--JOB POST CONTAINER -->
 
-
-            @foreach($jobPostings as $job)
-            @if ($job->job_approved ==1)
-            <div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row relative hover:shadow-lg transition-shadow md:min-h-[340px]">
-
-                <div class="md:w-1/4 h-48 md:h-auto bg-gray-300 relative rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none overflow-hidden group cursor-pointer"
-                    role="button" tabindex="0" aria-label="View job details"
-                    data-title="{{ $job->job_posting_title }}"
-                    data-company="{{ $job->job_posting_company }}"
-                    data-address="{{ $job->job_posting_address }}"
-                    data-date="{{ $job->created_at->diffForHumans() }}"
-                    data-description="{{ $job->job_posting_description }}"
-                    data-type="{{ $job->job_posting_employment_type }}"
-                    data-setup="{{ $job->job_posting_setup }}"
-                    data-valid="{{ $job->job_closing_date }}"
-                    data-image="{{ asset('storage/' . $job->job_posting_image) }}"
-                    data-programs="{{ $job->programs->pluck('program_name')->implode(', ') }}"
-                    data-industry="{{ $job->industry->industry_name ?? 'Not specified' }}"
-                    onclick="openJobModal(this)"
-                    onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openJobModal(this);}">
-                    <img src="{{ asset('storage/'.$job->job_posting_image) }}"
-                        class="object-cover w-full h-full opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-300">
-                    <div class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>
-                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span class="bg-white/90 text-[#1D264F] text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
-                            <i class="fas fa-eye mr-1"></i> VIEW DETAILS
-                        </span>
-                    </div>
-                </div>
-
-                <div class="p-6 flex-1 relative">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h2 class="text-2xl font-bold uppercase text-[#0E0F3B]">
-                                {{ $job->job_posting_title }}
-                            </h2>
-
-                            <p class="text-gray-600">
-                                {{ $job->job_posting_company }}
-                            </p>
-
-                            <p class="text-gray-500 text-sm">
-                                {{ $job->job_posting_address }}
-                            </p>
-
-                        </div>
-
-                        <div class="text-right">
-                            <div class="relative flex flex-col items-end">
-                                <div class="bookmark-tooltip invisible opacity-0 absolute bottom-full right-0 mb-2 pointer-events-none transition-all duration-300 z-50">
-                                    <div class="bg-blue-900 text-white text-[10px] py-1 px-3 rounded shadow-xl whitespace-nowrap relative">
-                                        Job post saved!
-                                        <div class="absolute top-full right-2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-blue-900"></div>
-                                    </div>
-                                </div>
-                                <button class="bookmark-btn text-gray-400 hover:text-blue-900 text-2xl transition-colors">
-                                    <i class="far fa-bookmark"></i>
-                                </button>
-                            </div>
-                            <p class="text-xs text-gray-400 mt-2 flex items-center justify-end">
-                                <i class="far fa-calendar-alt mr-1"></i> {{ $job->created_at->diffForHumans() }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 grid grid-cols-2 gap-4 text-sm font-semibold">
-                        <div>
-                            <p class="text-[#0E0F3B]">Job Type: <span class="font-normal">{{ $job->job_posting_employment_type }}</span></p>
-                            <p class="text-[#0E0F3B]">Job Setup: <span class="font-normal">{{ $job->job_posting_setup }}</span></p>
-                        </div>
-
-                        <div>
-                            <p>
-                            <p class="text-blue-900">Recommended Course/Program: <span class="font-normal ph"></span></p>
-                            @foreach ($job->programs as $program)
-                            {{ $program->program_name }}
-                            <br><br>
-                            @endforeach
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="mt-4">
-                        <p class="font-bold text-sm text-[#0E0F3B]">Job Description:</p>
-                        {{-- Rich text HTML (sanitized server-side on save, see
-                             JobPostingController) — a <div> here, not <p>,
-                             since the content can include block elements
-                             (headings, lists) that aren't valid inside <p>.
-                             Height is capped so a long description can't
-                             balloon the whole card — it fades out at the
-                             bottom instead of hard-clipping mid-line; the
-                             "VIEW DETAILS" button shows it in full. --}}
-                        <div class="relative max-h-[2.6rem] overflow-hidden">
-                            <div class="text-xs text-gray-500 job-description-content">{!! $job->job_posting_description !!}</div>
-                            <div class="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
-                        </div>
-                    </div>
-
-                    <div class="mt-6 flex items-center justify-between">
-                        <p class="text-xs text-gray-400 flex items-center">
-                            <i class="far fa-calendar-check mr-1"></i> Valid until: {{ $job->job_closing_date }}
-                        </p>
-                        <div class="flex items-center space-x-3">
-                            @if (auth()->user()->user_role === 'alumni')
-                            @if($job->applicants->contains(auth()->user()->alumnus->user_id))
-                            <button disabled class="bg-green-600 cursor-not-allowed text-white px-8 py-2 rounded-md font-bold text-sm flex items-center gap-2">
-                                <i class="fas fa-check-circle"></i> APPLIED
-                            </button>
-                            @else
-                            <form action="{{ route('jobApplication.apply', $job->job_posting_id) }}" method="POST">
-                                @csrf
-                                <button
-                                data-action="{{ route('jobApplication.apply', $job->job_posting_id) }}"
-                                onclick="handleApplyClick(this)"
-                                class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white px-8 py-2 rounded-md font-bold text-sm transition-colors">
-                                APPLY
-                            </button>
-                            </form>
-                            
-                            @endif
-                            @endif
-
-                            @php $jobImageUrl = asset('storage/' . $job->job_posting_image); @endphp
-                            <button
-                                data-title="{{ $job->job_posting_title }}"
-                                data-company="{{ $job->job_posting_company }}"
-                                data-address="{{ $job->job_posting_address }}"
-                                data-date="{{ $job->created_at->diffForHumans() }}"
-                                data-description="{{ $job->job_posting_description }}"
-                                data-type="{{ $job->job_posting_employment_type }}"
-                                data-setup="{{ $job->job_posting_setup }}"
-                                data-valid="{{ $job->job_closing_date }}"
-                                data-image="{{ asset('storage/' . $job->job_posting_image) }}"
-                                data-programs="{{ $job->programs->pluck('program_name')->implode(', ') }}"
-                    data-industry="{{ $job->industry->industry_name ?? 'Not specified' }}"
-                                onclick="openJobModal(this)"
-                                class="border border-[#1D46A4] text-[#1D46A4] px-6 py-2 rounded-md font-bold text-sm hover:bg-[#1D46A4] hover:border-none hover:text-white transition-colors">VIEW DETAILS</button>
-                            <div class="relative flex items-center">
-                                <button class="share-btn text-gray-500 hover:text-black transition-colors p-2" onclick="copyJobLink(this)">
-                                    <i class="fas fa-share-nodes"></i>
-                                </button>
-                                <div class="share-tooltip invisible opacity-0 absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-3 rounded shadow-lg transition-all duration-300">
-                                    Link Copied!
-                                    <div class="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-gray-800"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 flex items-center justify-between text-xs text-gray-500 border-t pt-4">
-                        <div class="flex items-center">
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode($job->user->user_first_name . ' ' . $job->user->user_last_name) }}&background=random"
-                                class="w-6 h-6 rounded-full mr-2">
-                            <span>Posted by <span class="font-bold text-black">{{ $job->user->user_first_name }} {{ $job->user->user_last_name }}</span></span>
-                        </div>
-
-                        @if (auth()->user()->user_role === 'alumni' && $job->applicants->contains(auth()->user()->alumnus->user_id))
-                        @php $status = $job->applicants->find(auth()->user()->alumnus->user_id)->pivot->application_status; @endphp
-                        <span class="inline-block text-xs font-bold px-3 py-1 rounded-full
-                            {{ $status === 'hired' ? 'bg-green-100 text-green-700' : '' }}
-                            {{ $status === 'declined' ? 'bg-red-100 text-red-700' : '' }}
-                            {{ $status === 'pending' ? 'bg-yellow-100 text-yellow-700' : '' }}">
-                            {{ strtoupper($status) }}
-                        </span>
-                        @endif
-                    </div>
-                </div>
-
+            @forelse($jobPostings as $job)
+            @include('partials.job-post-card', ['job' => $job])
+            @empty
+            <div class="bg-white rounded-3xl shadow-md p-12 text-center text-gray-500">
+                @if($activeTab === 'bookmarks')
+                <i class="far fa-bookmark text-4xl mb-3 text-gray-300"></i>
+                <p class="font-semibold">You haven't bookmarked any jobs yet.</p>
+                @else
+                <i class="fas fa-briefcase text-4xl mb-3 text-gray-300"></i>
+                <p class="font-semibold">No job postings match your search.</p>
+                @endif
             </div>
-            @endif
+            @endforelse
 
-            @endforeach
+        </div>
 
-            <div class="mt-12 flex justify-center items-center space-x-4 text-gray-500 font-medium">
-                <button class="hover:text-black"><i class="fas fa-chevron-left text-xs"></i></button>
-                <button class="text-black font-bold">1</button>
-                <button class="hover:text-black">2</button>
-                <button class="hover:text-black">3</button>
-                <button class="hover:text-black"><i class="fas fa-chevron-right text-xs"></i></button>
-            </div>
+        {{ $jobPostings->onEachSide(1)->links('partials.pagination') }}
     </main>
 
     <!--JOB POST MODAL-->
@@ -467,14 +233,14 @@
                     </div>
 
                     <div class="relative">
-                        <div id="modal-bookmark-tooltip" class="invisible opacity-0 absolute bottom-full right-0 mb-2 pointer-events-none transition-all duration-300 z-50">
-                            <div class="bg-blue-900 text-white text-[10px] py-1 px-3 rounded shadow-xl whitespace-nowrap relative">
-                                Job post saved!
-                                <div class="absolute top-full right-2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-blue-900"></div>
+                        <div id="modal-share-tooltip" class="invisible opacity-0 absolute bottom-full right-0 mb-2 pointer-events-none transition-all duration-300 z-50">
+                            <div class="bg-gray-800 text-white text-[10px] py-1 px-3 rounded shadow-xl whitespace-nowrap relative">
+                                Link Copied!
+                                <div class="absolute top-full right-2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-800"></div>
                             </div>
                         </div>
-                        <button onclick="showModalTooltip('modal-bookmark-tooltip', this)" class="text-[#1D264F] text-3xl hover:scale-110 transition-transform">
-                            <i id="modal-bookmark-icon" class="far fa-bookmark"></i>
+                        <button onclick="showModalTooltip('modal-share-tooltip')" class="text-[#1D264F] text-2xl hover:scale-110 transition-transform">
+                            <i class="fas fa-share-nodes"></i>
                         </button>
                     </div>
                 </div>
@@ -509,25 +275,12 @@
                     <div id="modal-valid" class="text-gray-500 text-sm flex items-center font-semibold">
                         <i class="far fa-calendar-check mr-2"></i> Valid until
                     </div>
-
-                    <div class="flex items-center space-x-6">
-                        <div class="relative">
-                            <div id="modal-share-tooltip" class="invisible opacity-0 absolute bottom-full right-0 mb-2 pointer-events-none transition-all duration-300 z-50">
-                                <div class="bg-gray-800 text-white text-[10px] py-1 px-3 rounded shadow-xl whitespace-nowrap relative">
-                                    Link Copied!
-                                    <div class="absolute top-full right-2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-800"></div>
-                                </div>
-                            </div>
-                            <button onclick="showModalTooltip('modal-share-tooltip')" class="text-[#1D264F] text-2xl hover:scale-110 transition-transform">
-                                <i class="fas fa-share-nodes"></i>
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    @if($user && $user->user_role === 'employer')
     <!-- POST A NEW JOB MODAL-->
     <div id="postJobModal"
         class="fixed inset-0 z-[110] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 overflow-y-auto">
@@ -828,25 +581,6 @@
         </div>
     </div>
 
-    <!-- APPLY CONFIRMATION MODAL -->
-    <div id="applyConfirmModal" class="fixed inset-0 z-[200] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center">
-            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-briefcase text-[#1D46A4] text-2xl"></i>
-            </div>
-            <h2 class="text-xl font-bold text-[#0E0F3B] mb-2">Confirm Application</h2>
-            <p class="text-gray-500 text-sm mb-6">Are you sure you want to apply for this job?</p>
-            <div class="flex gap-3">
-                <button onclick="cancelApply()" class="flex-1 border border-gray-300 text-gray-600 py-2.5 rounded-lg font-bold text-sm hover:bg-gray-100 transition-colors">
-                    CANCEL
-                </button>
-                <button onclick="confirmApply()" class="flex-1 bg-[#0E0F3B] text-white py-2.5 rounded-lg font-bold text-sm hover:bg-[#1D46A4] transition-colors">
-                    YES, APPLY
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- JOB POST PENDING APPROVAL MODAL -->
     <div id="pendingModal" class="fixed inset-0 z-[200] flex items-center justify-center bg-black bg-opacity-50 hidden">
         <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full relative text-center">
@@ -873,8 +607,11 @@
             </button>
         </div>
     </div>
+    @endif
 
-    @if(auth()->user()->user_role === 'alumni')
+    @if(!$user)
+    @include('partials.footer')
+    @elseif($user->user_role === 'alumni')
     @include('partials.footer-alumni')
     @else
     @include('partials.footer-employer')
@@ -883,45 +620,6 @@
 </body>
 
 <script>
-    // Combined Bookmark Toggle & Tooltip Logic
-    document.querySelectorAll('.bookmark-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const icon = this.querySelector('i');
-            const tooltip = this.parentElement.querySelector('.bookmark-tooltip');
-
-            // Check if it's currently in 'outline' (unsaved) mode
-            if (icon.classList.contains('far')) {
-                // SAVE STATE
-                icon.classList.replace('far', 'fas');
-                icon.classList.add('text-blue-900');
-
-                // Show Tooltip
-                tooltip.classList.remove('invisible', 'opacity-0');
-                tooltip.classList.add('visible', 'opacity-100', '-translate-y-1');
-
-                // Auto-hide Tooltip after 2 seconds
-                setTimeout(() => {
-                    tooltip.classList.add('invisible', 'opacity-0');
-                    tooltip.classList.remove('visible', 'opacity-100', '-translate-y-1');
-                }, 2000);
-            } else {
-                // UNSAVE STATE
-                icon.classList.replace('fas', 'far');
-                icon.classList.remove('text-blue-900');
-            }
-        });
-    });
-
-    // Handle Apply Button Interaction
-    document.querySelectorAll('.apply-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            this.innerText = 'APPLIED';
-            this.classList.remove('bg-[#1e293b]', 'hover:bg-black');
-            this.classList.add('bg-gray-400', 'cursor-not-allowed');
-            this.disabled = true;
-        });
-    });
-
     // Share Button Copy Logic
     function copyJobLink(button) {
         const dummyUrl = "https://alumnihub.example/jobs/12345";
@@ -972,42 +670,22 @@
         }
     }
 
-
     //job posts modal tooltip
-    function showModalTooltip(tooltipId, buttonElement) {
+    function showModalTooltip(tooltipId) {
         const tooltip = document.getElementById(tooltipId);
 
-        //Show the tooltip
         tooltip.classList.remove('invisible', 'opacity-0');
         tooltip.classList.add('opacity-100');
-
-        // Handle the Bookmark Toggle
-        if (tooltipId === 'modal-bookmark-tooltip') {
-            const icon = document.getElementById('modal-bookmark-icon');
-
-            // Toggle between regular (far) and solid (fas)
-            if (icon.classList.contains('far')) {
-                icon.classList.replace('far', 'fas');
-                // Optional: Change the tooltip text if it's already saved
-                tooltip.querySelector('div').firstChild.textContent = 'Job post saved!';
-            } else {
-                icon.classList.replace('fas', 'far');
-                tooltip.querySelector('div').firstChild.textContent = 'Removed from bookmarks';
-            }
-        }
-
 
         if (tooltipId === 'modal-share-tooltip') {
             navigator.clipboard.writeText(window.location.href);
         }
-
 
         setTimeout(() => {
             tooltip.classList.add('invisible', 'opacity-0');
             tooltip.classList.remove('opacity-100');
         }, 2000);
     }
-
 
     //POST A NEW JOB MODAL
     function openPostJobModal() {
@@ -1096,8 +774,6 @@
         document.getElementById('course-limit-msg').classList.add('hidden');
         document.getElementById('add-course-btn').classList.remove('opacity-50', 'pointer-events-none');
     }
-
-    let pendingApplyButton = null;
 
     function handleJobSubmit() {
         const form = document.querySelector('#postJobModal form');

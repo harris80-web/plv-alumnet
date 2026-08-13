@@ -312,11 +312,16 @@ class UserController extends Controller
                     'user_active' => true
                 ]);
 
-                $user->alumnus()->create([
+                $alumnus = $user->alumnus()->create([
                     'program_id' => $validated['program_id'],
                     'alumnus_batch' => $validated['alumnus_batch'],
                     'section_id' => $validated['section_id'],
                     'alumnus_gender' => $validated['alumnus_gender'],
+                ]);
+
+                $alumnus->alumniId()->create([
+                    'status' => 'pending',
+                    'status_updated_at' => now(),
                 ]);
 
                 Mail::to($user->user_email)->send(new AlumniCreatedMail($user, $password));

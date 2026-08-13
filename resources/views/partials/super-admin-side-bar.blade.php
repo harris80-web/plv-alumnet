@@ -64,11 +64,11 @@ function icon_class($page_name, $current_page)
                 <span class="sidebar-text hidden opacity-0 whitespace-nowrap">Job Placement Management</span>
             </a>
 
-            <a href="super_admin_id_yearbook.php"
+            <a href="{{ route('alumniId.management') }}"
                 data-tooltip="Alumni ID & Yearbook Management"
-                class="nav-link relative group flex items-center h-10 transition-all {{ $current_page === 'yearbook' ? 'bg-white/10 border-l-4 border-orange-500 pl-4' : 'hover:bg-white/10 px-5 group' }}">
+                class="nav-link relative group flex items-center h-10 transition-all {{ $current_page === 'alumni_id_management' ? 'bg-white/10 border-l-4 border-orange-500 pl-4' : 'hover:bg-white/10 px-5 group' }}">
                 <div class="w-8 shrink-0 flex items-center">
-                    <i data-lucide="book-open" class="w-4 h-4 transition-colors {{ $current_page === 'yearbook' ? 'text-orange-500' : 'text-slate-400 group-hover:text-orange-500' }}"></i>
+                    <i data-lucide="book-open" class="w-4 h-4 transition-colors {{ $current_page === 'alumni_id_management' ? 'text-orange-500' : 'text-slate-400 group-hover:text-orange-500' }}"></i>
                 </div>
                 <span class="sidebar-text hidden opacity-0 whitespace-nowrap">Alumni ID & Yearbook Management</span>
             </a>

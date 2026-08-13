@@ -56,6 +56,11 @@ class Alumnus extends Model
         return $this->belongsTo(User::class, 'user_id', 'user_id');
     }
 
+    public function alumniId()
+    {
+        return $this->hasOne(AlumniId::class, 'alumnus_id', 'user_id');
+    }
+
     public function program()
     {
         // "I belong to one user (the employer)"

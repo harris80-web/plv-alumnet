@@ -80,15 +80,24 @@
 
         <div class="grid md:grid-cols-2 gap-8">
 
+            @php
+                $alumniIdRecord = Auth::user()->alumnus->alumniId ?? null;
+                $alumniIdCardConfig = [
+                    'pending' => ['bg' => 'bg-amber-500/80', 'icon' => 'fa-clock', 'title' => 'Pending Submission', 'desc' => 'Your Alumni ID request has been submitted and is waiting to be processed.'],
+                    'under_review' => ['bg' => 'bg-blue-600/80', 'icon' => 'fa-magnifying-glass', 'title' => 'Under Review', 'desc' => 'Your Alumni ID is currently under review by the Alumni Office.'],
+                    'ready_to_claim' => ['bg' => 'bg-purple-600/80', 'icon' => 'fa-bell', 'title' => 'Ready to Claim', 'desc' => 'Your Alumni ID is ready! Visit the Alumni Office to claim it.'],
+                    'claimed' => ['bg' => 'bg-orange-600/80', 'icon' => 'fa-check', 'title' => 'Alumni ID Claimed', 'desc' => 'Your Alumni ID has been claimed.'],
+                ];
+                $alumniIdCard = $alumniIdCardConfig[$alumniIdRecord->status ?? null] ?? ['bg' => 'bg-slate-600/80', 'icon' => 'fa-circle-question', 'title' => 'No Record Found', 'desc' => 'No Alumni ID request found yet. Please contact the Alumni Office.'];
+            @endphp
             <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 flex flex-col">
                 <div class="relative h-64 bg-[url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800q=80')] bg-cover bg-center">
-                    <div class="alumniID absolute inset-0 bg-orange-600/80 flex flex-col items-center justify-center text-white p-6 text-center">
+                    <div class="alumniID absolute inset-0 {{ $alumniIdCard['bg'] }} flex flex-col items-center justify-center text-white p-6 text-center">
                         <div class="w-10 h-10 bg-white rounded-md flex items-center justify-center mb-4">
-                            <i class="fa-solid fa-check text-orange-600 text-xl"></i>
+                            <i class="fa-solid {{ $alumniIdCard['icon'] }} text-orange-600 text-xl"></i>
                         </div>
-                        <h3 class="text-2xl font-bold uppercase tracking-wide mb-4">Alumni ID Claimed</h3>
-                        <p class="text-sm font-medium mb-2">Your Alumni ID has been claimed.</p>
-                        <!--<p class="text-xs opacity-90 leading-relaxed">Your details are currently under initial review by the Alumni Office.</p>-->
+                        <h3 class="text-2xl font-bold uppercase tracking-wide mb-4">{{ $alumniIdCard['title'] }}</h3>
+                        <p class="text-sm font-medium mb-2">{{ $alumniIdCard['desc'] }}</p>
                     </div>
                 </div>
                 <div class="py-6 text-center">

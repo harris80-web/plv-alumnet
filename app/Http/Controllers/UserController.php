@@ -322,6 +322,12 @@ class UserController extends Controller
                 $alumnus->alumniId()->create([
                     'status' => 'pending',
                     'status_updated_at' => now(),
+                    'updated_by' => Auth::id(),
+                ]);
+
+                $alumnus->yearbook()->create([
+                    'distribution_status' => 'pending',
+                    'claiming_status' => 'pending',
                 ]);
 
                 Mail::to($user->user_email)->send(new AlumniCreatedMail($user, $password));

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class AlumniId extends Model
 {
@@ -10,6 +11,7 @@ class AlumniId extends Model
         'alumnus_id',
         'status',
         'status_updated_at',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -74,6 +76,11 @@ class AlumniId extends Model
         return $this->belongsTo(Alumnus::class, 'alumnus_id', 'user_id');
     }
 
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by', 'user_id');
+    }
+
     public function statusLabel(): string
     {
         return self::statusLabels()[$this->status] ?? $this->status;
@@ -107,6 +114,7 @@ class AlumniId extends Model
     {
         $this->status = $status;
         $this->status_updated_at = now();
+        $this->updated_by = Auth::id();
         $this->save();
     }
 }

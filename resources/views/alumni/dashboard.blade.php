@@ -107,17 +107,27 @@
                 </div>
             </div>
 
+            @php
+                $yearbookRecord = Auth::user()->alumnus->yearbook ?? null;
+                $yearbookCardConfig = [
+                    'pending' => ['bg' => 'bg-amber-500/80', 'title' => 'Pending', 'desc' => 'Your yearbook request is being processed.'],
+                    'on_hand' => ['bg' => 'bg-cyan-600/80', 'title' => 'On Hand', 'desc' => 'Your yearbook has arrived at the Alumni Office and is being prepared for release.'],
+                    'ready_to_claim' => ['bg' => 'bg-purple-600/80', 'title' => 'Ready to Claim', 'desc' => 'Your yearbook is ready! See the distribution details below.'],
+                    'claimed' => ['bg' => 'bg-green-600/80', 'title' => 'Yearbook Claimed', 'desc' => 'You have claimed your yearbook.'],
+                    'not_yet_claimed' => ['bg' => 'bg-slate-600/80', 'title' => 'Not Yet Claimed', 'desc' => 'Your yearbook has not been claimed yet.'],
+                ];
+                $yearbookCard = $yearbookCardConfig[$yearbookRecord->claiming_status ?? null] ?? ['bg' => 'bg-slate-600/80', 'title' => 'No Record Found', 'desc' => 'No yearbook record found yet. Please contact the Alumni Office.'];
+            @endphp
             <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 flex flex-col">
                 <div class="relative h-64 bg-[url('https://images.unsplash.com/photo-1544822688-c6f14d6986bb?auto=format&fit=crop&w=800q=80')] bg-cover bg-center">
-                    <div class="absolute inset-0 bg-[#0E0F3B]/80 flex flex-col items-center justify-center text-white p-6 text-center">
-                        <h3 class="text-xl font-bold uppercase tracking-widest mb-6">Ready for Distribution</h3>
-                        <p class="text-sm font-bold mb-4">Ready for Distribution to the Association</p>
-                        <p class="text-[10px] leading-relaxed mb-6 px-4">The yearbook inventory has arrived at the Alumni Association Office and is being prepared for release. See distribution schedule below:</p>
+                    <div class="absolute inset-0 {{ $yearbookCard['bg'] }} flex flex-col items-center justify-center text-white p-6 text-center">
+                        <h3 class="text-xl font-bold uppercase tracking-widest mb-4">{{ $yearbookCard['title'] }}</h3>
+                        <p class="text-[11px] leading-relaxed mb-6 px-4">{{ $yearbookCard['desc'] }}</p>
 
                         <div class="text-left w-full max-w-[200px] text-[10px] space-y-1">
-                            <p><span class="font-bold">DATE:</span></p>
-                            <p><span class="font-bold">SCHEDULE:</span></p>
-                            <p><span class="font-bold">LOCATION:</span></p>
+                            <p><span class="font-bold">DATE:</span> {{ optional($yearbookRecord?->distribution_scheduled_at)->format('M d, Y') ?? 'TBA' }}</p>
+                            <p><span class="font-bold">SCHEDULE:</span> {{ optional($yearbookRecord?->distribution_scheduled_at)->format('h:i A') ?? 'TBA' }}</p>
+                            <p><span class="font-bold">LOCATION:</span> {{ $yearbookRecord ? $yearbookRecord->locationLabel() : 'TBA' }}</p>
                         </div>
                     </div>
                 </div>

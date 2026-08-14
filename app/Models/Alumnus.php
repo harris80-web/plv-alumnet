@@ -61,6 +61,11 @@ class Alumnus extends Model
         return $this->hasOne(AlumniId::class, 'alumnus_id', 'user_id');
     }
 
+    public function yearbook()
+    {
+        return $this->hasOne(AlumniYearbook::class, 'alumnus_id', 'user_id');
+    }
+
     public function program()
     {
         // "I belong to one user (the employer)"

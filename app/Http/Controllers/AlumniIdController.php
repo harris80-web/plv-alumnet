@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AlumniId;
+use App\Models\AlumniYearbook;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,11 +14,17 @@ class AlumniIdController extends Controller
         abort_unless(in_array(Auth::user()->user_role, ['admin', 'super_admin']), 403);
     }
 
+    /**
+     * One page, two tabs (see resources/views/superAdmin/alumniIdManagement.blade.php)
+     * — Alumni ID and Alumni Yearbook are separate features sharing the same
+     * sidebar entry, so both datasets load together here rather than as two
+     * separate page loads.
+     */
     public function index()
     {
         $this->authorizeStaff();
 
-        $alumniIds = AlumniId::with(['alumnus.user', 'alumnus.program'])
+        $alumniIds = AlumniId::with(['alumnus.user', 'alumnus.program', 'updatedBy'])
             ->latest('created_at')
             ->get();
 
@@ -29,7 +36,20 @@ class AlumniIdController extends Controller
             'claimed' => $alumniIds->where('status', 'claimed')->count(),
         ];
 
-        return view('superAdmin.alumniIdManagement', compact('alumniIds', 'statusCounts'));
+        $yearbooks = AlumniYearbook::with(['alumnus.user', 'updatedBy'])
+            ->latest('created_at')
+            ->get();
+
+        $yearbookCounts = [
+            'total' => $yearbooks->count(),
+            'pending' => $yearbooks->where('claiming_status', 'pending')->count(),
+            'on_hand' => $yearbooks->where('claiming_status', 'on_hand')->count(),
+            'ready_to_claim' => $yearbooks->where('claiming_status', 'ready_to_claim')->count(),
+            'claimed' => $yearbooks->where('claiming_status', 'claimed')->count(),
+            'not_yet_claimed' => $yearbooks->where('claiming_status', 'not_yet_claimed')->count(),
+        ];
+
+        return view('superAdmin.alumniIdManagement', compact('alumniIds', 'statusCounts', 'yearbooks', 'yearbookCounts'));
     }
 
     /** The single "Mark ..." button — advances exactly one stage. */
@@ -71,6 +91,7 @@ class AlumniIdController extends Controller
         $count = AlumniId::whereIn('id', $validated['ids'])->update([
             'status' => $validated['status'],
             'status_updated_at' => now(),
+            'updated_by' => Auth::id(),
         ]);
 
         $label = AlumniId::statusLabels()[$validated['status']];

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AlumniIdController;
+use App\Http\Controllers\AlumniYearbookController;
 use App\Http\Controllers\AlumnusController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\ChatTicketController;
@@ -136,6 +137,9 @@ Route::get('/alumniIdManagement', [AlumniIdController::class, 'index'])->name('a
 Route::post('/alumniId/{id}/mark', [AlumniIdController::class, 'mark'])->name('alumniId.mark')->middleware('auth');
 Route::post('/alumniId/{id}/updateStatus', [AlumniIdController::class, 'updateStatus'])->name('alumniId.updateStatus')->middleware('auth');
 Route::post('/alumniId/bulkUpdateStatus', [AlumniIdController::class, 'bulkUpdateStatus'])->name('alumniId.bulkUpdateStatus')->middleware('auth');
+
+Route::post('/alumniYearbook/{id}/update', [AlumniYearbookController::class, 'updateYearbook'])->name('alumniYearbook.update')->middleware('auth');
+Route::post('/alumniYearbook/bulkUpdate', [AlumniYearbookController::class, 'bulkUpdateYearbook'])->name('alumniYearbook.bulkUpdate')->middleware('auth');
 
 Route::group(['middleware' => 'super_admin'], function () {
     //super admin routes

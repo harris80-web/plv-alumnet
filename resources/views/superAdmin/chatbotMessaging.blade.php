@@ -284,12 +284,16 @@
                     </div>
 
                     <div class="bg-white rounded-lg shadow-sm border border-slate-200 w-full">
-                        <div class="p-4 border-b border-slate-100">
+                        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
                             <h3 class="text-sm font-bold text-[#0E0F3B]">Full queue</h3>
+                            <span class="flex items-center gap-1.5 text-[10px] text-slate-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Live
+                            </span>
                         </div>
-                        <div class="divide-y divide-slate-100">
-                            @forelse ($waitingTickets->concat($withAgentTickets) as $t)
-                            <div class="flex items-center gap-3 px-4 py-3">
+                        <div id="queueList" class="divide-y divide-slate-100">
+                            @php $initialQueueTickets = $waitingTickets->concat($withAgentTickets); @endphp
+                            @forelse ($initialQueueTickets as $t)
+                            <div class="flex items-center gap-3 px-4 py-3" data-ticket-row="{{ $t->ticket_id }}">
                                 <div class="w-9 h-9 rounded-full bg-[#0E0F3B] flex items-center justify-center text-white text-xs font-bold shrink-0">{{ mb_substr($t->user->user_first_name ?? '?', 0, 1) }}</div>
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-2">
@@ -297,18 +301,22 @@
                                         <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase {{ $t->badgeClass() }}">{{ $t->statusLabel() }}</span>
                                     </div>
                                     <p class="text-xs text-slate-500 truncate">{{ \Illuminate\Support\Str::limit($t->latestMessage->message ?? '—', 70) }}</p>
+                                    @if ($t->status === 'with_agent' && $t->office?->user)
+                                    <p class="text-[10px] text-slate-400 mt-0.5">
+                                        <i class="fa-solid fa-user-check text-[9px]"></i>
+                                        Claimed by {{ trim($t->office->user->user_first_name . ' ' . $t->office->user->user_last_name) }}{{ $t->office->user_id === auth()->id() ? ' (you)' : '' }}
+                                        · {{ $t->claimed_at?->diffForHumans() }}
+                                    </p>
+                                    @endif
                                 </div>
                                 <span class="text-[10px] text-slate-400 shrink-0">{{ $t->latestMessage?->created_at?->diffForHumans() }}</span>
                                 @if ($t->status === 'waiting_agent')
-                                <form action="{{ route('chatbot.claim', $t->ticket_id) }}" method="POST" class="shrink-0">
-                                    @csrf
-                                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold px-3 py-2 rounded-md uppercase whitespace-nowrap">Assign to me</button>
-                                </form>
+                                <button type="button" onclick="claimTicket({{ $t->ticket_id }})" class="shrink-0 bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold px-3 py-2 rounded-md uppercase whitespace-nowrap">Assign to me</button>
                                 @endif
                                 <button type="button" onclick="openQueueThread({{ $t->ticket_id }})" class="shrink-0 bg-[#1D264F] hover:bg-[#0E0F3B] text-white text-[10px] font-bold px-3 py-2 rounded-md uppercase whitespace-nowrap">Open thread</button>
                             </div>
                             @empty
-                            <p class="text-center text-slate-400 text-sm py-12">The queue is empty — no one is waiting for an agent right now.</p>
+                            <p class="text-center text-slate-400 text-sm py-12" id="queueEmptyState">The queue is empty — no one is waiting for an agent right now.</p>
                             @endforelse
                         </div>
                     </div>
@@ -553,8 +561,11 @@
     <div id="queueThreadModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden mx-4 flex flex-col" style="height: 80vh;">
             <div class="relative bg-[#0E0F3B] flex items-center justify-between p-5 shrink-0">
-                <h2 class="text-lg font-bold text-white" id="qt-title">Conversation</h2>
-                <button type="button" id="qt-close-btn" onclick="closeQueueThread()" class="text-white/80 hover:text-white"><i data-lucide="x-circle" class="w-6 h-6"></i></button>
+                <div class="min-w-0">
+                    <h2 class="text-lg font-bold text-white truncate" id="qt-title">Conversation</h2>
+                    <p class="text-[11px] text-white/60" id="qt-subtitle"></p>
+                </div>
+                <button type="button" id="qt-close-btn" onclick="closeQueueThread()" class="text-white/80 hover:text-white shrink-0"><i data-lucide="x-circle" class="w-6 h-6"></i></button>
             </div>
             <div id="qt-messages" class="flex-1 overflow-y-auto p-5 space-y-3 bg-slate-50"></div>
             <div class="p-4 border-t border-slate-100 shrink-0">
@@ -578,6 +589,14 @@
                 document.getElementById('pageTabBtn-' + t).classList.toggle('active', t === tab);
             });
             if (window.lucide) lucide.createIcons();
+
+            // Only poll the queue while it's actually the visible tab — no
+            // point fetching updates nobody's looking at.
+            if (tab === 'queue') {
+                startQueuePolling();
+            } else {
+                stopQueuePolling();
+            }
         }
 
         // ── ALUMNI MESSAGING: flag detail panel ──
@@ -617,6 +636,91 @@
             form.submit();
         }
 
+        // ── LIVE AGENT QUEUE: live-updating list ──
+        let queueListPollTimer = null;
+        const QUEUE_JSON_URL = {!! json_encode(route('chatbot.queue')) !!};
+
+        function escapeHtmlQueue(str) {
+            const div = document.createElement('div');
+            div.textContent = str ?? '';
+            return div.innerHTML;
+        }
+
+        function renderQueueList(tickets) {
+            const container = document.getElementById('queueList');
+            if (!container) return;
+
+            if (tickets.length === 0) {
+                container.innerHTML = '<p class="text-center text-slate-400 text-sm py-12" id="queueEmptyState">The queue is empty — no one is waiting for an agent right now.</p>';
+                return;
+            }
+
+            container.innerHTML = tickets.map(t => {
+                const claimedHtml = (t.status === 'with_agent' && t.claimedByName)
+                    ? `<p class="text-[10px] text-slate-400 mt-0.5"><i class="fa-solid fa-user-check text-[9px]"></i> Claimed by ${escapeHtmlQueue(t.claimedByName)}${t.claimedByMe ? ' (you)' : ''} · ${escapeHtmlQueue(t.claimedAt || '')}</p>`
+                    : '';
+                const assignBtn = t.status === 'waiting_agent'
+                    ? `<button type="button" onclick="claimTicket(${t.ticketId})" class="shrink-0 bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold px-3 py-2 rounded-md uppercase whitespace-nowrap">Assign to me</button>`
+                    : '';
+
+                return `
+                    <div class="flex items-center gap-3 px-4 py-3" data-ticket-row="${t.ticketId}">
+                        <div class="w-9 h-9 rounded-full bg-[#0E0F3B] flex items-center justify-center text-white text-xs font-bold shrink-0">${escapeHtmlQueue(t.initial)}</div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2">
+                                <p class="font-semibold text-[#0E0F3B] text-sm truncate">${escapeHtmlQueue(t.name)}</p>
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${t.badgeClass}">${escapeHtmlQueue(t.statusLabel)}</span>
+                            </div>
+                            <p class="text-xs text-slate-500 truncate">${escapeHtmlQueue(t.preview)}</p>
+                            ${claimedHtml}
+                        </div>
+                        <span class="text-[10px] text-slate-400 shrink-0">${escapeHtmlQueue(t.timeLabel || '')}</span>
+                        ${assignBtn}
+                        <button type="button" onclick="openQueueThread(${t.ticketId})" class="shrink-0 bg-[#1D264F] hover:bg-[#0E0F3B] text-white text-[10px] font-bold px-3 py-2 rounded-md uppercase whitespace-nowrap">Open thread</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function pollQueue() {
+            try {
+                const res = await fetch(QUEUE_JSON_URL);
+                if (!res.ok) return;
+                const data = await res.json();
+                renderQueueList(data.tickets);
+            } catch (e) { /* transient network hiccup — next tick retries */ }
+        }
+
+        function startQueuePolling() {
+            if (queueListPollTimer) return;
+            pollQueue();
+            queueListPollTimer = setInterval(pollQueue, 5000);
+        }
+
+        function stopQueuePolling() {
+            if (queueListPollTimer) { clearInterval(queueListPollTimer); queueListPollTimer = null; }
+        }
+
+        /** Claim is AJAX now — no page reload — and jumps straight into the thread on success. */
+        async function claimTicket(ticketId) {
+            try {
+                const res = await fetch(`{{ url('/chatbotMessaging') }}/${ticketId}/claim`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    alert(err.error || 'Could not claim this ticket.');
+                    pollQueue();
+                    return;
+                }
+                pollQueue();
+                openQueueThread(ticketId);
+            } catch (e) {
+                alert('Failed to claim this ticket. Please check your connection and try again.');
+            }
+        }
+
         // ── LIVE AGENT QUEUE: thread modal ──
         let queueThreadTicketId = null;
         let queueThreadPollTimer = null;
@@ -636,10 +740,12 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        function applyThreadStatus(status) {
+        function applyThreadStatus(data) {
+            const status = data.status;
             const input = document.getElementById('qt-input');
             const sendBtn = document.getElementById('qt-send-btn');
             const resolveBtn = document.getElementById('qt-resolve-btn');
+            const subtitle = document.getElementById('qt-subtitle');
             const canReply = status === 'with_agent';
 
             input.disabled = !canReply;
@@ -648,6 +754,16 @@
             input.placeholder = status === 'waiting_agent'
                 ? 'Claim this ticket from the queue to reply'
                 : (status === 'resolved' ? 'This conversation is resolved.' : 'Type a reply...');
+
+            if (status === 'with_agent' && data.claimedByName) {
+                subtitle.textContent = data.claimedByMe ? 'Claimed by you' : `Claimed by ${data.claimedByName}`;
+            } else if (status === 'waiting_agent') {
+                subtitle.textContent = 'Waiting — not yet claimed';
+            } else if (status === 'resolved') {
+                subtitle.textContent = 'Resolved';
+            } else {
+                subtitle.textContent = '';
+            }
         }
 
         async function openQueueThread(ticketId) {
@@ -660,14 +776,14 @@
             const data = await res.json();
             if (queueThreadTicketId !== ticketId) return; // modal was closed/switched while this was in flight
             document.getElementById('qt-title').textContent = data.userName;
-            applyThreadStatus(data.status);
+            applyThreadStatus(data);
             renderQueueMessages(data.messages, false);
 
             queueThreadPollTimer = setInterval(async () => {
                 const r = await fetch(`{{ url('/chatbotMessaging') }}/${ticketId}/thread`);
                 const d = await r.json();
                 if (queueThreadTicketId !== ticketId) return; // stale tick from a since-closed/switched thread
-                applyThreadStatus(d.status);
+                applyThreadStatus(d);
                 const newOnes = d.messages.filter(m => m.id > queueThreadLastId);
                 if (newOnes.length) renderQueueMessages(newOnes, true);
             }, 4000);
@@ -693,7 +809,7 @@
                 alert('Could not send — this ticket may no longer be assigned to an agent. Refreshing...');
                 const res = await fetch(`{{ url('/chatbotMessaging') }}/${queueThreadTicketId}/thread`);
                 const data = await res.json();
-                applyThreadStatus(data.status);
+                applyThreadStatus(data);
                 return;
             }
             input.value = '';
@@ -704,14 +820,21 @@
             if (newOnes.length) renderQueueMessages(newOnes, true);
         }
 
-        function resolveQueueTicket() {
+        async function resolveQueueTicket() {
             if (!queueThreadTicketId || !confirm('Mark this conversation as resolved?')) return;
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `{{ url('/chatbotMessaging') }}/${queueThreadTicketId}/resolve`;
-            form.innerHTML = `<input type="hidden" name="_token" value="${CSRF_TOKEN}">`;
-            document.body.appendChild(form);
-            form.submit();
+
+            try {
+                await fetch(`{{ url('/chatbotMessaging') }}/${queueThreadTicketId}/resolve`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
+                });
+            } catch (e) {
+                alert('Failed to mark as resolved. Please check your connection and try again.');
+                return;
+            }
+
+            closeQueueThread();
+            pollQueue();
         }
 
         document.getElementById('qt-input')?.addEventListener('keydown', function (e) {

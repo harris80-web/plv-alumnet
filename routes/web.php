@@ -167,6 +167,7 @@ Route::get('/chatbot/{ticket}/poll', [ChatbotController::class, 'poll'])->name('
 Route::get('/chatbotMessaging', [ChatTicketController::class, 'index'])->name('chatbot.management')->middleware('auth');
 Route::post('/chatbotMessaging/settings', [ChatTicketController::class, 'updateSettings'])->name('chatbot.settings.update')->middleware('auth');
 Route::post('/chatbotMessaging/flags/{messageFlag}/action', [ChatTicketController::class, 'flagAction'])->name('chatbot.flagAction')->middleware('auth');
+Route::get('/chatbotMessaging/queue', [ChatTicketController::class, 'queueJson'])->name('chatbot.queue')->middleware('auth');
 Route::get('/chatbotMessaging/{ticket}/thread', [ChatTicketController::class, 'threadJson'])->name('chatbot.thread')->middleware('auth');
 Route::post('/chatbotMessaging/{ticket}/claim', [ChatTicketController::class, 'claim'])->name('chatbot.claim')->middleware('auth');
 Route::post('/chatbotMessaging/{ticket}/reply', [ChatTicketController::class, 'reply'])->name('chatbot.reply')->middleware('auth');

@@ -9,6 +9,7 @@ use App\Models\Faq;
 use App\Services\GeminiChatbotService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Backend for the floating chatbot widget (alumni + employer). One
@@ -87,6 +88,14 @@ class ChatbotController extends Controller
             return;
         }
 
+        // Checked before the AI call, not after — someone explicitly asking
+        // for a person shouldn't wait on a Gemini round-trip (or burn through
+        // the failed-attempts counter) just to be told what they already asked for.
+        if ($this->requestsHumanAgent($question)) {
+            $this->escalateOrDecline($ticket, $settings, acknowledged: true);
+            return;
+        }
+
         $role = Auth::user()->user_role;
         $faqs = ($role === 'employer' ? Faq::visibleToEmployer() : Faq::visibleToAlumni())
             ->get(['faq_question', 'faq_answer'])
@@ -100,6 +109,14 @@ class ChatbotController extends Controller
         try {
             $result = $gemini->ask($question, $faqs, $history);
         } catch (\Throwable $e) {
+            // Previously swallowed silently — a real failure here (bad key,
+            // quota, timeout, malformed response) left zero trace to debug
+            // from later. Still degrades to "couldn't answer" either way.
+            Log::warning('GeminiChatbotService::ask() failed, escalating instead', [
+                'ticket_id' => $ticket->ticket_id,
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+            ]);
             $result = ['answered' => false, 'answer' => null];
         }
 
@@ -127,22 +144,56 @@ class ChatbotController extends Controller
         }
     }
 
-    private function escalateOrDecline(ChatTicket $ticket, ChatbotSetting $settings): void
+    private function escalateOrDecline(ChatTicket $ticket, ChatbotSetting $settings, bool $acknowledged = false): void
     {
         if ($settings->live_agent_escalation_enabled) {
             ChatTicketMessage::create([
                 'ticket_id' => $ticket->ticket_id,
                 'sender_type' => 'ai',
-                'message' => "I'm not able to answer that — connecting you with a member of our team. Someone will be with you shortly.",
+                'message' => $acknowledged
+                    ? 'Sure — connecting you with a member of our team now. Someone will be with you shortly.'
+                    : "I'm not able to answer that — connecting you with a member of our team. Someone will be with you shortly.",
             ]);
             $ticket->escalate();
         } else {
             ChatTicketMessage::create([
                 'ticket_id' => $ticket->ticket_id,
                 'sender_type' => 'ai',
-                'message' => "I'm sorry, I don't have an answer for that right now. Please try the FAQ page or check back later.",
+                'message' => $acknowledged
+                    ? "I'd love to connect you with our team, but live agent support isn't available right now. Please try again later."
+                    : "I'm sorry, I don't have an answer for that right now. Please try the FAQ page or check back later.",
             ]);
         }
+    }
+
+    /**
+     * Fast, deterministic phrase match — not an AI call — so "can I talk to
+     * a human" escalates instantly instead of waiting on Gemini's judgment
+     * (and instead of silently counting as just one more failed attempt
+     * toward the usual escalation threshold).
+     */
+    private function requestsHumanAgent(string $message): bool
+    {
+        $patterns = [
+            '\bagents?\b',
+            '\bhumans?\b',
+            '\brepresentatives?\b',
+            'real person',
+            'actual person',
+            'live person',
+            'customer service',
+            'talk to (a |an )?(someone|staff)',
+            'speak (to|with) (a |an )?(someone|staff)',
+            'connect me (to|with)',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match('/' . $pattern . '/i', $message)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** Polled by the widget while waiting_agent/with_agent, to pick up agent replies without a page reload. */

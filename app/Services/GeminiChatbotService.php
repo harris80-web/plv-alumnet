@@ -83,9 +83,12 @@ class GeminiChatbotService
         $answered = (bool) ($decoded['answered'] ?? false);
         $answer = $answered ? trim((string) ($decoded['answer'] ?? '')) : null;
 
+        // $answer is null (not '') on the "couldn't answer" path — checking
+        // against '' let a null slip through to mb_substr() below and trip
+        // a deprecation warning on every declined question.
         return [
-            'answered' => $answered && $answer !== '',
-            'answer' => $answer !== '' ? mb_substr($answer, 0, 1500) : null,
+            'answered' => $answered && !empty($answer),
+            'answer' => !empty($answer) ? mb_substr($answer, 0, 1500) : null,
         ];
     }
 

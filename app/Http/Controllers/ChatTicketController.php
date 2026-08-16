@@ -15,6 +15,7 @@ use App\Models\UserNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ChatTicketController extends Controller
 {
@@ -117,23 +118,43 @@ class ChatTicketController extends Controller
         ));
     }
 
-    /** Agent picks up a waiting ticket. */
+    /**
+     * Agent picks up a waiting ticket — called via AJAX (see claimTicket() in
+     * the view), not a page reload, so the whole queue stays live for every
+     * admin watching it. Locks the row before checking status so two admins
+     * clicking "Assign to me" within the same instant can't both succeed —
+     * the status check alone (no lock) would leave a race window where both
+     * requests read "waiting_agent" before either had committed its update.
+     */
     public function claim(ChatTicket $ticket)
     {
         $this->authorizeStaff();
-        abort_unless($ticket->status === 'waiting_agent', 409, 'This ticket is no longer waiting.');
 
-        $office = Office::firstOrCreate(['user_id' => Auth::id()], ['office_address' => '']);
-        $ticket->claimBy($office);
+        $claimed = DB::transaction(function () use ($ticket) {
+            $locked = ChatTicket::where('ticket_id', $ticket->ticket_id)->lockForUpdate()->first();
 
-        ChatTicketMessage::create([
-            'ticket_id' => $ticket->ticket_id,
-            'sender_type' => 'agent',
-            'sender_id' => Auth::id(),
-            'message' => trim(Auth::user()->user_first_name . ' from the PLV-AlumNet team has joined the chat.'),
-        ]);
+            if (!$locked || $locked->status !== 'waiting_agent') {
+                return null;
+            }
 
-        return back()->with('success', 'Ticket assigned to you.');
+            $office = Office::firstOrCreate(['user_id' => Auth::id()], ['office_address' => '']);
+            $locked->claimBy($office);
+
+            ChatTicketMessage::create([
+                'ticket_id' => $locked->ticket_id,
+                'sender_type' => 'agent',
+                'sender_id' => Auth::id(),
+                'message' => trim(Auth::user()->user_first_name . ' from the PLV-AlumNet team has joined the chat.'),
+            ]);
+
+            return $locked;
+        });
+
+        if (!$claimed) {
+            return response()->json(['error' => 'This ticket was just claimed by someone else.'], 409);
+        }
+
+        return response()->json(['success' => true, 'ticketId' => $claimed->ticket_id]);
     }
 
     public function reply(Request $request, ChatTicket $ticket)
@@ -158,19 +179,60 @@ class ChatTicketController extends Controller
         $this->authorizeStaff();
         $ticket->resolve();
 
-        return back()->with('success', 'Ticket marked as resolved.');
+        return response()->json(['success' => true]);
     }
 
     /** JSON — thread contents for the queue's "open thread" panel, and its own light poll. */
     public function threadJson(ChatTicket $ticket)
     {
         $this->authorizeStaff();
+        $ticket->loadMissing('office.user');
 
         return response()->json([
             'ticketId' => $ticket->ticket_id,
             'status' => $ticket->status,
             'userName' => trim($ticket->user->user_first_name . ' ' . $ticket->user->user_last_name),
+            'claimedByName' => $ticket->office?->user ? trim($ticket->office->user->user_first_name . ' ' . $ticket->office->user->user_last_name) : null,
+            'claimedByMe' => $ticket->office?->user_id === Auth::id(),
             'messages' => $ticket->messages()->get()->map->toChatArray(),
+        ]);
+    }
+
+    /**
+     * Polled by every admin viewing the Live Agent Queue tab (see
+     * pollQueue() in the view) so the list — including who has claimed
+     * what — stays in sync across every open admin session, not just the
+     * one that clicked. This is what actually prevents the "two admins
+     * both accept the same ticket" confusion: a claim by one admin shows
+     * up on everyone else's screen within a few seconds, without anyone
+     * needing to refresh.
+     */
+    public function queueJson()
+    {
+        $this->authorizeStaff();
+
+        $waitingTickets = ChatTicket::with(['user', 'latestMessage'])->waitingAgent()->oldest('escalated_at')->get();
+        $withAgentTickets = ChatTicket::with(['user', 'office.user', 'latestMessage'])->where('status', 'with_agent')->latest('claimed_at')->get();
+
+        $currentUserId = Auth::id();
+        $mapTicket = function (ChatTicket $t) use ($currentUserId) {
+            return [
+                'ticketId' => $t->ticket_id,
+                'name' => trim(($t->user->user_first_name ?? '') . ' ' . ($t->user->user_last_name ?? '')),
+                'initial' => mb_substr($t->user->user_first_name ?? '?', 0, 1),
+                'preview' => $t->latestMessage->message ?? '—',
+                'status' => $t->status,
+                'statusLabel' => $t->statusLabel(),
+                'badgeClass' => $t->badgeClass(),
+                'timeLabel' => optional($t->latestMessage?->created_at)->diffForHumans(),
+                'claimedByName' => $t->office?->user ? trim($t->office->user->user_first_name . ' ' . $t->office->user->user_last_name) : null,
+                'claimedAt' => optional($t->claimed_at)->diffForHumans(),
+                'claimedByMe' => $t->office?->user_id === $currentUserId,
+            ];
+        };
+
+        return response()->json([
+            'tickets' => $waitingTickets->concat($withAgentTickets)->map($mapTicket)->values(),
         ]);
     }
 

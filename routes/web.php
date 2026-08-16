@@ -5,6 +5,7 @@ use App\Http\Controllers\AlumniIdController;
 use App\Http\Controllers\AlumniYearbookController;
 use App\Http\Controllers\AlumnusController;
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ChatTicketController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\EmployerController;
@@ -15,6 +16,8 @@ use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\JobBookmarkController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\NoticeController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\PasswordResetTokenController;
 use App\Http\Controllers\ProgramController;
@@ -62,9 +65,7 @@ Route::get('/general/tou', function () {
     return view('general.tou');
 })->name('general.tou');
 
-Route::get('/general/faqs', function () {
-    return view('general.faqs');
-})->name('general.faqs');
+Route::get('/general/faqs', [FaqController::class, 'generalFaqs'])->name('general.faqs');
 
 //alumni
 Route::get('/alumni/about', function () {
@@ -79,9 +80,7 @@ Route::get('/alumni/tou', function () {
     return view('alumni.tou');
 })->name('alumni.tou');
 
-Route::get('/alumni/faqs', function () {
-    return view('alumni.faqs');
-})->name('alumni.faqs');
+Route::get('/alumni/faqs', [FaqController::class, 'alumniFaqs'])->name('alumni.faqs');
 
 //employer
 Route::get('/employer/about', function () {
@@ -96,9 +95,7 @@ Route::get('/employer/tou', function () {
     return view('employer.tou');
 })->name('employer.tou');
 
-Route::get('/employer/faqs', function () {
-    return view('employer.faqs');
-})->name('employer.faqs');
+Route::get('/employer/faqs', [FaqController::class, 'employerFaqs'])->name('employer.faqs');
 
 //in session routes
 Route::get('/profile', [UserController::class, 'showProfile'])->name('user.profile');
@@ -116,11 +113,11 @@ Route::get('/superAdmin/profile', [UserController::class, 'showSuperAdminProfile
 
 Route::get('/admin/dashboard', function () {
     return view('admin.dashboard');
-})->middleware(['auth']);
+})->middleware(['auth'])->name('admin.dashboard');
 
 Route::get('/registrar/dashboard', function () {
     return view('registrar.dashboard');
-})->middleware(['auth']);
+})->middleware(['auth'])->name('registrar.dashboard');
 
 Route::get('/employer/dashboard', function () {
     return view('employer.dashboard');
@@ -140,6 +137,40 @@ Route::post('/alumniId/bulkUpdateStatus', [AlumniIdController::class, 'bulkUpdat
 
 Route::post('/alumniYearbook/{id}/update', [AlumniYearbookController::class, 'updateYearbook'])->name('alumniYearbook.update')->middleware('auth');
 Route::post('/alumniYearbook/bulkUpdate', [AlumniYearbookController::class, 'bulkUpdateYearbook'])->name('alumniYearbook.bulkUpdate')->middleware('auth');
+
+Route::get('/notices', [NoticeController::class, 'index'])->name('notices.management')->middleware('auth');
+Route::post('/notices', [NoticeController::class, 'store'])->name('notices.store')->middleware('auth');
+Route::put('/notices/{notice}', [NoticeController::class, 'update'])->name('notices.update')->middleware('auth');
+Route::delete('/notices/{notice}', [NoticeController::class, 'destroy'])->name('notices.destroy')->middleware('auth');
+
+Route::get('/alumni/events-seminars', [NoticeController::class, 'alumniEventsAndSeminars'])->name('notices.eventsSeminars')->middleware('auth');
+Route::get('/alumni/announcements', [NoticeController::class, 'alumniAnnouncements'])->name('notices.announcements')->middleware('auth');
+Route::post('/notices/{notice}/toggleInterest', [NoticeController::class, 'toggleInterest'])->name('notices.toggleInterest')->middleware('auth');
+
+Route::get('/faqManagement', [FaqController::class, 'index'])->name('faqs.management')->middleware('auth');
+Route::post('/faqs', [FaqController::class, 'store'])->name('faqs.store')->middleware('auth');
+Route::post('/faqs/bulkDelete', [FaqController::class, 'bulkDestroy'])->name('faqs.bulkDestroy')->middleware('auth');
+Route::post('/faqs/bulkUpdateRecipient', [FaqController::class, 'bulkUpdateRecipient'])->name('faqs.bulkUpdateRecipient')->middleware('auth');
+Route::put('/faqs/{faq}', [FaqController::class, 'update'])->name('faqs.update')->middleware('auth');
+Route::delete('/faqs/{faq}', [FaqController::class, 'destroy'])->name('faqs.destroy')->middleware('auth');
+
+// ── Bell icon notifications (alumni + employer) ──
+Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index')->middleware('auth');
+Route::post('/notifications/markAllRead', [NotificationController::class, 'markAllRead'])->name('notifications.markAllRead')->middleware('auth');
+
+// ── Floating chatbot widget (alumni + employer) ──
+Route::post('/chatbot/start', [ChatbotController::class, 'start'])->name('widget.start')->middleware('auth');
+Route::post('/chatbot/{ticket}/send', [ChatbotController::class, 'send'])->name('widget.send')->middleware('auth');
+Route::get('/chatbot/{ticket}/poll', [ChatbotController::class, 'poll'])->name('widget.poll')->middleware('auth');
+
+// ── Admin: Chatbot & Messaging management ──
+Route::get('/chatbotMessaging', [ChatTicketController::class, 'index'])->name('chatbot.management')->middleware('auth');
+Route::post('/chatbotMessaging/settings', [ChatTicketController::class, 'updateSettings'])->name('chatbot.settings.update')->middleware('auth');
+Route::post('/chatbotMessaging/flags/{messageFlag}/action', [ChatTicketController::class, 'flagAction'])->name('chatbot.flagAction')->middleware('auth');
+Route::get('/chatbotMessaging/{ticket}/thread', [ChatTicketController::class, 'threadJson'])->name('chatbot.thread')->middleware('auth');
+Route::post('/chatbotMessaging/{ticket}/claim', [ChatTicketController::class, 'claim'])->name('chatbot.claim')->middleware('auth');
+Route::post('/chatbotMessaging/{ticket}/reply', [ChatTicketController::class, 'reply'])->name('chatbot.reply')->middleware('auth');
+Route::post('/chatbotMessaging/{ticket}/resolve', [ChatTicketController::class, 'resolve'])->name('chatbot.resolve')->middleware('auth');
 
 Route::group(['middleware' => 'super_admin'], function () {
     //super admin routes
@@ -171,22 +202,24 @@ Route::get('/alumni/profile', [AlumnusController::class, 'showAlumniProfile'])->
 Route::put('/alumni/updateProfile/{alumnus}', [AlumnusController::class, 'updateAlumniProfile'])->name('alumni.updateProfile');
 Route::put('/alumni/deactivate/{id}', [AlumnusController::class, 'deactivateAlumnus'])->name('alumni.deactivateAlumnus');
 Route::put('/alumni/activate/{id}', [AlumnusController::class, 'activateAlumnus'])->name('alumni.activateAlumnus');
-Route::resource('alumni', AlumnusController::class);
+Route::resource('alumni', AlumnusController::class)->middleware('auth');
 
 
 Route::resource('announcements', AnnouncementController::class);
 
-Route::resource('chat-tickets', ChatTicketController::class);
-
-Route::resource('conversations', ConversationController::class);
+Route::get('/messages', [ConversationController::class, 'index'])->name('messages.index')->middleware('auth');
+Route::get('/messages/contacts/search', [ConversationController::class, 'searchContacts'])->name('messages.searchContacts')->middleware('auth');
+Route::get('/messages/sidebar-poll', [ConversationController::class, 'sidebarPoll'])->name('messages.sidebarPoll')->middleware('auth');
+Route::post('/messages/start', [ConversationController::class, 'start'])->name('messages.start')->middleware('auth');
+Route::get('/messages/{conversation}', [ConversationController::class, 'show'])->name('messages.show')->middleware('auth');
+Route::post('/messages/{conversation}/send', [MessageController::class, 'store'])->name('messages.send')->middleware('auth');
+Route::get('/messages/{conversation}/poll', [MessageController::class, 'poll'])->name('messages.poll')->middleware('auth');
 
 Route::resource('employers', EmployerController::class);
 Route::put('/employers/updateProfile/{employer}', [EmployerController::class, 'updateEmployerProfile'])->name('employers.updateProfile');
 Route::put('/employer/deactivate/{id}', [EmployerController::class, 'deactivateEmployer'])->name('employers.deactivateEmployer');
 
 Route::resource('events', EventController::class);
-
-Route::resource('faqs', FaqController::class);
 
 Route::resource('industries', IndustryController::class);
 
@@ -213,8 +246,6 @@ Route::get('/jobManagement', [JobPostingController::class, 'showJobManagement'])
 Route::post('/approveJobPost/{id}', [JobPostingController::class, 'approveJobPost'])->name('jobPosting.approve');
 Route::post('/declineJobPost/{id}', [JobPostingController::class, 'declineJobPost'])->name('jobPosting.decline');
 Route::delete('/deleteJobPost/{id}', [JobPostingController::class, 'deleteJobPost'])->name('jobPosting.delete');
-
-Route::resource('messages', MessageController::class);
 
 Route::resource('offices', OfficeController::class);
 Route::put('/offices/updateProfile/{office}', [OfficeController::class, 'updateOfficeProfile'])->name('offices.updateProfile');

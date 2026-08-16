@@ -115,6 +115,13 @@ class Alumnus extends Model
         return $this->hasMany(JobMatch::class, 'alumnus_id', 'user_id');
     }
 
+    /** Events/seminars this alumnus has marked "Interested" in. */
+    public function interestedNotices()
+    {
+        return $this->belongsToMany(Notice::class, 'notice_interests', 'alumnus_id', 'notice_id')
+            ->withTimestamps();
+    }
+
     public function testimonial()
     {
         // hasMany(RelatedModel, foreignKey, localKey)

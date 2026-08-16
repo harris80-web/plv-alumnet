@@ -1,17 +1,19 @@
 <div id="menuOverlay" class="fixed inset-0 bg-black/50 z-[60] hidden transition-opacity duration-300"></div>
 
-<div id="notificationPopup" class="absolute top-20 right-[20px] md:right-[250px] w-72 bg-white rounded-xl shadow-2xl z-[100] hidden transform origin-top-right transition-all duration-300 scale-95 opacity-0">
+<div id="notificationPopup" class="absolute top-20 right-[20px] md:right-[250px] w-80 bg-white rounded-xl shadow-2xl z-[100] hidden transform origin-top-right transition-all duration-300 scale-95 opacity-0">
     <div class="p-4 border-b flex justify-between items-center">
         <h3 class="text-[#0E0F3B] font-bold">Notifications</h3>
         <button onclick="toggleNotifications(event)" class="text-gray-400 hover:text-gray-600">
             <i class="fa-solid fa-xmark"></i>
         </button>
     </div>
-    <div class="p-10 flex flex-col items-center justify-center text-center">
-        <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-            <i class="fa-regular fa-bell text-gray-400 text-xl"></i>
+    <div id="notificationList" class="max-h-96 overflow-y-auto">
+        <div class="p-10 flex flex-col items-center justify-center text-center">
+            <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                <i class="fa-regular fa-bell text-gray-400 text-xl"></i>
+            </div>
+            <p class="text-gray-500 text-sm">No notifications</p>
         </div>
-        <p class="text-gray-500 text-sm">No notifications</p>
     </div>
 </div>
 
@@ -101,6 +103,7 @@
             setTimeout(() => {
                 notification.classList.remove('scale-95', 'opacity-0');
             }, 10);
+            markNotificationsRead();
         } else {
             notification.classList.add('scale-95', 'opacity-0');
             setTimeout(() => {
@@ -115,6 +118,86 @@
             notification.classList.add('hidden');
         }, 300);
     }
+
+    // ── Notification bell: fetch, render, and mark-as-read-on-open ──
+    const NOTIFICATIONS_URL = {!! json_encode(route('notifications.index')) !!};
+    const NOTIFICATIONS_MARK_READ_URL = {!! json_encode(route('notifications.markAllRead')) !!};
+    const NOTIF_CSRF_TOKEN = '{{ csrf_token() }}';
+
+    function escapeHtmlForNotif(str) {
+        const div = document.createElement('div');
+        div.textContent = str ?? '';
+        return div.innerHTML;
+    }
+
+    function renderNotifications(list) {
+        const container = document.getElementById('notificationList');
+        if (!container) return;
+
+        if (list.length === 0) {
+            container.innerHTML = `
+                <div class="p-10 flex flex-col items-center justify-center text-center">
+                    <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                        <i class="fa-regular fa-bell text-gray-400 text-xl"></i>
+                    </div>
+                    <p class="text-gray-500 text-sm">No notifications</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = list.map(n => `
+            <div class="p-4 border-b border-gray-50 ${n.read ? '' : 'bg-orange-50/60'}">
+                <div class="flex items-start gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-[#C73D1A] text-xs mt-0.5"></i>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-bold text-[#0E0F3B]">${escapeHtmlForNotif(n.title)}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">${escapeHtmlForNotif(n.body)}</p>
+                        <p class="text-[10px] text-gray-400 mt-1">${escapeHtmlForNotif(n.timeLabel)}</p>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function updateNotifBadge(count) {
+        document.querySelectorAll('#notifBadge').forEach(badge => {
+            badge.textContent = count > 9 ? '9+' : String(count);
+            badge.classList.toggle('hidden', count === 0);
+        });
+    }
+
+    async function fetchNotifications() {
+        try {
+            const res = await fetch(NOTIFICATIONS_URL);
+            if (!res.ok) return;
+            const data = await res.json();
+            renderNotifications(data.notifications);
+            updateNotifBadge(data.unreadCount);
+        } catch (e) { /* transient network hiccup — next poll retries */ }
+    }
+
+    async function markNotificationsRead() {
+        updateNotifBadge(0); // optimistic — next poll confirms
+        try {
+            await fetch(NOTIFICATIONS_MARK_READ_URL, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': NOTIF_CSRF_TOKEN, 'Accept': 'application/json' },
+            });
+            fetchNotifications();
+        } catch (e) { /* badge will resync on the next regular poll */ }
+    }
+
+    fetchNotifications();
+    let notifPollTimer = setInterval(fetchNotifications, 20000);
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+            clearInterval(notifPollTimer);
+        } else {
+            fetchNotifications();
+            notifPollTimer = setInterval(fetchNotifications, 20000);
+        }
+    });
 
     if (overlay) {
         overlay.addEventListener('click', () => {

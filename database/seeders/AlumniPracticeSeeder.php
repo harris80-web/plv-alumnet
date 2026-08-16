@@ -77,6 +77,7 @@ class AlumniPracticeSeeder extends Seeder
         $industries = Industry::all();
         $skills = Skill::all();
         $jobPostings = JobPosting::approved()->get();
+        $staffIds = User::whereIn('user_role', ['admin', 'super_admin'])->pluck('user_id');
 
         if ($programs->isEmpty() || $sections->isEmpty() || $skills->isEmpty()) {
             $this->command->error('Programs, sections, or skills are empty — seed those first.');
@@ -130,6 +131,7 @@ class AlumniPracticeSeeder extends Seeder
             $alumnus->alumniId()->create([
                 'status' => $status = self::ALUMNI_ID_STATUS_POOL[array_rand(self::ALUMNI_ID_STATUS_POOL)],
                 'status_updated_at' => $status === 'pending' ? $alumnus->created_at : fake()->dateTimeBetween('-3 months', 'now'),
+                'updated_by' => $status !== 'pending' && $staffIds->isNotEmpty() ? $staffIds->random() : null,
             ]);
 
             $alumnus->skills()->attach($skills->random(min($skills->count(), fake()->numberBetween(2, 5)))->pluck('skill_id'));

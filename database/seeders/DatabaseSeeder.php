@@ -31,7 +31,13 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             JobSeeder::class, // after Employer/Industry/Program/Skills
             JobApplicationSeeder::class, // after Alumnus/Job
+            AlumniPracticeSeeder::class, // after Program/Section/Industry/Skills/Job (uses approved jobs)
+            AlumniYearbookSeeder::class, // after AlumnusSeeder + AlumniPracticeSeeder (needs every alumnus to exist)
+            NoticeSeeder::class, // after AlumnusSeeder + AlumniPracticeSeeder (attaches interested alumni)
+            MessageSeeder::class, // after AlumnusSeeder (needs alumni@example.com + a few named alumni)
             TestimonialSeeder::class,
+            FaqSeeder::class, // after AdminSeeder/SuperAdminSeeder (attributes each FAQ to a staff creator)
+            ChatbotSeeder::class, // after AlumnusSeeder/EmployerSeeder/AdminSeeder (needs named accounts + a claimable office)
             // You can add more seeders here later (e.g., UserSeeder)
         ]);
     }

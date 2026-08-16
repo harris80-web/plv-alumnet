@@ -22,7 +22,11 @@
 
 <body class="bg-white">
 
-    @include('partials.header-employer')
+    @if(auth()->user()->user_role === 'employer')
+        @include('partials.header-employer')
+    @else
+        @include('partials.header-alumni')
+    @endif
 
     <section class="HeroSection h-[200px] flex items-end text-white shadow-lg">
         <div class="max-w-6xl w-full my-7 ml-10">
@@ -40,6 +44,13 @@
             <p class="text-sm bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-center mb-10">
                 Your new password must be different from previously used passwords.
             </p>
+
+            @if (session('must_change_password_notice'))
+            <div class="mb-6 flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-5 py-4">
+                <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5 shrink-0"></i>
+                <p class="text-sm">{{ session('must_change_password_notice') }}</p>
+            </div>
+            @endif
 
             @if ($errors->any())
             <div class="mb-4 text-red-600 text-sm">
@@ -125,7 +136,11 @@
         </div>
     </div>
 
-    @include('partials.footer-employer')
+    @if(auth()->user()->user_role === 'employer')
+        @include('partials.footer-employer')
+    @else
+        @include('partials.footer-alumni')
+    @endif
 
     <script>
         // Use querySelectorAll to handle all password fields on the page

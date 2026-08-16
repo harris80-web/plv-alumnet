@@ -309,7 +309,11 @@ class UserController extends Controller
                     'user_middle_name' => $validated['user_middle_name'],
                     'user_suffix' => $validated['user_suffix'],
                     'user_role' => 'alumni',
-                    'user_active' => true
+                    'user_active' => true,
+                    // They're logging in with a system-generated password
+                    // emailed in plaintext below — force a change before
+                    // they can use the account for anything else.
+                    'must_change_password' => true,
                 ]);
 
                 $alumnus = $user->alumnus()->create([
@@ -463,7 +467,10 @@ class UserController extends Controller
 
         DB::table('users')
             ->where('user_id', $user->user_id)
-            ->update(['user_password' => Hash::make($validated['new_password'])]);
+            ->update([
+                'user_password' => Hash::make($validated['new_password']),
+                'must_change_password' => false,
+            ]);
 
         return redirect()->route('users.dashboardRedirect')
             ->with('password_changed', true);

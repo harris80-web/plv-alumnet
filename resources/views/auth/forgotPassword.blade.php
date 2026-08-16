@@ -87,7 +87,7 @@
         <div class="text-white max-w-lg m-7">
             <div class="flex items-center gap-1 mb-2">
                 <div class="w-20 h-20 flex items-center justify-center">
-                    <img src="assets/PLV-Logo-2.svg" alt="" class="h-[90px] w-auto">
+                    <img src="{{ asset('assets/PLV-Logo-2.svg') }}" alt="" class="h-[90px] w-auto">
                 </div>
                 <div class="flex flex-col items-center h-auto w-auto">
                     <img src="assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png" alt="" class="h-auto w-auto ">

@@ -63,99 +63,29 @@
         </header>
 
         <div class="space-y-6 mb-10">
-
-            <!-- FAQ ITEM -->
+            @forelse ($faqs as $faq)
             <section class="faq-item group">
                 <button class="faq-toggle w-full flex items-center justify-between bg-white p-5 rounded-t-xl shadow-md border-b border-gray-100 transition-all outline-none focus:outline-none focus:ring-0">
                     <div class="flex items-center gap-4">
-                        <span class="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">?</span>
+                        <span class="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold shrink-0">?</span>
                         <span class="text-lg font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-left">
-                            Why is my account pending verification?
+                            {{ $faq->faq_question }}
                         </span>
                     </div>
-                    <i class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
+                    <i class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-300 chevron shrink-0 ml-3"></i>
                 </button>
 
                 <div class="faq-content grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out overflow-hidden">
                     <div class="min-h-0">
                         <div class="faq-gradient p-6 rounded-b-xl shadow-lg bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07]">
-                            <p class="text-white text-center text-sm leading-relaxed">
-                                The PLV-AlumNet Administrators needs time to manually cross-reference the data you provided. This process usually takes <strong>24-48 hours</strong>. You will be notified via email once approved.
-                            </p>
+                            <p class="text-white text-center text-sm leading-relaxed whitespace-pre-line">{{ $faq->faq_answer }}</p>
                         </div>
                     </div>
                 </div>
             </section>
-
-            <!-- FAQ ITEM -->
-            <section class="faq-item group">
-                <button class="faq-toggle w-full flex items-center justify-between bg-white p-5 rounded-t-xl shadow-md border-b border-gray-100 transition-all outline-none focus:outline-none focus:ring-0">
-                    <div class="flex items-center gap-4">
-                        <span class="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">?</span>
-                        <span class="text-lg font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-left">
-                            I am an employer. How do I post a job?
-                        </span>
-                    </div>
-                    <i class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
-                </button>
-
-                <div class="faq-content grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out overflow-hidden">
-                    <div class="min-h-0">
-                        <div class="faq-gradient p-6 rounded-b-xl shadow-lg bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07]">
-                            <p class="text-white text-center text-sm leading-relaxed">
-                                By clicking the <strong>”Sign Up” button </strong> and register your company profile. Once your company is approved by our Admins, you will gain access to the Job Board where you can post, manage job postings and applicants.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- FAQ ITEM -->
-            <section class="faq-item group">
-                <button class="faq-toggle w-full flex items-center justify-between bg-white p-5 rounded-t-xl shadow-md border-b border-gray-100 transition-all outline-none focus:outline-none focus:ring-0">
-                    <div class="flex items-center gap-4">
-                        <span class="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">?</span>
-                        <span class="text-lg font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-left">
-                            How long does it take for a job posting to go live?
-                        </span>
-                    </div>
-                    <i class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
-                </button>
-
-                <div class="faq-content grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out overflow-hidden">
-                    <div class="min-h-0">
-                        <div class="faq-gradient p-6 rounded-b-xl shadow-lg bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07]">
-                            <p class="text-white text-center text-sm leading-relaxed">
-                                Job postings typically go live immediately after submission once approved by the system's administrator. However, PLV reserves the right to review new employer accounts or flag unusual postings, which may delay publication by up to [Hours/days] .
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- FAQ ITEM -->
-            <section class="faq-item group mb-5">
-                <button class="faq-toggle w-full flex items-center justify-between bg-white p-5 rounded-t-xl shadow-md border-b border-gray-100 transition-all outline-none focus:outline-none focus:ring-0">
-                    <div class="flex items-center gap-4">
-                        <span class="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">?</span>
-                        <span class="text-lg font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-left">
-                            Where can I find the university's official contact information?
-                        </span>
-                    </div>
-                    <i class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
-                </button>
-
-                <div class="faq-content grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out overflow-hidden">
-                    <div class="min-h-0">
-                        <div class="faq-gradient p-6 rounded-b-xl shadow-lg bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07]">
-                            <p class="text-white text-center text-sm leading-relaxed">
-                                Please refer to the <strong>footer</strong> section of the website for the Official Facebook Page, Address and Email of the University.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
+            @empty
+            <p class="text-center text-gray-400 text-sm py-10">No FAQs available yet.</p>
+            @endforelse
         </div>
     </section>
 

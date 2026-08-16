@@ -33,7 +33,14 @@ class User extends Authenticatable
         'user_number',
         'user_profile_picture',
         'user_active',
-        'user_role'
+        'user_role',
+        'user_muted',
+        'must_change_password',
+    ];
+
+    protected $casts = [
+        'user_muted' => 'boolean',
+        'must_change_password' => 'boolean',
     ];
 
     public function alumnus()
@@ -69,6 +76,11 @@ class User extends Authenticatable
         return $this->hasMany(ChatTicket::class, 'user_id', 'user_id');
     }
 
+    public function userNotifications()
+    {
+        return $this->hasMany(UserNotification::class, 'user_id', 'user_id');
+    }
+
     public function getEmailForPasswordReset()
     {
         return $this->user_email;
@@ -98,5 +110,10 @@ class User extends Authenticatable
     public function isEmployer(): bool
     {
         return $this->user_role === 'employer';
+    }
+
+    public function isMuted(): bool
+    {
+        return (bool) $this->user_muted;
     }
 }

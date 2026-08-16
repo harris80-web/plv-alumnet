@@ -89,7 +89,7 @@
                             </a>
                         </div>
                     </div>
-                    <img src="assets/PLV-Logo-2.svg" alt="" class="h-[100px] w-auto">
+                    <img src="{{ asset('assets/PLV-Logo-2.svg') }}" alt="" class="h-[100px] w-auto">
                 </div>
             </div>
         </div>

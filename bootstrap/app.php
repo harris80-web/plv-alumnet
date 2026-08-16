@@ -7,8 +7,9 @@ use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\AlumniMiddleware;
 use App\Http\Middleware\EmployerMiddleware;
+use App\Http\Middleware\ForcePasswordChange;
 use App\Http\Middleware\RegistrarMiddleware;
-use App\Http\Middleware\SuperAdminMiddleware;   
+use App\Http\Middleware\SuperAdminMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -24,6 +25,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'registrar' => RegistrarMiddleware::class,
             'admin' => AdminMiddleware::class,
             'super_admin' => SuperAdminMiddleware::class,
+        ]);
+
+        // Global, not opt-in — a forced password change should hold regardless
+        // of which route a flagged account tries to hit. No-op for everyone
+        // else (see ForcePasswordChange::handle()).
+        $middleware->web(append: [
+            ForcePasswordChange::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

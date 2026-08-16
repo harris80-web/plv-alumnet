@@ -14,6 +14,14 @@ use Illuminate\Support\Facades\Hash;
 
 class AlumnusSeeder extends Seeder
 {
+    /** Same weighting as AlumniPracticeSeeder so both alumni pools look consistent. */
+    private const ALUMNI_ID_STATUS_POOL = [
+        'pending', 'pending', 'pending', 'pending',
+        'under_review', 'under_review', 'under_review',
+        'ready_to_claim', 'ready_to_claim',
+        'claimed', 'claimed',
+    ];
+
     /**
      * Practice dataset spanning several programs so the job-matching /
      * ranking feature (JobMatchService) has real variety to score against
@@ -23,6 +31,8 @@ class AlumnusSeeder extends Seeder
      */
     public function run(): void
     {
+        $staffIds = User::whereIn('user_role', ['admin', 'super_admin'])->pluck('user_id');
+
         $alumni = [
             [
                 'first' => 'Ryza', 'last' => 'Ison', 'gender' => 'female',
@@ -278,6 +288,17 @@ class AlumnusSeeder extends Seeder
             }
 
             $alumnus->refreshResumeCompleteness();
+
+            // Every alumnus needs an ID record — without this, "Alumni ID
+            // Management" only ever showed the 50 AlumniPracticeSeeder rows
+            // and silently dropped these 20 named accounts (including the
+            // main demo login, alumni@example.com).
+            $idStatus = self::ALUMNI_ID_STATUS_POOL[array_rand(self::ALUMNI_ID_STATUS_POOL)];
+            $alumnus->alumniId()->create([
+                'status' => $idStatus,
+                'status_updated_at' => $idStatus === 'pending' ? $alumnus->created_at : Carbon::now()->subDays(rand(1, 60)),
+                'updated_by' => $idStatus !== 'pending' && $staffIds->isNotEmpty() ? $staffIds->random() : null,
+            ]);
         }
     }
 }

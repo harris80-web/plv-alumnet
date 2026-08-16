@@ -26,21 +26,22 @@
                 class="{{ $current_page == 'users.dashboardRedirect' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                 HOME
             </a>
-            <a href="events.php"
-                class="{{ $current_page == 'events' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">EVENTS</a>
-            <a href="announcements.php"
-                class="{{ $current_page == 'announcements' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">ANNOUNCEMENTS</a>
+            <a href="{{ route('notices.eventsSeminars') }}"
+                class="{{ $current_page == 'notices.eventsSeminars' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">EVENTS</a>
+            <a href="{{ route('notices.announcements') }}"
+                class="{{ $current_page == 'notices.announcements' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">ANNOUNCEMENTS</a>
             <a href="{{ route('jobPosting.jobBoard') }}"
                 class="{{ $current_page == 'jobPosting.jobBoard' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">JOB BOARD</a>
-            <a href="alumni_directory.php"
-                class="{{ $current_page == 'alumni_directory' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">DIRECTORY</a>
+            <a href="{{ route('alumni.index') }}"
+                class="{{ $current_page == 'alumni.index' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">DIRECTORY</a>
 
             <div class="flex items-center gap-6 text-white ml-5">
-                <button class="hover:text-[#ED7A07] transition-colors">
+                <a href="{{ route('messages.index') }}" class="{{ str_starts_with($current_page ?? '', 'messages.') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }} transition-colors">
                     <i data-lucide="messages-square" class="w-6 h-6"></i>
-                </button>
-                <button onclick="toggleNotifications(event)" class="hover:text-[#ED7A07] transition-colors">
+                </a>
+                <button onclick="toggleNotifications(event)" class="relative hover:text-[#ED7A07] transition-colors">
                     <i data-lucide="bell" class="w-6 h-6"></i>
+                    <span id="notifBadge" class="hidden absolute -top-1.5 -right-1.5 bg-[#C73D1A] text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center"></span>
                 </button>
                 <button onclick="toggleSidebar()" class="hover:text-[#ED7A07] transition-colors">
                     <i data-lucide="circle-user" class="w-7 h-7"></i>
@@ -57,6 +58,8 @@
     <script>
         lucide.createIcons();
     </script>
+
+    @include('partials.chatbot-widget')
 </body>
 
 </html>

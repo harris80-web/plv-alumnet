@@ -73,7 +73,7 @@ function icon_class($page_name, $current_page)
                 <span class="sidebar-text hidden opacity-0 whitespace-nowrap">Alumni ID & Yearbook Management</span>
             </a>
 
-            <a href="super_admin_notices_events.php"
+            <a href="{{ route('notices.management') }}"
                 data-tooltip="Notices & Events Management"
                 class="nav-link relative group flex items-center h-10 transition-all {{ $current_page === 'notices' ? 'bg-white/10 border-l-4 border-orange-500 pl-4' : 'hover:bg-white/10 px-5 group' }}">
                 <div class="w-8 shrink-0 flex items-center">
@@ -82,7 +82,7 @@ function icon_class($page_name, $current_page)
                 <span class="sidebar-text hidden opacity-0 whitespace-nowrap">Notices & Events Management</span>
             </a>
 
-            <a href="super_admin_chatbot_messaging.php"
+            <a href="{{ route('chatbot.management') }}"
                 data-tooltip="Chatbot & Messaging Management"
                 class="nav-link relative group flex items-center h-10 transition-all {{ $current_page === 'messaging' ? 'bg-white/10 border-l-4 border-orange-500 pl-4' : 'hover:bg-white/10 px-5 group' }}">
                 <div class="w-8 shrink-0 flex items-center">
@@ -100,7 +100,7 @@ function icon_class($page_name, $current_page)
                 <span class="sidebar-text hidden opacity-0 whitespace-nowrap">Testimonial Management</span>
             </a>
 
-            <a href="super_admin_faqs.php"
+            <a href="{{ route('faqs.management') }}"
                 data-tooltip="Manage FAQs"
                 class="nav-link relative group flex items-center h-10 transition-all {{ $current_page === 'faqs' ? 'bg-white/10 border-l-4 border-orange-500 pl-4' : 'hover:bg-white/10 px-5 group' }}">
                 <div class="w-8 shrink-0 flex items-center">

@@ -46,8 +46,9 @@
             </a>
 
             <div class="flex items-center gap-6 text-white ml-5 relative">
-                <button onclick="toggleNotifications(event)" class="hover:text-[#ED7A07] transition-colors">
+                <button onclick="toggleNotifications(event)" class="relative hover:text-[#ED7A07] transition-colors">
                     <i data-lucide="bell" class="w-6 h-6"></i>
+                    <span id="notifBadge" class="hidden absolute -top-1.5 -right-1.5 bg-[#C73D1A] text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center"></span>
                 </button>
 
                 <button onclick="toggleSidebar()" class="hover:text-[#ED7A07] transition-colors focus:outline-none">
@@ -63,6 +64,8 @@
     <script>
         lucide.createIcons();
     </script>
+
+    @include('partials.chatbot-widget')
 </body>
 
 </html>

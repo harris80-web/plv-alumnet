@@ -58,105 +58,26 @@
         </header>
  
         <div class="space-y-6 mb-20">
-
+            @forelse ($faqs as $faq)
             <div class="faq-item group">
                 <button class="faq-toggle w-full flex items-center justify-between bg-white p-5 rounded-t-xl shadow-md border-b border-gray-100 transition-all outline-none focus:outline-none focus:ring-0">
                     <div class="flex items-center gap-4">
-                        <span class="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">?</span>
-                        <span class="text-lg font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-left">Why is my account pending verification?</span>
+                        <span class="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold shrink-0">?</span>
+                        <span class="text-lg font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-left">{{ $faq->faq_question }}</span>
                     </div>
-                    <i class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
+                    <i class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-300 chevron shrink-0 ml-3"></i>
                 </button>
                 <div class="faq-content grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out overflow-hidden">
                     <div class="min-h-0">
                         <div class="faq-gradient p-6 rounded-b-xl shadow-lg bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07]">
-                            <p class="text-white text-center text-sm leading-relaxed">
-                                The verification process requires time for the admin to manually check and validate all the details entered during sign up within the systems database. This process usually takes <strong>24–48 hours</strong> before the account can be fully approved.
-                            </p>
+                            <p class="text-white text-center text-sm leading-relaxed whitespace-pre-line">{{ $faq->faq_answer }}</p>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="faq-item group">
-                <button class="faq-toggle w-full flex items-center justify-between bg-white p-5 rounded-t-xl shadow-md border-b border-gray-100 transition-all outline-none focus:outline-none focus:ring-0">
-                    <div class="flex items-center gap-4">
-                        <span class="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">?</span>
-                        <span class="text-lg font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-left">How can I track my Alumni ID or Yearbook claiming status?</span>
-                    </div>
-                    <i class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
-                </button>
-                <div class="faq-content grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out overflow-hidden">
-                    <div class="min-h-0">
-                        <div class="faq-gradient p-6 rounded-b-xl shadow-lg bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07]">
-                            <p class="text-white text-center text-sm leading-relaxed">
-                                Navigate to the <strong>ID/Yearbook Tracker section</strong> on your dashboard. Follow the instructions to monitor its claiming status.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="faq-item group">
-                <button class="faq-toggle w-full flex items-center justify-between bg-white p-5 rounded-t-xl shadow-md border-b border-gray-100 transition-all outline-none focus:outline-none focus:ring-0">
-                    <div class="flex items-center gap-4">
-                        <span class="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">?</span>
-                        <span class="text-lg font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-left">How do I sign up as an alumni?</span>
-                    </div>
-                    <i class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
-                </button>
-                <div class="faq-content grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out overflow-hidden">
-                    <div class="min-h-0">
-                        <div class="faq-gradient p-6 rounded-b-xl shadow-lg bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07]">
-                            <p class="text-white text-center text-sm leading-relaxed">
-                                You don’t need to manually sign up as an alumni. Once you graduate, you will be <strong>automatically registered</strong> in the system. An email will be sent to you containing your <strong>login credentials</strong>. For now, only employers are allowed to create accounts. <strong>Welcome to PLV-AlumNet!</strong>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <section class="faq-item group">
-                <button class="faq-toggle w-full flex items-center justify-between bg-white p-5 rounded-t-xl shadow-md border-b border-gray-100 transition-all outline-none focus:outline-none focus:ring-0">
-                    <div class="flex items-center gap-4">
-                        <span class="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">?</span>
-                        <span class="text-lg font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-left">
-                            I am an employer. How do I post a job?
-                        </span>
-                    </div>
-                    <i class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
-                </button>
-
-                <div class="faq-content grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out overflow-hidden">
-                    <div class="min-h-0">
-                        <div class="faq-gradient p-6 rounded-b-xl shadow-lg bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07]">
-                            <p class="text-white text-center text-sm leading-relaxed">
-                                By clicking the <strong>”Sign Up” button </strong> and register your company profile. Once your company is approved by our Admins, you will gain access to the Job Board where you can post, manage job postings and applicants.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-
-            <div class="faq-item group mb-5">
-                <button class="faq-toggle w-full flex items-center justify-between bg-white p-5 rounded-t-xl shadow-md border-b border-gray-100 transition-all outline-none focus:outline-none focus:ring-0">
-                    <div class="flex items-center gap-4">
-                        <span class="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">?</span>
-                        <span class="text-lg font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-left">Where can I find the University's Official contact information?</span>
-                    </div>
-                    <i class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-300 chevron"></i>
-                </button>
-                <div class="faq-content grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out overflow-hidden">
-                    <div class="min-h-0">
-                        <div class="faq-gradient p-6 rounded-b-xl shadow-lg bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07]">
-                            <p class="text-white text-center text-sm leading-relaxed">
-                                Please refer to the <strong>footer</strong> section of the website for the Official Facebook Page, Address and Email of the University.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            @empty
+            <p class="text-center text-gray-400 text-sm py-10">No FAQs available yet.</p>
+            @endforelse
         </div>
     </section>
 

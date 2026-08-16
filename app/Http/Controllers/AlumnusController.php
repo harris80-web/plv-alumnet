@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Mail\ActivateAlumniMail;
 use App\Mail\DeactAlumniMail;
 use App\Models\Alumnus;
+use App\Models\Program;
 use Illuminate\Foundation\Auth\User;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -17,11 +19,42 @@ use Illuminate\Support\Facades\Storage;
 class AlumnusController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Alumni Directory — search/filter over alumni who opted into a public
+     * profile (Alumnus::scopePublicProfiles()). Alumni-only: this is the
+     * "browse each other" page, not an admin listing (that's
+     * superAdmin.userManagement).
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $user = Auth::user();
+        abort_unless($user && $user->user_role === 'alumni', 403);
+
+        $query = Alumnus::with(['user', 'program', 'section', 'industry', 'skills'])
+            ->publicProfiles();
+
+        if ($search = trim((string) $request->input('search'))) {
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('user_first_name', 'like', "%{$search}%")
+                    ->orWhere('user_last_name', 'like', "%{$search}%")
+                    ->orWhere('user_middle_name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($programId = $request->input('program')) {
+            $query->where('program_id', $programId);
+        }
+
+        if ($batch = $request->input('batch')) {
+            $query->where('alumnus_batch', $batch);
+        }
+
+        $alumni = $query->orderByDesc('alumnus_batch')->paginate(10)->withQueryString();
+
+        $programs = Program::orderBy('program_name')->get();
+        $batches = Alumnus::publicProfiles()->distinct()->orderByDesc('alumnus_batch')->pluck('alumnus_batch');
+        $filters = $request->only(['search', 'program', 'batch']);
+
+        return view('alumni.directory', compact('alumni', 'programs', 'batches', 'filters'));
     }
 
     /**

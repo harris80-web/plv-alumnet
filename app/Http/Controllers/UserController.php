@@ -9,6 +9,7 @@ use App\Models\Alumnus;
 use App\Models\Office;
 use App\Models\Program;
 use App\Models\Section;
+use App\Models\UserNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -119,8 +120,10 @@ class UserController extends Controller
         //     $employerIdSelfiePath = $request->file('employer_id_picture_selfie')->store('employerIdSelfies', 'public');
         // }
 
+        $newEmployerUser = null;
+
         try {
-            DB::transaction(function () use ($validated, $companyDocumentPath) {
+            DB::transaction(function () use ($validated, $companyDocumentPath, &$newEmployerUser) {
                 $user = User::create([
                     'user_email' => $validated['user_email'],
                     'user_password' => Hash::make($validated['user_password']),
@@ -129,6 +132,7 @@ class UserController extends Controller
                     'user_role' => 'employer',
                     'user_active' => false
                 ]);
+                $newEmployerUser = $user;
 
                 $user->employer()->create([
                     'employer_company_name' => $validated['employer_company_name'],
@@ -172,8 +176,30 @@ class UserController extends Controller
             ]);
         }
 
+        $this->notifyStaffOfPendingEmployer($newEmployerUser, $validated['employer_company_name']);
 
         return redirect()->route('auth.register')->with('success', 'Account registered successfully!');
+    }
+
+    /** New employer registrations are unrestricted to either staff role — see UserController::showUsers()/approveEmployer(). */
+    private function notifyStaffOfPendingEmployer(User $employerUser, string $companyName): void
+    {
+        $recipientIds = User::whereIn('user_role', ['admin', 'super_admin'])->pluck('user_id');
+        if ($recipientIds->isEmpty()) {
+            return;
+        }
+
+        $now = now();
+        $rows = $recipientIds->map(fn ($userId) => [
+            'user_id' => $userId,
+            'type' => 'employer_registration_pending',
+            'title' => 'New employer awaiting verification',
+            'body' => "{$companyName} ({$employerUser->user_first_name} {$employerUser->user_last_name}) registered and needs verification.",
+            'created_at' => $now,
+            'updated_at' => $now,
+        ])->all();
+
+        UserNotification::insert($rows);
     }
 
     public function goToWaitForApproval()
@@ -443,8 +469,7 @@ class UserController extends Controller
         } else if ($user->user_role == 'employer') {
             return redirect()->route('employer.dashboard');
         } else if ($user->user_role == 'alumni') {
-            $testimonials = Testimonial::all()->where('testimonial_post', true);
-            return view('alumni.dashboard', compact('testimonials'));
+            return redirect()->route('alumnus.dashboard');
         } else {
             Auth::logout();
             return redirect()->route('auth.login')->withErrors('error', 'Your account role is not recognized. Please contact the administrator.');

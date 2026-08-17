@@ -142,6 +142,7 @@
                             <td class="px-4 py-3 font-medium text-black border-r border-slate-100 leading-tight">{{ $alumnus->program->program_name ?? 'N/A' }}</td>
                             <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $alumnus->alumnus_batch }}</td>
                             <td class="px-4 py-3 text-center relative">
+                                @if ($alumnus->user_id !== auth()->id())
                                 <div class="relative inline-block text-left">
                                     <button type="button" onclick="toggleDirectoryDropdown(this)"
                                         class="p-2 hover:bg-slate-100 rounded-full transition-colors">
@@ -160,6 +161,9 @@
                                         </div>
                                     </div>
                                 </div>
+                                @else
+                                <span class="text-xs text-gray-400 italic">You</span>
+                                @endif
                             </td>
                         </tr>
                         @empty

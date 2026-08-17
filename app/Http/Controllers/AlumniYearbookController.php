@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AlumniYearbook;
+use App\Models\UserNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -39,6 +40,10 @@ class AlumniYearbookController extends Controller
         $yearbook = AlumniYearbook::findOrFail($id);
         $yearbook->applyUpdate($validated, Auth::id());
 
+        if (array_key_exists('claiming_status', $validated) && $validated['claiming_status'] !== null) {
+            $this->notifyClaimingStatusChange($yearbook);
+        }
+
         return back()->with('success', 'Alumni yearbook record updated.');
     }
 
@@ -66,8 +71,22 @@ class AlumniYearbookController extends Controller
         $yearbooks = AlumniYearbook::whereIn('id', $validated['ids'])->get();
         foreach ($yearbooks as $yearbook) {
             $yearbook->applyUpdate($fields, Auth::id());
+
+            if (array_key_exists('claiming_status', $fields)) {
+                $this->notifyClaimingStatusChange($yearbook);
+            }
         }
 
         return back()->with('success', count($yearbooks) . ' yearbook record(s) updated.');
+    }
+
+    private function notifyClaimingStatusChange(AlumniYearbook $yearbook): void
+    {
+        UserNotification::create([
+            'user_id' => $yearbook->alumnus_id,
+            'type' => 'yearbook_status',
+            'title' => 'Yearbook status updated',
+            'body' => 'Your yearbook status is now "' . $yearbook->claimingStatusLabel() . '".',
+        ]);
     }
 }

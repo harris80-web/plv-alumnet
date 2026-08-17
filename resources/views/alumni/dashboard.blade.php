@@ -164,52 +164,106 @@
             <h2 class="text-3xl font-bold text-[#0E0F3B] uppercase tracking-tight">
                 Job Matches <span class="text-[#0E0F3B]">For You!</span>
             </h2>
-            <a href="job-board.php" class="text-[#ED7A07] font-bold uppercase text-sm hover:border-b-2 border-[#C73D1A] inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+            <a href="{{ route('jobPosting.jobBoard') }}" class="text-[#ED7A07] font-bold uppercase text-sm hover:border-b-2 border-[#C73D1A] inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
                 Go to Job Board >
             </a>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
-            <script>
-                // Array to easily generate multiple cards for the mockup
-                for (let i = 0; i < 3; i++) {
-                    document.write(`
-                <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 flex flex-col transition-transform hover:scale-[1.02]">
-                    <div class="relative h-48 bg-[url('https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=600q=80')] bg-cover bg-center">
-                        <div class="absolute inset-0 bg-[#0E0F3B]/50 mix-blend-multiply"></div>
-                        <div class="absolute inset-0 bg-blue-600/20"></div>
-                    </div>
-
-                    <div class="p-6 flex flex-col flex-grow">
-                        <div class="flex justify-between items-start mb-2">
-                            <h3 class="font-bold text-[#0E0F3B] uppercase text-xl">Job Title</h3>
-                            <span class="text-[9px] text-gray-400 flex items-center gap-1 mt-1">
-                                <i class="fa-regular fa-calendar"></i> Posted 2 hours ago
-                            </span>
-                        </div>
-
-                        <p class="text-xs text-gray-400 font-semibold uppercase mb-4 tracking-wider">Company / Business Name</p>
-                        
-                        <p class="text-[10px] text-gray-500 font-bold uppercase mb-2">Recommended Course/Program</p>
-                        
-                        <p class="text-[11px] text-gray-600 leading-relaxed mb-6">
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer placerat, nulla suscipit aliquam feugiat, nulla elit accumsan nisl, at facilisis nunc tellus at dolor. In nec turpis malesuada, iaculis magna non, feugiat erat.
-                        </p>
-
-                        <div class="mt-auto pt-4 border-t border-gray-100">
-                            <p class="text-[9px] text-gray-400 flex items-center gap-1 uppercase font-bold">
-                                <i class="fa-regular fa-calendar-check"></i> Closing / Validity Date
-                            </p>
-                        </div>
+            @forelse ($jobMatches as $match)
+            @php
+                $job = $match->jobPosting;
+                $cardImage = $job->job_posting_image
+                    ? asset('storage/' . $job->job_posting_image)
+                    : 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=600q=80';
+                // Same $appliedJobs contract as partials.job-post-card, see AlumniDashboardController::index().
+                $hasApplied = $appliedJobs->has($job->job_posting_id);
+            @endphp
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 flex flex-col transition-transform hover:scale-[1.02]">
+                {{-- Same data-* contract + openJobModal() as partials.job-post-card
+                     (shared modal: partials.job-detail-modal) so clicking a
+                     recommended job here opens the identical "View Details"
+                     modal used on the job board. --}}
+                <div class="relative h-48 bg-cover bg-center group cursor-pointer" style="background-image:url('{{ $cardImage }}');"
+                    role="button" tabindex="0" aria-label="View job details"
+                    data-title="{{ $job->job_posting_title }}"
+                    data-company="{{ $job->job_posting_company }}"
+                    data-address="{{ $job->job_posting_address }}"
+                    data-date="{{ $job->created_at->diffForHumans() }}"
+                    data-description="{{ $job->job_posting_description }}"
+                    data-type="{{ $job->job_posting_employment_type }}"
+                    data-setup="{{ $job->job_posting_setup }}"
+                    data-valid="{{ $job->job_closing_date }}"
+                    data-image="{{ $cardImage }}"
+                    data-programs="{{ $job->programs->pluck('program_name')->implode(', ') }}"
+                    data-industry="{{ $job->industry->industry_name ?? 'Not specified' }}"
+                    onclick="openJobModal(this)"
+                    onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openJobModal(this);}">
+                    <div class="absolute inset-0 bg-[#0E0F3B]/50 mix-blend-multiply"></div>
+                    <div class="absolute inset-0 bg-blue-600/20"></div>
+                    <span class="absolute top-3 right-3 bg-white/90 text-[#C73D1A] text-[10px] font-bold uppercase px-2 py-1 rounded-full">
+                        {{ round($match->blendedScore()) }}% Match
+                    </span>
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span class="bg-white/90 text-[#1D264F] text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
+                            <i class="fas fa-eye mr-1"></i> VIEW DETAILS
+                        </span>
                     </div>
                 </div>
-                `);
-                }
-            </script>
+
+                <div class="p-6 flex flex-col flex-grow">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-[#0E0F3B] uppercase text-xl">{{ $job->job_posting_title }}</h3>
+                        <span class="text-[9px] text-gray-400 flex items-center gap-1 mt-1 shrink-0">
+                            <i class="fa-regular fa-calendar"></i> {{ $job->created_at->diffForHumans() }}
+                        </span>
+                    </div>
+
+                    <p class="text-xs text-gray-400 font-semibold uppercase mb-4 tracking-wider">{{ $job->job_posting_company }}</p>
+
+                    <p class="text-[10px] text-gray-500 font-bold uppercase mb-2">
+                        {{ $job->programs->pluck('program_name')->implode(', ') ?: 'Open to all programs' }}
+                    </p>
+
+                    <p class="text-[11px] text-gray-600 leading-relaxed mb-6">
+                        {{ $match->ai_explanation ?: Str::limit(strip_tags($job->job_posting_description), 160) }}
+                    </p>
+
+                    <div class="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between gap-2">
+                        <p class="text-[9px] text-gray-400 flex items-center gap-1 uppercase font-bold">
+                            <i class="fa-regular fa-calendar-check"></i>
+                            {{ $job->job_closing_date ? 'Closes ' . \Carbon\Carbon::parse($job->job_closing_date)->format('M d, Y') : 'Open-ended' }}
+                        </p>
+                        @if ($hasApplied)
+                        <button disabled class="bg-green-600 cursor-not-allowed text-white px-4 py-1.5 rounded-md font-bold text-xs flex items-center gap-1.5 shrink-0">
+                            <i class="fas fa-check-circle"></i> APPLIED
+                        </button>
+                        @else
+                        <form action="{{ route('jobApplication.apply', $job->job_posting_id) }}" method="POST" class="shrink-0">
+                            @csrf
+                            <button type="submit" class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white px-4 py-1.5 rounded-md font-bold text-xs transition-colors">
+                                APPLY
+                            </button>
+                        </form>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @empty
+            <div class="md:col-span-3 bg-white rounded-2xl shadow-md border border-gray-100 p-10 text-center text-gray-500">
+                <i class="fa-solid fa-magnifying-glass text-3xl mb-3 block text-gray-300"></i>
+                <p class="mb-4">No job matches yet. Complete your resume so we can start recommending jobs for you.</p>
+                <a href="{{ route('resume.build') }}" class="inline-block px-6 py-2 rounded-md bg-[#0E0F3B] text-white text-sm font-bold uppercase hover:bg-[#1D264F] transition-colors">
+                    Build Your Resume
+                </a>
+            </div>
+            @endforelse
 
         </div>
     </section>
+
+    @include('partials.job-detail-modal')
 
     <section class="AlumniServices orange-gradient py-16 px-6 text-white text-center">
         <div class="max-w-4xl mx-auto">
@@ -225,7 +279,7 @@
                         <i class="fa-solid fa-users text-3xl text-white"></i>
                     </div>
                     <span class="text-xs font-bold uppercase mb-4 text-center">Community Updates</span>
-                    <a href="#" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
+                    <a href="{{ route('notices.announcements') }}" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
                         View More
                     </a>
                 </div>
@@ -235,7 +289,7 @@
                         <i class="fa-solid fa-address-book text-3xl text-white"></i>
                     </div>
                     <span class="text-xs font-bold uppercase mb-4 text-center">Alumni Directory</span>
-                    <a href="#" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
+                    <a href="{{ route('alumni.index') }}" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
                         View More
                     </a>
                 </div>
@@ -245,7 +299,7 @@
                         <i class="fa-solid fa-briefcase text-3xl text-white"></i>
                     </div>
                     <span class="text-xs font-bold uppercase mb-4 text-center">Job Board</span>
-                    <a href="#" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
+                    <a href="{{ route('jobPosting.jobBoard') }}" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
                         View More
                     </a>
                 </div>
@@ -255,7 +309,7 @@
                         <i class="fa-solid fa-comments text-3xl text-white"></i>
                     </div>
                     <span class="text-xs font-bold uppercase mb-4 text-center">Network Connect</span>
-                    <a href="#" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
+                    <a href="{{ route('messages.index') }}" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
                         View More
                     </a>
                 </div>

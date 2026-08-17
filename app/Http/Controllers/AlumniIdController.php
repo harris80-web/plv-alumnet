@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AlumniId;
 use App\Models\AlumniYearbook;
+use App\Models\UserNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -59,6 +60,7 @@ class AlumniIdController extends Controller
 
         $alumniId = AlumniId::findOrFail($id);
         $alumniId->markNext();
+        $this->notifyStatusChange($alumniId);
 
         return back()->with('success', 'Alumni ID status updated to ' . $alumniId->statusLabel() . '.');
     }
@@ -74,6 +76,7 @@ class AlumniIdController extends Controller
 
         $alumniId = AlumniId::findOrFail($id);
         $alumniId->setStatus($validated['status']);
+        $this->notifyStatusChange($alumniId);
 
         return back()->with('success', 'Alumni ID status updated to ' . $alumniId->statusLabel() . '.');
     }
@@ -88,6 +91,8 @@ class AlumniIdController extends Controller
             'status' => ['required', 'in:' . implode(',', AlumniId::STATUSES)],
         ]);
 
+        $alumniIds = AlumniId::whereIn('id', $validated['ids'])->get();
+
         $count = AlumniId::whereIn('id', $validated['ids'])->update([
             'status' => $validated['status'],
             'status_updated_at' => now(),
@@ -96,6 +101,20 @@ class AlumniIdController extends Controller
 
         $label = AlumniId::statusLabels()[$validated['status']];
 
+        foreach ($alumniIds as $alumniId) {
+            $this->notifyStatusChange($alumniId, $label);
+        }
+
         return back()->with('success', "{$count} alumni ID(s) updated to {$label}.");
+    }
+
+    private function notifyStatusChange(AlumniId $alumniId, ?string $label = null): void
+    {
+        UserNotification::create([
+            'user_id' => $alumniId->alumnus_id,
+            'type' => 'alumni_id_status',
+            'title' => 'Alumni ID status updated',
+            'body' => 'Your Alumni ID status is now "' . ($label ?? $alumniId->statusLabel()) . '".',
+        ]);
     }
 }

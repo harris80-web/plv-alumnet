@@ -36,6 +36,23 @@ class JobMatchService
     }
 
     /**
+     * Recomputes the deterministic score for one alumnus against every
+     * currently open+approved posting. Cheap (no external API calls), so
+     * this is safe to call synchronously right after a resume save — the
+     * alumnus sees fresh "Job Matches For You" rankings immediately instead
+     * of waiting for the next scheduled job-matches:recompute run. AI
+     * enrichment (semantic score/explanation) is layered on separately by
+     * that scheduled command, not here.
+     *
+     * @return \Illuminate\Support\Collection<int, JobMatch>
+     */
+    public function refreshForAlumnus(Alumnus $alumnus)
+    {
+        return JobPosting::approved()->open()->get()
+            ->map(fn (JobPosting $job) => $this->scoreFor($job, $alumnus));
+    }
+
+    /**
      * Weighted overlap between the alumnus's skills and the job's required
      * skills (job_posting_skills.weight, 1-5). A job with no skills
      * configured gets full credit — can't penalize for an unspecified

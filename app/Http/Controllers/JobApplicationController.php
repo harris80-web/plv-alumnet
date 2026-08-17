@@ -9,6 +9,7 @@ use App\Mail\ShortlistApplicantMail;
 use App\Models\Alumnus;
 use App\Models\JobApplication;
 use App\Models\JobPosting;
+use App\Models\UserNotification;
 use App\Services\JobMatchService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -172,6 +173,12 @@ class JobApplicationController extends Controller
         $alumnus->save();
 
         Mail::to($alumnus->user->user_email)->queue(new HireApplicantMail($application));
+        UserNotification::create([
+            'user_id' => $alumnus->user_id,
+            'type' => 'job_application_hired',
+            'title' => 'Congratulations — you were hired!',
+            'body' => "You've been hired for \"{$application->job->job_posting_title}\" at {$application->job->job_posting_company}.",
+        ]);
     }
 
     public function hireApplicant($applicationId)
@@ -192,6 +199,12 @@ class JobApplicationController extends Controller
         $application->application_status = 'declined';
         $application->save();
         Mail::to($application->alumnus->user->user_email)->queue(new DeclineApplicantMail($application));
+        UserNotification::create([
+            'user_id' => $application->alumnus_id,
+            'type' => 'job_application_declined',
+            'title' => 'Application update',
+            'body' => "Your application for \"{$application->job->job_posting_title}\" at {$application->job->job_posting_company} was not selected this time.",
+        ]);
     }
 
     public function declineApplicant($applicationId)
@@ -207,6 +220,12 @@ class JobApplicationController extends Controller
         $application->application_status = 'shortlisted';
         $application->save();
         Mail::to($application->alumnus->user->user_email)->queue(new ShortlistApplicantMail($application));
+        UserNotification::create([
+            'user_id' => $application->alumnus_id,
+            'type' => 'job_application_shortlisted',
+            'title' => "You've been shortlisted!",
+            'body' => "You've been shortlisted for \"{$application->job->job_posting_title}\" at {$application->job->job_posting_company}.",
+        ]);
     }
 
     public function shortlistApplicant($applicationId)

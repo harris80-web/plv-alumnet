@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Mail\DeactEmployerMail;
 use App\Models\Employer;
+use App\Models\JobPosting;
+use App\Models\Notice;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -13,6 +16,56 @@ use Illuminate\Support\Facades\Storage;
 
 class EmployerController extends Controller
 {
+    /** How many days out counts as "expiring soon" for the dashboard stat tile. */
+    private const EXPIRING_SOON_DAYS = 7;
+
+    /**
+     * Employer dashboard — was a closure returning a static view with zero
+     * data (see routes/web.php history); every number/list here was
+     * previously hardcoded in the blade file.
+     */
+    public function dashboard()
+    {
+        $user = Auth::user();
+        $employer = $user->employer;
+        $employerId = $user->user_id;
+
+        $stats = [
+            'activePostings' => JobPosting::where('user_id', $employerId)->approved()->open()->count(),
+            // Mirrors the same $job->applicants->where('pivot.is_read', false)
+            // convention used on the My Job Postings page (general/jobPostings.blade.php).
+            'unreadApplicants' => DB::table('job_applications')
+                ->join('job_postings', 'job_postings.job_posting_id', '=', 'job_applications.job_id')
+                ->where('job_postings.user_id', $employerId)
+                ->where('job_applications.is_read', false)
+                ->count(),
+            'expiringSoon' => JobPosting::where('user_id', $employerId)->approved()->open()
+                ->whereBetween('job_closing_date', [now()->toDateString(), now()->addDays(self::EXPIRING_SOON_DAYS)->toDateString()])
+                ->count(),
+        ];
+
+        // Active (approved + not yet closed) postings first, then ranked by
+        // applicant count within each group — an active post with 20
+        // applicants should surface before a closed one with 2, but a
+        // closed post with 20 shouldn't outrank an active post with 3
+        // either. All of the employer's postings are included, not just
+        // the active ones.
+        $jobPostings = JobPosting::where('user_id', $employerId)
+            ->withCount('applications')
+            ->orderByRaw('CASE WHEN job_approved = 1 AND job_closing_date >= ? THEN 0 ELSE 1 END', [now()->toDateString()])
+            ->orderByDesc('applications_count')
+            ->get();
+
+        $upcomingEvents = Notice::category('event')
+            ->visibleToEmployer()
+            ->upcoming()
+            ->orderBy('event_datetime')
+            ->take(3)
+            ->get();
+
+        return view('employer.dashboard', compact('employer', 'stats', 'jobPostings', 'upcomingEvents'));
+    }
+
     /**
      * Display a listing of the resource.
      */

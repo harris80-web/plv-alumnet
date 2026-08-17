@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Alumnus;
 use App\Models\Notice;
+use App\Models\UserNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,6 +21,11 @@ class NoticeController extends Controller
     private function authorizeAlumnus(): void
     {
         abort_unless(Auth::user()->user_role === 'alumni', 403);
+    }
+
+    private function authorizeEmployer(): void
+    {
+        abort_unless(Auth::user()->user_role === 'employer', 403);
     }
 
     public function index()
@@ -95,7 +102,7 @@ class NoticeController extends Controller
         }
 
         try {
-            Notice::create($this->preparedData($validated) + [
+            $notice = Notice::create($this->preparedData($validated) + [
                 'thumbnail' => $thumbnailPath,
                 'created_by' => Auth::id(),
             ]);
@@ -106,7 +113,38 @@ class NoticeController extends Controller
             return back()->withErrors(['error' => 'Failed to add notice. Please try again.']);
         }
 
+        if (in_array($notice->recipient, ['alumni', 'everyone'], true)) {
+            $this->notifyAllAlumni($notice);
+        }
+
         return back()->with('success', 'Notice added successfully.');
+    }
+
+    /**
+     * Bulk-inserted (not looped Eloquent::create) since this can fan out to
+     * every alumnus in the system — a single INSERT keeps "admin publishes a
+     * notice" from turning into hundreds of individual queries.
+     */
+    private function notifyAllAlumni(Notice $notice): void
+    {
+        $alumnusIds = Alumnus::pluck('user_id');
+        if ($alumnusIds->isEmpty()) {
+            return;
+        }
+
+        $isAnnouncement = $notice->category === 'announcement';
+        $now = now();
+
+        $rows = $alumnusIds->map(fn ($userId) => [
+            'user_id' => $userId,
+            'type' => $isAnnouncement ? 'new_announcement' : 'new_' . $notice->category,
+            'title' => $isAnnouncement ? 'New announcement' : 'New ' . $notice->categoryLabel() . ' posted',
+            'body' => $notice->title,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ])->all();
+
+        UserNotification::insert($rows);
     }
 
     public function update(Request $request, Notice $notice)
@@ -172,8 +210,9 @@ class NoticeController extends Controller
             ->withQueryString();
 
         $interestedNoticeIds = Auth::user()->alumnus->interestedNotices->pluck('id')->all();
+        $user = Auth::user();
 
-        return view('alumni.eventsSeminars', compact('notices', 'activeTab', 'interestedNoticeIds'));
+        return view('alumni.eventsSeminars', compact('notices', 'activeTab', 'interestedNoticeIds', 'user'));
     }
 
     public function alumniAnnouncements(Request $request)
@@ -186,7 +225,54 @@ class NoticeController extends Controller
             ->paginate(6)
             ->withQueryString();
 
-        return view('alumni.announcements', compact('notices'));
+        $user = Auth::user();
+
+        return view('alumni.announcements', compact('notices', 'user'));
+    }
+
+    /**
+     * Employer counterpart to alumniEventsAndSeminars() — same view
+     * (resources/views/alumni/eventsSeminars.blade.php is role-aware: it
+     * switches header/footer and hides the alumni-only "Interested" button
+     * based on $user->user_role), just scoped to notices visible to the
+     * general/employer audience instead of alumni, and with no
+     * interestedNoticeIds (employers have no interestedNotices relation —
+     * the view never reads that array for a non-alumni user, but it still
+     * needs to exist to avoid an undefined-variable error).
+     */
+    public function employerEventsAndSeminars(Request $request)
+    {
+        $this->authorizeEmployer();
+
+        $activeTab = $request->query('tab') === 'seminar' ? 'seminar' : 'events';
+        $category = $activeTab === 'seminar' ? 'seminar' : 'event';
+
+        $notices = Notice::category($category)
+            ->visibleToEmployer()
+            ->orderBy('event_datetime')
+            ->paginate(6)
+            ->withQueryString();
+
+        $user = Auth::user();
+        $interestedNoticeIds = [];
+
+        return view('alumni.eventsSeminars', compact('notices', 'activeTab', 'interestedNoticeIds', 'user'));
+    }
+
+    /** Employer counterpart to alumniAnnouncements() — see employerEventsAndSeminars() for why the same view is reused. */
+    public function employerAnnouncements(Request $request)
+    {
+        $this->authorizeEmployer();
+
+        $notices = Notice::category('announcement')
+            ->visibleToEmployer()
+            ->orderByDesc('event_datetime')
+            ->paginate(6)
+            ->withQueryString();
+
+        $user = Auth::user();
+
+        return view('alumni.announcements', compact('notices', 'user'));
     }
 
     /** Toggles the current alumnus's interest — one click marks/unmarks, no separate "cancel" flow needed. */

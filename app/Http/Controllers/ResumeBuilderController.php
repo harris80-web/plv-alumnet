@@ -10,6 +10,7 @@ use App\Models\JobApplication;
 use App\Models\Skill;
 use App\Models\User;
 use App\Services\GeminiResumeParser;
+use App\Services\JobMatchService;
 use App\Services\ResumeTextParser;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -234,6 +235,12 @@ class ResumeBuilderController extends Controller
         });
 
         $alumnus = $alumnus->fresh(['skills', 'experiences', 'certifications']);
+
+        // Deterministic-only (no Gemini call) so saving the resume stays
+        // fast — the dashboard's job recommendations are current for this
+        // alumnus right away instead of waiting for the hourly schedule.
+        // AI enrichment catches up on the next job-matches:recompute --ai run.
+        app(JobMatchService::class)->refreshForAlumnus($alumnus);
 
         return response()->json([
             'resume_completeness' => $alumnus->alumnus_resume_completeness,

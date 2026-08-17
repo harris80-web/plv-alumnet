@@ -43,7 +43,7 @@
 
 <body>
     @php $current_page = Route::currentRouteName(); @endphp
-    @include('partials.header-alumni')
+    @include($user->user_role === 'employer' ? 'partials.header-employer' : 'partials.header-alumni')
 
     <section class="HeroSection h-[200px] flex items-end text-white shadow-lg">
         <div class="max-w-6xl w-full my-7 ml-10">
@@ -52,11 +52,12 @@
         </div>
     </section>
 
+    @php $eventsSeminarsRoute = $user->user_role === 'employer' ? 'notices.employerEventsSeminars' : 'notices.eventsSeminars'; @endphp
     <nav class="bg-white border-b sticky top-0 z-10 shadow-md">
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-start space-x-8 uppercase text-sm font-bold tracking-wide">
-                <a href="{{ route('notices.eventsSeminars', ['tab' => 'events']) }}" class="py-4 transition-all {{ $activeTab === 'events' ? 'tab-active' : 'text-gray-500 hover:text-orange-600' }}">Events</a>
-                <a href="{{ route('notices.eventsSeminars', ['tab' => 'seminar']) }}" class="py-4 transition-all {{ $activeTab === 'seminar' ? 'tab-active' : 'text-gray-500 hover:text-orange-600' }}">Seminars</a>
+                <a href="{{ route($eventsSeminarsRoute, ['tab' => 'events']) }}" class="py-4 transition-all {{ $activeTab === 'events' ? 'tab-active' : 'text-gray-500 hover:text-orange-600' }}">Events</a>
+                <a href="{{ route($eventsSeminarsRoute, ['tab' => 'seminar']) }}" class="py-4 transition-all {{ $activeTab === 'seminar' ? 'tab-active' : 'text-gray-500 hover:text-orange-600' }}">Seminars</a>
             </div>
         </div>
     </nav>
@@ -88,8 +89,10 @@
                 data-speaker-name="{{ $notice->speaker_name }}"
                 data-speaker-topic="{{ $notice->speaker_topic }}"
                 data-description="{{ $notice->description }}"
+                @if ($user->user_role === 'alumni')
                 data-interested="{{ $isInterested ? '1' : '0' }}"
-                data-toggle-url="{{ route('notices.toggleInterest', $notice->id) }}">
+                data-toggle-url="{{ route('notices.toggleInterest', $notice->id) }}"
+                @endif>
                 <div class="relative h-40 bg-cover bg-center shrink-0" style="background-image:url('{{ $notice->thumbnailUrl() }}')">
                     <div class="absolute inset-0 bg-[#0E0F3B]/25"></div>
                     <span class="absolute top-3 left-3 text-[9px] font-bold uppercase px-2 py-1 rounded-full {{ $notice->categoryBadgeClass() }}">
@@ -123,6 +126,7 @@
                         <div class="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
                     </div>
 
+                    @if ($user->user_role === 'alumni')
                     <div class="mt-auto pt-3 border-t border-gray-100">
                         <form action="{{ route('notices.toggleInterest', $notice->id) }}" method="POST" onclick="event.stopPropagation()">
                             @csrf
@@ -133,6 +137,7 @@
                             </button>
                         </form>
                     </div>
+                    @endif
                 </div>
             </div>
             @endforeach
@@ -145,7 +150,7 @@
 
     @include('partials.notice-detail-modal')
 
-    @include('partials.footer-alumni')
+    @include($user->user_role === 'employer' ? 'partials.footer-employer' : 'partials.footer-alumni')
 </body>
 
 </html>

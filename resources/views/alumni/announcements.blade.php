@@ -38,7 +38,7 @@
 
 <body>
     @php $current_page = Route::currentRouteName(); @endphp
-    @include('partials.header-alumni')
+    @include($user->user_role === 'employer' ? 'partials.header-employer' : 'partials.header-alumni')
 
     <section class="HeroSection h-[200px] flex items-end text-white shadow-lg">
         <div class="max-w-6xl w-full my-7 ml-10">
@@ -101,7 +101,7 @@
 
     @include('partials.notice-detail-modal')
 
-    @include('partials.footer-alumni')
+    @include($user->user_role === 'employer' ? 'partials.footer-employer' : 'partials.footer-alumni')
 </body>
 
 </html>

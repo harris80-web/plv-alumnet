@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AlumniDashboardController;
 use App\Http\Controllers\AlumniIdController;
 use App\Http\Controllers\AlumniYearbookController;
 use App\Http\Controllers\AlumnusController;
@@ -119,14 +120,9 @@ Route::get('/registrar/dashboard', function () {
     return view('registrar.dashboard');
 })->middleware(['auth'])->name('registrar.dashboard');
 
-Route::get('/employer/dashboard', function () {
-    return view('employer.dashboard');
-})->middleware(['auth'])->name('employer.dashboard');
+Route::get('/employer/dashboard', [EmployerController::class, 'dashboard'])->middleware(['auth'])->name('employer.dashboard');
 
-Route::get('/alumni/dashboard', function () {
-    $testimonials = Testimonial::where('testimonial_post', true)->latest()->get();
-    return view('alumni.dashboard', compact('testimonials'));
-})->middleware(['auth'])->name('alumnus.dashboard');
+Route::get('/alumni/dashboard', [AlumniDashboardController::class, 'index'])->middleware(['auth'])->name('alumnus.dashboard');
 
 Route::get('/superAdmin/userManagement', [UserController::class, 'showUsers'])->name('superAdmin.userManagement');
 
@@ -145,6 +141,8 @@ Route::delete('/notices/{notice}', [NoticeController::class, 'destroy'])->name('
 
 Route::get('/alumni/events-seminars', [NoticeController::class, 'alumniEventsAndSeminars'])->name('notices.eventsSeminars')->middleware('auth');
 Route::get('/alumni/announcements', [NoticeController::class, 'alumniAnnouncements'])->name('notices.announcements')->middleware('auth');
+Route::get('/employer/events-seminars', [NoticeController::class, 'employerEventsAndSeminars'])->name('notices.employerEventsSeminars')->middleware('auth');
+Route::get('/employer/announcements', [NoticeController::class, 'employerAnnouncements'])->name('notices.employerAnnouncements')->middleware('auth');
 Route::post('/notices/{notice}/toggleInterest', [NoticeController::class, 'toggleInterest'])->name('notices.toggleInterest')->middleware('auth');
 
 Route::get('/faqManagement', [FaqController::class, 'index'])->name('faqs.management')->middleware('auth');
@@ -238,6 +236,7 @@ Route::post('/jobBoard/bulkShortlistApplicants/{jobPostingId}', [JobApplicationC
 Route::resource('job-postings', JobPostingController::class);
 Route::get('/jobBoard', [JobPostingController::class, 'showJobBoard'])->name('jobPosting.jobBoard');
 Route::get('/jobBoard/bookmarks', [JobPostingController::class, 'showBookmarks'])->name('jobPosting.bookmarks');
+Route::get('/jobBoard/myApplications', [JobPostingController::class, 'showMyApplications'])->name('jobPosting.myApplications')->middleware('auth');
 Route::post('/jobBoard/addJobPost/{id}', [JobPostingController::class, 'addJobPost'])->name('jobPosting.addJobPost');
 Route::post('/jobBoard/toggleBookmark/{jobPostingId}', [JobBookmarkController::class, 'toggle'])->name('jobBookmark.toggle');
 Route::post('/job-postings/upload-image', [JobPostingController::class, 'uploadDescriptionImage'])->name('jobPosting.uploadDescriptionImage');

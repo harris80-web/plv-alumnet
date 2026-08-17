@@ -6,9 +6,12 @@ use App\Mail\ApproveJobPostMail;
 use App\Mail\DeclineJobPostMail;
 use App\Mail\DeleteJobPostMail;
 use App\Models\Industry;
+use App\Models\JobApplication;
 use App\Models\JobPosting;
 use App\Models\Program;
 use App\Models\Skill;
+use App\Models\User;
+use App\Models\UserNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -76,12 +79,15 @@ class JobPostingController extends Controller
         //
     }
 
+    /** Blended-score floor (see JobMatch::blendedScore()) above which a job counts as "recommended" on the board. */
+    private const RECOMMENDED_SCORE_THRESHOLD = 50;
+
     public function showJobBoard(Request $request)
     {
         $user = Auth::user();
 
-        $jobPostings = $this->filteredJobPostingsQuery($request)
-            ->latest('updated_at')
+        $jobPostings = $this->filteredJobPostingsQuery($request, $user)
+            ->latest('job_postings.updated_at')
             ->paginate(6)
             ->withQueryString();
 
@@ -97,9 +103,9 @@ class JobPostingController extends Controller
         $user = Auth::user();
         abort_unless($user && $user->user_role === 'alumni', 403);
 
-        $jobPostings = $this->filteredJobPostingsQuery($request)
+        $jobPostings = $this->filteredJobPostingsQuery($request, $user)
             ->whereHas('bookmarkedBy', fn ($q) => $q->where('job_bookmarks.alumnus_id', $user->user_id))
-            ->latest('updated_at')
+            ->latest('job_postings.updated_at')
             ->paginate(6)
             ->withQueryString();
 
@@ -107,14 +113,70 @@ class JobPostingController extends Controller
     }
 
     /**
+     * "My Applications" tab — every job this alumnus has applied to,
+     * regardless of whether the posting is still open/approved (a closed or
+     * since-declined posting shouldn't vanish from someone's own application
+     * history), sorted by when they applied (latest first). Unlike
+     * showJobBoard()/showBookmarks() this doesn't start from
+     * filteredJobPostingsQuery() — that base query's active()/approved()
+     * scope would hide exactly the applications most worth checking on
+     * (e.g. one still pending on a job that's since closed) — but it does
+     * reuse the same search/program/job_type/date_posted filters via
+     * applySearchFilters() so the search bar behaves the same on every tab.
+     */
+    public function showMyApplications(Request $request)
+    {
+        $user = Auth::user();
+        abort_unless($user && $user->user_role === 'alumni', 403);
+
+        $query = JobPosting::with(['skills', 'programs', 'industry', 'user'])
+            ->whereHas('applications', fn ($q) => $q->where('alumnus_id', $user->user_id))
+            ->addSelect(['applied_at' => JobApplication::selectRaw('application_date')
+                ->whereColumn('job_applications.job_id', 'job_postings.job_posting_id')
+                ->where('job_applications.alumnus_id', $user->user_id)
+                ->limit(1),
+            ]);
+
+        $jobPostings = $this->applySearchFilters($query, $request)
+            ->orderByDesc('applied_at')
+            ->paginate(6)
+            ->withQueryString();
+
+        return view('general.jobBoard', $this->jobBoardViewData($request, $user, $jobPostings, 'applications'));
+    }
+
+    /**
      * Shared base query behind both the main job board and the bookmarks
      * tab, so "search/filter" behaves identically no matter which list
-     * you're looking at.
+     * you're looking at. For a logged-in alumnus, also pulls in their
+     * job_matches blended score as a `match_score` column (via a correlated
+     * subquery, not a join, so it can't collide with job_postings' own
+     * created_at/updated_at columns) and sorts recommended jobs first —
+     * job-post-card.blade.php uses the same column + threshold to show the
+     * "Recommended" badge, so the badge always matches the ordering.
      */
-    private function filteredJobPostingsQuery(Request $request)
+    private function filteredJobPostingsQuery(Request $request, ?\App\Models\User $user = null)
     {
         $query = JobPosting::active()->approved()->with(['skills', 'programs', 'industry', 'user']);
 
+        if ($user && $user->user_role === 'alumni' && $user->alumnus) {
+            $query->addSelect(['match_score' => \App\Models\JobMatch::selectRaw('COALESCE(score * 0.7 + ai_score * 0.3, score)')
+                ->whereColumn('job_matches.job_posting_id', 'job_postings.job_posting_id')
+                ->where('job_matches.alumnus_id', $user->user_id)
+                ->limit(1),
+            ])->orderByRaw('match_score IS NULL, match_score DESC');
+        }
+
+        return $this->applySearchFilters($query, $request);
+    }
+
+    /**
+     * search/program/job_type/date_posted filters — shared by every job
+     * listing query (board, bookmarks, my-applications) so filtering
+     * behaves identically no matter which tab you're on.
+     */
+    private function applySearchFilters($query, Request $request)
+    {
         if ($search = trim((string) $request->input('search'))) {
             $query->where(function ($q) use ($search) {
                 $q->where('job_posting_title', 'like', "%{$search}%")
@@ -164,8 +226,9 @@ class JobPostingController extends Controller
         }
 
         $filters = $request->only(['search', 'program', 'job_type', 'date_posted']);
+        $recommendedThreshold = self::RECOMMENDED_SCORE_THRESHOLD;
 
-        return compact('jobPostings', 'programs', 'industries', 'user', 'appliedJobs', 'bookmarkedIds', 'activeTab', 'filters');
+        return compact('jobPostings', 'programs', 'industries', 'user', 'appliedJobs', 'bookmarkedIds', 'activeTab', 'filters', 'recommendedThreshold');
     }
 
     public function addJobPost(Request $request, $id)
@@ -195,8 +258,10 @@ class JobPostingController extends Controller
         $selectedPrograms = array_unique(array_filter($request->program));
         $description = Purifier::clean($validated['job_posting_description'], 'job_description');
 
+        $jobPost = null;
+
         try {
-            DB::transaction(function () use ($validated, $jobImagePath, $id, $selectedPrograms, $description) {
+            DB::transaction(function () use ($validated, $jobImagePath, $id, $selectedPrograms, $description, &$jobPost) {
                 $jobPost = JobPosting::create([
                     'job_posting_image' => $jobImagePath,
                     'job_posting_title' => $validated['job_posting_title'],
@@ -221,12 +286,47 @@ class JobPostingController extends Controller
             return back()->withErrors($e->getMessage());
         }
 
+        $this->notifyJobPostingSubmitted($jobPost, Auth::user()->user_role);
+
         if(Auth::user()->user_role === 'employer') {
             return redirect()->route('jobPosting.jobBoard')->with('success', 'Job posting added successfully!');
         } else {
             return redirect()->route('jobPosting.jobManagement')->with('success', 'Job posting added successfully!');
         }
-        
+
+    }
+
+    /**
+     * Mirrors showJobManagement()'s cross-review split: each staff role
+     * reviews jobs from employers and from the *other* staff role, never
+     * their own — so notification recipients follow the same rule (an
+     * employer's posting alerts both staff roles, an admin's posting alerts
+     * only super_admin, and vice versa).
+     */
+    private function notifyJobPostingSubmitted(JobPosting $jobPost, string $submitterRole): void
+    {
+        $notifyRoles = match ($submitterRole) {
+            'admin' => ['super_admin'],
+            'super_admin' => ['admin'],
+            default => ['admin', 'super_admin'],
+        };
+
+        $recipientIds = User::whereIn('user_role', $notifyRoles)->pluck('user_id');
+        if ($recipientIds->isEmpty()) {
+            return;
+        }
+
+        $now = now();
+        $rows = $recipientIds->map(fn ($userId) => [
+            'user_id' => $userId,
+            'type' => 'job_posting_submitted',
+            'title' => 'New job posting awaiting approval',
+            'body' => "\"{$jobPost->job_posting_title}\" at {$jobPost->job_posting_company} was submitted for review.",
+            'created_at' => $now,
+            'updated_at' => $now,
+        ])->all();
+
+        UserNotification::insert($rows);
     }
 
     public function showMyJobPosts(Request $request, $id)
@@ -377,6 +477,12 @@ class JobPostingController extends Controller
         $job = JobPosting::findOrFail($id);
         $job->update(['job_approved' => true]);
         Mail::to($job->employer->user->user_email)->send(new ApproveJobPostMail($job));
+        UserNotification::create([
+            'user_id' => $job->user_id,
+            'type' => 'job_posting_approved',
+            'title' => 'Job posting approved',
+            'body' => "Your job posting \"{$job->job_posting_title}\" was approved and is now live on the job board.",
+        ]);
         return redirect()->route('jobPosting.jobManagement')->with('success', 'Job posting approved successfully!');
     }
 
@@ -389,6 +495,12 @@ class JobPostingController extends Controller
         ]);
         Log::info("Job posting with ID {$job->job_posting_id}, from: {$job->user->user_first_name} {$job->user->user_last_name} declined. Reason: {$validated['decline-reason']}");
         Mail::to($job->employer->user->user_email)->send(new DeclineJobPostMail($job));
+        UserNotification::create([
+            'user_id' => $job->user_id,
+            'type' => 'job_posting_rejected',
+            'title' => 'Job posting rejected',
+            'body' => "Your job posting \"{$job->job_posting_title}\" was not approved. Reason: {$validated['decline-reason']}",
+        ]);
         $job->delete();
         return redirect()->route('jobPosting.jobManagement')->with('success', 'Job posting declined successfully!');
     }

@@ -101,6 +101,12 @@ class Notice extends Model
         return $query->whereIn('recipient', ['alumni', 'everyone']);
     }
 
+    /** Employer-facing pages only show notices meant for the general audience (not alumni-only). */
+    public function scopeVisibleToEmployer($query)
+    {
+        return $query->whereIn('recipient', ['general', 'everyone']);
+    }
+
     public function scopeUpcoming($query)
     {
         return $query->where('event_datetime', '>=', now());

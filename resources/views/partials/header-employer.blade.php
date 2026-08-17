@@ -30,8 +30,8 @@
                 HOME
             </a>
 
-            <a href="announcements_employer.php"
-                class="{{ $current_page === 'general.announcements' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+            <a href="{{ route('notices.employerAnnouncements') }}"
+                class="{{ $current_page === 'notices.employerAnnouncements' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                 ANNOUNCEMENTS
             </a>
 

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Testimonial;
+use App\Models\User;
+use App\Models\UserNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -86,9 +88,32 @@ class TestimonialController extends Controller
         }
         $testimonials = Testimonial::all();
 
+        $this->notifyStaffOfNewTestimonial($id);
 
         // Redirect back with a success message
         return redirect()->route('users.dashboardRedirect', compact('testimonials'))->with('success', 'Your testimonial has been submitted successfully!');
+    }
+
+    private function notifyStaffOfNewTestimonial($submitterId): void
+    {
+        $submitter = User::find($submitterId);
+        $recipientIds = User::whereIn('user_role', ['admin', 'super_admin'])->pluck('user_id');
+        if ($recipientIds->isEmpty()) {
+            return;
+        }
+
+        $submitterName = $submitter ? "{$submitter->user_first_name} {$submitter->user_last_name}" : 'An alumnus';
+        $now = now();
+        $rows = $recipientIds->map(fn ($userId) => [
+            'user_id' => $userId,
+            'type' => 'testimonial_submitted',
+            'title' => 'New testimonial submitted',
+            'body' => "{$submitterName} submitted a testimonial awaiting review.",
+            'created_at' => $now,
+            'updated_at' => $now,
+        ])->all();
+
+        UserNotification::insert($rows);
     }
 
     public function showTestimonials()

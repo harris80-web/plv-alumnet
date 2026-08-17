@@ -6,6 +6,8 @@ use App\Models\ChatbotSetting;
 use App\Models\ChatTicket;
 use App\Models\ChatTicketMessage;
 use App\Models\Faq;
+use App\Models\User;
+use App\Models\UserNotification;
 use App\Services\GeminiChatbotService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -155,6 +157,10 @@ class ChatbotController extends Controller
                     : "I'm not able to answer that — connecting you with a member of our team. Someone will be with you shortly.",
             ]);
             $ticket->escalate();
+
+            if ($settings->live_agent_notification) {
+                $this->notifyAgentsOfEscalation($ticket);
+            }
         } else {
             ChatTicketMessage::create([
                 'ticket_id' => $ticket->ticket_id,
@@ -164,6 +170,34 @@ class ChatbotController extends Controller
                     : "I'm sorry, I don't have an answer for that right now. Please try the FAQ page or check back later.",
             ]);
         }
+    }
+
+    /**
+     * Gated on ChatbotSetting::live_agent_notification — the setting already
+     * existed (and was already validated in ChatTicketController::updateSettings())
+     * but nothing ever read it until now. Notifies the same pool ChatTicketController
+     * treats as available agents (see $agentsOnline there): admin + super_admin.
+     */
+    private function notifyAgentsOfEscalation(ChatTicket $ticket): void
+    {
+        $recipientIds = User::whereIn('user_role', ['admin', 'super_admin'])->pluck('user_id');
+        if ($recipientIds->isEmpty()) {
+            return;
+        }
+
+        $requester = $ticket->user;
+        $requesterName = $requester ? "{$requester->user_first_name} {$requester->user_last_name}" : 'A user';
+        $now = now();
+        $rows = $recipientIds->map(fn ($userId) => [
+            'user_id' => $userId,
+            'type' => 'live_agent_escalation',
+            'title' => 'Live agent requested',
+            'body' => "{$requesterName} needs help in the chatbot and is waiting for a live agent.",
+            'created_at' => $now,
+            'updated_at' => $now,
+        ])->all();
+
+        UserNotification::insert($rows);
     }
 
     /**

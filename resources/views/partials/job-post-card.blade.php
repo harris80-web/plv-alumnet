@@ -2,6 +2,11 @@
     $isAlumni = $user && $user->user_role === 'alumni';
     $hasApplied = $isAlumni && isset($appliedJobs) && $appliedJobs->has($job->job_posting_id);
     $isBookmarked = $isAlumni && in_array($job->job_posting_id, $bookmarkedIds ?? [], true);
+    // match_score comes from JobPostingController::filteredJobPostingsQuery()'s
+    // correlated subquery (alumni only) — same blended score / threshold the
+    // board sorts by, so this badge always agrees with the ordering.
+    $isRecommended = $isAlumni && isset($job->match_score) && $job->match_score !== null
+        && (float) $job->match_score >= ($recommendedThreshold ?? 50);
 @endphp
 
 <div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row relative hover:shadow-lg transition-shadow md:min-h-[340px]">
@@ -24,6 +29,11 @@
         <img src="{{ asset('storage/'.$job->job_posting_image) }}"
             class="object-cover w-full h-full opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-300">
         <div class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>
+        @if ($isRecommended)
+        <span class="absolute top-2 left-2 z-10 bg-[#ED7A07] text-white text-[10px] font-bold uppercase px-3 py-1 rounded-full shadow-md">
+            <i class="fas fa-star mr-1"></i> Recommended
+        </span>
+        @endif
         <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
             <span class="bg-white/90 text-[#1D264F] text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
                 <i class="fas fa-eye mr-1"></i> VIEW DETAILS

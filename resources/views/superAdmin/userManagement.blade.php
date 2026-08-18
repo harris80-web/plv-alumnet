@@ -581,6 +581,13 @@ $current_page = 'user_management';
                             </button>
                         </div>
                         <div class="flex gap-2">
+                            <!-- Bulk Deactivate -->
+                            <button type="button" id="bulkDeactivateAlumniBtn" onclick="openBulkDeactivateAlumniModal()"
+                                class="hidden bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg text-sm font-semibold items-center gap-2 shadow-sm transition-all">
+                                <i data-lucide="user-minus" class="w-4 h-4"></i>
+                                DEACTIVATE SELECTED (<span id="bulkDeactivateAlumniCount">0</span>)
+                            </button>
+
                             <!-- Dropdown Container -->
                             <div class="relative inline-block text-left" id="alumniDropdown">
                                 <button onclick="toggleDropdown()"
@@ -592,7 +599,7 @@ $current_page = 'user_management';
 
                                 <!-- Dropdown Menu -->
                                 <div id="dropdownMenu"
-                                    class="hidden absolute left-0 mt-2 w-48 origin-top-left rounded-md bg-white shadow-lg focus:outline-none z-50 ">
+                                    class="hidden absolute left-0 mt-2 w-52 origin-top-left rounded-md bg-white shadow-lg focus:outline-none z-50 ">
                                     <div class="py-1">
                                         <!-- Option 1: Manual Add -->
                                         <button onclick="openAddModal()"
@@ -607,20 +614,31 @@ $current_page = 'user_management';
                                             <i data-lucide="file-up" class="w-4 h-4"></i>
                                             Import CSV File
                                         </button>
+
+                                        <!-- Option 3: Download Template -->
+                                        <a href="{{ route('users.downloadAlumniCsvTemplate') }}"
+                                            class="flex items-center gap-2 px-4 py-2 text-sm text-[#0E0F3B] hover:bg-gray-100 w-full text-left">
+                                            <i data-lucide="file-down" class="w-4 h-4"></i>
+                                            Download CSV Template
+                                        </a>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Hidden File Input for CSV -->
-                            <input type="file" id="csvFileInput" accept=".csv" class="hidden"
-                                onchange="handleFileSelect(this)">
+                            <!-- Hidden form + file input that submits straight to the server on selection -->
+                            <form id="csvImportForm" action="{{ route('users.importAlumniCsv') }}" method="POST"
+                                enctype="multipart/form-data" class="hidden">
+                                @csrf
+                                <input type="file" name="csv_file" id="csvFileInput" accept=".csv"
+                                    onchange="this.form.submit()">
+                            </form>
 
                             <!-- Export Button -->
-                            <button id="exportBtn" onclick="exportAlumniToCSV()"
+                            <a href="{{ route('users.exportAlumniCsv') }}" id="exportBtn"
                                 class="bg-[#C73D1A] hover:bg-[#a83215] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
                                 <i data-lucide="download" class="w-4 h-4"></i>
                                 EXPORT CSV
-                            </button>
+                            </a>
                         </div>
                     </div>
 
@@ -639,8 +657,11 @@ $current_page = 'user_management';
                         <table class="w-full text-left text-[10px]">
                             <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                                 <tr>
-                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">Alumni ID No. <i
-                                            data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
+                                    <th class="px-3 py-4 font-semibold border-r border-slate-700 w-10">
+                                        <input type="checkbox" id="selectAllAlumni" onchange="toggleAllAlumniCheckboxes(this)"
+                                            class="w-4 h-4 rounded border-slate-300 align-middle">
+                                    </th>
+                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">ID</th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Last Name <i
                                             data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">First Name</th>
@@ -668,8 +689,12 @@ $current_page = 'user_management';
                                 : 'bg-red-100 text-red-700 border-red-200';
                                 @endphp
                                 <tr class="hover:bg-slate-50/80 transition-colors text-center">
+                                    <td class="px-3 py-3 border-r border-slate-100">
+                                        <input type="checkbox" class="alumni-row-checkbox w-4 h-4 rounded border-slate-300 align-middle"
+                                            value="{{ $alumnus->user_id }}" onchange="updateBulkDeactivateAlumniButton()">
+                                    </td>
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $alumnus->alumnus_id ?? 'N/A' }}
+                                        {{ $loop->iteration }}
                                     </td>
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
                                         {{ $alumnus->user?->user_last_name }}
@@ -714,6 +739,10 @@ $current_page = 'user_management';
                                             <div
                                                 class="dropdown-menu absolute right-4 mt-2 w-56 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
                                                 <div class="py-1">
+                                                    <a href="{{ route('alumni.show', $alumnus->user_id) }}"
+                                                        class="flex items-center w-full px-4 py-2.5 text-sm text-[#0E0F3B] hover:bg-slate-50 transition-colors">
+                                                        <i data-lucide="eye" class="w-4 h-4 mr-3"></i> View Alumni
+                                                    </a>
                                                     @if ($alumnus->user->user_active)
                                                     <button
                                                         onclick="openDeactivateModal('{{ $alumnus->user->user_first_name }}', '{{ $alumnus->user->user_last_name }}', {{ $alumnus->user_id }})"
@@ -755,7 +784,7 @@ $current_page = 'user_management';
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="11" class="px-4 py-8 text-center text-slate-400 text-sm">No alumni
+                                    <td colspan="12" class="px-4 py-8 text-center text-slate-400 text-sm">No alumni
                                         found.</td>
                                 </tr>
                                 @endforelse
@@ -1364,6 +1393,56 @@ $current_page = 'user_management';
         </div>
     </div>
 
+    <!-- ===== BULK DEACTIVATE ALUMNI MODAL ===== -->
+    <div id="bulkDeactivateAlumniModal"
+        class="fixed inset-0 z-[100] flex items-center justify-center invisible transition-all duration-300">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeBulkDeactivateAlumniModal()"></div>
+        <div id="bulkDeactivateAlumniContent"
+            class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
+            <div class="p-8 text-center">
+                <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="user-minus" class="w-8 h-8 text-red-500"></i>
+                </div>
+                <h3 class="text-[#0E0F3B] text-xl font-bold mb-1">Deactivate Selected Accounts</h3>
+                <p id="bulkDeactivateAlumniName" class="text-slate-400 text-xs font-medium mb-3"></p>
+                <p class="text-slate-500 text-sm leading-relaxed mb-4">
+                    Are you sure you want to <span class="font-bold text-red-600">deactivate</span> these accounts?
+                </p>
+                <div class="text-left">
+                    <label class="text-xs font-bold text-[#0E0F3B] uppercase tracking-wider block mb-2">
+                        Reason for Deactivation <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="bulkDeactivateAlumniReason" rows="3"
+                        placeholder="Enter reason for deactivating these accounts..."
+                        class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 resize-none transition-all"></textarea>
+                    <div id="bulkDeactivateAlumniError"
+                        class="hidden mt-2 flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                        <i data-lucide="circle-alert" class="w-3.5 h-3.5 mt-0.5 shrink-0 text-red-500"></i>
+                        <span class="text-red-600 text-xs font-medium">Please provide a reason before
+                            deactivating.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="px-8 pb-8 flex gap-3">
+                <button onclick="closeBulkDeactivateAlumniModal()"
+                    class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all uppercase">
+                    Cancel
+                </button>
+                <button id="bulkDeactivateAlumniSubmitBtn" onclick="submitBulkDeactivateAlumni()"
+                    class="flex-1 py-2.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-all uppercase">
+                    Yes, Deactivate
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <form id="bulkDeactivateAlumniForm" action="{{ route('users.bulkDeactivateAlumni') }}" method="POST" class="hidden">
+        @csrf
+        @method('PUT')
+        <div id="bulkDeactivateAlumniIdsContainer"></div>
+        <input type="hidden" name="deactivate-reason" id="bulkDeactivateAlumniReasonInput">
+    </form>
+
     <!-- ==================== ALUMNI FILTER SIDEBAR ==================== -->
     <div id="filterSidebar" class="fixed inset-0 z-50 invisible transition-all duration-300">
         <div class="absolute inset-0 bg-black/20 backdrop-blur-sm" onclick="toggleAlumniFilterSidebar()"></div>
@@ -1744,11 +1823,74 @@ $current_page = 'user_management';
             toggleDropdown(); // Close menu after selection
         }
 
-        function handleFileSelect(input) {
-            if (input.files && input.files[0]) {
-                console.log("File selected:", input.files[0].name);
-                // Add your CSV processing logic here
+        /* ── Alumni bulk-select + bulk deactivate ─────────────────── */
+        function toggleAllAlumniCheckboxes(headerCheckbox) {
+            document.querySelectorAll('.alumni-row-checkbox').forEach(cb => cb.checked = headerCheckbox.checked);
+            updateBulkDeactivateAlumniButton();
+        }
+
+        function getSelectedAlumniIds() {
+            return Array.from(document.querySelectorAll('.alumni-row-checkbox:checked')).map(cb => cb.value);
+        }
+
+        function updateBulkDeactivateAlumniButton() {
+            const checkboxes = document.querySelectorAll('.alumni-row-checkbox');
+            const selected = getSelectedAlumniIds();
+            const btn = document.getElementById('bulkDeactivateAlumniBtn');
+
+            document.getElementById('bulkDeactivateAlumniCount').textContent = selected.length;
+            btn.classList.toggle('hidden', selected.length === 0);
+            btn.classList.toggle('flex', selected.length > 0);
+
+            // Keep the header checkbox in sync when rows are (de)selected individually.
+            const selectAll = document.getElementById('selectAllAlumni');
+            selectAll.checked = checkboxes.length > 0 && selected.length === checkboxes.length;
+            selectAll.indeterminate = selected.length > 0 && selected.length < checkboxes.length;
+        }
+
+        function openBulkDeactivateAlumniModal() {
+            const selected = getSelectedAlumniIds();
+            if (selected.length === 0) return;
+
+            document.getElementById('bulkDeactivateAlumniName').textContent = selected.length + ' account(s) selected';
+            document.getElementById('bulkDeactivateAlumniReason').value = '';
+            document.getElementById('bulkDeactivateAlumniError').classList.add('hidden');
+
+            const modal = document.getElementById('bulkDeactivateAlumniModal');
+            const content = document.getElementById('bulkDeactivateAlumniContent');
+            lucide.createIcons();
+            modal.classList.remove('invisible');
+            setTimeout(() => content.classList.remove('scale-95'), 10);
+        }
+
+        function closeBulkDeactivateAlumniModal() {
+            const modal = document.getElementById('bulkDeactivateAlumniModal');
+            const content = document.getElementById('bulkDeactivateAlumniContent');
+            content.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('invisible'), 200);
+        }
+
+        function submitBulkDeactivateAlumni() {
+            const reason = document.getElementById('bulkDeactivateAlumniReason').value.trim();
+            const error = document.getElementById('bulkDeactivateAlumniError');
+            if (!reason) {
+                error.classList.remove('hidden');
+                lucide.createIcons();
+                return;
             }
+
+            const container = document.getElementById('bulkDeactivateAlumniIdsContainer');
+            container.innerHTML = '';
+            getSelectedAlumniIds().forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = id;
+                container.appendChild(input);
+            });
+
+            document.getElementById('bulkDeactivateAlumniReasonInput').value = reason;
+            document.getElementById('bulkDeactivateAlumniForm').submit();
         }
 
         // Optional: Close dropdown if user clicks outside of it
@@ -1814,32 +1956,7 @@ $current_page = 'user_management';
             form.submit();
         }
 
-        //Alumni EXPORT CSV FUNCTION
-        function exportAlumniToCSV() {
-            // 1. Define your data (Usually this comes from your database or an array)
-            const data = [
-                ["Name", "Course", "Batch", "Email"], // Headers
-                ["Juan Dela Cruz", "BSIT", "2024", "juan@example.com"],
-                ["Maria Clara", "BSCS", "2023", "maria@example.com"]
-            ];
-
-            // 2. Convert array to CSV string
-            let csvContent = "data:text/csv;charset=utf-8," +
-                data.map(row => row.join(",")).join("\n");
-
-            // 3. Create a temporary hidden link to trigger the download
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "alumni_list.csv");
-            document.body.appendChild(link); // Required for Firefox
-
-            // 4. Trigger click and cleanup
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // EMPLOYERS CSV EXPORT JS LOGIC 
+        // EMPLOYERS CSV EXPORT JS LOGIC
         function exportEmployersToCSV() {
             const filename = 'approved_employers_' + new Date().toISOString().slice(0, 10) + '.csv';
             const csv = [];

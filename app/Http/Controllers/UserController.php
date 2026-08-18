@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use App\Mail\AlumniCreatedMail;
+use App\Mail\DeactAlumniMail;
 use App\Models\Industry;
 use App\Models\Testimonial;
 use Illuminate\Support\Facades\Mail;
@@ -323,52 +324,295 @@ class UserController extends Controller
             'section_id' => 'required|exists:sections,section_id',
             'user_email' => 'required|email|max:255|unique:users,user_email',
         ]);
-        $password = Str::random(10);
 
         try {
-            DB::transaction(function () use ($validated, $password) {
-                $user = User::create([
-                    'user_email' => $validated['user_email'],
-                    'user_password' => Hash::make($password),
-                    'user_first_name' => $validated['user_first_name'],
-                    'user_last_name' => $validated['user_last_name'],
-                    'user_middle_name' => $validated['user_middle_name'],
-                    'user_suffix' => $validated['user_suffix'],
-                    'user_role' => 'alumni',
-                    'user_active' => true,
-                    // They're logging in with a system-generated password
-                    // emailed in plaintext below — force a change before
-                    // they can use the account for anything else.
-                    'must_change_password' => true,
-                ]);
-
-                $alumnus = $user->alumnus()->create([
-                    'program_id' => $validated['program_id'],
-                    'alumnus_batch' => $validated['alumnus_batch'],
-                    'section_id' => $validated['section_id'],
-                    'alumnus_gender' => $validated['alumnus_gender'],
-                ]);
-
-                $alumnus->alumniId()->create([
-                    'status' => 'pending',
-                    'status_updated_at' => now(),
-                    'updated_by' => Auth::id(),
-                ]);
-
-                $alumnus->yearbook()->create([
-                    'distribution_status' => 'pending',
-                    'claiming_status' => 'pending',
-                ]);
-
-                Mail::to($user->user_email)->send(new AlumniCreatedMail($user, $password));
-            });
+            $this->createAlumnusAccount($validated);
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Email failed: ' . $e->getMessage()]);
-            dd($e->getMessage());
-            return back()->withErrors($e->getMessage());
+            return back()->withErrors(['error' => 'Failed to add alumnus: ' . $e->getMessage()]);
         }
 
         return redirect()->route('superAdmin.userManagement')->with('success', 'Alumnus added successfully!');
+    }
+
+    /**
+     * Shared by addAlumnus() (manual single add) and importAlumniCsv() (one
+     * call per valid row) so both paths create the exact same User +
+     * Alumnus + AlumniId + Yearbook bundle the same way. $data keys match
+     * addAlumnus()'s validated array: user_first_name, user_middle_name,
+     * user_last_name, user_suffix (nullable), user_email, alumnus_gender,
+     * program_id, section_id, alumnus_batch.
+     *
+     * Mail is queued (not sent inline) — importAlumniCsv() can call this in
+     * a loop over many rows, and a live SMTP round-trip per row risks the
+     * same request-timeout problem bulk hiring already ran into (see
+     * JobApplicationController::hireApplication()).
+     */
+    private function createAlumnusAccount(array $data): User
+    {
+        $password = Str::random(10);
+
+        return DB::transaction(function () use ($data, $password) {
+            $user = User::create([
+                'user_email' => $data['user_email'],
+                'user_password' => Hash::make($password),
+                'user_first_name' => $data['user_first_name'],
+                'user_last_name' => $data['user_last_name'],
+                'user_middle_name' => $data['user_middle_name'],
+                'user_suffix' => $data['user_suffix'] ?? null,
+                'user_role' => 'alumni',
+                'user_active' => true,
+                // They're logging in with a system-generated password
+                // emailed in plaintext below — force a change before
+                // they can use the account for anything else.
+                'must_change_password' => true,
+            ]);
+
+            $alumnus = $user->alumnus()->create([
+                'program_id' => $data['program_id'],
+                'alumnus_batch' => $data['alumnus_batch'],
+                'section_id' => $data['section_id'],
+                'alumnus_gender' => $data['alumnus_gender'],
+            ]);
+
+            $alumnus->alumniId()->create([
+                'status' => 'pending',
+                'status_updated_at' => now(),
+                'updated_by' => Auth::id(),
+            ]);
+
+            $alumnus->yearbook()->create([
+                'distribution_status' => 'pending',
+                'claiming_status' => 'pending',
+            ]);
+
+            Mail::to($user->user_email)->queue(new AlumniCreatedMail($user, $password));
+
+            return $user;
+        });
+    }
+
+    /** Plain-text CSV, matching the columns importAlumniCsv() expects — the "Download Template" link in User Management. */
+    public function downloadAlumniCsvTemplate()
+    {
+        $columns = ['first_name', 'middle_name', 'last_name', 'suffix', 'email', 'gender', 'program', 'section', 'batch'];
+        $example = ['Juan', 'Santos', 'Dela Cruz', '', 'juan.delacruz@example.com', 'male', 'BSIT', 'Section A', (string) date('Y')];
+
+        $callback = function () use ($columns, $example) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, $columns);
+            fputcsv($handle, $example);
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="alumni_import_template.csv"',
+        ]);
+    }
+
+    /**
+     * Row-by-row CSV import, reusing createAlumnusAccount() for each valid
+     * row — a bad row (missing field, unknown program/section, duplicate
+     * email, bad gender/batch value) is skipped and reported, not fatal to
+     * the whole file, so one typo doesn't block everyone else in the batch.
+     */
+    public function importAlumniCsv(Request $request)
+    {
+        $request->validate([
+            'csv_file' => ['required', 'file', 'mimes:csv,txt', 'max:5120'],
+        ]);
+
+        $handle = fopen($request->file('csv_file')->getRealPath(), 'r');
+        $header = fgetcsv($handle);
+
+        if (!$header) {
+            fclose($handle);
+            return back()->withErrors(['error' => 'The CSV file is empty.']);
+        }
+
+        // Normalize so column order/casing/stray whitespace in the uploaded
+        // file doesn't have to match the template byte-for-byte.
+        $header = array_map(fn ($h) => strtolower(trim((string) $h)), $header);
+        $required = ['first_name', 'middle_name', 'last_name', 'email', 'gender', 'program', 'section', 'batch'];
+        $missing = array_diff($required, $header);
+
+        if (!empty($missing)) {
+            fclose($handle);
+            return back()->withErrors(['error' => 'CSV is missing required column(s): ' . implode(', ', $missing) . '. Download the template for the correct format.']);
+        }
+
+        $genderMap = [
+            'male' => 'male',
+            'female' => 'female',
+            'prefer not to say' => 'prefer_not_to_say',
+            'prefer_not_to_say' => 'prefer_not_to_say',
+        ];
+
+        $rowNum = 1; // row 1 was the header
+        $created = 0;
+        $errors = [];
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $rowNum++;
+
+            if (count(array_filter($row, fn ($v) => trim((string) $v) !== '')) === 0) {
+                continue; // blank line
+            }
+
+            $data = array_combine($header, array_pad($row, count($header), null));
+
+            $firstName = trim((string) ($data['first_name'] ?? ''));
+            $middleName = trim((string) ($data['middle_name'] ?? ''));
+            $lastName = trim((string) ($data['last_name'] ?? ''));
+            $suffix = trim((string) ($data['suffix'] ?? ''));
+            $email = trim((string) ($data['email'] ?? ''));
+            $genderRaw = strtolower(trim((string) ($data['gender'] ?? '')));
+            $programName = trim((string) ($data['program'] ?? ''));
+            $sectionName = trim((string) ($data['section'] ?? ''));
+            $batch = trim((string) ($data['batch'] ?? ''));
+
+            if ($firstName === '' || $middleName === '' || $lastName === '' || $email === '') {
+                $errors[] = "Row {$rowNum}: first name, middle name, last name, and email are required.";
+                continue;
+            }
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors[] = "Row {$rowNum}: \"{$email}\" is not a valid email address.";
+                continue;
+            }
+
+            if (User::where('user_email', $email)->exists()) {
+                $errors[] = "Row {$rowNum}: {$email} is already registered.";
+                continue;
+            }
+
+            $gender = $genderMap[$genderRaw] ?? null;
+            if (!$gender) {
+                $errors[] = "Row {$rowNum}: gender must be \"male\", \"female\", or \"prefer not to say\".";
+                continue;
+            }
+
+            $program = Program::where('program_name', $programName)->first();
+            if (!$program) {
+                $errors[] = "Row {$rowNum}: program \"{$programName}\" was not found.";
+                continue;
+            }
+
+            $section = Section::where('section_name', $sectionName)->first();
+            if (!$section) {
+                $errors[] = "Row {$rowNum}: section \"{$sectionName}\" was not found.";
+                continue;
+            }
+
+            if (!ctype_digit($batch) || (int) $batch < 1900 || (int) $batch > (int) date('Y') + 1) {
+                $errors[] = "Row {$rowNum}: \"{$batch}\" is not a valid batch year.";
+                continue;
+            }
+
+            try {
+                $this->createAlumnusAccount([
+                    'user_first_name' => $firstName,
+                    'user_middle_name' => $middleName,
+                    'user_last_name' => $lastName,
+                    'user_suffix' => $suffix !== '' ? $suffix : null,
+                    'user_email' => $email,
+                    'alumnus_gender' => $gender,
+                    'program_id' => $program->program_id,
+                    'section_id' => $section->section_id,
+                    'alumnus_batch' => (int) $batch,
+                ]);
+                $created++;
+            } catch (\Exception $e) {
+                $errors[] = "Row {$rowNum}: failed to create account ({$e->getMessage()}).";
+            }
+        }
+
+        fclose($handle);
+
+        $summary = "{$created} alumni imported successfully.";
+
+        if (empty($errors)) {
+            return redirect()->route('superAdmin.userManagement')->with('success', $summary);
+        }
+
+        // Cap flashed row errors — a bad file with hundreds of bad rows
+        // shouldn't blow up the session flash payload.
+        $shown = array_slice($errors, 0, 20);
+        $more = count($errors) - count($shown);
+        if ($more > 0) {
+            $shown[] = "...and {$more} more error(s) not shown.";
+        }
+
+        return redirect()->route('superAdmin.userManagement')
+            ->with('success', $summary)
+            ->withErrors($shown);
+    }
+
+    /** Real data version of the alumni table's "Export CSV" button — mirrors the visible table's columns exactly. */
+    public function exportAlumniCsv()
+    {
+        $alumni = Alumnus::with(['user', 'program', 'section'])->get();
+
+        $callback = function () use ($alumni) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['ID', 'Last Name', 'First Name', 'Middle Name', 'Suffix', 'Gender', 'Program', 'Section', 'Batch', 'Email', 'Status']);
+
+            foreach ($alumni as $i => $alumnus) {
+                fputcsv($handle, [
+                    $i + 1,
+                    $alumnus->user?->user_last_name,
+                    $alumnus->user?->user_first_name,
+                    $alumnus->user?->user_middle_name,
+                    $alumnus->user?->user_suffix,
+                    Alumnus::genderLabels()[$alumnus->alumnus_gender] ?? '',
+                    $alumnus->program->program_name ?? '',
+                    $alumnus->section->section_name ?? '',
+                    $alumnus->alumnus_batch,
+                    $alumnus->user?->user_email,
+                    $alumnus->user?->user_active ? 'Active' : 'Deactivated',
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="alumni_list_' . now()->format('Y-m-d') . '.csv"',
+        ]);
+    }
+
+    /**
+     * Bulk counterpart to AlumnusController::deactivateAlumnus() — same
+     * user_active flip + DeactAlumniMail, just over a batch. Silently skips
+     * any selected id that's already deactivated (or not an alumnus id at
+     * all) rather than erroring the whole request, same "drop out of the
+     * batch" philosophy as JobApplicationController's bulk actions.
+     */
+    public function bulkDeactivateAlumni(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer'],
+            'deactivate-reason' => ['required', 'string', 'max:255'],
+        ]);
+
+        $alumni = Alumnus::with('user')
+            ->whereIn('user_id', $validated['ids'])
+            ->whereHas('user', fn ($q) => $q->where('user_active', true))
+            ->get();
+
+        foreach ($alumni as $alumnus) {
+            $alumnus->user->update(['user_active' => false]);
+            Log::info("Alumnus with ID {$alumnus->user_id}: {$alumnus->user->user_first_name} {$alumnus->user->user_last_name} deactivated (bulk). Reason: {$validated['deactivate-reason']}");
+            Mail::to($alumnus->user->user_email)->queue(new DeactAlumniMail($alumnus->user, $validated['deactivate-reason']));
+        }
+
+        if ($alumni->isEmpty()) {
+            return back()->with('error', 'None of the selected accounts could be deactivated (already inactive?).');
+        }
+
+        return back()->with('success', $alumni->count() . ' alumni account(s) deactivated.');
     }
 
     public function addAdmin(Request $request)
@@ -461,7 +705,12 @@ class UserController extends Controller
     {
         $user = Auth::user();
         if ($user->user_role == 'admin') {
-            return redirect()->route('admin.dashboard');
+            // admin.dashboard is an unfinished placeholder view — admin and
+            // super_admin already share identical permissions on every real
+            // page (job management, notices, alumni ID, user management),
+            // and the shared sidebar's own "Dashboard" link already points
+            // here too, so this is the one real dashboard for both roles.
+            return redirect()->route('superAdmin.dashboard');
         } else if ($user->user_role == 'super_admin') {
             return redirect()->route('superAdmin.dashboard');
         } else if ($user->user_role == 'registrar') {

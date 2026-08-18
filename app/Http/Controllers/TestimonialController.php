@@ -12,6 +12,36 @@ use Illuminate\Support\Facades\Log;
 class TestimonialController extends Controller
 {
     /**
+     * AJAX target for the "Alumni Testimonials" pagination on both the
+     * public homepage and the alumni dashboard (see
+     * partials/testimonial-cards-script.blade.php) — returns just the cards
+     * + pagination partial, not a full page. Public (no auth) since the
+     * homepage instance is guest-visible.
+     *
+     * `path` tells the paginator which real page to build its link hrefs
+     * against (this endpoint's own URL isn't a real page a user should ever
+     * land on) — whitelisted to the two known embeds so it can't be used to
+     * generate a link to an arbitrary path.
+     */
+    public function cardsFragment(Request $request)
+    {
+        // No withQueryString() here — this endpoint's own query string
+        // (page, path) is just plumbing for this fetch, not state worth
+        // preserving in the links it renders.
+        $testimonials = Testimonial::with(['alumnus.user', 'alumnus.program'])
+            ->where('testimonial_post', true)
+            ->latest()
+            ->paginate(4)
+            ->fragment('alumni-testimonials');
+
+        if (in_array($request->query('path'), ['/', '/alumni/dashboard'], true)) {
+            $testimonials->setPath($request->query('path'));
+        }
+
+        return view('partials.testimonial-cards', compact('testimonials'));
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index()

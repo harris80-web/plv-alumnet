@@ -23,6 +23,9 @@ class Alumnus extends Model
         'alumnus_first_job_date',
         'alumnus_workplace',
         'alumnus_workplace_undisclosed',
+        'alumnus_job_position',
+        'alumnus_employment_date',
+        'alumnus_employed_via_platform',
         'alumnus_resume_summary',
         'alumnus_resume_file_path',
         'linkedin_url',
@@ -39,6 +42,8 @@ class Alumnus extends Model
         'alumnus_resume_completeness' => 'integer',
         'alumnus_batch' => 'integer',
         'alumnus_first_job_date' => 'date',
+        'alumnus_employment_date' => 'date',
+        'alumnus_employed_via_platform' => 'boolean',
     ];
 
     public static function genderLabels(): array
@@ -81,6 +86,22 @@ class Alumnus extends Model
     public function industry()
     {
         return $this->belongsTo(Industry::class, 'industry_id', 'industry_id');
+    }
+
+    /**
+     * "Job Aligned With Course" indicator — true only when currently
+     * employed, both program and industry are set, and Program::
+     * ALIGNED_INDUSTRIES says that program's grads typically work in that
+     * industry. Used on the alumnus's own profile, the alumni directory,
+     * and the admin's "View Alumni" page, so it lives here once rather than
+     * being recomputed differently in each view.
+     */
+    public function hasCourseAlignedJob(): bool
+    {
+        return (bool) $this->alumnus_employment_status
+            && $this->program
+            && $this->industry
+            && $this->program->isAlignedWithIndustry($this->industry);
     }
 
     public function educations()

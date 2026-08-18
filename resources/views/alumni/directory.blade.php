@@ -128,6 +128,7 @@
                                 'section' => $alumnus->section->section_name ?? 'N/A',
                                 'employment' => $alumnus->alumnus_employment_status ? 'Employed' : 'Unemployed',
                                 'industry' => $alumnus->industry->industry_name ?? null,
+                                'aligned' => $alumnus->hasCourseAlignedJob(),
                                 'skills' => $skillNames ?: 'None listed',
                                 'linkedin' => $alumnus->linkedin_url,
                                 'email' => $alumnus->user->user_email,
@@ -211,9 +212,14 @@
                         <span class="font-bold text-[#C73D1A]">Section</span>
                         <span id="pm-section" class="text-gray-700"></span>
                     </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-2">
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-2">
                         <span class="font-bold text-[#C73D1A]">Employment</span>
-                        <span id="pm-employment" class="text-gray-700"></span>
+                        <span class="text-right">
+                            <span id="pm-employment" class="text-gray-700"></span>
+                            <span id="pm-aligned" class="hidden ml-1 inline-flex items-center gap-1 bg-green-100 text-green-700 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full align-middle">
+                                <i class="fa-solid fa-circle-check"></i> Aligned with Course
+                            </span>
+                        </span>
                     </div>
                     <div class="border-b border-gray-100 pb-2">
                         <span class="font-bold text-[#C73D1A] block mb-1">Skills</span>
@@ -276,6 +282,7 @@
             document.getElementById('pm-batch').textContent = data.batch;
             document.getElementById('pm-section').textContent = data.section;
             document.getElementById('pm-employment').textContent = data.employment + (data.industry ? ' — ' + data.industry : '');
+            document.getElementById('pm-aligned').classList.toggle('hidden', !data.aligned);
             document.getElementById('pm-skills').textContent = data.skills;
             document.getElementById('pm-email').textContent = data.email;
             document.getElementById('pm-email').href = 'mailto:' + data.email;

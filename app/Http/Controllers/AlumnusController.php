@@ -74,11 +74,20 @@ class AlumnusController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Admin/super_admin "View Alumni" page — read-only profile summary
+     * linked from the dropdown in superAdmin.userManagement's alumni tab.
      */
     public function show(Alumnus $alumnus)
     {
-        //
+        abort_unless(in_array(Auth::user()->user_role, ['admin', 'super_admin']), 403);
+
+        $alumnus->load([
+            'user', 'program', 'section', 'industry',
+            'skills', 'experiences.industry', 'certifications',
+            'alumniId', 'yearbook',
+        ]);
+
+        return view('superAdmin.alumniProfile', compact('alumnus'));
     }
 
     /**
@@ -114,6 +123,8 @@ class AlumnusController extends Controller
             'industry_id' => 'required_if:alumnus_employment_status,1|nullable|exists:industries,industry_id',
             'alumnus_workplace' => 'nullable|string|max:255',
             'alumnus_workplace_undisclosed' => 'nullable|boolean',
+            'alumnus_job_position' => 'nullable|string|max:255',
+            'alumnus_employment_date' => 'nullable|date|before_or_equal:today',
             'alumnus_first_job_date' => 'nullable|date|before_or_equal:today',
             'user_email' => 'required|email|unique:users,user_email,' . $user->user_id . ',user_id',
             'user_number' => 'nullable|string|max:20',
@@ -135,8 +146,18 @@ class AlumnusController extends Controller
                 $employed = (bool) ($validated['alumnus_employment_status'] ?? $alumni->alumnus_employment_status);
                 $workplaceUndisclosed = $employed && !empty($validated['alumnus_workplace_undisclosed']);
 
+                // Job position + employment date are system-of-record once
+                // hired through an in-system job posting (see
+                // JobApplicationController::hireApplication()) — this
+                // self-service form can't overwrite them while that's still
+                // true. The only way it clears is marking yourself
+                // unemployed; a later "Employed" self-edit after that is by
+                // definition a job that didn't come from the platform.
+                $viaPlatform = $employed && $alumni->alumnus_employed_via_platform;
+
                 $alumni->update([
                     'alumnus_employment_status' => $employed,
+                    'alumnus_employed_via_platform' => $viaPlatform,
                     'industry_id' => $employed && !empty($validated['industry_id']) ? $validated['industry_id'] : null,
                     // Not required — alumni can share their industry without
                     // naming the employer, or skip it entirely.
@@ -144,6 +165,12 @@ class AlumnusController extends Controller
                         ? $validated['alumnus_workplace']
                         : null,
                     'alumnus_workplace_undisclosed' => $workplaceUndisclosed,
+                    'alumnus_job_position' => $viaPlatform
+                        ? $alumni->alumnus_job_position
+                        : ($employed && !empty($validated['alumnus_job_position']) ? $validated['alumnus_job_position'] : null),
+                    'alumnus_employment_date' => $viaPlatform
+                        ? $alumni->alumnus_employment_date
+                        : ($employed && !empty($validated['alumnus_employment_date']) ? $validated['alumnus_employment_date'] : null),
                     // Settable exactly once — for alumni whose job didn't
                     // come through the system (the system itself sets this
                     // automatically on hire, see JobApplicationController::

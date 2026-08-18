@@ -410,50 +410,14 @@
         @endif
     </section>
 
-    <section class="AlumniTestimonial py-20 px-6 text-white text-center mb-10">
+    <section id="alumni-testimonials" class="AlumniTestimonial py-20 px-6 text-white text-center mb-10">
         <h2 class="text-3xl font-bold uppercase mb-12 tracking-widest">Alumni Testimonials</h2>
 
-        <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
-            @foreach ($testimonials as $testimonial)
-            <div class="bg-white text-left p-6 rounded-lg shadow-2xl relative flex gap-4">
-                <div class="flex-shrink-0">
-                    <div class="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center">
-                        @if ($testimonial->alumnus->user->user_profile_picture)
-                            <img src="{{ asset('storage/' . $testimonial->alumnus->user->user_profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover rounded-full">
-                        @else
-                        <i class="fa-solid fa-user text-3xl text-white"></i>
-                        @endif
-
-                    </div>
-                </div>
-                <div>
-                    <h4 class="text-blue-900 font-bold uppercase text-lg">{{ $testimonial->alumnus->user->user_first_name }} {{ $testimonial->alumnus->user->user_last_name }}</h4>
-                    <p class="text-blue-700 text-[10px] font-semibold mb-3 uppercase">{{ $testimonial->alumnus->program->program_name }}, Batch {{ $testimonial->alumnus->alumnus_batch }}</p>
-                    <p class="text-gray-600 text-xs leading-relaxed">{{ $testimonial->testimonial_body }}</p>
-                </div>
-            </div>
-            @endforeach
-            <!-- <script>
-                const roles = ["BS Information Technology, Batch 2023", "BS Psychology, Batch 2022", "BS Electrical Engineering, Batch 2018", "BS Civil Engineering, Batch 2022"];
-                roles.forEach(role => {
-                    document.write(`
-                    <div class="bg-white text-left p-6 rounded-lg shadow-2xl relative flex gap-4">
-                        <div class="flex-shrink-0">
-                            <div class="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center">
-                                <i class="fa-solid fa-user text-3xl text-white"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <h4 class="text-blue-900 font-bold uppercase text-lg">Alumni Name</h4>
-                            <p class="text-blue-700 text-[10px] font-semibold mb-3 uppercase">${role}</p>
-                            <p class="text-gray-600 text-xs leading-relaxed">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.</p>
-                        </div>
-                    </div>
-                    `);
-                });
-            </script> -->
+        <div id="testimonial-cards-wrap">
+            @include('partials.testimonial-cards')
         </div>
     </section>
+    @include('partials.testimonial-cards-script')
 
     <section class="Experience py-5 px-6 max-w-7xl mx-auto mb-5 flex flex-col md:flex-row items-center gap-12">
 

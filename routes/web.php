@@ -38,7 +38,15 @@ use App\Http\Controllers\SkillSearchController;
 
 //general
 Route::get('/', function () {
-    $testimonials = Testimonial::where('testimonial_post', true)->latest()->get();
+    $testimonials = Testimonial::with(['alumnus.user', 'alumnus.program'])
+        ->where('testimonial_post', true)
+        ->latest()
+        ->paginate(4)
+        ->withQueryString()
+        // Full page reload is unavoidable with plain pagination links, but
+        // this at least lands back on the testimonials section instead of
+        // the very top of the page.
+        ->fragment('alumni-testimonials');
     return view('general.home', compact('testimonials'));
 })->name('general.home');
 
@@ -275,6 +283,7 @@ Route::put('/postTestimonial/{id}', [TestimonialController::class, 'postTestimon
 Route::delete('/deleteTestimonial/{id}', [TestimonialController::class, 'deleteTestimonial'])->name('testimonials.delete');
 Route::resource('testimonials', TestimonialController::class);
 Route::get('/testimonialManagement', [TestimonialController::class, 'showTestimonials'])->name('testimonials.manage');
+Route::get('/testimonials/cards', [TestimonialController::class, 'cardsFragment'])->name('testimonials.cardsFragment');
 
 
 Route::post('/users/storeEmployer', [UserController::class, 'storeEmployer'])->name('users.storeEmployer');
@@ -282,6 +291,10 @@ Route::post('/users/login', [UserController::class, 'login'])->name('users.login
 Route::post('/users/approve/{id}', [UserController::class, 'approveEmployer'])->name('users.approveEmployer');
 Route::put('/users/reject/{id}', [UserController::class, 'rejectEmployer'])->name('users.rejectEmployer');
 Route::post('/users/addAlumnus', [UserController::class, 'addAlumnus'])->name('users.addAlumnus');
+Route::get('/users/alumni/csv-template', [UserController::class, 'downloadAlumniCsvTemplate'])->name('users.downloadAlumniCsvTemplate')->middleware('auth');
+Route::post('/users/alumni/import-csv', [UserController::class, 'importAlumniCsv'])->name('users.importAlumniCsv')->middleware('auth');
+Route::get('/users/alumni/export-csv', [UserController::class, 'exportAlumniCsv'])->name('users.exportAlumniCsv')->middleware('auth');
+Route::put('/users/alumni/bulk-deactivate', [UserController::class, 'bulkDeactivateAlumni'])->name('users.bulkDeactivateAlumni')->middleware('auth');
 Route::post('/users/addAdmin', [UserController::class, 'addAdmin'])->name('users.addAdmin');
 Route::get('/showChangePassword', [UserController::class, 'showChangePassword'])->name('users.showChangePassword');
 Route::put('/changePassword', [UserController::class, 'changePassword'])->name('users.changePassword');

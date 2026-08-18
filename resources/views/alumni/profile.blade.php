@@ -123,8 +123,13 @@
                 <div class="space-y-6">
                     <div>
                         <p class="text-xs font-black text-slate-900 uppercase">Employment Status</p>
-                        <p class="text-md text-gray-600 font-medium">
+                        <p class="text-md text-gray-600 font-medium flex items-center gap-2">
                             {{ $user->alumnus->alumnus_employment_status == 0 ? 'Unemployed' : 'Employed' }}
+                            @if($user->alumnus->hasCourseAlignedJob())
+                            <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-[10px] font-bold uppercase px-2 py-1 rounded-full">
+                                <i class="fa-solid fa-circle-check"></i> Aligned with Course
+                            </span>
+                            @endif
                         </p>
                     </div>
                     @if($user->alumnus->alumnus_employment_status)
@@ -144,6 +149,22 @@
                             @endif
                         </p>
                     </div>
+                    @if($user->alumnus->alumnus_job_position)
+                    <div>
+                        <p class="text-xs font-black text-slate-900 uppercase">Job Position</p>
+                        <p class="text-md text-gray-600 font-medium">
+                            {{ $user->alumnus->alumnus_job_position }}
+                        </p>
+                    </div>
+                    @endif
+                    @if($user->alumnus->alumnus_employment_date)
+                    <div>
+                        <p class="text-xs font-black text-slate-900 uppercase">Employment Date</p>
+                        <p class="text-md text-gray-600 font-medium">
+                            {{ $user->alumnus->alumnus_employment_date->format('F j, Y') }}
+                        </p>
+                    </div>
+                    @endif
                     @endif
                     @if($user->alumnus->alumnus_first_job_date)
                     <div>

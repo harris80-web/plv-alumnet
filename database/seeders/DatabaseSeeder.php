@@ -28,14 +28,20 @@ class DatabaseSeeder extends Seeder
             SuperAdminSeeder::class,
             AlumnusSeeder::class,
             EmployerSeeder::class,
+            EmployerPracticeSeeder::class, // after EmployerSeeder/IndustrySeeder — bulk employers for JobPostingPracticeSeeder to post under
             AdminSeeder::class,
+            AdminPracticeSeeder::class, // after AdminSeeder — more than one admin for the cross-review split to exercise
             JobSeeder::class, // after Employer/Industry/Program/Skills
+            JobPostingPracticeSeeder::class, // after JobSeeder/EmployerPracticeSeeder — bulk postings across every employer
             JobApplicationSeeder::class, // after Alumnus/Job
             AlumniPracticeSeeder::class, // after Program/Section/Industry/Skills/Job (uses approved jobs)
-            AlumniYearbookSeeder::class, // after AlumnusSeeder + AlumniPracticeSeeder (needs every alumnus to exist)
-            NoticeSeeder::class, // after AlumnusSeeder + AlumniPracticeSeeder (attaches interested alumni)
-            MessageSeeder::class, // after AlumnusSeeder (needs alumni@example.com + a few named alumni)
+            AlumniPracticeSeeder2::class, // after AlumniPracticeSeeder — second wave, non-colliding emails, sees the larger job pool
+            AlumniYearbookSeeder::class, // after every alumni seeder (needs every alumnus to exist)
+            NoticeSeeder::class, // after every alumni seeder (attaches interested alumni)
+            NoticePracticeSeeder::class, // after NoticeSeeder + every alumni seeder
+            MessageSeeder::class, // after every alumni seeder (bulk pass scales with the full alumni pool)
             TestimonialSeeder::class,
+            TestimonialPracticeSeeder::class, // after TestimonialSeeder + every alumni seeder
             FaqSeeder::class, // after AdminSeeder/SuperAdminSeeder (attributes each FAQ to a staff creator)
             ChatbotSeeder::class, // after AlumnusSeeder/EmployerSeeder/AdminSeeder (needs named accounts + a claimable office)
             // You can add more seeders here later (e.g., UserSeeder)

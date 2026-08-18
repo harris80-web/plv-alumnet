@@ -53,10 +53,14 @@ class JobMatchService
     }
 
     /**
-     * Weighted overlap between the alumnus's skills and the job's required
-     * skills (job_posting_skills.weight, 1-5). A job with no skills
-     * configured gets full credit — can't penalize for an unspecified
-     * requirement.
+     * Presence-based overlap between the alumnus's skills and the job's
+     * required skills — what fraction of the required list the alumnus
+     * actually has. job_posting_skills does have a `weight` column, but
+     * there's no UI for an employer to ever set it differently per skill
+     * (see JobPostingController::syncJobSkills()), so every skill on every
+     * job is scored equally rather than pretending a per-skill weight is in
+     * effect. A job with no skills configured gets full credit — can't
+     * penalize for an unspecified requirement.
      */
     private function scoreSkills(JobPosting $job, Alumnus $alumnus): float
     {
@@ -65,17 +69,10 @@ class JobMatchService
             return 45.0;
         }
 
-        $totalWeight = $requiredSkills->sum(fn ($s) => (int) $s->pivot->weight);
-        if ($totalWeight <= 0) {
-            return 45.0;
-        }
-
         $alumnusSkillIds = $alumnus->skills->pluck('skill_id')->all();
-        $matchedWeight = $requiredSkills
-            ->filter(fn ($s) => in_array($s->skill_id, $alumnusSkillIds, true))
-            ->sum(fn ($s) => (int) $s->pivot->weight);
+        $matchedCount = $requiredSkills->filter(fn ($s) => in_array($s->skill_id, $alumnusSkillIds, true))->count();
 
-        return round(($matchedWeight / $totalWeight) * 45, 2);
+        return round(($matchedCount / $requiredSkills->count()) * 45, 2);
     }
 
     /**

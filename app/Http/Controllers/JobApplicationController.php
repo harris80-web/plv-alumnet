@@ -167,6 +167,14 @@ class JobApplicationController extends Controller
             $alumnus->alumnus_workplace = $application->job->job_posting_company;
             $alumnus->alumnus_workplace_undisclosed = false;
         }
+        // Job position + employment date come from the posting itself and
+        // are locked on the self-service profile form while this flag is
+        // true (see AlumnusController::updateAlumniProfile()) — every new
+        // in-system hire overwrites them with the new posting's details,
+        // same as workplace/industry above.
+        $alumnus->alumnus_job_position = $application->job->job_posting_title;
+        $alumnus->alumnus_employment_date = now();
+        $alumnus->alumnus_employed_via_platform = true;
         if (!$alumnus->alumnus_first_job_date) {
             $alumnus->alumnus_first_job_date = now();
         }

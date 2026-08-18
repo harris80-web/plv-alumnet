@@ -27,7 +27,13 @@ class AlumniDashboardController extends Controller
      */
     public function index(JobMatchService $matchService)
     {
-        $testimonials = Testimonial::where('testimonial_post', true)->latest()->get();
+        $testimonials = Testimonial::with(['alumnus.user', 'alumnus.program'])
+            ->where('testimonial_post', true)
+            ->latest()
+            ->paginate(4)
+            ->withQueryString()
+            // Lands the reload back on the testimonials section instead of the top of the dashboard.
+            ->fragment('alumni-testimonials');
 
         $alumnus = Auth::user()->alumnus ?? null;
         $jobMatches = collect();

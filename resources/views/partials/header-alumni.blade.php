@@ -17,13 +17,13 @@
     <?php $current_page = Route::currentRouteName();  ?>
 
     <header class="sticky top-0 z-50 w-full bg-[#0E0F3B] font-bold flex justify-between px-[4em] py-[1em]">
-        <a href="{{ route('users.dashboardRedirect') }}" class="flex items-center gap-3 ml-10">
+        <a href="{{ route('alumnus.dashboard') }}" class="flex items-center gap-3 ml-10">
             <img src="{{ asset('assets/PLV-AlumNet LOGOMARK_WHITE.svg') }}" alt="" class="h-12 w-12">
             <img src="{{ asset('assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png') }}" alt="" class="h-8 w-30">
         </a>
         <nav class="flex items-center justify-center gap-10 text-white flex-1 font-medium text-sm">
-            <a href="{{ route('users.dashboardRedirect') }}"
-                class="{{ $current_page == 'users.dashboardRedirect' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
+            <a href="{{ route('alumnus.dashboard') }}"
+                class="{{ $current_page == 'alumnus.dashboard' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                 HOME
             </a>
             <a href="{{ route('notices.eventsSeminars') }}"
@@ -55,6 +55,7 @@
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.ui-animations')
     <script>
         lucide.createIcons();
     </script>

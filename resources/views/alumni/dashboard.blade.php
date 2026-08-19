@@ -89,6 +89,13 @@
                     'claimed' => ['bg' => 'bg-orange-600/80', 'icon' => 'fa-check', 'title' => 'Alumni ID Claimed', 'desc' => 'Your Alumni ID has been claimed.'],
                 ];
                 $alumniIdCard = $alumniIdCardConfig[$alumniIdRecord->status ?? null] ?? ['bg' => 'bg-slate-600/80', 'icon' => 'fa-circle-question', 'title' => 'No Record Found', 'desc' => 'No Alumni ID request found yet. Please contact the Alumni Office.'];
+
+                // Static stepper across the known status order — reflects
+                // current status only, there's no per-transition history
+                // table to draw a real timeline from.
+                $alumniIdSteps = \App\Models\AlumniId::STATUSES;
+                $alumniIdStepLabels = \App\Models\AlumniId::statusLabels();
+                $alumniIdCurrentIndex = $alumniIdRecord ? array_search($alumniIdRecord->status, $alumniIdSteps, true) : -1;
             @endphp
             <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 flex flex-col">
                 <div class="relative h-64 bg-[url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800q=80')] bg-cover bg-center">
@@ -104,6 +111,11 @@
                     <h4 class="text-2xl font-bold">
                         <span class="inner-text-shadow text-3xl font-medium bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Alumni ID Status</span>
                     </h4>
+                    <button type="button"
+                        onclick="openAnimatedModal(document.getElementById('alumniIdStatusModal'), document.getElementById('alumniIdStatusModalPanel'))"
+                        class="mt-3 text-xs font-bold uppercase tracking-widest text-white bg-[#0E0F3B] hover:bg-[#1D46A4] px-6 py-2 rounded-full transition-colors">
+                        View Status
+                    </button>
                 </div>
             </div>
 
@@ -117,6 +129,16 @@
                     'not_yet_claimed' => ['bg' => 'bg-slate-600/80', 'title' => 'Not Yet Claimed', 'desc' => 'Your yearbook has not been claimed yet.'],
                 ];
                 $yearbookCard = $yearbookCardConfig[$yearbookRecord->claiming_status ?? null] ?? ['bg' => 'bg-slate-600/80', 'title' => 'No Record Found', 'desc' => 'No yearbook record found yet. Please contact the Alumni Office.'];
+
+                // 'not_yet_claimed' is a separate terminal state, not a stage
+                // further along than 'claimed' — kept out of the linear
+                // stepper and called out as its own message instead.
+                $yearbookSteps = ['pending', 'on_hand', 'ready_to_claim', 'claimed'];
+                $yearbookStepLabels = \App\Models\AlumniYearbook::claimingStatusLabels();
+                $yearbookIsNotYetClaimed = ($yearbookRecord->claiming_status ?? null) === 'not_yet_claimed';
+                $yearbookCurrentIndex = $yearbookRecord && !$yearbookIsNotYetClaimed
+                    ? array_search($yearbookRecord->claiming_status, $yearbookSteps, true)
+                    : -1;
             @endphp
             <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 flex flex-col">
                 <div class="relative h-64 bg-[url('https://images.unsplash.com/photo-1544822688-c6f14d6986bb?auto=format&fit=crop&w=800q=80')] bg-cover bg-center">
@@ -135,11 +157,137 @@
                     <h4 class="text-2xl font-bold">
                         <span class="inner-text-shadow text-3xl font-medium bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Yearbook Claiming Status</span>
                     </h4>
+                    <button type="button"
+                        onclick="openAnimatedModal(document.getElementById('yearbookStatusModal'), document.getElementById('yearbookStatusModalPanel'))"
+                        class="mt-3 text-xs font-bold uppercase tracking-widest text-white bg-[#0E0F3B] hover:bg-[#1D46A4] px-6 py-2 rounded-full transition-colors">
+                        View Status
+                    </button>
                 </div>
             </div>
 
         </div>
     </section>
+
+    {{-- ===== Alumni ID Status modal ===== --}}
+    <div id="alumniIdStatusModal"
+        class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-200 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div id="alumniIdStatusModalPanel"
+            class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden opacity-0 scale-95 transition-all duration-200">
+            <div class="bg-[#0E0F3B] px-6 py-4 flex items-center justify-between">
+                <span class="text-white font-bold uppercase tracking-widest text-sm">Alumni ID Status</span>
+                <button type="button"
+                    onclick="closeAnimatedModal(document.getElementById('alumniIdStatusModal'), document.getElementById('alumniIdStatusModalPanel'))"
+                    class="text-white hover:text-gray-300">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                @if($alumniIdRecord)
+                    <p class="text-xs font-bold text-[#C73D1A] uppercase tracking-wide mb-1">Reference No.</p>
+                    <p class="text-lg font-bold text-[#0E0F3B] mb-6">ALID-{{ str_pad($alumniIdRecord->id, 6, '0', STR_PAD_LEFT) }}</p>
+
+                    <div class="flex items-center mb-2">
+                        @foreach($alumniIdSteps as $i => $stepKey)
+                            <div class="w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold {{ $i <= $alumniIdCurrentIndex ? 'bg-[#C73D1A] text-white' : 'bg-gray-200 text-gray-400' }}">
+                                @if($i < $alumniIdCurrentIndex)
+                                    <i class="fa-solid fa-check"></i>
+                                @else
+                                    {{ $i + 1 }}
+                                @endif
+                            </div>
+                            @if(!$loop->last)
+                                <div class="flex-1 h-0.5 {{ $i < $alumniIdCurrentIndex ? 'bg-[#C73D1A]' : 'bg-gray-200' }}"></div>
+                            @endif
+                        @endforeach
+                    </div>
+                    <div class="grid grid-cols-4 text-[10px] font-medium text-center mb-6">
+                        @foreach($alumniIdSteps as $i => $stepKey)
+                            <span class="{{ $i <= $alumniIdCurrentIndex ? 'text-[#C73D1A]' : 'text-gray-400' }}">{{ $alumniIdStepLabels[$stepKey] }}</span>
+                        @endforeach
+                    </div>
+
+                    <p class="text-sm text-gray-600 mb-4">{{ $alumniIdCard['desc'] }}</p>
+
+                    <div class="border-t border-gray-100 pt-4 text-xs text-gray-500">
+                        Last updated {{ $alumniIdRecord->status_updated_at ? $alumniIdRecord->status_updated_at->format('F j, Y g:i A') : 'Not yet updated' }}
+                    </div>
+                @else
+                    <p class="text-sm text-gray-500 text-center py-6">No Alumni ID request found yet. Please contact the Alumni Office.</p>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== Yearbook Claiming Status modal ===== --}}
+    <div id="yearbookStatusModal"
+        class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-200 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div id="yearbookStatusModalPanel"
+            class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden opacity-0 scale-95 transition-all duration-200">
+            <div class="bg-[#0E0F3B] px-6 py-4 flex items-center justify-between">
+                <span class="text-white font-bold uppercase tracking-widest text-sm">Yearbook Claiming Status</span>
+                <button type="button"
+                    onclick="closeAnimatedModal(document.getElementById('yearbookStatusModal'), document.getElementById('yearbookStatusModalPanel'))"
+                    class="text-white hover:text-gray-300">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                @if($yearbookRecord)
+                    <p class="text-xs font-bold text-[#C73D1A] uppercase tracking-wide mb-1">Reference No.</p>
+                    <p class="text-lg font-bold text-[#0E0F3B] mb-6">ALYB-{{ str_pad($yearbookRecord->id, 6, '0', STR_PAD_LEFT) }}</p>
+
+                    @if($yearbookIsNotYetClaimed)
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 mb-6 text-sm text-slate-600">
+                            <i class="fa-solid fa-circle-exclamation mr-1"></i> {{ $yearbookCard['desc'] }}
+                        </div>
+                    @else
+                        <div class="flex items-center mb-2">
+                            @foreach($yearbookSteps as $i => $stepKey)
+                                <div class="w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold {{ $i <= $yearbookCurrentIndex ? 'bg-[#C73D1A] text-white' : 'bg-gray-200 text-gray-400' }}">
+                                    @if($i < $yearbookCurrentIndex)
+                                        <i class="fa-solid fa-check"></i>
+                                    @else
+                                        {{ $i + 1 }}
+                                    @endif
+                                </div>
+                                @if(!$loop->last)
+                                    <div class="flex-1 h-0.5 {{ $i < $yearbookCurrentIndex ? 'bg-[#C73D1A]' : 'bg-gray-200' }}"></div>
+                                @endif
+                            @endforeach
+                        </div>
+                        <div class="grid grid-cols-4 text-[10px] font-medium text-center mb-6">
+                            @foreach($yearbookSteps as $i => $stepKey)
+                                <span class="{{ $i <= $yearbookCurrentIndex ? 'text-[#C73D1A]' : 'text-gray-400' }}">{{ $yearbookStepLabels[$stepKey] }}</span>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    <p class="text-sm text-gray-600 mb-4">{{ $yearbookCard['desc'] }}</p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm border-t border-gray-100 pt-4">
+                        <div>
+                            <p class="text-xs font-bold text-[#C73D1A] uppercase tracking-wide mb-1">Date</p>
+                            <p class="text-[#0E0F3B] font-semibold">{{ optional($yearbookRecord->distribution_scheduled_at)->format('M d, Y') ?? 'TBA' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-[#C73D1A] uppercase tracking-wide mb-1">Schedule</p>
+                            <p class="text-[#0E0F3B] font-semibold">{{ optional($yearbookRecord->distribution_scheduled_at)->format('h:i A') ?? 'TBA' }}</p>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <p class="text-xs font-bold text-[#C73D1A] uppercase tracking-wide mb-1">Location</p>
+                            <p class="text-[#0E0F3B] font-semibold">{{ $yearbookRecord->locationLabel() }}</p>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-100 mt-4 pt-4 text-xs text-gray-500">
+                        Last updated {{ $yearbookRecord->status_updated_at ? $yearbookRecord->status_updated_at->format('F j, Y g:i A') : 'Not yet updated' }}
+                    </div>
+                @else
+                    <p class="text-sm text-gray-500 text-center py-6">No yearbook record found yet. Please contact the Alumni Office.</p>
+                @endif
+            </div>
+        </div>
+    </div>
 
     <section class="py-16 px-6 max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center justify-items-center">
         <div class="rounded-lg overflow-hidden shadow-xl w-full">

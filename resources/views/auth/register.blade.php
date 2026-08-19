@@ -30,6 +30,9 @@
 
 <body class="min-h-screen relative flex items-center justify-center">
 
+    <!-- Error Toast Container -->
+    <div id="toastContainer" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 w-[90%] max-w-sm pointer-events-none"></div>
+
     <div class="absolute inset-0 z-0">
         <img src="{{ asset('assets/alumnetBackground.svg') }}" alt="PLV Building" class="w-full h-full object-cover">
         <!-- <div class="absolute inset-0 bg-overlay"></div> -->
@@ -60,7 +63,7 @@
 
         <div>
             <div class="text-left mb-4 mt-5">
-                <a href="{{ route('general.home') }}" class="text-white text-sm hover:text-[#0E0F3B]">↩ Return to
+                <a href="{{ route('general.home') }}" class="text-white text-sm px-3 py-1.5 rounded-full transition-colors hover:bg-white hover:text-[#0E0F3B]">↩ Return to
                     Home</a>
             </div>
 
@@ -88,88 +91,74 @@
                         </script>
                     @endif
 
-                    <div>
-                        <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Company Name:</label>
-                        <input type="text" name="employer_company_name"
-                            class="w-full px-4 py-0.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A]"
-                            required>
-                        @if($errors->has('employer_company_name'))
-                            <div class="alert alert-danger">
-                                {{ $errors->first('employer_company_name') }}
-                            </div>
-                        @endif
+                    <div class="pt-1">
+                        <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-wider border-b border-gray-200 pb-1">
+                            Business Details</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Business Name:</label>
+                            <input type="text" name="employer_company_name"
+                                class="w-full px-4 py-0.5 border rounded focus:outline-none focus:ring-2 {{ $errors->has('employer_company_name') ? 'border-red-600 focus:ring-red-600' : 'border-[#C73D1A] focus:ring-[#C73D1A]' }}"
+                                required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Website URL:</label>
+                            <input type="url" name="employer_website_url"
+                                class="w-full px-4 py-0.5 border rounded focus:outline-none focus:ring-2 {{ $errors->has('employer_website_url') ? 'border-red-600 focus:ring-red-600' : 'border-[#C73D1A] focus:ring-[#C73D1A]' }}">
+                        </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Website URL:</label>
-                        <input type="url" name="employer_website_url"
-                            class="w-full px-4 py-0.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
-                        @if($errors->has('employer_website_url'))
-                            <div class="alert alert-danger">
-                                {{ $errors->first('employer_website_url') }}
-                            </div>
-                        @endif
+                        <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Business Verification
+                            Document</label>
+                        <p class="text-[10px] text-gray-500 mb-2">Upload a document proving your company's legitimacy
+                            <br>(eg. Business Permit, SEC/DTI Registration, BIR Certificate)</p>
+
+                        <div id="documentDropzone"
+                            class="w-full border border-dashed rounded-lg bg-slate-50 hover:bg-slate-100 transition cursor-pointer flex items-center justify-center text-center px-4 py-4 {{ $errors->has('employer_company_document') ? 'border-red-600' : 'border-[#C73D1A]' }}"
+                            onclick="document.getElementById('employer_company_document').click()">
+                            <span id="documentDropzoneText" class="text-[11px] text-gray-400">Choose file or drag &amp;
+                                drop here</span>
+                        </div>
+                        <input type="file" id="employer_company_document" name="employer_company_document"
+                            accept="application/pdf,image/*" class="hidden">
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Document:</label>
-                        <input type="file" name="employer_company_document" accept="application/pdf"
-                            class="w-full px-4 py-0.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
-                        @if($errors->has('employer_company_document'))
-                            <div class="alert alert-danger">
-                                {{ $errors->first('employer_company_document') }}
-                            </div>
-                        @endif
+                    <div class="pt-1">
+                        <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-wider border-b border-gray-200 pb-1">
+                            Employer Details</p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">First Name:</label>
                             <input type="text" name="user_first_name"
-                                class="w-full px-4 py-0.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A]"
+                                class="w-full px-4 py-0.5 border rounded focus:outline-none focus:ring-2 {{ $errors->has('user_first_name') ? 'border-red-600 focus:ring-red-600' : 'border-[#C73D1A] focus:ring-[#C73D1A]' }}"
                                 required>
-                            @if($errors->has('user_first_name'))
-                                <div class="alert alert-danger">
-                                    {{ $errors->first('user_first_name') }}
-                                </div>
-                            @endif
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Last Name:</label>
                             <input type="text" name="user_last_name"
-                                class="w-full px-4 py-0.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A]"
+                                class="w-full px-4 py-0.5 border rounded focus:outline-none focus:ring-2 {{ $errors->has('user_last_name') ? 'border-red-600 focus:ring-red-600' : 'border-[#C73D1A] focus:ring-[#C73D1A]' }}"
                                 required>
-                            @if($errors->has('user_last_name'))
-                                <div class="alert alert-danger">
-                                    {{ $errors->first('user_last_name') }}
-                                </div>
-                            @endif
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Email:</label>
                         <input type="email" name="user_email"
-                            class="w-full px-4 py-0.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A]"
+                            class="w-full px-4 py-0.5 border rounded focus:outline-none focus:ring-2 {{ $errors->has('user_email') ? 'border-red-600 focus:ring-red-600' : 'border-[#C73D1A] focus:ring-[#C73D1A]' }}"
                             required>
-                            @if($errors->has('user_email'))
-                                <div class="alert alert-danger">
-                                    {{ $errors->first('user_email') }}
-                                </div>
-                            @endif
                     </div>
 
                     <div class="relative">
                         <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Password:</label>
 
                         <input id="passwordInput" type="password" name="user_password"
-                            class="w-full px-4 py-0.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A] pr-10"
+                            class="w-full px-4 py-0.5 border rounded focus:outline-none focus:ring-2 pr-10 {{ $errors->has('user_password') ? 'border-red-600 focus:ring-red-600' : 'border-[#C73D1A] focus:ring-[#C73D1A]' }}"
                             required>
-                            @if($errors->has('user_password'))
-                                <div class="alert alert-danger">
-                                    {{ $errors->first('user_password') }}
-                                </div>
-                            @endif
 
                         <button type="button" id="togglePassword"
                             class="absolute right-3 top-8 text-gray-400 hover:text-orange-500 focus:outline-none">
@@ -228,8 +217,8 @@
 
     <!-- Terms & Privacy Modal -->
     <div id="termsModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden font-[Montserrat]">
-        <div class="bg-white rounded-xl shadow-2xl w-[90%] max-w-lg overflow-hidden">
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden opacity-0 transition-opacity duration-200 font-[Montserrat]">
+        <div id="termsModalPanel" class="bg-white rounded-xl shadow-2xl w-[90%] max-w-lg overflow-hidden opacity-0 scale-95 transition-all duration-200">
             <div class="bg-[#0E0F3B] px-4 py-2 flex items-center justify-between">
                 <span class="text-white text-[10px] font-semibold uppercase tracking-widest">Terms of Use & Privacy
                     Policy</span>
@@ -281,8 +270,8 @@
 
     <!-- Data Privacy Act Modal -->
     <div id="dataPrivacyModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden font-[Montserrat]">
-        <div class="bg-white rounded-xl shadow-2xl w-[90%] max-w-lg overflow-hidden">
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden opacity-0 transition-opacity duration-200 font-[Montserrat]">
+        <div id="dataPrivacyModalPanel" class="bg-white rounded-xl shadow-2xl w-[90%] max-w-lg overflow-hidden opacity-0 scale-95 transition-all duration-200">
             <div class="bg-[#0E0F3B] px-4 py-2 flex items-center justify-between">
                 <span class="text-white text-[10px] font-semibold uppercase tracking-widest">Data Privacy Act</span>
                 <button onclick="closePrivacyModal()"
@@ -337,8 +326,8 @@
 
     <!-- Success Modal -->
     <div id="successModal"
-        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 hidden font-[Montserrat]">
-        <div class="bg-white rounded-xl shadow-2xl w-[90%] max-w-md overflow-hidden transform transition-all relative">
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 hidden opacity-0 transition-opacity duration-200 font-[Montserrat]">
+        <div id="successModalPanel" class="bg-white rounded-xl shadow-2xl w-[90%] max-w-md overflow-hidden transform transition-all duration-200 opacity-0 scale-95 relative">
             <button onclick="closeSuccessModal()"
                 class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none z-10">
                 <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -374,7 +363,96 @@
         </div>
     </div>
 
+    @include('partials.ui-animations')
     <script>
+        // Error toasts (red), populated from server-side validation errors
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+
+            const toast = document.createElement('div');
+            toast.className = 'pointer-events-auto flex items-start gap-2 bg-red-50 text-red-700 border border-red-500 text-[12px] font-medium px-4 py-3 rounded-md shadow-lg opacity-0 -translate-y-2 transition-all duration-300 ease-out';
+
+            const text = document.createElement('span');
+            text.className = 'flex-1';
+            text.textContent = message;
+
+            const closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'text-red-500 hover:text-red-700 leading-none text-lg';
+            closeBtn.innerHTML = '&times;';
+            closeBtn.onclick = () => dismissToast(toast);
+
+            toast.appendChild(text);
+            toast.appendChild(closeBtn);
+            container.appendChild(toast);
+
+            // Force a layout flush so the opacity-0/-translate-y-2 starting state is
+            // actually painted before we transition away from it, otherwise the
+            // browser can collapse both class changes into a single frame and the
+            // toast just snaps in/out instead of animating.
+            toast.getBoundingClientRect();
+            requestAnimationFrame(() => {
+                toast.classList.remove('opacity-0', '-translate-y-2');
+            });
+
+            setTimeout(() => dismissToast(toast), 8000);
+        }
+
+        function dismissToast(toast) {
+            if (!toast.isConnected) return;
+            toast.classList.add('opacity-0', '-translate-y-2');
+            setTimeout(() => toast.remove(), 300);
+        }
+
+        @if ($errors->any())
+            window.addEventListener('DOMContentLoaded', () => {
+                const messages = @json($errors->all());
+                messages.forEach(message => showToast(message));
+            });
+        @endif
+
+        // Business Verification Document dropzone
+        const documentDropzone = document.getElementById('documentDropzone');
+        const documentInput = document.getElementById('employer_company_document');
+        const documentDropzoneText = document.getElementById('documentDropzoneText');
+
+        function updateDocumentDropzoneText() {
+            if (documentInput.files.length > 0) {
+                documentDropzoneText.textContent = documentInput.files[0].name;
+                documentDropzoneText.classList.remove('text-gray-400');
+                documentDropzoneText.classList.add('text-[#0E0F3B]', 'font-semibold');
+            } else {
+                documentDropzoneText.textContent = 'Choose file or drag & drop here';
+                documentDropzoneText.classList.add('text-gray-400');
+                documentDropzoneText.classList.remove('text-[#0E0F3B]', 'font-semibold');
+            }
+        }
+
+        documentInput.addEventListener('change', updateDocumentDropzoneText);
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            documentDropzone.addEventListener(eventName, function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                documentDropzone.classList.add('bg-slate-100');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            documentDropzone.addEventListener(eventName, function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                documentDropzone.classList.remove('bg-slate-100');
+            });
+        });
+
+        documentDropzone.addEventListener('drop', function (e) {
+            if (e.dataTransfer.files.length > 0) {
+                documentInput.files = e.dataTransfer.files;
+                updateDocumentDropzoneText();
+            }
+        });
+
         const passwordInput = document.getElementById('passwordInput');
         const togglePassword = document.getElementById('togglePassword');
         const eyeIcon = document.getElementById('eyeIcon');
@@ -400,13 +478,11 @@
         // Terms & Privacy Modal
         function openModal(event) {
             event.preventDefault();
-            document.getElementById('termsModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            openAnimatedModal(document.getElementById('termsModal'), document.getElementById('termsModalPanel'));
         }
 
         function closeModal() {
-            document.getElementById('termsModal').classList.add('hidden');
-            document.body.style.overflow = '';
+            closeAnimatedModal(document.getElementById('termsModal'), document.getElementById('termsModalPanel'));
         }
 
         function agreeAndClose() {
@@ -421,13 +497,11 @@
         // Data Privacy Modal
         function openPrivacyModal(event) {
             event.preventDefault();
-            document.getElementById('dataPrivacyModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            openAnimatedModal(document.getElementById('dataPrivacyModal'), document.getElementById('dataPrivacyModalPanel'));
         }
 
         function closePrivacyModal() {
-            document.getElementById('dataPrivacyModal').classList.add('hidden');
-            document.body.style.overflow = '';
+            closeAnimatedModal(document.getElementById('dataPrivacyModal'), document.getElementById('dataPrivacyModalPanel'));
         }
 
         function agreePrivacyAndClose() {
@@ -440,13 +514,11 @@
         });
 
         function showSuccessModal() {
-            document.getElementById('successModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            openAnimatedModal(document.getElementById('successModal'), document.getElementById('successModalPanel'));
         }
 
         function closeSuccessModal() {
-            document.getElementById('successModal').classList.add('hidden');
-            document.body.style.overflow = '';
+            closeAnimatedModal(document.getElementById('successModal'), document.getElementById('successModalPanel'));
         }
     </script>
 </body>

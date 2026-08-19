@@ -27,6 +27,9 @@
 
 <body class="min-h-screen relative flex items-center justify-center">
 
+    <!-- Error Toast Container -->
+    <div id="toastContainer" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 w-[90%] max-w-sm pointer-events-none"></div>
+
     <div class="absolute inset-0 z-0">
         <img src="{{ asset('assets/alumnetBackground.svg') }}" alt="PLV Building" class="w-full h-full object-cover">
         <!-- <div class="absolute inset-0 bg-overlay"></div> -->
@@ -56,7 +59,7 @@
 
         <div>
             <div class="text-left mb-4 mt-5">
-                <a href="{{ route('general.home') }}" class="text-white text-sm hover:text-[#0E0F3B]">↩ Return to
+                <a href="{{ route('general.home') }}" class="text-white text-sm px-3 py-1.5 rounded-full transition-colors hover:bg-white hover:text-[#0E0F3B]">↩ Return to
                     Home</a>
             </div>
 
@@ -81,28 +84,16 @@
                     <div>
                         <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Email:</label>
                         <input type="email" name="user_email"
-                            class="w-full px-4 py-1.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A]"
+                            class="w-full px-4 py-1.5 border rounded focus:outline-none focus:ring-2 {{ $errors->has('user_email') ? 'border-red-600 focus:ring-red-600' : 'border-[#C73D1A] focus:ring-[#C73D1A]' }}"
                             required>
-                        @error('user_email')
-                            <span class="my-custom-error font-semibold text-sm">
-                                <i class="fas fa-exclamation-circle"></i> 
-                                {{ $message }}
-                            </span>
-                        @enderror
                     </div>
 
                     <div class="relative">
                         <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Password:</label>
 
                         <input id="passwordInput" type="password" name="user_password"
-                            class="w-full px-4 py-1.5 border border-[#C73D1A] rounded focus:outline-none focus:ring-2 focus:ring-[#C73D1A] pr-10"
+                            class="w-full px-4 py-1.5 border rounded focus:outline-none focus:ring-2 pr-10 {{ $errors->has('user_password') ? 'border-red-600 focus:ring-red-600' : 'border-[#C73D1A] focus:ring-[#C73D1A]' }}"
                             required>
-                        @error('user_password')
-                            <span class="my-custom-error text-sm">
-                                <i class="fas fa-exclamation-circle"></i> 
-                                {{ $message }}
-                            </span>
-                        @enderror
 
                         <button type="button" id="togglePassword"
                             class="absolute right-3 top-8 text-gray-400 hover:text-orange-500 focus:outline-none">
@@ -138,6 +129,52 @@
     </div>
 
     <script>
+        // Error toasts (red), populated from server-side validation errors
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+
+            const toast = document.createElement('div');
+            toast.className = 'pointer-events-auto flex items-start gap-2 bg-red-50 text-red-700 border border-red-500 text-[12px] font-medium px-4 py-3 rounded-md shadow-lg opacity-0 -translate-y-2 transition-all duration-300 ease-out';
+
+            const text = document.createElement('span');
+            text.className = 'flex-1';
+            text.textContent = message;
+
+            const closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'text-red-500 hover:text-red-700 leading-none text-lg';
+            closeBtn.innerHTML = '&times;';
+            closeBtn.onclick = () => dismissToast(toast);
+
+            toast.appendChild(text);
+            toast.appendChild(closeBtn);
+            container.appendChild(toast);
+
+            // Force a layout flush so the opacity-0/-translate-y-2 starting state is
+            // actually painted before we transition away from it, otherwise the
+            // browser can collapse both class changes into a single frame and the
+            // toast just snaps in/out instead of animating.
+            toast.getBoundingClientRect();
+            requestAnimationFrame(() => {
+                toast.classList.remove('opacity-0', '-translate-y-2');
+            });
+
+            setTimeout(() => dismissToast(toast), 8000);
+        }
+
+        function dismissToast(toast) {
+            if (!toast.isConnected) return;
+            toast.classList.add('opacity-0', '-translate-y-2');
+            setTimeout(() => toast.remove(), 300);
+        }
+
+        @if ($errors->any())
+            window.addEventListener('DOMContentLoaded', () => {
+                const messages = @json($errors->all());
+                messages.forEach(message => showToast(message));
+            });
+        @endif
+
         const passwordInput = document.getElementById('passwordInput');
         const togglePassword = document.getElementById('togglePassword');
         const eyeIcon = document.getElementById('eyeIcon');

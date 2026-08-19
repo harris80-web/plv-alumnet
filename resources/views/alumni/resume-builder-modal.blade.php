@@ -5,18 +5,33 @@
     resume-editor-modal.blade.php (the "Edit Resume" popup shown once
     complete); expects $user, $resumeData, $industries.
 --}}
-<div id="resumeBuilderOverlay" class="hidden fixed inset-0 z-[200] bg-black/60 flex items-start justify-center overflow-y-auto py-8 px-4">
-    <div id="resumeBuilderPanel" class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl relative p-8 md:p-12">
+<div id="resumeBuilderOverlay" class="hidden fixed inset-0 z-[200] bg-black/60 opacity-0 transition-opacity duration-200 flex items-start justify-center overflow-y-auto py-8 px-4">
+    <div id="resumeBuilderPanel" class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl relative p-8 md:p-12 opacity-0 scale-95 transition-all duration-200">
 
-        {{-- ===== Import an existing resume ===== --}}
-        <div class="mb-6 p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
-            <p class="text-sm font-medium text-gray-700 mb-2">
-                <i class="fa-solid fa-file-import text-red-800 mr-1"></i>
-                Already have a resume? Import it to fill in the fields below automatically — you can still edit everything before saving.
-            </p>
-            <div class="flex flex-wrap items-center gap-3">
-                <input type="file" id="importResumeFile" accept="application/pdf"
-                    class="text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-red-800 file:text-white file:text-xs file:font-medium hover:file:bg-red-900">
+        <button type="button" id="closeResumeBuilderBtn"
+            class="absolute top-6 right-6 text-gray-400 hover:text-gray-600">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+
+        {{-- ===== Header ===== --}}
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+                IMPORT RESUME
+            </h1>
+            <p class="text-sm text-gray-500 mt-1 max-w-lg mx-auto">Already have a resume? Import it to fill in the
+                fields below automatically — you can still edit everything before saving.</p>
+        </div>
+
+        {{-- ===== Import an existing resume — real drag & drop ===== --}}
+        <div class="mb-8">
+            <div id="resumeDropzone" onclick="document.getElementById('importResumeFile').click()"
+                class="p-6 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 hover:bg-gray-100 transition cursor-pointer text-center">
+                <i class="fa-solid fa-cloud-arrow-up text-3xl text-[#C73D1A] mb-2"></i>
+                <p id="resumeDropzoneText" class="text-sm font-medium text-gray-500">Drag &amp; drop or upload files
+                    here</p>
+                <input type="file" id="importResumeFile" accept="application/pdf" class="hidden">
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-3 mt-3">
                 <button type="button" id="importResumeBtn"
                     class="text-sm font-medium bg-[#0E0F3B] text-white rounded px-4 py-1.5 hover:bg-[#1D46A4] disabled:opacity-50">
                     Import from PDF
@@ -25,44 +40,32 @@
             </div>
         </div>
 
-        {{-- ===== Header + progress ===== --}}
+        {{-- ===== Resume Builder header + step wizard ===== --}}
         <div class="mb-6">
-            <div class="flex items-center justify-between mb-2">
-                <h1 class="text-2xl font-bold text-gray-900">Build Your Resume</h1>
-                <div class="flex items-center gap-3">
-                    <span id="step-label" class="text-sm font-medium text-red-800">Step 1 of 4</span>
-                    <button type="button" id="closeResumeBuilderBtn" class="text-gray-400 hover:text-gray-600">
-                        <i class="fa-solid fa-xmark text-xl"></i>
-                    </button>
-                </div>
-            </div>
-            {{-- Wizard progress only — how far through the 4 steps you are.
-                 Moves with Continue/Back, nothing else. --}}
-            <div class="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                <div id="step-progress-bar" class="h-full bg-red-800 rounded-full transition-all duration-300"
-                    style="width:0%"></div>
-            </div>
+            <h2 class="text-center text-xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent mb-1">
+                RESUME BUILDER
+            </h2>
+            <p class="text-center text-sm text-gray-500 italic mb-6">"Build a professional resume step by step —
+                fill in your details below and we'll format it for you."</p>
 
-            {{-- Actual resume completeness — a different thing from the bar
-                 above, only updates after a real save (Save draft/Submit/Import). --}}
-            <div class="flex items-center justify-between mt-4">
-                <span class="text-xs font-bold text-gray-600 uppercase tracking-wide">Resume completeness</span>
-                <span class="text-xs font-medium text-gray-600"><span id="completeness-label">{{ $resumeData['resume_completeness'] ?? 0 }}</span>% saved</span>
-            </div>
-            <ul id="completeness-breakdown" class="mt-2 space-y-1 text-xs text-gray-500">
-                @foreach($user->alumnus->completenessBreakdown() as $item)
-                    <li data-key="{{ $item['key'] }}" class="flex items-center gap-2">
-                        <i class="fa-solid {{ $item['done'] ? 'fa-circle-check text-green-600' : 'fa-circle text-gray-300' }}"></i>
-                        <span>{{ $item['label'] }}</span>
-                    </li>
+            @php $wizardSteps = ['Summary', 'Skills', 'Experience', 'Certifications']; @endphp
+            <div class="flex items-center">
+                @foreach ($wizardSteps as $i => $label)
+                    <div class="step-circle w-9 h-9 shrink-0 rounded-full border-2 border-gray-300 text-gray-400 flex items-center justify-center font-bold text-sm cursor-pointer transition-colors duration-300"
+                        data-step="{{ $i }}">
+                        <span class="step-number">{{ $i + 1 }}</span>
+                        <i class="fa-solid fa-check step-check hidden"></i>
+                    </div>
+                    @if (!$loop->last)
+                        <div class="step-connector flex-1 h-0.5 bg-gray-200 transition-colors duration-300"></div>
+                    @endif
                 @endforeach
-            </ul>
-            <div class="flex gap-4 mt-3 text-sm">
-                <button type="button" class="step-tab font-medium text-red-800" data-step="0">1. Summary</button>
-                <button type="button" class="step-tab font-medium text-gray-400" data-step="1">2. Skills</button>
-                <button type="button" class="step-tab font-medium text-gray-400" data-step="2">3. Experience</button>
-                <button type="button" class="step-tab font-medium text-gray-400" data-step="3">4.
-                    Certifications</button>
+            </div>
+            <div class="grid grid-cols-4 mt-2">
+                @foreach ($wizardSteps as $i => $label)
+                    <span
+                        class="step-label text-xs font-medium text-gray-400 {{ $i === 0 ? 'text-left' : ($loop->last ? 'text-right' : 'text-center') }}">{{ $label }}</span>
+                @endforeach
             </div>
         </div>
 
@@ -77,13 +80,13 @@
 
                 <textarea name="resume_summary" id="resume_summary" rows="4" maxlength="500"
                     placeholder="e.g. Recent BSIT graduate specializing in full-stack web development..."
-                    class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-800">{{ old('resume_summary', $resumeData['resume_summary'] ?? '') }}</textarea>
+                    class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">{{ old('resume_summary', $resumeData['resume_summary'] ?? '') }}</textarea>
                 <p class="text-xs text-gray-400 text-right mt-1"><span id="summary-count">0</span>/500</p>
 
                 <label class="block text-sm font-medium text-gray-700 mt-4 mb-1">LinkedIn</label>
                 <input type="url" name="linkedin_url" placeholder="linkedin.com/in/..."
                     value="{{ old('linkedin_url', $resumeData['linkedin_url'] ?? '') }}"
-                    class="w-full sm:w-1/2 rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-800">
+                    class="w-full sm:w-1/2 rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
             </section>
 
             {{-- ===== Step 1: Skills ===== --}}
@@ -95,7 +98,7 @@
                 <div class="relative mb-4 w-full sm:w-1/2">
                     <input type="text" id="skill-search-input" autocomplete="off"
                         placeholder="Search for a skill (e.g. Laravel, Excel, Lesson Planning)..."
-                        class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-800">
+                        class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
                     <div id="skill-search-results"
                         class="hidden absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded shadow-lg max-h-56 overflow-y-auto">
                     </div>
@@ -107,7 +110,7 @@
                             class="skill-chip flex items-center gap-1 pl-3 pr-1 py-1 rounded-full border border-gray-300 bg-gray-50 text-sm">
                             <span class="skill-name-display">{{ $skill['name'] }}</span>
                             <input type="hidden" name="skills[{{ $i }}][name]" value="{{ $skill['name'] }}">
-                            <button type="button" class="remove-row text-red-700 px-1">&times;</button>
+                            <button type="button" class="remove-row text-[#C73D1A] px-1">&times;</button>
                         </div>
                     @endforeach
                 </div>
@@ -133,14 +136,14 @@
 
                             <input type="text" name="experiences[{{ $i }}][job_title]" value="{{ $exp['job_title'] }}"
                                 placeholder="Job title / Project title"
-                                class="w-full rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-red-800">
+                                class="w-full rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
                                 <input type="number" name="experiences[{{ $i }}][duration_months]"
                                     value="{{ $exp['duration_months'] }}" min="0" max="600" placeholder="Duration (months)"
-                                    class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-800">
+                                    class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
                                 <select name="experiences[{{ $i }}][industry_id]"
-                                    class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-800">
+                                    class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
                                     <option value="">Industry (optional)</option>
                                     @foreach($industries as $industry)
                                         <option value="{{ $industry->industry_id }}" @selected(($exp['industry_id'] ?? null) == $industry->industry_id)>{{ $industry->industry_name }}</option>
@@ -150,15 +153,15 @@
 
                             <textarea name="experiences[{{ $i }}][job_description]" rows="3"
                                 placeholder="What did you do? Be specific."
-                                class="w-full rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-red-800">{{ $exp['job_description'] }}</textarea>
+                                class="w-full rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">{{ $exp['job_description'] }}</textarea>
 
-                            <button type="button" class="remove-row text-sm text-red-700">Remove</button>
+                            <button type="button" class="remove-row text-sm text-[#C73D1A]">Remove</button>
                         </div>
                     @endforeach
                 </div>
 
                 <button type="button" id="add-experience"
-                    class="text-sm font-medium border border-red-800 text-red-800 rounded px-3 py-1.5 hover:bg-red-50">
+                    class="text-sm font-medium border border-[#C73D1A] text-[#C73D1A] rounded px-3 py-1.5 hover:bg-orange-50">
                     + Add work or project
                 </button>
             </section>
@@ -188,38 +191,55 @@
                                 <input type="text" name="certifications[{{ $i }}][certification_name]"
                                     value="{{ $cert['certification_name'] }}"
                                     placeholder="Title (e.g. AWS Certified Cloud Practitioner)"
-                                    class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-800">
+                                    class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
                                 <input type="text" name="certifications[{{ $i }}][certification_from]"
                                     value="{{ $cert['certification_from'] }}" placeholder="Issuing organization / speaker"
-                                    class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-800">
+                                    class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
                             </div>
 
                             <input type="date" name="certifications[{{ $i }}][certification_date]"
                                 value="{{ $cert['certification_date'] }}"
-                                class="w-40 rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-red-800">
+                                class="w-40 rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
 
-                            <button type="button" class="remove-row text-sm text-red-700">Remove</button>
+                            <button type="button" class="remove-row text-sm text-[#C73D1A]">Remove</button>
                         </div>
                     @endforeach
                 </div>
 
                 <button type="button" id="add-cert"
-                    class="text-sm font-medium border border-red-800 text-red-800 rounded px-3 py-1.5 hover:bg-red-50">
+                    class="text-sm font-medium border border-[#C73D1A] text-[#C73D1A] rounded px-3 py-1.5 hover:bg-orange-50">
                     + Add certification or seminar
                 </button>
             </section>
 
+            {{-- Resume completeness — a different thing from the wizard step
+                 above; only updates after a real save (Save draft/Submit/Import). --}}
+            <div class="mt-6 pt-4 border-t border-gray-200">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-[#0E0F3B] uppercase tracking-wide">Resume Completeness</span>
+                    <span class="text-xs font-bold text-[#C73D1A]"><span id="completeness-label">{{ $resumeData['resume_completeness'] ?? 0 }}</span>% Saved</span>
+                </div>
+                <ul id="completeness-breakdown" class="space-y-1 text-xs text-gray-500">
+                    @foreach($user->alumnus->completenessBreakdown() as $item)
+                        <li data-key="{{ $item['key'] }}" class="flex items-center gap-2">
+                            <i class="fa-solid {{ $item['done'] ? 'fa-circle-check text-green-600' : 'fa-circle text-gray-300' }}"></i>
+                            <span>{{ $item['label'] }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+
             {{-- ===== Nav buttons ===== --}}
             <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-200">
                 <button type="button" id="btn-back"
-                    class="hidden text-sm font-medium border border-gray-300 text-gray-700 rounded px-4 py-2">Back</button>
+                    class="hidden text-sm font-medium border border-gray-300 text-gray-700 rounded px-4 py-2 hover:bg-gray-50">Back</button>
                 <div class="ml-auto flex items-center gap-3">
                     <span id="draft-status" class="text-xs text-gray-500"></span>
                     <button type="button" id="btn-draft"
-                        class="text-sm font-medium border border-gray-300 text-gray-700 rounded px-4 py-2">Save
+                        class="text-sm font-medium border border-gray-300 text-gray-700 rounded px-4 py-2 hover:bg-gray-50">Save
                         draft</button>
                     <button type="button" id="btn-next"
-                        class="text-sm font-medium bg-red-800 text-white rounded px-4 py-2 hover:bg-red-900">Continue</button>
+                        class="text-sm font-medium bg-[#C73D1A] text-white rounded px-4 py-2 hover:bg-[#A8330F]">Continue</button>
                 </div>
             </div>
         </form>
@@ -231,7 +251,7 @@
     <div class="skill-chip flex items-center gap-1 pl-3 pr-1 py-1 rounded-full border border-gray-300 text-sm">
         <input type="text" name="skills[__INDEX__][name]" placeholder="e.g. Laravel"
             class="bg-transparent focus:outline-none w-28">
-        <button type="button" class="remove-row text-red-700 px-1">&times;</button>
+        <button type="button" class="remove-row text-[#C73D1A] px-1">&times;</button>
     </div>
 </template>
 
@@ -244,13 +264,13 @@
                     value="project"> Project</label>
         </div>
         <input type="text" name="experiences[__INDEX__][job_title]" placeholder="Job title / Project title"
-            class="w-full rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-red-800">
+            class="w-full rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
             <input type="number" name="experiences[__INDEX__][duration_months]" min="0" max="600"
                 placeholder="Duration (months)"
-                class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-800">
+                class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
             <select name="experiences[__INDEX__][industry_id]"
-                class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-800">
+                class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
                 <option value="">Industry (optional)</option>
                 @foreach($industries as $industry)
                     <option value="{{ $industry->industry_id }}">{{ $industry->industry_name }}</option>
@@ -258,8 +278,8 @@
             </select>
         </div>
         <textarea name="experiences[__INDEX__][job_description]" rows="3" placeholder="What did you do?"
-            class="w-full rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-red-800"></textarea>
-        <button type="button" class="remove-row text-sm text-red-700">Remove</button>
+            class="w-full rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]"></textarea>
+        <button type="button" class="remove-row text-sm text-[#C73D1A]">Remove</button>
     </div>
 </template>
 
@@ -276,14 +296,14 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
             <input type="text" name="certifications[__INDEX__][certification_name]" placeholder="Title"
-                class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-800">
+                class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
             <input type="text" name="certifications[__INDEX__][certification_from]"
                 placeholder="Issuing organization / speaker"
-                class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-800">
+                class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
         </div>
         <input type="date" name="certifications[__INDEX__][certification_date]"
-            class="w-40 rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-red-800">
-        <button type="button" class="remove-row text-sm text-red-700">Remove</button>
+            class="w-40 rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+        <button type="button" class="remove-row text-sm text-[#C73D1A]">Remove</button>
     </div>
 </template>
 
@@ -305,17 +325,20 @@
 
     var form = document.getElementById('resume-form');
     var steps = document.querySelectorAll('.wizard-step');
-    var tabs = document.querySelectorAll('.step-tab');
+    var stepCircles = document.querySelectorAll('.step-circle');
+    var stepLabels = document.querySelectorAll('.step-label');
+    var stepConnectors = document.querySelectorAll('.step-connector');
     var btnNext = document.getElementById('btn-next');
     var btnBack = document.getElementById('btn-back');
     var btnDraft = document.getElementById('btn-draft');
+    var panel = document.getElementById('resumeBuilderPanel');
 
     document.getElementById('openResumeEditorBtn').addEventListener('click', function () {
-        overlay.classList.remove('hidden');
+        openAnimatedModal(overlay, panel);
     });
 
     function closeBuilder() {
-        overlay.classList.add('hidden');
+        closeAnimatedModal(overlay, panel);
     }
 
     document.getElementById('closeResumeBuilderBtn').addEventListener('click', closeBuilder);
@@ -326,20 +349,35 @@
     function showStep(idx) {
         currentStep = idx;
         steps.forEach(function (s) { s.classList.toggle('hidden', Number(s.dataset.step) !== idx); });
-        tabs.forEach(function (t) { t.className = 'step-tab font-medium ' + (Number(t.dataset.step) <= idx ? 'text-red-800' : 'text-gray-400'); });
+
+        // Circle wizard: solid orange for the active step (number shown) and
+        // completed steps (checkmark shown instead), gray outline for
+        // upcoming ones. Connector segments fill in solid up to the active step.
+        stepCircles.forEach(function (circle, i) {
+            var done = i < idx, active = i === idx;
+            circle.classList.toggle('bg-[#C73D1A]', done || active);
+            circle.classList.toggle('border-[#C73D1A]', done || active);
+            circle.classList.toggle('text-white', done || active);
+            circle.classList.toggle('border-gray-300', !done && !active);
+            circle.classList.toggle('text-gray-400', !done && !active);
+            circle.querySelector('.step-number').classList.toggle('hidden', done);
+            circle.querySelector('.step-check').classList.toggle('hidden', !done);
+        });
+        stepLabels.forEach(function (label, i) {
+            label.classList.toggle('text-[#C73D1A]', i <= idx);
+            label.classList.toggle('font-bold', i === idx);
+            label.classList.toggle('text-gray-400', i > idx);
+        });
+        stepConnectors.forEach(function (line, i) {
+            line.classList.toggle('bg-[#C73D1A]', i < idx);
+            line.classList.toggle('bg-gray-200', i >= idx);
+        });
+
         btnBack.classList.toggle('hidden', idx === 0);
         btnNext.textContent = idx === totalSteps - 1 ? 'Submit resume' : 'Continue';
-
-        // Pure wizard-progress indicator — moves forward/backward with
-        // Continue/Back only, never tied to what's typed or saved. The
-        // separate "Resume completeness" number below only ever comes from
-        // the server (see submitForm) — the two are deliberately not the
-        // same thing.
-        document.getElementById('step-label').textContent = 'Step ' + (idx + 1) + ' of ' + totalSteps;
-        document.getElementById('step-progress-bar').style.width = Math.round((idx / (totalSteps - 1)) * 100) + '%';
     }
 
-    tabs.forEach(function (t) { t.addEventListener('click', function () { showStep(Number(t.dataset.step)); }); });
+    stepCircles.forEach(function (c) { c.addEventListener('click', function () { showStep(Number(c.dataset.step)); }); });
     btnBack.addEventListener('click', function () { if (currentStep > 0) showStep(currentStep - 1); });
     btnNext.addEventListener('click', function () {
         if (currentStep < totalSteps - 1) { showStep(currentStep + 1); } else { submitForm(true); }
@@ -406,7 +444,7 @@
             if (added.indexOf(skill.skill_name.toLowerCase()) !== -1) return;
 
             var item = document.createElement('div');
-            item.className = 'px-3 py-2 text-sm hover:bg-red-50 cursor-pointer';
+            item.className = 'px-3 py-2 text-sm hover:bg-orange-50 cursor-pointer';
             item.textContent = skill.skill_name;
             item.addEventListener('click', function () {
                 addSkillChip(skill.skill_name);
@@ -417,7 +455,7 @@
 
         if (!hasExactMatch && added.indexOf(query.toLowerCase()) === -1) {
             var addNew = document.createElement('div');
-            addNew.className = 'px-3 py-2 text-sm text-red-800 font-medium hover:bg-red-50 cursor-pointer border-t border-gray-100';
+            addNew.className = 'px-3 py-2 text-sm text-[#C73D1A] font-medium hover:bg-orange-50 cursor-pointer border-t border-gray-100';
             addNew.textContent = '+ Add "' + query + '" as a new skill';
             addNew.addEventListener('click', function () {
                 addSkillChip(query);
@@ -452,7 +490,7 @@
 
         var btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'remove-row text-red-700 px-1';
+        btn.className = 'remove-row text-[#C73D1A] px-1';
         btn.innerHTML = '&times;';
 
         chip.appendChild(span);
@@ -564,6 +602,37 @@
     var importBtn = document.getElementById('importResumeBtn');
     var importFile = document.getElementById('importResumeFile');
     var importStatus = document.getElementById('importResumeStatus');
+
+    var resumeDropzone = document.getElementById('resumeDropzone');
+    var resumeDropzoneText = document.getElementById('resumeDropzoneText');
+
+    function updateResumeDropzoneText() {
+        var has = importFile.files.length > 0;
+        resumeDropzoneText.textContent = has ? importFile.files[0].name : 'Drag & drop or upload files here';
+        resumeDropzoneText.classList.toggle('text-gray-500', !has);
+        resumeDropzoneText.classList.toggle('text-[#0E0F3B]', has);
+        resumeDropzoneText.classList.toggle('font-semibold', has);
+    }
+    importFile.addEventListener('change', updateResumeDropzoneText);
+
+    ['dragenter', 'dragover'].forEach(function (ev) {
+        resumeDropzone.addEventListener(ev, function (e) {
+            e.preventDefault(); e.stopPropagation();
+            resumeDropzone.classList.add('bg-gray-100');
+        });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+        resumeDropzone.addEventListener(ev, function (e) {
+            e.preventDefault(); e.stopPropagation();
+            resumeDropzone.classList.remove('bg-gray-100');
+        });
+    });
+    resumeDropzone.addEventListener('drop', function (e) {
+        if (e.dataTransfer.files.length > 0) {
+            importFile.files = e.dataTransfer.files;
+            updateResumeDropzoneText();
+        }
+    });
 
     importBtn.addEventListener('click', function () {
         if (!importFile.files.length) {

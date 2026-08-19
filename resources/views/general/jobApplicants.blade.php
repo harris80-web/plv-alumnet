@@ -157,14 +157,29 @@
     @include('partials.success')
     @if(session('error'))
     <div id="errorToast" class="fixed inset-0 z-[300] flex items-start justify-center pt-6 pointer-events-none">
-        <div class="pointer-events-auto flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-5 py-4 shadow-md max-w-md w-full mx-4">
+        <div id="errorBox" class="pointer-events-auto flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-5 py-4 shadow-md transition-all duration-300 ease-out max-w-md w-full mx-4 opacity-0 -translate-y-2">
             <i class="fas fa-circle-exclamation text-red-500 text-base shrink-0"></i>
             <p class="text-sm font-medium flex-1">{{ session('error') }}</p>
-            <button onclick="document.getElementById('errorToast').remove()" class="text-red-400 hover:text-red-600 shrink-0">
+            <button onclick="closeErrorToast()" class="text-red-400 hover:text-red-600 shrink-0">
                 <i class="fas fa-times text-sm"></i>
             </button>
         </div>
     </div>
+    <script>
+        (function () {
+            const box = document.getElementById('errorBox');
+            box.getBoundingClientRect();
+            requestAnimationFrame(() => box.classList.remove('opacity-0', '-translate-y-2'));
+        })();
+
+        function closeErrorToast() {
+            const box = document.getElementById('errorBox');
+            box.classList.add('opacity-0', '-translate-y-2');
+            setTimeout(() => document.getElementById('errorToast')?.remove(), 300);
+        }
+
+        setTimeout(closeErrorToast, 5000);
+    </script>
     @endif
     <section class="HeroSection h-[200px] flex items-end text-white shadow-lg">
         <div class="max-w-6xl w-full my-7 ml-10">

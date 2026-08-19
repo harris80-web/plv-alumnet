@@ -128,7 +128,7 @@
 
                     @if ($user->user_role === 'alumni')
                     <div class="mt-auto pt-3 border-t border-gray-100">
-                        <form action="{{ route('notices.toggleInterest', $notice->id) }}" method="POST" onclick="event.stopPropagation()">
+                        <form class="interest-form" action="{{ route('notices.toggleInterest', $notice->id) }}" method="POST" onclick="event.stopPropagation()">
                             @csrf
                             <button type="submit"
                                 class="w-full text-xs font-bold uppercase py-2.5 rounded-lg transition-colors {{ $isInterested ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-[#1D264F] hover:bg-[#0E0F3B] text-white' }}">
@@ -149,6 +149,23 @@
     </main>
 
     @include('partials.notice-detail-modal')
+
+    @if ($user->user_role === 'alumni')
+    <script>
+        // Card-grid "Interested" buttons — same submitInterestToggle() used
+        // by the detail modal's own button (defined in
+        // partials/notice-detail-modal.blade.php), so clicking either one
+        // updates instantly instead of reloading the page.
+        window.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.interest-form').forEach(function (form) {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    submitInterestToggle(this, this.closest('[data-toggle-url]'));
+                });
+            });
+        });
+    </script>
+    @endif
 
     @include($user->user_role === 'employer' ? 'partials.footer-employer' : 'partials.footer-alumni')
 </body>

@@ -126,124 +126,137 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+            <div class="mt-12 space-y-6">
 
-                <div class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label for="alumnus_employment_status" class="text-xs font-bold text-orange-600 uppercase block mb-1">Employment Status</label>
-                        <select name="alumnus_employment_status" id="alumnus_employment_status" onchange="toggleEmploymentFields(this.value)" class="w-full md:w-3/4 py-1.5 px-2 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
+                        <select name="alumnus_employment_status" id="alumnus_employment_status" onchange="toggleEmploymentFields(this.value)" class="w-full py-1.5 px-2 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
                             <option value="1" {{ $user->alumnus->alumnus_employment_status == 1 ? 'selected' : '' }}>Employed</option>
                             <option value="0" {{ $user->alumnus->alumnus_employment_status == 0 ? 'selected' : '' }}>Unemployed</option>
                         </select>
                     </div>
-
-                    <div id="employment-fields" class="space-y-4 {{ $user->alumnus->alumnus_employment_status ? '' : 'hidden' }}">
-                        <div>
-                            <label for="industry_id" class="text-xs font-bold text-orange-600 uppercase block mb-1">Industry / Sector</label>
-                            <select name="industry_id" id="industry_id" required class="w-full md:w-3/4 py-1.5 px-2 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
-                                <option value="" disabled {{ $user->alumnus->industry_id ? '' : 'selected' }}>Select Industry / Sector</option>
-                                @foreach($industries as $industry)
-                                <option value="{{ $industry->industry_id }}" {{ $user->alumnus->industry_id == $industry->industry_id ? 'selected' : '' }}>
-                                    {{ $industry->industry_name }}
-                                </option>
-                                @endforeach
-                            </select>
-                            <p class="text-[10px] text-gray-400 mt-1">
-                                Set automatically when you're hired through a job post here — change it yourself if your job didn't come from the system.
-                            </p>
-                        </div>
-
-                        <div>
-                            <div class="flex items-center justify-between mb-1">
-                                <label for="alumnus_workplace" class="text-xs font-bold text-orange-600 uppercase">Where Do You Work?</label>
-                                <button type="button" id="workplaceUndisclosedBtn" onclick="toggleWorkplaceUndisclosed()"
-                                    class="text-[10px] font-bold uppercase px-2 py-1 rounded border border-[#0E0F3B] text-[#0E0F3B] hover:bg-[#0E0F3B] hover:text-white transition shrink-0">
-                                    <span id="workplaceUndisclosedLabel">{{ $user->alumnus->alumnus_workplace_undisclosed ? 'Disclose Workplace' : "Don't Disclose" }}</span>
-                                </button>
-                            </div>
-                            <input type="hidden" name="alumnus_workplace_undisclosed" id="alumnus_workplace_undisclosed" value="{{ $user->alumnus->alumnus_workplace_undisclosed ? 1 : 0 }}">
-                            <input type="text" name="alumnus_workplace" id="alumnus_workplace" placeholder="Company / Organization name"
-                                value="{{ $user->alumnus->alumnus_workplace }}"
-                                {{ $user->alumnus->alumnus_workplace_undisclosed ? 'disabled' : '' }}
-                                class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed">
-                            <p class="text-[10px] text-gray-400 mt-1">
-                                Set automatically when you're hired through a job post here — only fill this in yourself if your job didn't come from the system. Optional, and you can mark it undisclosed and just leave your industry above set.
-                            </p>
-                        </div>
-
-                        <div>
-                            <label for="alumnus_job_position" class="text-xs font-bold text-orange-600 uppercase block mb-1">Job Position</label>
-                            @if($user->alumnus->alumnus_employed_via_platform)
-                            <input type="text" value="{{ $user->alumnus->alumnus_job_position }}" disabled
-                                class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 bg-gray-100 text-gray-400 cursor-not-allowed">
-                            <p class="text-[10px] text-gray-400 mt-1">
-                                Set from the job posting you were hired through here — not editable while that's your current job.
-                            </p>
-                            @else
-                            <input type="text" name="alumnus_job_position" id="alumnus_job_position" placeholder="e.g. Software Engineer"
-                                value="{{ $user->alumnus->alumnus_job_position }}"
-                                class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
-                            <p class="text-[10px] text-gray-400 mt-1">
-                                Set automatically when you're hired through a job post here — fill this in yourself if your job didn't come from the system.
-                            </p>
-                            @endif
-                        </div>
-
-                        <div>
-                            <label for="alumnus_employment_date" class="text-xs font-bold text-orange-600 uppercase block mb-1">Employment Date</label>
-                            @if($user->alumnus->alumnus_employed_via_platform)
-                            <input type="date" value="{{ optional($user->alumnus->alumnus_employment_date)->format('Y-m-d') }}" disabled
-                                class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 bg-gray-100 text-gray-400 cursor-not-allowed">
-                            <p class="text-[10px] text-gray-400 mt-1">
-                                Set when you were hired through this job post — not editable while that's your current job.
-                            </p>
-                            @else
-                            <input type="date" name="alumnus_employment_date" id="alumnus_employment_date" max="{{ now()->format('Y-m-d') }}"
-                                value="{{ optional($user->alumnus->alumnus_employment_date)->format('Y-m-d') }}"
-                                class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
-                            <p class="text-[10px] text-gray-400 mt-1">
-                                When you started your current job — not the same as your date of first job below. Set automatically when hired through a job post here.
-                            </p>
-                            @endif
-                        </div>
-
-                        <div>
-                            <label for="alumnus_first_job_date" class="text-xs font-bold text-orange-600 uppercase block mb-1">Date of First Job</label>
-                            @if($user->alumnus->alumnus_first_job_date)
-                            <input type="date" value="{{ $user->alumnus->alumnus_first_job_date->format('Y-m-d') }}" disabled
-                                class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 bg-gray-100 text-gray-400 cursor-not-allowed">
-                            <p class="text-[10px] text-gray-400 mt-1">
-                                Already recorded — this can only be set once.
-                            </p>
-                            @else
-                            <input type="date" name="alumnus_first_job_date" max="{{ now()->format('Y-m-d') }}"
-                                class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
-                            <p class="text-[10px] text-gray-400 mt-1">
-                                Set automatically when you're hired through a job post here — only fill this in yourself if your first job didn't come from the system. You can only set this once.
-                            </p>
-                            @endif
-                        </div>
-                    </div>
-
                     <div>
                         <label for="user_email" class="text-xs font-bold text-orange-600 uppercase block mb-1">Email</label>
-                        <input type="email" name="user_email" placeholder="example@email.com" value="{{ $user->user_email }}" class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
-                    </div>
-
-                    <div>
-                        <label for="user_number" class="text-xs font-bold text-orange-600 uppercase block mb-1">Contact No.</label>
-                        <input type="text" name="user_number" placeholder="09XXXXXXXXX" value="{{ $user->user_number }}" class="w-full md:w-3/4 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
+                        <input type="email" name="user_email" placeholder="example@email.com" value="{{ $user->user_email }}" class="w-full border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
                     </div>
                 </div>
 
-                <div class="flex flex-col justify-start items-end space-y-4">
-                    <div class="w-full md:w-72 flex items-center justify-between">
-                        <span class="text-xs font-bold text-orange-600 uppercase">Resume</span>
-                        <button type="button" id="openResumeEditorBtn"
-                            class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white text-xs font-bold py-2 px-8 rounded shadow-md transition duration-200 uppercase w-44">
-                            {{ $user->alumnus->isResumeComplete() ? 'Edit Resume' : 'Create Resume' }}
-                        </button>
+                {{-- Only relevant once "Employed" is picked above — laid out as a
+                     neat 2-column grid of its own instead of one long stacked
+                     column, so it doesn't dominate the page when expanded. --}}
+                <div id="employment-fields" class="grid grid-cols-1 md:grid-cols-2 gap-4 {{ $user->alumnus->alumnus_employment_status ? '' : 'hidden' }}">
+                    <div>
+                        <label for="industry_id" class="text-xs font-bold text-orange-600 uppercase block mb-1">Industry / Sector</label>
+                        <select name="industry_id" id="industry_id" required class="w-full py-1.5 px-2 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
+                            <option value="" disabled {{ $user->alumnus->industry_id ? '' : 'selected' }}>Select Industry / Sector</option>
+                            @foreach($industries as $industry)
+                            <option value="{{ $industry->industry_id }}" {{ $user->alumnus->industry_id == $industry->industry_id ? 'selected' : '' }}>
+                                {{ $industry->industry_name }}
+                            </option>
+                            @endforeach
+                        </select>
+                        <p class="text-[10px] text-gray-400 mt-1">
+                            Set automatically when you're hired through a job post here — change it yourself if your job didn't come from the system.
+                        </p>
                     </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="alumnus_workplace" class="text-xs font-bold text-orange-600 uppercase">Where Do You Work?</label>
+                            <button type="button" id="workplaceUndisclosedBtn" onclick="toggleWorkplaceUndisclosed()"
+                                class="text-[10px] font-bold uppercase px-2 py-1 rounded border border-[#0E0F3B] text-[#0E0F3B] hover:bg-[#0E0F3B] hover:text-white transition shrink-0">
+                                <span id="workplaceUndisclosedLabel">{{ $user->alumnus->alumnus_workplace_undisclosed ? 'Disclose Workplace' : "Don't Disclose" }}</span>
+                            </button>
+                        </div>
+                        <input type="hidden" name="alumnus_workplace_undisclosed" id="alumnus_workplace_undisclosed" value="{{ $user->alumnus->alumnus_workplace_undisclosed ? 1 : 0 }}">
+                        <input type="text" name="alumnus_workplace" id="alumnus_workplace" placeholder="Company / Organization name"
+                            value="{{ $user->alumnus->alumnus_workplace }}"
+                            {{ $user->alumnus->alumnus_workplace_undisclosed ? 'disabled' : '' }}
+                            class="w-full border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed">
+                        <p class="text-[10px] text-gray-400 mt-1">
+                            Set automatically when you're hired through a job post here — only fill this in yourself if your job didn't come from the system. Optional, and you can mark it undisclosed and just leave your industry above set.
+                        </p>
+                    </div>
+
+                    <div>
+                        <label for="alumnus_job_position" class="text-xs font-bold text-orange-600 uppercase block mb-1">Job Position</label>
+                        @if($user->alumnus->alumnus_employed_via_platform)
+                        <input type="text" value="{{ $user->alumnus->alumnus_job_position }}" disabled
+                            class="w-full border border-[#0E0F3B] rounded-md p-2 bg-gray-100 text-gray-400 cursor-not-allowed">
+                        <p class="text-[10px] text-gray-400 mt-1">
+                            Set from the job posting you were hired through here — not editable while that's your current job.
+                        </p>
+                        @else
+                        <input type="text" name="alumnus_job_position" id="alumnus_job_position" placeholder="e.g. Software Engineer"
+                            value="{{ $user->alumnus->alumnus_job_position }}"
+                            class="w-full border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
+                        <p class="text-[10px] text-gray-400 mt-1">
+                            Set automatically when you're hired through a job post here — fill this in yourself if your job didn't come from the system.
+                        </p>
+                        @endif
+                    </div>
+
+                    <div>
+                        <label for="alumnus_employment_date" class="text-xs font-bold text-orange-600 uppercase block mb-1">Employment Date</label>
+                        @if($user->alumnus->alumnus_employed_via_platform)
+                        <input type="date" value="{{ optional($user->alumnus->alumnus_employment_date)->format('Y-m-d') }}" disabled
+                            class="w-full border border-[#0E0F3B] rounded-md p-2 bg-gray-100 text-gray-400 cursor-not-allowed">
+                        <p class="text-[10px] text-gray-400 mt-1">
+                            Set when you were hired through this job post — not editable while that's your current job.
+                        </p>
+                        @else
+                        <input type="date" name="alumnus_employment_date" id="alumnus_employment_date" max="{{ now()->format('Y-m-d') }}"
+                            value="{{ optional($user->alumnus->alumnus_employment_date)->format('Y-m-d') }}"
+                            class="w-full border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
+                        <p class="text-[10px] text-gray-400 mt-1">
+                            When you started your current job — not the same as your date of first job below. Set automatically when hired through a job post here.
+                        </p>
+                        @endif
+                    </div>
+
+                    <div>
+                        <label for="alumnus_first_job_date" class="text-xs font-bold text-orange-600 uppercase block mb-1">Date of First Job</label>
+                        @if($user->alumnus->alumnus_first_job_date)
+                        <input type="date" value="{{ $user->alumnus->alumnus_first_job_date->format('Y-m-d') }}" disabled
+                            class="w-full border border-[#0E0F3B] rounded-md p-2 bg-gray-100 text-gray-400 cursor-not-allowed">
+                        <p class="text-[10px] text-gray-400 mt-1">
+                            Already recorded — this can only be set once.
+                        </p>
+                        @else
+                        <input type="date" name="alumnus_first_job_date" max="{{ now()->format('Y-m-d') }}"
+                            class="w-full border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
+                        <p class="text-[10px] text-gray-400 mt-1">
+                            Set automatically when you're hired through a job post here — only fill this in yourself if your first job didn't come from the system. You can only set this once.
+                        </p>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="user_number" class="text-xs font-bold text-orange-600 uppercase block mb-1">Contact No.</label>
+                        <input type="text" name="user_number" placeholder="09XXXXXXXXX" value="{{ $user->user_number }}" class="w-full border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
+                    </div>
+                    <div>
+                        {{-- Skills are managed via the chip-search UI in the Resume
+                             section below (a many-to-many relation, not a plain
+                             field this form posts) — shown read-only here just to
+                             mirror the mockup's layout, same treatment as
+                             Program/Batch above. --}}
+                        <p class="text-xs font-bold text-orange-600 uppercase block mb-1">Skills</p>
+                        <p class="w-full border border-gray-200 bg-gray-50 rounded-md p-2 text-sm text-[#0E0F3B] min-h-[38px]">
+                            {{ $user->alumnus->skills->pluck('skill_name')->join(', ') ?: 'Add skills from the Resume section below' }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between md:w-1/2">
+                    <span class="text-xs font-bold text-orange-600 uppercase">Resume</span>
+                    <button type="button" id="openResumeEditorBtn"
+                        class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white text-xs font-bold py-2 px-8 rounded shadow-md transition duration-200 uppercase w-44">
+                        {{ $user->alumnus->isResumeComplete() ? 'Edit Resume' : 'Create Resume' }}
+                    </button>
                 </div>
             </div>
 

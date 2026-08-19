@@ -276,7 +276,7 @@ class NoticeController extends Controller
     }
 
     /** Toggles the current alumnus's interest — one click marks/unmarks, no separate "cancel" flow needed. */
-    public function toggleInterest(Notice $notice)
+    public function toggleInterest(Request $request, Notice $notice)
     {
         $this->authorizeAlumnus();
         abort_if($notice->category === 'announcement', 403);
@@ -290,6 +290,20 @@ class NoticeController extends Controller
             $alumnus->interestedNotices()->attach($notice->id);
         }
 
-        return back()->with('success', $alreadyInterested ? 'Marked as not interested.' : 'Marked as interested!');
+        $nowInterested = !$alreadyInterested;
+
+        // The card grid and the detail modal both submit this as a plain
+        // form (full page reload, flash message) by default; the JS on
+        // eventsSeminars.blade.php upgrades that to a fetch() call instead so
+        // it can show a confirmation modal instantly without reloading —
+        // this branch is what that fetch() call gets back.
+        if ($request->wantsJson()) {
+            return response()->json([
+                'interested' => $nowInterested,
+                'title' => $notice->title,
+            ]);
+        }
+
+        return back()->with('success', $nowInterested ? 'Marked as interested!' : 'Marked as not interested.');
     }
 }

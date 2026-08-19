@@ -80,11 +80,18 @@
                                         class="fa-brands fa-facebook-f text-sm text-[#0E0F3B] transition-colors duration-300 group-hover:text-white"></i>
                                 </div>
                             </a>
-                            <a href="mailto:your@email.com" class="group">
+                            <!-- <a href="mailto:your@email.com" class="group">
                                 <div
                                     class="flex items-center justify-center w-8 h-8 bg-white border border-white rounded-full transition-all duration-300 group-hover:border-[#ED7A07] group-hover:bg-[#ED7A07]">
                                     <i
                                         class="fa-solid fa-envelope text-sm text-[#0E0F3B] transition-colors duration-300 group-hover:text-white"></i>
+                                </div>
+                            </a> -->
+                            <a href="https://valenzuela.plv.edu.ph/PLVWeb/home" target="_blank" class="group">
+                                <div
+                                    class="flex items-center justify-center w-8 h-8 bg-white border border-white rounded-full transition-all duration-300 group-hover:border-[#ED7A07] group-hover:bg-[#ED7A07]">
+                                    <i
+                                        class="fa-solid fa-globe text-sm text-[#0E0F3B] transition-colors duration-300 group-hover:text-white"></i>
                                 </div>
                             </a>
                         </div>

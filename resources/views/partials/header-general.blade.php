@@ -63,6 +63,7 @@
 
         </nav>
     </header>
+    @include('partials.ui-animations')
     <script src="script.js"></script>
 </body>
 

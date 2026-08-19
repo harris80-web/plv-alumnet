@@ -61,6 +61,7 @@
 
     </header>
 
+    @include('partials.ui-animations')
     <script>
         lucide.createIcons();
     </script>

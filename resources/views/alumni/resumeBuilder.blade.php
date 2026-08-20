@@ -150,8 +150,8 @@
         <div class="flex justify-between mt-6 pt-4 border-t border-gray-200">
             <button type="button" id="btn-back" class="hidden text-sm font-medium border border-gray-300 text-gray-700 rounded px-4 py-2">Back</button>
             <div class="ml-auto flex gap-2">
-                <button type="button" id="btn-draft" class="text-sm font-medium border border-gray-300 text-gray-700 rounded px-4 py-2">Save draft</button>
-                <button type="button" id="btn-next" class="text-sm font-medium bg-red-800 text-white rounded px-4 py-2 hover:bg-red-900">Continue</button>
+                <button type="button" id="btn-draft" class="text-sm font-medium border border-gray-300 text-gray-700 rounded px-4 py-2">Save Draft</button>
+                <button type="button" id="btn-next" class="text-sm font-medium bg-[#C73D1A] text-white rounded px-4 py-2 hover:bg-[#A82F15]">Continue</button>
             </div>
         </div>
     </form>

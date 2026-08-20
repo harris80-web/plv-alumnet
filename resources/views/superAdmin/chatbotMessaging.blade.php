@@ -9,8 +9,8 @@
     <title>Chatbot & Messaging | PLV-AlumNet</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/PLV-AlumNet LOGO.png') }}">
-    @vite('resources/css/app.css')
-    @vite('resources/js/app.js')
+    <!-- @vite('resources/css/app.css')
+    @vite('resources/js/app.js') -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest" defer></script>
     <style>
@@ -56,7 +56,7 @@
                 </div>
                 @endif
 
-                <h1 class="text-2xl font-bold text-[#0E0F3B] mb-4">Chatbot &amp; Messaging</h1>
+                <!-- <h1 class="text-2xl font-bold text-[#0E0F3B] mb-4">Chatbot &amp; Messaging</h1> -->
 
                 <!-- PAGE TABS -->
                 <div class="flex gap-6 border-b border-slate-200 mb-6 overflow-x-auto">

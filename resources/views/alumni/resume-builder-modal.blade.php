@@ -15,10 +15,10 @@
 
         {{-- ===== Header ===== --}}
         <div class="text-center mb-6">
-            <h1 class="text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+            <h1 class="w-fit mx-auto text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
                 IMPORT RESUME
             </h1>
-            <p class="text-sm text-gray-500 mt-1 max-w-lg mx-auto">Already have a resume? Import it to fill in the
+            <p class="text-sm text-black mt-1 max-w-lg mx-auto">Already have a resume? Import it to fill in the
                 fields below automatically — you can still edit everything before saving.</p>
         </div>
 
@@ -31,6 +31,7 @@
                     here</p>
                 <input type="file" id="importResumeFile" accept="application/pdf" class="hidden">
             </div>
+            <p class="text-center text-xs text-gray-500 uppercase tracking-wide mt-3">or</p>
             <div class="flex flex-wrap items-center justify-center gap-3 mt-3">
                 <button type="button" id="importResumeBtn"
                     class="text-sm font-medium bg-[#0E0F3B] text-white rounded px-4 py-1.5 hover:bg-[#1D46A4] disabled:opacity-50">
@@ -40,31 +41,35 @@
             </div>
         </div>
 
+        <div class="border-t border-gray-200 mb-6"></div>
+
         {{-- ===== Resume Builder header + step wizard ===== --}}
         <div class="mb-6">
-            <h2 class="text-center text-xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent mb-1">
+            <h2 class="w-fit mx-auto text-xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent mb-1">
                 RESUME BUILDER
             </h2>
-            <p class="text-center text-sm text-gray-500 italic mb-6">"Build a professional resume step by step —
+            <p class="text-center text-sm text-black italic mb-6">"Build a professional resume step by step —
                 fill in your details below and we'll format it for you."</p>
 
+            {{-- Circle + its own label share one column (flex-col, items-center)
+                 so the label is always centered directly under its circle,
+                 regardless of container width — a separate grid-cols-4 row
+                 can't do this since the circles themselves aren't evenly
+                 spaced (fixed-width circles + flexible connector lines). --}}
             @php $wizardSteps = ['Summary', 'Skills', 'Experience', 'Certifications']; @endphp
-            <div class="flex items-center">
+            <div class="flex items-start">
                 @foreach ($wizardSteps as $i => $label)
-                    <div class="step-circle w-9 h-9 shrink-0 rounded-full border-2 border-gray-300 text-gray-400 flex items-center justify-center font-bold text-sm cursor-pointer transition-colors duration-300"
-                        data-step="{{ $i }}">
-                        <span class="step-number">{{ $i + 1 }}</span>
-                        <i class="fa-solid fa-check step-check hidden"></i>
+                    <div class="flex flex-col items-center">
+                        <div class="step-circle w-9 h-9 shrink-0 rounded-full border-2 border-gray-300 text-gray-400 flex items-center justify-center font-bold text-sm cursor-pointer transition-colors duration-300"
+                            data-step="{{ $i }}">
+                            <span class="step-number">{{ $i + 1 }}</span>
+                            <i class="fa-solid fa-check step-check hidden" style="display:none"></i>
+                        </div>
+                        <span class="step-label mt-2 w-16 text-xs font-medium text-gray-400 text-center">{{ $label }}</span>
                     </div>
                     @if (!$loop->last)
-                        <div class="step-connector flex-1 h-0.5 bg-gray-200 transition-colors duration-300"></div>
+                        <div class="step-connector flex-1 h-0.5 bg-gray-200 transition-colors duration-300 mt-[18px]"></div>
                     @endif
-                @endforeach
-            </div>
-            <div class="grid grid-cols-4 mt-2">
-                @foreach ($wizardSteps as $i => $label)
-                    <span
-                        class="step-label text-xs font-medium text-gray-400 {{ $i === 0 ? 'text-left' : ($loop->last ? 'text-right' : 'text-center') }}">{{ $label }}</span>
                 @endforeach
             </div>
         </div>
@@ -74,31 +79,31 @@
 
             {{-- ===== Step 0: Summary ===== --}}
             <section class="wizard-step" data-step="0">
-                <h2 class="text-lg font-semibold text-gray-900 mb-1">Professional Summary</h2>
-                <p class="text-sm text-gray-500 mb-4">A short description of who you are and what you're looking for.
+                <h2 class="text-lg font-semibold text-[#ED7A07] mb-1">Professional Summary</h2>
+                <p class="text-sm text-black mb-4">A short description of who you are and what you're looking for.
                 </p>
 
                 <textarea name="resume_summary" id="resume_summary" rows="4" maxlength="500"
                     placeholder="e.g. Recent BSIT graduate specializing in full-stack web development..."
-                    class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">{{ old('resume_summary', $resumeData['resume_summary'] ?? '') }}</textarea>
+                    class="w-full rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07]">{{ old('resume_summary', $resumeData['resume_summary'] ?? '') }}</textarea>
                 <p class="text-xs text-gray-400 text-right mt-1"><span id="summary-count">0</span>/500</p>
 
-                <label class="block text-sm font-medium text-gray-700 mt-4 mb-1">LinkedIn</label>
+                <label class="block text-sm font-medium text-[#ED7A07] mt-4 mb-1">LinkedIn</label>
                 <input type="url" name="linkedin_url" placeholder="linkedin.com/in/..."
                     value="{{ old('linkedin_url', $resumeData['linkedin_url'] ?? '') }}"
-                    class="w-full sm:w-1/2 rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                    class="w-full sm:w-1/2 rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07]">
             </section>
 
             {{-- ===== Step 1: Skills ===== --}}
             <section class="wizard-step hidden" data-step="1">
-                <h2 class="text-lg font-semibold text-gray-900 mb-1">Skills</h2>
-                <p class="text-sm text-gray-500 mb-4">Search for skills relevant to the kind of work you're looking for.
+                <h2 class="text-lg font-semibold text-[#ED7A07] mb-1">Skills</h2>
+                <p class="text-sm text-black mb-4">Search for skills relevant to the kind of work you're looking for.
                 </p>
 
                 <div class="relative mb-4 w-full sm:w-1/2">
                     <input type="text" id="skill-search-input" autocomplete="off"
                         placeholder="Search for a skill (e.g. Laravel, Excel, Lesson Planning)..."
-                        class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                        class="w-full rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07]">
                     <div id="skill-search-results"
                         class="hidden absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded shadow-lg max-h-56 overflow-y-auto">
                     </div>
@@ -118,32 +123,32 @@
 
             {{-- ===== Step 2: Experience & Projects ===== --}}
             <section class="wizard-step hidden" data-step="2">
-                <h2 class="text-lg font-semibold text-gray-900 mb-1">Experience &amp; Projects</h2>
-                <p class="text-sm text-gray-500 mb-4">Add work experience (jobs, internships, OJT) and projects — same
+                <h2 class="text-lg font-semibold text-[#ED7A07] mb-1">Experience &amp; Projects</h2>
+                <p class="text-sm text-black mb-4">Add work experience (jobs, internships, OJT) and projects — same
                     form, just pick the type.</p>
 
                 <div id="experience-list">
                     @foreach(($resumeData['experiences'] ?? []) as $i => $exp)
                         <div class="experience-row mb-3 p-3 border border-gray-200 rounded">
                             <div class="flex gap-4 mb-2 text-sm">
-                                <label class="flex items-center gap-1"><input type="radio"
+                                <label class="flex items-center gap-1"><input type="radio" class="accent-[#ED7A07]"
                                         name="experiences[{{ $i }}][type]" value="work" @checked($exp['type'] === 'work')>
                                     Work</label>
-                                <label class="flex items-center gap-1"><input type="radio"
+                                <label class="flex items-center gap-1"><input type="radio" class="accent-[#ED7A07]"
                                         name="experiences[{{ $i }}][type]" value="project"
                                         @checked($exp['type'] === 'project')> Project</label>
                             </div>
 
                             <input type="text" name="experiences[{{ $i }}][job_title]" value="{{ $exp['job_title'] }}"
                                 placeholder="Job title / Project title"
-                                class="w-full rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                                class="w-full rounded border border-[#0E0F3B] px-3 py-2 text-sm mb-2 focus:outline-none focus:border-[#ED7A07]">
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
                                 <input type="number" name="experiences[{{ $i }}][duration_months]"
                                     value="{{ $exp['duration_months'] }}" min="0" max="600" placeholder="Duration (months)"
-                                    class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                                    class="rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07]">
                                 <select name="experiences[{{ $i }}][industry_id]"
-                                    class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                                    class="rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07]">
                                     <option value="">Industry (optional)</option>
                                     @foreach($industries as $industry)
                                         <option value="{{ $industry->industry_id }}" @selected(($exp['industry_id'] ?? null) == $industry->industry_id)>{{ $industry->industry_name }}</option>
@@ -153,36 +158,36 @@
 
                             <textarea name="experiences[{{ $i }}][job_description]" rows="3"
                                 placeholder="What did you do? Be specific."
-                                class="w-full rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">{{ $exp['job_description'] }}</textarea>
+                                class="w-full rounded border border-[#0E0F3B] px-3 py-2 text-sm mb-2 focus:outline-none focus:border-[#ED7A07]">{{ $exp['job_description'] }}</textarea>
 
-                            <button type="button" class="remove-row text-sm text-[#C73D1A]">Remove</button>
+                            <button type="button" class="remove-row text-sm border border-[#C73D1A] text-[#C73D1A] rounded px-3 py-1.5 transition-colors hover:bg-[#C73D1A] hover:text-white">Remove</button>
                         </div>
                     @endforeach
                 </div>
 
                 <button type="button" id="add-experience"
-                    class="text-sm font-medium border border-[#C73D1A] text-[#C73D1A] rounded px-3 py-1.5 hover:bg-orange-50">
+                    class="text-sm font-medium border border-[#C73D1A] text-[#C73D1A] rounded px-3 py-1.5 transition-colors hover:bg-[#C73D1A] hover:text-white">
                     + Add work or project
                 </button>
             </section>
 
             {{-- ===== Step 3: Certifications & Seminars ===== --}}
             <section class="wizard-step hidden" data-step="3">
-                <h2 class="text-lg font-semibold text-gray-900 mb-1">Certifications &amp; Seminars</h2>
-                <p class="text-sm text-gray-500 mb-4">Board exams, licenses, certifications, seminars, and trainings
+                <h2 class="text-lg font-semibold text-[#ED7A07] mb-1">Certifications &amp; Seminars</h2>
+                <p class="text-sm text-black mb-4">Board exams, licenses, certifications, seminars, and trainings
                     you've attended.</p>
 
                 <div id="cert-list">
                     @foreach(($resumeData['certifications'] ?? []) as $i => $cert)
                         <div class="cert-row mb-3 p-3 border border-gray-200 rounded">
                             <div class="flex gap-4 mb-2 text-sm">
-                                <label class="flex items-center gap-1"><input type="radio"
+                                <label class="flex items-center gap-1"><input type="radio" class="accent-[#ED7A07]"
                                         name="certifications[{{ $i }}][certification_type]" value="certification"
                                         @checked($cert['certification_type'] === 'certification')> Certification</label>
-                                <label class="flex items-center gap-1"><input type="radio"
+                                <label class="flex items-center gap-1"><input type="radio" class="accent-[#ED7A07]"
                                         name="certifications[{{ $i }}][certification_type]" value="seminar"
                                         @checked($cert['certification_type'] === 'seminar')> Seminar</label>
-                                <label class="flex items-center gap-1"><input type="radio"
+                                <label class="flex items-center gap-1"><input type="radio" class="accent-[#ED7A07]"
                                         name="certifications[{{ $i }}][certification_type]" value="training"
                                         @checked($cert['certification_type'] === 'training')> Training</label>
                             </div>
@@ -191,23 +196,23 @@
                                 <input type="text" name="certifications[{{ $i }}][certification_name]"
                                     value="{{ $cert['certification_name'] }}"
                                     placeholder="Title (e.g. AWS Certified Cloud Practitioner)"
-                                    class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                                    class="rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07]">
                                 <input type="text" name="certifications[{{ $i }}][certification_from]"
                                     value="{{ $cert['certification_from'] }}" placeholder="Issuing organization / speaker"
-                                    class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                                    class="rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07]">
                             </div>
 
                             <input type="date" name="certifications[{{ $i }}][certification_date]"
                                 value="{{ $cert['certification_date'] }}"
-                                class="w-40 rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                                class="w-40 rounded border border-[#0E0F3B] px-3 py-2 text-sm mb-2 focus:outline-none focus:border-[#ED7A07]">
 
-                            <button type="button" class="remove-row text-sm text-[#C73D1A]">Remove</button>
+                            <button type="button" class="remove-row text-sm border border-[#C73D1A] text-[#C73D1A] rounded px-3 py-1.5 transition-colors hover:bg-[#C73D1A] hover:text-white">Remove</button>
                         </div>
                     @endforeach
                 </div>
 
                 <button type="button" id="add-cert"
-                    class="text-sm font-medium border border-[#C73D1A] text-[#C73D1A] rounded px-3 py-1.5 hover:bg-orange-50">
+                    class="text-sm font-medium border border-[#C73D1A] text-[#C73D1A] rounded px-3 py-1.5 transition-colors hover:bg-[#C73D1A] hover:text-white">
                     + Add certification or seminar
                 </button>
             </section>
@@ -216,7 +221,7 @@
                  above; only updates after a real save (Save draft/Submit/Import). --}}
             <div class="mt-6 pt-4 border-t border-gray-200">
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-bold text-[#0E0F3B] uppercase tracking-wide">Resume Completeness</span>
+                    <span class="font-[Inter] text-xs font-bold text-[#0E0F3B] uppercase tracking-wide">Resume Completeness</span>
                     <span class="text-xs font-bold text-[#C73D1A]"><span id="completeness-label">{{ $resumeData['resume_completeness'] ?? 0 }}</span>% Saved</span>
                 </div>
                 <ul id="completeness-breakdown" class="space-y-1 text-xs text-gray-500">
@@ -232,14 +237,13 @@
             {{-- ===== Nav buttons ===== --}}
             <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-200">
                 <button type="button" id="btn-back"
-                    class="hidden text-sm font-medium border border-gray-300 text-gray-700 rounded px-4 py-2 hover:bg-gray-50">Back</button>
+                    class="hidden text-sm font-medium border border-gray-300 text-[#C73D1A] rounded px-4 py-2 hover:bg-gray-50">Back</button>
                 <div class="ml-auto flex items-center gap-3">
                     <span id="draft-status" class="text-xs text-gray-500"></span>
                     <button type="button" id="btn-draft"
-                        class="text-sm font-medium border border-gray-300 text-gray-700 rounded px-4 py-2 hover:bg-gray-50">Save
-                        draft</button>
+                        class="text-sm font-medium border border-gray-300 text-[#C73D1A] rounded px-4 py-2 hover:bg-gray-50">Save Draft</button>
                     <button type="button" id="btn-next"
-                        class="text-sm font-medium bg-[#C73D1A] text-white rounded px-4 py-2 hover:bg-[#A8330F]">Continue</button>
+                        class="text-sm font-medium bg-[#C73D1A] text-white rounded px-4 py-2 hover:bg-[#A82F15]"> Continue</button>
                 </div>
             </div>
         </form>
@@ -258,19 +262,19 @@
 <template id="experience-row-template">
     <div class="experience-row mb-3 p-3 border border-gray-200 rounded">
         <div class="flex gap-4 mb-2 text-sm">
-            <label class="flex items-center gap-1"><input type="radio" name="experiences[__INDEX__][type]"
+            <label class="flex items-center gap-1"><input type="radio" class="accent-[#ED7A07]" name="experiences[__INDEX__][type]"
                     value="work" checked> Work</label>
-            <label class="flex items-center gap-1"><input type="radio" name="experiences[__INDEX__][type]"
+            <label class="flex items-center gap-1"><input type="radio" class="accent-[#ED7A07]" name="experiences[__INDEX__][type]"
                     value="project"> Project</label>
         </div>
         <input type="text" name="experiences[__INDEX__][job_title]" placeholder="Job title / Project title"
-            class="w-full rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+            class="w-full rounded border border-[#0E0F3B] px-3 py-2 text-sm mb-2 focus:outline-none focus:border-[#ED7A07]">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
             <input type="number" name="experiences[__INDEX__][duration_months]" min="0" max="600"
                 placeholder="Duration (months)"
-                class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                class="rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07]">
             <select name="experiences[__INDEX__][industry_id]"
-                class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                class="rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07]">
                 <option value="">Industry (optional)</option>
                 @foreach($industries as $industry)
                     <option value="{{ $industry->industry_id }}">{{ $industry->industry_name }}</option>
@@ -278,32 +282,32 @@
             </select>
         </div>
         <textarea name="experiences[__INDEX__][job_description]" rows="3" placeholder="What did you do?"
-            class="w-full rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]"></textarea>
-        <button type="button" class="remove-row text-sm text-[#C73D1A]">Remove</button>
+            class="w-full rounded border border-[#0E0F3B] px-3 py-2 text-sm mb-2 focus:outline-none focus:border-[#ED7A07]"></textarea>
+        <button type="button" class="remove-row text-sm border border-[#C73D1A] text-[#C73D1A] rounded px-3 py-1.5 transition-colors hover:bg-[#C73D1A] hover:text-white">REMOVE</button>
     </div>
 </template>
 
 <template id="cert-row-template">
     <div class="cert-row mb-3 p-3 border border-gray-200 rounded">
         <div class="flex gap-4 mb-2 text-sm">
-            <label class="flex items-center gap-1"><input type="radio"
+            <label class="flex items-center gap-1"><input type="radio" class="accent-[#ED7A07]"
                     name="certifications[__INDEX__][certification_type]" value="certification" checked>
                 Certification</label>
-            <label class="flex items-center gap-1"><input type="radio"
+            <label class="flex items-center gap-1"><input type="radio" class="accent-[#ED7A07]"
                     name="certifications[__INDEX__][certification_type]" value="seminar"> Seminar</label>
-            <label class="flex items-center gap-1"><input type="radio"
+            <label class="flex items-center gap-1"><input type="radio" class="accent-[#ED7A07]"
                     name="certifications[__INDEX__][certification_type]" value="training"> Training</label>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
             <input type="text" name="certifications[__INDEX__][certification_name]" placeholder="Title"
-                class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                class="rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07]">
             <input type="text" name="certifications[__INDEX__][certification_from]"
                 placeholder="Issuing organization / speaker"
-                class="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                class="rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07]">
         </div>
         <input type="date" name="certifications[__INDEX__][certification_date]"
-            class="w-40 rounded border border-gray-300 px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
-        <button type="button" class="remove-row text-sm text-[#C73D1A]">Remove</button>
+            class="w-40 rounded border border-[#0E0F3B] px-3 py-2 text-sm mb-2 focus:outline-none focus:border-[#ED7A07]">
+        <button type="button" class="remove-row text-sm border border-[#C73D1A] text-[#C73D1A] rounded px-3 py-1.5 transition-colors hover:bg-[#C73D1A] hover:text-white">Remove</button>
     </div>
 </template>
 
@@ -333,18 +337,34 @@
     var btnDraft = document.getElementById('btn-draft');
     var panel = document.getElementById('resumeBuilderPanel');
 
-    document.getElementById('openResumeEditorBtn').addEventListener('click', function () {
-        openAnimatedModal(overlay, panel);
-    });
+    // Guarded rather than a bare .addEventListener() call: if any of these
+    // elements is ever missing (wrong page, stale cache, a future markup
+    // change), an unguarded call throws immediately and — since this whole
+    // file runs as one IIFE — silently aborts every listener defined further
+    // down (Back/Continue/Save Draft, step circles, skill search, import),
+    // making the entire modal look "broken" with no error visible in the UI.
+    var openResumeEditorBtn = document.getElementById('openResumeEditorBtn');
+    if (openResumeEditorBtn) {
+        openResumeEditorBtn.addEventListener('click', function () {
+            openAnimatedModal(overlay, panel);
+        });
+    } else {
+        console.warn('resume-builder-modal: #openResumeEditorBtn not found on this page.');
+    }
 
     function closeBuilder() {
         closeAnimatedModal(overlay, panel);
     }
 
-    document.getElementById('closeResumeBuilderBtn').addEventListener('click', closeBuilder);
-    overlay.addEventListener('click', function (e) {
-        if (e.target === overlay) closeBuilder();
-    });
+    var closeResumeBuilderBtn = document.getElementById('closeResumeBuilderBtn');
+    if (closeResumeBuilderBtn) {
+        closeResumeBuilderBtn.addEventListener('click', closeBuilder);
+    }
+    if (overlay) {
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) closeBuilder();
+        });
+    }
 
     function showStep(idx) {
         currentStep = idx;
@@ -355,34 +375,42 @@
         // upcoming ones. Connector segments fill in solid up to the active step.
         stepCircles.forEach(function (circle, i) {
             var done = i < idx, active = i === idx;
-            circle.classList.toggle('bg-[#C73D1A]', done || active);
-            circle.classList.toggle('border-[#C73D1A]', done || active);
+            circle.classList.toggle('bg-[#ED7A07]', done || active);
+            circle.classList.toggle('border-[#ED7A07]', done || active);
             circle.classList.toggle('text-white', done || active);
             circle.classList.toggle('border-gray-300', !done && !active);
             circle.classList.toggle('text-gray-400', !done && !active);
-            circle.querySelector('.step-number').classList.toggle('hidden', done);
-            circle.querySelector('.step-check').classList.toggle('hidden', !done);
+            // Inline style.display, not just the "hidden" class — Font
+            // Awesome's own base rule for .fa-solid/.fa-check can win a
+            // specificity/source-order tie against Tailwind's .hidden
+            // utility, which was letting the checkmark render even while
+            // "hidden" was correctly applied in the DOM. Inline style always
+            // wins, so this is unambiguous regardless of stylesheet order.
+            circle.querySelector('.step-number').style.display = done ? 'none' : '';
+            circle.querySelector('.step-check').style.display = done ? '' : 'none';
         });
         stepLabels.forEach(function (label, i) {
-            label.classList.toggle('text-[#C73D1A]', i <= idx);
+            label.classList.toggle('text-[#ED7A07]', i <= idx);
             label.classList.toggle('font-bold', i === idx);
             label.classList.toggle('text-gray-400', i > idx);
         });
         stepConnectors.forEach(function (line, i) {
-            line.classList.toggle('bg-[#C73D1A]', i < idx);
+            line.classList.toggle('bg-[#ED7A07]', i < idx);
             line.classList.toggle('bg-gray-200', i >= idx);
         });
 
-        btnBack.classList.toggle('hidden', idx === 0);
-        btnNext.textContent = idx === totalSteps - 1 ? 'Submit resume' : 'Continue';
+        if (btnBack) btnBack.classList.toggle('hidden', idx === 0);
+        if (btnNext) btnNext.textContent = idx === totalSteps - 1 ? 'Submit resume' : 'Continue';
     }
 
     stepCircles.forEach(function (c) { c.addEventListener('click', function () { showStep(Number(c.dataset.step)); }); });
-    btnBack.addEventListener('click', function () { if (currentStep > 0) showStep(currentStep - 1); });
-    btnNext.addEventListener('click', function () {
-        if (currentStep < totalSteps - 1) { showStep(currentStep + 1); } else { submitForm(true); }
-    });
-    btnDraft.addEventListener('click', function () { submitForm(false); });
+    if (btnBack) btnBack.addEventListener('click', function () { if (currentStep > 0) showStep(currentStep - 1); });
+    if (btnNext) {
+        btnNext.addEventListener('click', function () {
+            if (currentStep < totalSteps - 1) { showStep(currentStep + 1); } else { submitForm(true); }
+        });
+    }
+    if (btnDraft) btnDraft.addEventListener('click', function () { submitForm(false); });
 
     function addRow(templateId, listId, counterKey) {
         var tpl = document.getElementById(templateId).content.cloneNode(true);

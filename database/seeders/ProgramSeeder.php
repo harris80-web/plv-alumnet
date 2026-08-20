@@ -14,56 +14,33 @@ class ProgramSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('programs')->insert([
-            'program_name' => 'Bachelor of Arts in Communication',
-        ]);
-        DB::table('programs')->insert([
-            'program_name' => 'Bachelor of Early Childhood Education',
-        ]);
-        DB::table('programs')->insert([
-            'program_name' => 'Bachelor of Science in Accountancy',
-        ]);
-        DB::table('programs')->insert([
-            'program_name' => 'Bachelor of Science in Business Administration Major in Financial Management',
-        ]);
-        DB::table('programs')->insert([
-            'program_name' => 'Bachelor of Science in Business Administration Major in Human Resource Management',
-        ]);
-        DB::table('programs')->insert([
-            'program_name' => 'Bachelor of Science in Business Administration Major in Marketing Management',
-        ]);
-        DB::table('programs')->insert([
-            'program_name' => 'Bachelor of Science in Civil Engineering',
-        ]);
-        DB::table('programs')->insert([
-            'program_name' => 'Bachelor of Science in Electrical Engineering',
-        ]);
-        DB::table('programs')->insert([
-            'program_name' => 'Bachelor of Science in Information Technology',
-        ]);
-        DB::table('programs')->insert([
-            'program_name' => 'Bachelor of Science in Psychology',
-        ]);
-        DB::table('programs')->insert([
-            'program_name' => 'Bachelor of Public Administration',
-        ]);
-        DB::table('programs')->insert([
-            'program_name' => 'Bachelor of Science in Social Work',
-        ]);
-        DB::table('programs')->insert([
-            'program_name' => 'Bachelor of Secondary Education Major in English',
-        ]);
-        DB::table('programs')->insert([
-            'program_name' => 'Bachelor of Secondary Education Major in Filipino',
-        ]);
-        DB::table('programs')->insert([
-            'program_name' => 'Bachelor of Secondary Education Major in Mathematics',
-        ]);
-        DB::table('programs')->insert([
-            'program_name' => 'Bachelor of Secondary Education Major in Science',
-        ]);
-        DB::table('programs')->insert([
-            'program_name' => 'Bachelor of Secondary Education Major in Social Studies',
-        ]);
+        $programNames = [
+            'Bachelor of Arts in Communication',
+            'Bachelor of Early Childhood Education',
+            'Bachelor of Science in Accountancy',
+            'Bachelor of Science in Business Administration Major in Financial Management',
+            'Bachelor of Science in Business Administration Major in Human Resource Management',
+            'Bachelor of Science in Business Administration Major in Marketing Management',
+            'Bachelor of Science in Civil Engineering',
+            'Bachelor of Science in Electrical Engineering',
+            'Bachelor of Science in Information Technology',
+            'Bachelor of Science in Psychology',
+            'Bachelor of Public Administration',
+            'Bachelor of Science in Social Work',
+            'Bachelor of Secondary Education Major in English',
+            'Bachelor of Secondary Education Major in Filipino',
+            'Bachelor of Secondary Education Major in Mathematics',
+            'Bachelor of Secondary Education Major in Science',
+            'Bachelor of Secondary Education Major in Social Studies',
+        ];
+
+        // updateOrInsert keyed on program_name so re-running this seeder
+        // (e.g. `php artisan db:seed` more than once) can't duplicate rows —
+        // it previously used a plain insert() per program with no
+        // existence check, which is how the programs table ended up with
+        // the same 17 names repeated 5x over.
+        foreach ($programNames as $name) {
+            DB::table('programs')->updateOrInsert(['program_name' => $name]);
+        }
     }
 }

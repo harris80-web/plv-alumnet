@@ -89,39 +89,47 @@
                     </div>
                 </div>
 
-                <div class="md:col-span-9">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-y-6 gap-x-6">
-                        <div>
+                <div class="md:col-span-9 space-y-4">
+                    {{-- Row 1: identity fields, 4 across --}}
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-4">
+                        <div class="min-w-0">
                             <p class="text-xs font-semibold text-orange-600 uppercase">Last Name</p>
-                            <h3 class="text-lg font-semibold text-[#0E0F3B] uppercase">{{ $user->user_last_name }}</h3>
+                            <h3 class="text-sm font-semibold text-[#0E0F3B] uppercase truncate">{{ $user->user_last_name }}</h3>
                         </div>
-                        <div>
+                        <div class="min-w-0">
                             <p class="text-xs font-semibold text-orange-600 uppercase">First Name</p>
-                            <h3 class="text-lg font-semibold text-[#0E0F3B] uppercase">{{ $user->user_first_name }}</h3>
+                            <h3 class="text-sm font-semibold text-[#0E0F3B] uppercase truncate">{{ $user->user_first_name }}</h3>
                         </div>
-                        <div>
+                        <div class="min-w-0">
                             <p class="text-xs font-semibold text-orange-600 uppercase">Middle Name</p>
-                            <h3 class="text-lg font-semibold text-[#0E0F3B] uppercase">{{ $user->user_middle_name }}</h3>
+                            <h3 class="text-sm font-semibold text-[#0E0F3B] uppercase truncate">{{ $user->user_middle_name }}</h3>
                         </div>
-                        <div>
+                        <div class="min-w-0">
                             <p class="text-xs font-semibold text-orange-600 uppercase">Suffix</p>
-                            <h3 class="text-lg font-semibold text-[#0E0F3B] uppercase">{{ $user->user_suffix }}</h3>
+                            <h3 class="text-sm font-semibold text-[#0E0F3B] uppercase truncate">{{ $user->user_suffix }}</h3>
                         </div>
-                        <div>
+                    </div>
+
+                    {{-- Row 2: Gender and Batch --}}
+                    <div class="grid grid-cols-2 gap-y-4 gap-x-4">
+                        <div class="min-w-0">
                             <p class="text-xs font-semibold text-orange-600 uppercase">Gender</p>
-                            <h3 class="text-lg font-semibold text-[#0E0F3B] uppercase">
+                            <h3 class="text-sm font-semibold text-[#0E0F3B] uppercase truncate">
                                 {{ \App\Models\Alumnus::genderLabels()[$user->alumnus->alumnus_gender] ?? 'Not specified' }}
                             </h3>
                         </div>
-
-                        <div class="md:col-span-2">
-                            <p class="text-xs font-bold text-orange-600 uppercase">Program</p>
-                            <h3 class="text-lg font-semibold text-[#0E0F3B] uppercase">{{ $user->alumnus->program->program_name ?? 'Not specified' }}</h3>
-                        </div>
-                        <div class="md:col-span-2">
+                        <div class="min-w-0">
                             <p class="text-xs font-bold text-orange-600 uppercase">Batch</p>
-                            <h3 class="text-lg font-semibold text-[#0E0F3B] uppercase">{{ $user->alumnus->alumnus_batch ?? 'Not specified' }}</h3>
+                            <h3 class="text-sm font-semibold text-[#0E0F3B] uppercase truncate">{{ $user->alumnus->alumnus_batch ?? 'Not specified' }}</h3>
                         </div>
+                    </div>
+
+                    {{-- Row 3: Program alone, full width --}}
+                    <div class="min-w-0">
+                        <p class="text-xs font-bold text-orange-600 uppercase">Program</p>
+                        <h3 class="text-sm font-semibold text-[#0E0F3B] uppercase truncate"
+                            title="{{ $user->alumnus->program->program_name ?? 'Not specified' }}">
+                            {{ $user->alumnus->program->program_name ?? 'Not specified' }}</h3>
                     </div>
                 </div>
             </div>
@@ -272,58 +280,6 @@
         </form>
     </main>
 
-    <div id="menuOverlay1" class="fixed inset-0 bg-black/50 z-[60] hidden transition-opacity duration-300"></div>
-
-    <div id="notificationPopup1" class="fixed top-20 right-[250px] w-72 bg-white rounded-xl shadow-2xl z-[70] hidden transform origin-top-right transition-all duration-300 scale-95 opacity-0">
-        <div class="p-4 border-b flex justify-between items-center">
-            <h3 class="text-[#0E0F3B] font-bold">Notifications</h3>
-            <button onclick="toggleNotifications()" class="text-gray-400 hover:text-gray-600">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-        <div class="p-10 flex flex-col items-center justify-center text-center">
-            <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                <i class="fa-regular fa-bell text-gray-400 text-xl"></i>
-            </div>
-            <p class="text-gray-500 text-sm">No notifications</p>
-        </div>
-    </div>
-
-    <div id="userSidebar1" class="fixed top-0 right-0 h-full w-80 bg-white z-[70] shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out">
-        <div class="p-6 relative flex flex-col h-full">
-            <button onclick="toggleSidebar()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
-
-            <div class="flex flex-col items-center mt-8 mb-6">
-                <div class="w-24 h-24 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <i class="fa-solid fa-user text-5xl text-white"></i>
-                </div>
-                <h2 class="text-[#ED7A07] font-semibold text-xl uppercase tracking-wider">User</h2>
-                <div class="w-full border-b mt-4"></div>
-            </div>
-
-            <nav class="space-y-4 flex-grow">
-                <a href="{{ route('user.profile') }}" class="flex items-center gap-4 text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white  p-3 w-full transition font-semibold rounded-sm">
-                    <i class="fa-solid fa-address-card w-6"></i> View Profile
-                </a>
-                <a href="{{ route('users.editProfile') }}" class="flex items-center gap-4  p-3 w-full transition font-bold bg-[#ED7A07] text-white hover:font-bold">
-                    <i class="fa-solid fa-user-pen w-6"></i> Edit Profile
-                </a>
-                <a href="{{ route('alumni.changePassword') }}" class="flex items-center gap-4 text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white p-3 w-full transition font-regular hover:font-semibold">
-                    <i class="fa-solid fa-lock w-6"></i> Change Password
-                </a>
-            </nav>
-
-            <form action="{{ route('user.logout') }}" method="POST" class="border-t pt-6">
-                @csrf
-                <button type="submit" class="flex items-center gap-4 text-[#0E0F3B] hover:text-[#ED7A07] p-3 transition font-bold">
-                    <i class="fa-solid fa-right-from-bracket"></i> Log out
-                </button>
-            </form>
-        </div>
-    </div>
-
     @if($user->alumnus->isResumeComplete())
         @include('alumni.resume-editor-modal', ['user' => $user, 'resumeData' => $resumeData, 'industries' => $industries])
     @else
@@ -355,39 +311,6 @@
         }
         label.textContent = undisclosed ? 'Disclose Workplace' : "Don't Disclose";
     }
-
-    //TRIGGER FOR ALERT NOTIFICATION AND USER PROFILE SIDE BAR
-
-    function toggleSidebar() {
-        document.getElementById('userSidebar1').classList.toggle('translate-x-full');
-        document.getElementById('menuOverlay1').classList.toggle('hidden');
-        // Close notifications if sidebar opens
-        document.getElementById('notificationPopup1').classList.add('hidden');
-    }
-
-    function toggleNotifications() {
-        const isHidden = notification.classList.contains('hidden');
-
-        if (isHidden) {
-            notification.classList.remove('hidden');
-            // Small timeout to allow transition
-            setTimeout(() => {
-                notification.classList.remove('scale-95', 'opacity-0');
-            }, 10);
-        } else {
-            notification.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => {
-                notification.classList.add('hidden');
-            }, 300);
-        }
-    }
-
-    overlay.addEventListener('click', () => {
-        sidebar.classList.add('translate-x-full');
-        notification.classList.add('hidden');
-        overlay.classList.add('hidden');
-    });
-
 
     //user profile view image/upload image
     function togglePhotoOptions(event) {

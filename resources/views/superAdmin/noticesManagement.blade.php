@@ -9,8 +9,8 @@
     <title>Notices & Events Management | PLV-AlumNet</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/PLV-AlumNet LOGO.png') }}">
-    @vite('resources/css/app.css')
-    @vite('resources/js/app.js')
+    <!-- @vite('resources/css/app.css')
+    @vite('resources/js/app.js') -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest" defer></script>
     <style>

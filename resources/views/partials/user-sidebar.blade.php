@@ -17,60 +17,97 @@
     </div>
 </div>
 
-<div id="userSidebar" class="fixed top-0 right-0 h-full w-80 bg-white z-[70] shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out">
-    <div class="p-6 relative flex flex-col h-full">
-        <button onclick="toggleSidebar()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600">
-            <i class="fa-solid fa-xmark text-xl"></i>
-        </button>
+<div id="userSidebar" class="fixed top-0 right-0 h-full w-80 bg-white z-[70] shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+    <button onclick="toggleSidebar()" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600">
+        <i class="fa-solid fa-xmark text-lg"></i>
+    </button>
 
-        <div class="flex flex-col items-center mt-8 mb-6">
-            <div class="w-24 h-24 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                <i class="fa-solid fa-user text-5xl text-white"></i>
-            </div>
-            <h2 class="text-[#ED7A07] font-semibold text-xl uppercase tracking-wider">
-                {{ auth()->user()->user_first_name }} {{ auth()->user()->user_last_name }}
-            </h2>
-            <div class="w-full border-b mt-4"></div>
+    <div class="p-6 flex flex-col flex-1 overflow-y-auto">
+        {{-- Logo --}}
+        <div class="flex items-center justify-center gap-2 mb-6">
+            <img src="{{ asset('assets/PLV-AlumNet LOGOMARK_BLUE 1.png') }}" alt="" class="h-14 w-auto">
+            <img src="{{ asset('assets/PLV-AlumNet LETTERMARK_COLORED 2.png') }}" alt="PLV-AlumNet" class="h-9 w-auto">
         </div>
 
-        <nav class="space-y-4 flex-grow">
-            @if(str_contains($current_page, 'employer'))
+        <div class="border-t border-gray-100 mb-4"></div>
+
+        {{-- Avatar + name row --}}
+        <div class="flex items-center gap-3 pb-4 border-b border-gray-100 mb-4">
+            <div class="w-12 h-12 shrink-0 bg-[#0E0F3B] rounded-full flex items-center justify-center overflow-hidden">
+                <i class="fa-solid fa-user text-xl text-white"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-[#C73D1A] font-bold uppercase text-sm truncate">
+                    {{ auth()->user()->user_first_name }} {{ auth()->user()->user_last_name }}
+                </p>
+                <p class="text-xs text-gray-400 truncate">
+                    @if(auth()->user()->user_role === 'employer')
+                        {{ auth()->user()->employer->employer_company_name ?? 'Company' }}
+                    @else
+                        Alumni Batch {{ auth()->user()->alumnus->alumnus_batch ?? '—' }}
+                    @endif
+                </p>
+            </div>
+        </div>
+
+        {{-- Account settings --}}
+        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Account Settings</p>
+        <nav class="space-y-1 flex-grow">
+            @if(auth()->user()->user_role === 'employer')
                 <a href="{{ route('user.profile') }}"
-                    class="flex items-center gap-4 p-3 w-full transition {{ $current_page == 'employer_profile' ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
-                    <i class="fa-solid fa-building w-6"></i> Company Profile
+                    class="group flex items-center gap-3 -mx-6 px-6 py-2.5 text-sm transition {{ $current_page == 'employer_profile' ? 'text-[#ED7A07] font-bold bg-orange-50' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
+                    <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-md bg-gray-50 group-hover:bg-transparent">
+                        <i class="fa-solid fa-building text-xs"></i>
+                    </span>
+                    Company Profile
                 </a>
                 <a href="{{ route('users.editProfile') }}"
-                    class="flex items-center gap-4 p-3 w-full transition {{ $current_page == 'employer_edit' ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
-                    <i class="fa-solid fa-pen-to-square w-6"></i> Edit Details
+                    class="group flex items-center gap-3 -mx-6 px-6 py-2.5 text-sm transition {{ $current_page == 'employer_edit' ? 'text-[#ED7A07] font-bold bg-orange-50' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
+                    <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-md bg-gray-50 group-hover:bg-transparent">
+                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                    </span>
+                    Edit Details
                 </a>
-                <a href="#"
-                    class="flex items-center gap-4 p-3 w-full transition {{ $current_page == 'employer_change_password' ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
-                    <i class="fa-solid fa-lock w-6"></i> Change Password
+                <a href="{{ route('users.showChangePassword') }}"
+                    class="group flex items-center gap-3 -mx-6 px-6 py-2.5 text-sm transition {{ $current_page == 'employer_change_password' ? 'text-[#ED7A07] font-bold bg-orange-50' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
+                    <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-md bg-gray-50 group-hover:bg-transparent">
+                        <i class="fa-solid fa-lock text-xs"></i>
+                    </span>
+                    Change Password
                 </a>
             @else
                 <a href="{{ route('user.profile') }}"
-                    class="flex items-center gap-4 p-3 w-full transition {{ $current_page == 'alumni_profile' ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
-                    <i class="fa-solid fa-address-card w-6"></i> View Profile
+                    class="group flex items-center gap-3 -mx-6 px-6 py-2.5 text-sm transition {{ $current_page == 'alumni_profile' ? 'text-[#ED7A07] font-bold bg-orange-50' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
+                    <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-md bg-gray-50 group-hover:bg-transparent">
+                        <i class="fa-solid fa-address-card text-xs"></i>
+                    </span>
+                    View Profile
                 </a>
                 <a href="{{ route('users.editProfile') }}"
-                    class="flex items-center gap-4 p-3 w-full transition {{ $current_page == 'alumni_edit' ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
-                    <i class="fa-solid fa-user-pen w-6"></i> Edit Profile
+                    class="group flex items-center gap-3 -mx-6 px-6 py-2.5 text-sm transition {{ $current_page == 'alumni_edit' ? 'text-[#ED7A07] font-bold bg-orange-50' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
+                    <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-md bg-gray-50 group-hover:bg-transparent">
+                        <i class="fa-solid fa-user-pen text-xs"></i>
+                    </span>
+                    Edit Profile
                 </a>
                 <a href="{{ route('users.showChangePassword') }}"
-                    class="flex items-center gap-4 p-3 w-full transition {{ $current_page == 'alumni_change_password' ? 'bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
-                    <i class="fa-solid fa-lock w-6"></i> Change Password
+                    class="group flex items-center gap-3 -mx-6 px-6 py-2.5 text-sm transition {{ $current_page == 'alumni_change_password' ? 'text-[#ED7A07] font-bold bg-orange-50' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">
+                    <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-md bg-gray-50 group-hover:bg-transparent">
+                        <i class="fa-solid fa-lock text-xs"></i>
+                    </span>
+                    Change Password
                 </a>
             @endif
         </nav>
+    </div>
 
-        <div class="border-t pt-6">
-            <form method="POST" action="{{ route('user.logout') }}">
-                @csrf
-                <button type="submit" class="flex items-center gap-4 text-[#0E0F3B] hover:text-[#ED7A07] p-3 transition font-bold w-full">
-                    <i class="fa-solid fa-right-from-bracket"></i> Log out
-                </button>
-            </form>
-        </div>
+    <div class="border-t border-gray-100 px-6 py-4 shrink-0">
+        <form method="POST" action="{{ route('user.logout') }}">
+            @csrf
+            <button type="submit" class="flex items-center gap-3 text-[#0E0F3B] hover:text-[#ED7A07] transition font-bold text-sm">
+                <i class="fa-solid fa-right-from-bracket"></i> Log out
+            </button>
+        </form>
     </div>
 </div>
 

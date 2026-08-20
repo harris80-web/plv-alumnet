@@ -6,11 +6,11 @@ $pageTitles = [
     'profile.blade.php'         => 'Super Admin Profile',
     'userManagement.blade.php' => 'User Management',
     'jobManagement.blade.php'   => 'Job Placement Management',
-    'yearbook.blade.php'     => 'Alumni ID & Yearbook Management',
+    'alumniIdManagement.blade.php'     => 'Alumni ID & Yearbook Management',
     'notices.blade.php'  => 'Notices & Events',
-    'messaging.blade.php' => 'Chatbot & Messaging',
+    'chatbotMessaging.blade.php' => 'Chatbot & Messaging',
     'testimonialManagement.blade.php'    => 'Testimonial Management',
-    'faqs.blade.php'            => 'Manage FAQs'
+    'faqManagement.blade.php'            => 'Manage FAQs'
 ];
 
 $title = $pageTitles[$currentPage] ?? 'Super Admin Panel';

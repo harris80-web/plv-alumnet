@@ -36,15 +36,18 @@
                 class="{{ $current_page == 'alumni.index' ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">DIRECTORY</a>
 
             <div class="flex items-center gap-6 text-white ml-5">
-                <a href="{{ route('messages.index') }}" class="{{ str_starts_with($current_page ?? '', 'messages.') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }} transition-colors">
+                <a href="{{ route('messages.index') }}" class="group relative {{ str_starts_with($current_page ?? '', 'messages.') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }} transition-colors">
                     <i data-lucide="messages-square" class="w-6 h-6"></i>
+                    <span class="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 whitespace-nowrap bg-[#0E0F3B] text-white text-[10px] font-semibold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50">Messages</span>
                 </a>
-                <button onclick="toggleNotifications(event)" class="relative hover:text-[#ED7A07] transition-colors">
+                <button onclick="toggleNotifications(event)" class="group relative hover:text-[#ED7A07] transition-colors">
                     <i data-lucide="bell" class="w-6 h-6"></i>
                     <span id="notifBadge" class="hidden absolute -top-1.5 -right-1.5 bg-[#C73D1A] text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center"></span>
+                    <span class="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 whitespace-nowrap bg-[#0E0F3B] text-white text-[10px] font-semibold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50">Notifications</span>
                 </button>
-                <button onclick="toggleSidebar()" class="hover:text-[#ED7A07] transition-colors">
+                <button onclick="toggleSidebar()" class="group relative hover:text-[#ED7A07] transition-colors">
                     <i data-lucide="circle-user" class="w-7 h-7"></i>
+                    <span class="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 whitespace-nowrap bg-[#0E0F3B] text-white text-[10px] font-semibold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50">Profile</span>
                 </button>
             </div>
         </nav>

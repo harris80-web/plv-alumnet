@@ -63,17 +63,26 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="bg-white rounded-xl shadow-lg border-t-8 border-orange-600 p-8 text-center transition-transform hover:-translate-y-1">
                     <div class="text-6xl font-bold text-orange-600 mb-2">{{ $stats['activePostings'] }}</div>
-                    <p class="text-orange-700 font-semibold leading-tight">Active Job<br>Postings</p>
+                    <p class="text-orange-700 font-semibold leading-tight flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-briefcase text-orange-700"></i>
+                        <span>Active Job<br>Postings</span>
+                    </p>
                 </div>
 
                 <div class="bg-white rounded-xl shadow-lg border-t-8 border-orange-600 p-8 text-center transition-transform hover:-translate-y-1">
                     <div class="text-6xl font-bold text-orange-600 mb-2">{{ $stats['unreadApplicants'] }}</div>
-                    <p class="text-orange-700 font-semibold leading-tight">New Unreviewed<br>Applicants</p>
+                    <p class="text-orange-700 font-semibold leading-tight flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-user-clock text-orange-700"></i>
+                        <span>New Unreviewed<br>Applicants</span>
+                    </p>
                 </div>
 
                 <div class="bg-white rounded-xl shadow-lg border-t-8 border-orange-600 p-8 text-center transition-transform hover:-translate-y-1">
                     <div class="text-6xl font-bold text-orange-600 mb-2">{{ $stats['expiringSoon'] }}</div>
-                    <p class="text-orange-700 font-semibold leading-tight">Job Posts<br>Expiring Soon</p>
+                    <p class="text-orange-700 font-semibold leading-tight flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-hourglass-half text-orange-700"></i>
+                        <span>Job Posts<br>Expiring Soon</span>
+                    </p>
                 </div>
             </div>
         </div>
@@ -268,52 +277,34 @@
         </div>
     </section>
 
-    <section class="py-16 px-6 max-w-6xl mx-auto relative">
+    <section class="py-4 px-6 max-w-6xl mx-auto relative pb-16">
         <div class="flex justify-between items-end mb-8 pl-4">
-            <span class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent 
-            text-4xl font-bold text-blue-900 uppercase tracking-tighter"> | Campus Events</span>
-            <a href="{{ route('notices.employerEventsSeminars') }}" class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent font-bold uppercase text-sm hover:border-b-2 border-[#C73D1A]">Go to Events ></a>
+            <span class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent
+            text-4xl font-bold text-blue-900 uppercase tracking-tighter"> | Announcements</span>
+            <a href="{{ route('notices.employerAnnouncements') }}" class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent font-bold uppercase text-sm hover:border-b-2 border-[#C73D1A]">Go to Announcements ></a>
         </div>
 
-        <div class="flex items-center">
-            <button class="p-2 text-gray-400 hover:text-blue-900"><i class="fa-solid fa-chevron-left text-2xl"></i></button>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow">
-                @forelse ($upcomingEvents as $event)
-                <div class="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100">
-                    <div class="h-40">
-                        <img src="{{ $event->thumbnailUrl() }}" class="w-full h-full object-cover">
-                    </div>
-
-                    <div class="p-4 flex gap-4 items-start relative ">
-                        <div class="flex-grow">
-                            <h3 class="font-bold text-blue-900 uppercase text-sm">{{ $event->title }}</h3>
-                            @if ($event->location)
-                            <p class="text-[10px] text-gray-500 mb-2">
-                            <i class="fa-solid fa-location-dot mr-1"></i> {{ $event->location }}
-                            </p>
-                            @endif
-                            <p class="text-xs text-black w-3/4 leading-tight">
-                              {{ Str::limit(strip_tags($event->description), 100) ?: 'No description provided.' }}
-                            </p>
-                        </div>
-                         <div class="flex-shrink-0 absolute right-0 bg-orange-700 text-white p-2 text-center w-16 rounded-sm shadow-sm">
-                            <span class="block text-xl font-bold leading-none tracking-tighter">{{ $event->event_datetime->format('d') }}</span>
-                            <span class="text-[10px] uppercase font-semibold">{{ $event->event_datetime->format('M') }}</span>
-                        </div>
-                    </div>
-
-                </div>
-                @empty
-                <div class="col-span-3 bg-white rounded-lg shadow-md border border-gray-100 p-8 text-center text-gray-400">
-                    <i class="fa-regular fa-calendar-xmark text-3xl mb-2 block"></i>
-                    <p class="font-semibold text-sm">No upcoming campus events right now.</p>
-                </div>
-                @endforelse
-            </div>
-
-            <button class="p-2 text-gray-400 hover:text-blue-900"><i class="fa-solid fa-chevron-right text-2xl"></i></button>
+        @if ($recentAnnouncements->isEmpty())
+        <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-10 text-center text-gray-500">
+            <i class="fa-solid fa-bullhorn text-3xl mb-3 block text-gray-300"></i>
+            <p>No announcements right now.</p>
         </div>
+        @else
+        <div class="space-y-4">
+            @foreach ($recentAnnouncements as $notice)
+            <a href="{{ route('notices.employerAnnouncements') }}" class="flex items-center gap-4 bg-white shadow-md rounded-lg border border-gray-100 p-4 hover:shadow-lg transition-shadow">
+                <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-bullhorn text-amber-600"></i>
+                </div>
+                <div class="flex-grow min-w-0">
+                    <h3 class="font-bold text-blue-900 text-sm truncate">{{ $notice->title }}</h3>
+                    <p class="text-xs text-gray-500 truncate">{{ \Illuminate\Support\Str::limit(strip_tags($notice->description ?? ''), 100) }}</p>
+                </div>
+                <p class="text-[10px] text-gray-400 shrink-0 whitespace-nowrap">{{ $notice->event_datetime->format('M d, Y') }}</p>
+            </a>
+            @endforeach
+        </div>
+        @endif
     </section>
 
     @include('partials.footer-employer')

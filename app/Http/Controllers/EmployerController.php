@@ -56,14 +56,13 @@ class EmployerController extends Controller
             ->orderByDesc('applications_count')
             ->get();
 
-        $upcomingEvents = Notice::category('event')
+        $recentAnnouncements = Notice::category('announcement')
             ->visibleToEmployer()
-            ->upcoming()
-            ->orderBy('event_datetime')
+            ->orderByDesc('event_datetime')
             ->take(3)
             ->get();
 
-        return view('employer.dashboard', compact('employer', 'stats', 'jobPostings', 'upcomingEvents'));
+        return view('employer.dashboard', compact('employer', 'stats', 'jobPostings', 'recentAnnouncements'));
     }
 
     /**

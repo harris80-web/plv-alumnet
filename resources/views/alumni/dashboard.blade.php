@@ -83,12 +83,12 @@
             @php
                 $alumniIdRecord = Auth::user()->alumnus->alumniId ?? null;
                 $alumniIdCardConfig = [
-                    'pending' => ['bg' => 'bg-amber-500/80', 'icon' => 'fa-clock', 'title' => 'Pending Submission', 'desc' => 'Your Alumni ID request has been submitted and is waiting to be processed.'],
-                    'under_review' => ['bg' => 'bg-blue-600/80', 'icon' => 'fa-magnifying-glass', 'title' => 'Under Review', 'desc' => 'Your Alumni ID is currently under review by the Alumni Office.'],
-                    'ready_to_claim' => ['bg' => 'bg-purple-600/80', 'icon' => 'fa-bell', 'title' => 'Ready to Claim', 'desc' => 'Your Alumni ID is ready! Visit the Alumni Office to claim it.'],
-                    'claimed' => ['bg' => 'bg-orange-600/80', 'icon' => 'fa-check', 'title' => 'Alumni ID Claimed', 'desc' => 'Your Alumni ID has been claimed.'],
+                    'pending' => ['icon' => 'fa-clock', 'title' => 'Pending Submission', 'desc' => 'Your Alumni ID request has been submitted and is waiting to be processed.'],
+                    'under_review' => ['icon' => 'fa-magnifying-glass', 'title' => 'Under Review', 'desc' => 'Your Alumni ID is currently under review by the Alumni Office.'],
+                    'ready_to_claim' => ['icon' => 'fa-bell', 'title' => 'Ready to Claim', 'desc' => 'Your Alumni ID is ready! Visit the Alumni Office to claim it.'],
+                    'claimed' => ['icon' => 'fa-check', 'title' => 'Alumni ID Claimed', 'desc' => 'Your Alumni ID has been claimed.'],
                 ];
-                $alumniIdCard = $alumniIdCardConfig[$alumniIdRecord->status ?? null] ?? ['bg' => 'bg-slate-600/80', 'icon' => 'fa-circle-question', 'title' => 'No Record Found', 'desc' => 'No Alumni ID request found yet. Please contact the Alumni Office.'];
+                $alumniIdCard = $alumniIdCardConfig[$alumniIdRecord->status ?? null] ?? ['icon' => 'fa-circle-question', 'title' => 'No Record Found', 'desc' => 'No Alumni ID request found yet. Please contact the Alumni Office.'];
 
                 // Static stepper across the known status order — reflects
                 // current status only, there's no per-transition history
@@ -98,8 +98,14 @@
                 $alumniIdCurrentIndex = $alumniIdRecord ? array_search($alumniIdRecord->status, $alumniIdSteps, true) : -1;
             @endphp
             <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 flex flex-col">
+                <div class="px-5 py-3 border-b border-gray-100 text-center">
+                    <h4 class="w-fit mx-auto text-sm font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+                        Alumni ID Claiming Status
+                    </h4>
+                </div>
                 <div class="relative h-64 bg-[url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800q=80')] bg-cover bg-center">
-                    <div class="alumniID absolute inset-0 {{ $alumniIdCard['bg'] }} flex flex-col items-center justify-center text-white p-6 text-center">
+                    <div class="alumniID absolute inset-0 flex flex-col items-center justify-center text-white p-6 text-center"
+                        style="background-image: linear-gradient(-25deg, rgba(237,122,7,0.6), rgba(199,61,26,0.6));">
                         <div class="w-10 h-10 bg-white rounded-md flex items-center justify-center mb-4">
                             <i class="fa-solid {{ $alumniIdCard['icon'] }} text-orange-600 text-xl"></i>
                         </div>
@@ -108,12 +114,9 @@
                     </div>
                 </div>
                 <div class="py-6 text-center">
-                    <h4 class="text-2xl font-bold">
-                        <span class="inner-text-shadow text-3xl font-medium bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Alumni ID Status</span>
-                    </h4>
                     <button type="button"
                         onclick="openAnimatedModal(document.getElementById('alumniIdStatusModal'), document.getElementById('alumniIdStatusModalPanel'))"
-                        class="mt-3 text-xs font-bold uppercase tracking-widest text-white bg-[#0E0F3B] hover:bg-[#1D46A4] px-6 py-2 rounded-full transition-colors">
+                        class="px-8 py-2 rounded-md border-2 border-[#0E0F3B] text-[#0E0F3B] font-bold hover:bg-[#0E0F3B] hover:text-white transition-colors duration-300 uppercase text-sm tracking-widest">
                         View Status
                     </button>
                 </div>
@@ -122,13 +125,13 @@
             @php
                 $yearbookRecord = Auth::user()->alumnus->yearbook ?? null;
                 $yearbookCardConfig = [
-                    'pending' => ['bg' => 'bg-amber-500/80', 'title' => 'Pending', 'desc' => 'Your yearbook request is being processed.'],
-                    'on_hand' => ['bg' => 'bg-cyan-600/80', 'title' => 'On Hand', 'desc' => 'Your yearbook has arrived at the Alumni Office and is being prepared for release.'],
-                    'ready_to_claim' => ['bg' => 'bg-purple-600/80', 'title' => 'Ready to Claim', 'desc' => 'Your yearbook is ready! See the distribution details below.'],
-                    'claimed' => ['bg' => 'bg-green-600/80', 'title' => 'Yearbook Claimed', 'desc' => 'You have claimed your yearbook.'],
-                    'not_yet_claimed' => ['bg' => 'bg-slate-600/80', 'title' => 'Not Yet Claimed', 'desc' => 'Your yearbook has not been claimed yet.'],
+                    'pending' => ['title' => 'Pending', 'desc' => 'Your yearbook request is being processed.'],
+                    'on_hand' => ['title' => 'On Hand', 'desc' => 'Your yearbook has arrived at the Alumni Office and is being prepared for release.'],
+                    'ready_to_claim' => ['title' => 'Ready to Claim', 'desc' => 'Your yearbook is ready! See the distribution details below.'],
+                    'claimed' => ['title' => 'Yearbook Claimed', 'desc' => 'You have claimed your yearbook.'],
+                    'not_yet_claimed' => ['title' => 'Not Yet Claimed', 'desc' => 'Your yearbook has not been claimed yet.'],
                 ];
-                $yearbookCard = $yearbookCardConfig[$yearbookRecord->claiming_status ?? null] ?? ['bg' => 'bg-slate-600/80', 'title' => 'No Record Found', 'desc' => 'No yearbook record found yet. Please contact the Alumni Office.'];
+                $yearbookCard = $yearbookCardConfig[$yearbookRecord->claiming_status ?? null] ?? ['title' => 'No Record Found', 'desc' => 'No yearbook record found yet. Please contact the Alumni Office.'];
 
                 // 'not_yet_claimed' is a separate terminal state, not a stage
                 // further along than 'claimed' — kept out of the linear
@@ -141,8 +144,14 @@
                     : -1;
             @endphp
             <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 flex flex-col">
+                <div class="px-5 py-3 border-b border-gray-100 text-center">
+                    <h4 class="w-fit mx-auto text-sm font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+                        Yearbook Claiming Status
+                    </h4>
+                </div>
                 <div class="relative h-64 bg-[url('https://images.unsplash.com/photo-1544822688-c6f14d6986bb?auto=format&fit=crop&w=800q=80')] bg-cover bg-center">
-                    <div class="absolute inset-0 {{ $yearbookCard['bg'] }} flex flex-col items-center justify-center text-white p-6 text-center">
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-white p-6 text-center"
+                        style="background-image: linear-gradient(180deg, rgba(32,113,201,0.7) 60%, rgba(29,70,164,0.7) 80%, rgba(14,15,59,0.7) 95%);">
                         <h3 class="text-xl font-bold uppercase tracking-widest mb-4">{{ $yearbookCard['title'] }}</h3>
                         <p class="text-[11px] leading-relaxed mb-6 px-4">{{ $yearbookCard['desc'] }}</p>
 
@@ -154,12 +163,9 @@
                     </div>
                 </div>
                 <div class="py-6 text-center">
-                    <h4 class="text-2xl font-bold">
-                        <span class="inner-text-shadow text-3xl font-medium bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Yearbook Claiming Status</span>
-                    </h4>
                     <button type="button"
                         onclick="openAnimatedModal(document.getElementById('yearbookStatusModal'), document.getElementById('yearbookStatusModalPanel'))"
-                        class="mt-3 text-xs font-bold uppercase tracking-widest text-white bg-[#0E0F3B] hover:bg-[#1D46A4] px-6 py-2 rounded-full transition-colors">
+                        class="px-8 py-2 rounded-md border-2 border-[#0E0F3B] text-[#0E0F3B] font-bold hover:bg-[#0E0F3B] hover:text-white transition-colors duration-300 uppercase text-sm tracking-widest">
                         View Status
                     </button>
                 </div>
@@ -498,7 +504,10 @@
         </div>
 
         @if ($upcomingNotices->isEmpty())
-        <p class="text-center text-gray-400 py-10">No upcoming events or seminars right now.</p>
+        <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-10 text-center text-gray-500">
+            <i class="fa-regular fa-calendar-xmark text-3xl mb-3 block text-gray-300"></i>
+            <p>No upcoming events or seminars right now.</p>
+        </div>
         @else
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             @foreach ($upcomingNotices as $notice)
@@ -539,7 +548,10 @@
         </div>
 
         @if ($recentAnnouncements->isEmpty())
-        <p class="text-center text-gray-400 py-10">No announcements right now.</p>
+        <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-10 text-center text-gray-500">
+            <i class="fa-solid fa-bullhorn text-3xl mb-3 block text-gray-300"></i>
+            <p>No announcements right now.</p>
+        </div>
         @else
         <div class="space-y-4">
             @foreach ($recentAnnouncements as $notice)
@@ -567,11 +579,12 @@
     </section>
     @include('partials.testimonial-cards-script')
 
-    <section class="Experience py-5 px-6 max-w-7xl mx-auto mb-5 flex flex-col md:flex-row items-center gap-12">
+    <section class="Experience w-full min-h-[560px] py-16 px-6 mb-5 flex items-center">
+        <div class="max-w-7xl mx-auto w-full flex flex-col md:flex-row items-center gap-12">
 
         <div class="relative w-full ">
 
-            <div class="relative z-10 bg-[#0E0F3B] p-8 shadow-2xl w-full max-w-md mx-auto shadow-outer">
+            <div class="relative z-10 bg-[#0E0F3B] p-8 rounded-2xl shadow-2xl w-full max-w-md mx-auto shadow-outer">
                 <form action="{{ route('testimonials.submit', Auth::user()) }}" method="POST" class="space-y-4">
                     @csrf
                     <!-- <div>
@@ -604,14 +617,15 @@
             </div>
         </div>
 
-        <div class="w-full md:w-1/2 space-y-6 text-center flex flex-col items-center">
-            <h2 class="text-5xl md:text-6xl font-bold text-[#0E0F3B] leading-tight">
-                Share your<br>experience
+        <div class="w-full md:w-1/2 space-y-3 text-center flex flex-col items-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-[#0E0F3B] leading-tight">
+                Share your experience
             </h2>
 
-            <p class="text-[#0E0F3B] font-medium text-lg text-justify leading-relaxed max-w-md mx-auto">
+            <p class="text-[#0E0F3B] font-medium text-sm text-center leading-relaxed max-w-md mx-auto">
                 Tell us about the connections, opportunities, or mentorship you've gained through the AlumNet. Your testimonial helps highlight the value of our network for all PLV graduates.
             </p>
+        </div>
         </div>
     </section>
 

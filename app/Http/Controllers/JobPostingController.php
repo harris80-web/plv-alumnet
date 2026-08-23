@@ -129,7 +129,7 @@ class JobPostingController extends Controller
         $user = Auth::user();
         abort_unless($user && $user->user_role === 'alumni', 403);
 
-        $query = JobPosting::with(['skills', 'programs', 'industry', 'user'])
+        $query = JobPosting::with(['skills', 'programs', 'industry', 'user', 'employer.reviews'])
             ->whereHas('applications', fn ($q) => $q->where('alumnus_id', $user->user_id))
             ->addSelect(['applied_at' => JobApplication::selectRaw('application_date')
                 ->whereColumn('job_applications.job_id', 'job_postings.job_posting_id')
@@ -157,7 +157,7 @@ class JobPostingController extends Controller
      */
     private function filteredJobPostingsQuery(Request $request, ?\App\Models\User $user = null)
     {
-        $query = JobPosting::active()->approved()->with(['skills', 'programs', 'industry', 'user']);
+        $query = JobPosting::active()->approved()->with(['skills', 'programs', 'industry', 'user', 'employer.reviews']);
 
         if ($user && $user->user_role === 'alumni' && $user->alumnus) {
             $query->addSelect(['match_score' => \App\Models\JobMatch::selectRaw('COALESCE(score * 0.7 + ai_score * 0.3, score)')

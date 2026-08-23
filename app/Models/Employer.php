@@ -51,7 +51,33 @@ class Employer extends Model
     {
         return $this->hasMany(JobPosting::class, 'user_id', 'user_id');
     }
- 
+
+    public function reviews()
+    {
+        return $this->hasMany(EmployerReview::class, 'employer_id', 'user_id');
+    }
+
+    /**
+     * Uses the already-loaded `reviews` collection when eager-loaded (see
+     * JobPostingController::filteredJobPostingsQuery()), so listing job
+     * cards doesn't run 2 extra count queries per card — falls back to a
+     * real query only when reviews weren't eager-loaded (e.g. the reviews
+     * page itself, one employer at a time).
+     */
+    public function upvoteCount(): int
+    {
+        return $this->relationLoaded('reviews')
+            ? $this->reviews->where('vote', 'upvote')->count()
+            : $this->reviews()->where('vote', 'upvote')->count();
+    }
+
+    public function downvoteCount(): int
+    {
+        return $this->relationLoaded('reviews')
+            ? $this->reviews->where('vote', 'downvote')->count()
+            : $this->reviews()->where('vote', 'downvote')->count();
+    }
+
     public function scopeApproved($query)
     {
         return $query->where('employer_approved', true);

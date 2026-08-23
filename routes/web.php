@@ -10,6 +10,7 @@ use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ChatTicketController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\EmployerController;
+use App\Http\Controllers\EmployerReviewController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\IndustryController;
@@ -247,6 +248,8 @@ Route::get('/jobBoard/bookmarks', [JobPostingController::class, 'showBookmarks']
 Route::get('/jobBoard/myApplications', [JobPostingController::class, 'showMyApplications'])->name('jobPosting.myApplications')->middleware('auth');
 Route::post('/jobBoard/addJobPost/{id}', [JobPostingController::class, 'addJobPost'])->name('jobPosting.addJobPost');
 Route::post('/jobBoard/toggleBookmark/{jobPostingId}', [JobBookmarkController::class, 'toggle'])->name('jobBookmark.toggle');
+Route::post('/companies/{employer}/vote', [EmployerReviewController::class, 'vote'])->name('employerReviews.vote')->middleware('auth');
+Route::get('/companies/{employer}/reviews', [EmployerReviewController::class, 'reviews'])->name('employerReviews.index');
 Route::post('/job-postings/upload-image', [JobPostingController::class, 'uploadDescriptionImage'])->name('jobPosting.uploadDescriptionImage');
 Route::get('/myJobPosts/{id}', [JobPostingController::class, 'showMyJobPosts'])->name('jobPosting.myJobPosts');
 Route::post('/editJobPost/{id}', [JobPostingController::class, 'editJobPost'])->name('jobPosting.editJobPost');
@@ -281,9 +284,13 @@ Route::put('/testimonials/bulk-hide', [TestimonialController::class, 'bulkHide']
 Route::put('/testimonials/bulk-delete', [TestimonialController::class, 'bulkDelete'])->name('testimonials.bulkDelete');
 Route::put('/postTestimonial/{id}', [TestimonialController::class, 'postTestimonial'])->name('testimonials.post');
 Route::delete('/deleteTestimonial/{id}', [TestimonialController::class, 'deleteTestimonial'])->name('testimonials.delete');
+// Must come before Route::resource('testimonials', ...) below — that
+// resource registers GET /testimonials/{testimonial}, which otherwise
+// greedily matches "cards" as an id and 404s before this route is ever
+// reached (same reason the bulk-* routes above also precede it).
+Route::get('/testimonials/cards', [TestimonialController::class, 'cardsFragment'])->name('testimonials.cardsFragment');
 Route::resource('testimonials', TestimonialController::class);
 Route::get('/testimonialManagement', [TestimonialController::class, 'showTestimonials'])->name('testimonials.manage');
-Route::get('/testimonials/cards', [TestimonialController::class, 'cardsFragment'])->name('testimonials.cardsFragment');
 
 
 Route::post('/users/storeEmployer', [UserController::class, 'storeEmployer'])->name('users.storeEmployer');

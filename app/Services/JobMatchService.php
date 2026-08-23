@@ -18,6 +18,12 @@ use App\Models\JobPosting;
  */
 class JobMatchService
 {
+    /** Net-vote ratio needs at least this many total votes before it affects ranking — one or two votes shouldn't swing anything. */
+    private const MIN_VOTES_FOR_REPUTATION = 3;
+
+    /** Max points a company's reputation can add or subtract — small on purpose, see scoreCompanyReputation(). */
+    private const REPUTATION_MAX_POINTS = 5;
+
     public function scoreFor(JobPosting $job, Alumnus $alumnus): JobMatch
     {
         $breakdown = [
@@ -25,14 +31,51 @@ class JobMatchService
             'experience' => $this->scoreExperience($alumnus),
             'program' => $this->scoreProgram($job, $alumnus),
             'certifications' => $this->scoreCertifications($alumnus),
+            'company_reputation' => $this->scoreCompanyReputation($job),
         ];
 
-        $score = round(array_sum($breakdown), 2);
+        // The 4 fit components already sum to 100 on their own — reputation
+        // is a small nudge on top, not a 5th criterion, and is clamped so it
+        // can never push a genuinely poor fit above a genuinely good one
+        // (a job already at 100 on fit alone gets no further benefit from a
+        // good reputation; it can only help a job that isn't already
+        // maxed out — see App\Models\EmployerReview).
+        $score = round(min(100, max(0, array_sum($breakdown))), 2);
 
         return JobMatch::updateOrCreate(
             ['job_posting_id' => $job->job_posting_id, 'alumnus_id' => $alumnus->user_id],
             ['score' => $score, 'score_breakdown' => $breakdown, 'computed_at' => now()]
         );
+    }
+
+    /**
+     * Small tie-breaking bonus/penalty from the employer's alumni-submitted
+     * up/downvotes (see App\Models\EmployerReview) — "the higher the
+     * upvotes, the more likely their job post appears in the
+     * recommendation, if the criteria is still met": this only ever adjusts
+     * an already-qualifying score by up to ±5 points, it never substitutes
+     * for actual fit. Neutral (0) until a company has at least
+     * MIN_VOTES_FOR_REPUTATION votes, so a single early vote can't swing
+     * anything.
+     */
+    private function scoreCompanyReputation(JobPosting $job): float
+    {
+        $employer = $job->employer;
+        if (!$employer) {
+            return 0.0;
+        }
+
+        $upvotes = $employer->upvoteCount();
+        $downvotes = $employer->downvoteCount();
+        $total = $upvotes + $downvotes;
+
+        if ($total < self::MIN_VOTES_FOR_REPUTATION) {
+            return 0.0;
+        }
+
+        $netRatio = ($upvotes - $downvotes) / $total; // -1 (all down) .. 1 (all up)
+
+        return round($netRatio * self::REPUTATION_MAX_POINTS, 2);
     }
 
     /**

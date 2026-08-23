@@ -106,7 +106,12 @@ class JobPostingPracticeSeeder extends Seeder
             }
             $existingTitles[] = $employer->employer_company_name . '|' . $fullTitle;
 
-            $programIds = Program::whereIn('program_name', $template['programs'])->pluck('program_id');
+            // JobPostingController validates 'program' as max:3 on both
+            // create and edit — some templates below list more than 3
+            // programs (e.g. Education's 6), so this must cap the same way
+            // or seeded jobs end up in a state the real form could never
+            // have produced.
+            $programIds = Program::whereIn('program_name', $template['programs'])->pluck('program_id')->shuffle()->take(3);
             $skillNames = collect($template['skills'])->shuffle()->take(fake()->numberBetween(2, 4));
 
             // ~15% already closed, ~20% closing within a week, the rest open for a while yet.

@@ -7,6 +7,17 @@
     // board sorts by, so this badge always agrees with the ordering.
     $isRecommended = $isAlumni && isset($job->match_score) && $job->match_score !== null
         && (float) $job->match_score >= ($recommendedThreshold ?? 50);
+
+    // Company up/down votes — see App\Models\EmployerReview. Deliberately
+    // NOT shown to admin/employer roles (only the alumni-facing vote
+    // buttons are gated; the "Reviews" link below stays visible to
+    // everyone). $job->employer->reviews is eager-loaded in
+    // JobPostingController::filteredJobPostingsQuery()/showMyApplications(),
+    // so this never triggers a query per card.
+    $employer = $job->employer;
+    $companyUpvotes = $employer?->upvoteCount() ?? 0;
+    $companyDownvotes = $employer?->downvoteCount() ?? 0;
+    $myCompanyVote = $isAlumni && $employer ? $employer->reviews->firstWhere('alumnus_id', $user->user_id) : null;
 @endphp
 
 <div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row relative hover:shadow-lg transition-shadow md:min-h-[340px]">
@@ -167,6 +178,31 @@
                 </div>
             </div>
         </div>
+
+        @if ($employer)
+        <div class="mt-4 flex items-center justify-between border-t pt-4">
+            @if ($isAlumni)
+            <div class="flex items-center gap-2">
+                <button type="button" class="vote-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors {{ $myCompanyVote?->vote === 'upvote' ? 'bg-green-600 text-white border-green-600' : 'border-gray-300 text-gray-500 hover:border-green-500 hover:text-green-600' }}"
+                    data-employer-id="{{ $employer->user_id }}" data-vote-type="upvote"
+                    onclick="castCompanyVote(this)">
+                    <i class="fas fa-thumbs-up"></i> <span class="vote-count">{{ $companyUpvotes }}</span>
+                </button>
+                <button type="button" class="vote-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors {{ $myCompanyVote?->vote === 'downvote' ? 'bg-red-600 text-white border-red-600' : 'border-gray-300 text-gray-500 hover:border-red-500 hover:text-red-600' }}"
+                    data-employer-id="{{ $employer->user_id }}" data-vote-type="downvote"
+                    onclick="castCompanyVote(this)">
+                    <i class="fas fa-thumbs-down"></i> <span class="vote-count">{{ $companyDownvotes }}</span>
+                </button>
+            </div>
+            @else
+            <div></div>
+            @endif
+
+            <a href="{{ route('employerReviews.index', ['employer' => $employer->user_id, 'back' => url()->full()]) }}" class="reviews-link text-xs font-bold text-[#1D46A4] hover:underline flex items-center gap-1.5" data-employer-id="{{ $employer->user_id }}">
+                <i class="fas fa-comment-dots"></i> Reviews (<span class="reviews-count">{{ $companyUpvotes + $companyDownvotes }}</span>)
+            </a>
+        </div>
+        @endif
 
         <div class="mt-4 flex items-center justify-between text-xs text-gray-500 border-t pt-4">
             <div class="flex items-center">

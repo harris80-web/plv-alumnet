@@ -217,6 +217,7 @@
     </main>
 
     @include('partials.job-detail-modal')
+    @include('partials.company-review-modal')
 
     @if($user && $user->user_role === 'employer')
     <!-- POST A NEW JOB MODAL-->
@@ -409,7 +410,7 @@
 
                                         </select>
 
-                                        <button type="button" onclick="addCourseField()" class="bg-[#1D264F] text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#0E0F3B] transition-colors shadow-sm">
+                                        <button type="button" id="add-course-btn" onclick="addCourseField()" class="bg-[#1D264F] text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#0E0F3B] transition-colors shadow-sm">
                                             <i class="fas fa-plus text-[10px]"></i>
                                         </button>
 

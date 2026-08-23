@@ -24,7 +24,7 @@ class JobMatch extends Model
 
     protected $casts = [
         'score' => 'decimal:2',
-        'score_breakdown' => 'array', // JSON: e.g. {"skills":42.5,"program":15,"experience":20,"certifications":8}
+        'score_breakdown' => 'array', // JSON: e.g. {"skills":42.5,"program":15,"experience":20,"certifications":8,"company_reputation":2.5}
         'ai_score' => 'decimal:2',
         'ai_computed_at' => 'datetime',
         'computed_at' => 'datetime',

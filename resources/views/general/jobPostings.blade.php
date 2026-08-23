@@ -627,12 +627,13 @@
                                     </select>
 
                                     @if($index === 0)
-                                    <button type="button" onclick="addCourseField()"
+                                    <button type="button"
+                                        onclick="addCourseField('editCourseInputContainer-{{ $job->job_posting_id }}', 'editCourseLimitMsg-{{ $job->job_posting_id }}')"
                                         class="bg-[#1D264F] text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#0E0F3B] transition-colors">
                                         <i class="fas fa-plus text-xs"></i>
                                     </button>
                                     @else
-                                    <button type="button" onclick="removeCourseField(this)"
+                                    <button type="button" onclick="removeCourseField(this, 'editCourseLimitMsg-{{ $job->job_posting_id }}')"
                                         class="bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors">
                                         <i class="fas fa-minus text-xs"></i>
                                     </button>
@@ -641,7 +642,7 @@
                                 @endforeach
                             </div>
 
-                            <p id="editCourseLimitMsg" class="text-[9px] text-gray-400 italic hidden">
+                            <p id="editCourseLimitMsg-{{ $job->job_posting_id }}" class="text-[9px] text-gray-400 italic hidden">
                                 Maximum of 3 programs reached.
                             </p>
                         </div>
@@ -858,8 +859,15 @@
     }
 
     // POST A NEW JOB MODAL - ADD COURSE FIELD
-    function addCourseField() {
-        const container = document.getElementById('course-input-container');
+    // containerId/msgId default to the "Post a New Job" modal's own ids so
+    // its existing onclick="addCourseField()" calls (no args) keep working
+    // unchanged. The per-job Edit Job form passes its own ids explicitly
+    // (editCourseInputContainer-{id} / editCourseLimitMsg-{id}) — this used
+    // to be hardcoded to the create form's ids, so clicking "+" inside Edit
+    // silently added a row to the hidden create form instead of the visible
+    // edit form.
+    function addCourseField(containerId = 'course-input-container', msgId = 'course-limit-msg') {
+        const container = document.getElementById(containerId);
         const rows = container.getElementsByClassName('course-row');
 
         if (rows.length < 3) {
@@ -869,18 +877,18 @@
             const btn = newRow.querySelector('button');
             btn.innerHTML = '<i class="fas fa-minus text-xs"></i>';
             btn.classList.replace('bg-[#1D264F]', 'bg-red-500');
-            btn.setAttribute('onclick', 'removeCourseField(this)');
+            btn.setAttribute('onclick', "removeCourseField(this, '" + msgId + "')");
             container.appendChild(newRow);
 
             if (rows.length === 3) {
-                document.getElementById('course-limit-msg').classList.remove('hidden');
+                document.getElementById(msgId)?.classList.remove('hidden');
             }
         }
     }
 
-    function removeCourseField(button) {
+    function removeCourseField(button, msgId = 'course-limit-msg') {
         button.closest('.course-row').remove();
-        document.getElementById('course-limit-msg').classList.add('hidden');
+        document.getElementById(msgId)?.classList.add('hidden');
     }
 
     // EDIT JOB POST MODAL

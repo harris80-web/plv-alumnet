@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
 use App\Mail\AlumniCreatedMail;
 use App\Mail\DeactAlumniMail;
 use App\Models\Industry;
+use App\Models\JobApplication;
 use App\Models\Testimonial;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
@@ -271,10 +272,11 @@ class UserController extends Controller
     {
         $sections = Section::all();
         $programs = Program::all();
-        $employers = Employer::with('user')->get();
+        $industries = Industry::orderBy('industry_name')->get();
+        $employers = Employer::with(['user', 'industry'])->get();
         $alumni = Alumnus::with('user')->get();
         $admins = Office::with('user')->get();
-        return view('superAdmin.userManagement', compact('employers', 'alumni', 'admins', 'sections', 'programs'));
+        return view('superAdmin.userManagement', compact('employers', 'alumni', 'admins', 'sections', 'programs', 'industries'));
     }
 
     public function approveEmployer($id)
@@ -752,15 +754,75 @@ class UserController extends Controller
 
     public function showDashboard()
     {
-        $jobPlacementCount = DB::table('job_applications')
-            ->where('application_status', 'hired')
-            ->count();
-        $jobApplicationCount = DB::table('job_applications')->count();
+        // Batch/Course/Employment Status filter — see buildOverviewStats()
+        // and buildEmploymentReports() for exactly how each report uses it.
+        $batch = request()->query('batch');
+        $programId = request()->query('program_id');
+        $employmentStatus = request()->query('employment_status');
+        $hireMonths = $this->resolveHireMonths(request()->query('hire_months'));
+
+        $stats = $this->buildOverviewStats($batch, $programId, $employmentStatus);
+
+        $batches = Alumnus::whereNotNull('alumnus_batch')->distinct()->orderByDesc('alumnus_batch')->pluck('alumnus_batch');
+        $programs = Program::orderBy('program_name')->get();
+        // hire_months lives outside $dashboardFilters on purpose — it always
+        // has a value (default 6), and $dashboardFilters drives both the
+        // sticky select values AND the "Clear" link's visibility check,
+        // which should only fire for an actually-applied batch/program/
+        // status filter, not the hire-range default.
+        $dashboardFilters = ['batch' => $batch, 'program_id' => $programId, 'employment_status' => $employmentStatus];
+
+        $reports = $this->buildEmploymentReports($batch, $programId, $employmentStatus, $hireMonths);
+
+        return view('superAdmin.dashboard', array_merge(
+            compact('stats', 'batches', 'programs', 'dashboardFilters', 'hireMonths'),
+            $reports
+        ));
+    }
+
+    /**
+     * The 4 overview stat cards — split out of showDashboard() so the CSV
+     * export (exportDashboardReport()) can compute the exact same numbers
+     * shown on screen instead of re-deriving them differently.
+     */
+    /**
+     * "Hires per Month" range selector — validates the raw query param
+     * into one of a small fixed set of lengths rather than trusting an
+     * arbitrary integer straight into a date-range loop.
+     */
+    private function resolveHireMonths(?string $raw): int
+    {
+        $allowed = [3, 6, 12, 24];
+        $value = (int) $raw;
+
+        return in_array($value, $allowed, true) ? $value : 6;
+    }
+
+    private function buildOverviewStats(?string $batch, ?string $programId, ?string $employmentStatus): array
+    {
+        $applyAlumniFilters = function ($query, string $alumniTable = 'alumni') use ($batch, $programId, $employmentStatus) {
+            if ($batch) {
+                $query->where("$alumniTable.alumnus_batch", $batch);
+            }
+            if ($programId) {
+                $query->where("$alumniTable.program_id", $programId);
+            }
+            if ($employmentStatus !== null && $employmentStatus !== '') {
+                $query->where("$alumniTable.alumnus_employment_status", $employmentStatus === 'employed' ? 1 : 0);
+            }
+            return $query;
+        };
+
+        $jobApplicationsQuery = $applyAlumniFilters(
+            DB::table('job_applications')->join('alumni', 'alumni.user_id', '=', 'job_applications.alumnus_id')
+        );
+        $jobPlacementCount = (clone $jobApplicationsQuery)->where('application_status', 'hired')->count();
+        $jobApplicationCount = $jobApplicationsQuery->count();
         $jobPlacementRate = $jobApplicationCount > 0
             ? ($jobPlacementCount / $jobApplicationCount) * 100
             : 0;
 
-        $stats = [
+        return [
             'jobPlacementRate' => round($jobPlacementRate, 2),
             'activeJobs' => DB::table('job_postings')
                 ->where('job_approved', true)
@@ -770,13 +832,283 @@ class UserController extends Controller
                 ->where('user_active', true)
                 ->where('user_role', 'employer')
                 ->count(),
-            'alumniUsers' => DB::table('users')
-                ->where('user_active', true)
-                ->where('user_role', 'alumni')
-                ->count()
+            'alumniUsers' => $applyAlumniFilters(
+                DB::table('users')
+                    ->join('alumni', 'alumni.user_id', '=', 'users.user_id')
+                    ->where('users.user_active', true)
+                    ->where('users.user_role', 'alumni')
+            )->count(),
         ];
+    }
 
-        return view('superAdmin.dashboard', compact('stats'));
+    /**
+     * The dashboard's "EXPORT CSV" button — one CSV covering every report
+     * on the page (overview stats, each breakdown chart's underlying
+     * numbers, the employed alumni list, and the companies report),
+     * scoped by the same Batch/Course/Employment Status filter currently
+     * applied on screen so the export always matches what the admin is
+     * looking at.
+     */
+    public function exportDashboardReport()
+    {
+        $batch = request()->query('batch');
+        $programId = request()->query('program_id');
+        $employmentStatus = request()->query('employment_status');
+        $hireMonths = $this->resolveHireMonths(request()->query('hire_months'));
+
+        $stats = $this->buildOverviewStats($batch, $programId, $employmentStatus);
+        $r = $this->buildEmploymentReports($batch, $programId, $employmentStatus, $hireMonths);
+
+        $batchLabel = $batch ?: 'All';
+        $programLabel = $programId ? (Program::find($programId)->program_name ?? $programId) : 'All';
+        $statusLabel = $employmentStatus ? ucfirst($employmentStatus) : 'All';
+
+        $callback = function () use ($stats, $r, $batchLabel, $programLabel, $statusLabel, $hireMonths) {
+            $out = fopen('php://output', 'w');
+
+            fputcsv($out, ['PLV-AlumNet — Admin Dashboard Report Export']);
+            fputcsv($out, ['Generated', now()->format('M d, Y h:i A')]);
+            fputcsv($out, ['Filters', "Batch: $batchLabel | Program: $programLabel | Employment Status: $statusLabel"]);
+            fputcsv($out, []);
+
+            fputcsv($out, ['OVERVIEW']);
+            fputcsv($out, ['Metric', 'Value']);
+            fputcsv($out, ['Total Alumni Users', $stats['alumniUsers']]);
+            fputcsv($out, ['Employment Rate', $r['employmentRate'] . '%']);
+            fputcsv($out, ['Unemployment Rate', $r['unemploymentRate'] . '%']);
+            fputcsv($out, ['Industry Partners', $stats['industryPartners']]);
+            fputcsv($out, ['Active Job Postings', $stats['activeJobs']]);
+            fputcsv($out, ['Job Placement Rate', $stats['jobPlacementRate'] . '%']);
+            fputcsv($out, []);
+
+            fputcsv($out, ['EMPLOYMENT RATE BY BATCH/YEAR']);
+            fputcsv($out, ['Batch', 'Total', 'Employed', 'Rate']);
+            foreach ($r['employmentByBatch'] as $batchYear => $row) {
+                fputcsv($out, [$batchYear, $row['total'], $row['employed'], $row['rate'] . '%']);
+            }
+            fputcsv($out, []);
+
+            fputcsv($out, ['INDUSTRY DISTRIBUTION OF EMPLOYED ALUMNI']);
+            fputcsv($out, ['Industry', 'Employed Count']);
+            foreach ($r['industryDistribution'] as $industry => $count) {
+                fputcsv($out, [$industry, $count]);
+            }
+            fputcsv($out, []);
+
+            fputcsv($out, ['EMPLOYMENT RATE BY GENDER']);
+            fputcsv($out, ['Gender', 'Total', 'Employed', 'Rate']);
+            foreach ($r['genderEmployment'] as $row) {
+                fputcsv($out, [$row['label'], $row['total'], $row['employed'], $row['rate'] . '%']);
+            }
+            fputcsv($out, []);
+
+            fputcsv($out, ['JOB-TO-DEGREE ALIGNMENT BY PROGRAM (Overall: ' . $r['alignmentRate'] . '%)']);
+            fputcsv($out, ['Program', 'Employed', 'Aligned', 'Rate']);
+            foreach ($r['programAlignment'] as $program => $row) {
+                fputcsv($out, [$program, $row['total'], $row['aligned'], $row['rate'] . '%']);
+            }
+            fputcsv($out, []);
+
+            fputcsv($out, ['EMPLOYMENT INTERVAL (graduation to first job)']);
+            fputcsv($out, ['Interval', 'Alumni']);
+            foreach ($r['employmentInterval'] as $bucket => $count) {
+                fputcsv($out, [$bucket, $count]);
+            }
+            fputcsv($out, []);
+
+            fputcsv($out, ['JOB PLACEMENT & HIRING']);
+            fputcsv($out, ['Total Applications', $r['totalApplications']]);
+            fputcsv($out, ['Total Hired', $r['totalHired']]);
+            fputcsv($out, []);
+            fputcsv($out, ['Top Hiring Companies']);
+            fputcsv($out, ['Company', 'Hires']);
+            foreach ($r['topHiringCompanies'] as $row) {
+                fputcsv($out, [$row->job_posting_company, $row->hires]);
+            }
+            fputcsv($out, []);
+            fputcsv($out, ["Hires per Month (last $hireMonths months)"]);
+            fputcsv($out, ['Month', 'Hires']);
+            foreach ($r['hiresPerMonth'] as $month => $count) {
+                fputcsv($out, [$month, $count]);
+            }
+            fputcsv($out, []);
+
+            fputcsv($out, ['EMPLOYED ALUMNI REPORT']);
+            fputcsv($out, ['Name', 'Batch', 'Program', 'Workplace', 'Position', 'Industry', 'Employment Date', 'Aligned']);
+            foreach ($r['employedAlumniTable'] as $a) {
+                fputcsv($out, [
+                    trim(($a->user->user_first_name ?? '') . ' ' . ($a->user->user_last_name ?? '')),
+                    $a->alumnus_batch,
+                    $a->program->program_name ?? 'N/A',
+                    $a->alumnus_workplace_undisclosed ? 'Undisclosed' : ($a->alumnus_workplace ?? 'N/A'),
+                    $a->alumnus_job_position ?? 'N/A',
+                    $a->industry->industry_name ?? 'N/A',
+                    optional($a->alumnus_employment_date)->format('M d, Y') ?? 'N/A',
+                    $a->alumnus_employment_status ? ($a->hasCourseAlignedJob() ? 'Aligned' : 'Not Aligned') : '',
+                ]);
+            }
+            fputcsv($out, []);
+
+            fputcsv($out, ['REGISTERED COMPANIES (' . $r['registeredCompanies']->count() . ')']);
+            fputcsv($out, ['Company', 'Industry', 'Contact']);
+            foreach ($r['registeredCompanies'] as $employer) {
+                fputcsv($out, [$employer->employer_company_name, $employer->industry->industry_name ?? 'N/A', $employer->user->user_email ?? 'N/A']);
+            }
+            fputcsv($out, []);
+
+            fputcsv($out, ['PENDING / UNREGISTERED COMPANIES (' . $r['pendingCompanies']->count() . ')']);
+            fputcsv($out, ['Company', 'Industry', 'Contact']);
+            foreach ($r['pendingCompanies'] as $employer) {
+                fputcsv($out, [$employer->employer_company_name, $employer->industry->industry_name ?? 'N/A', $employer->user->user_email ?? 'N/A']);
+            }
+
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="dashboard_report_' . now()->format('Y-m-d') . '.csv"',
+        ]);
+    }
+
+    /**
+     * Everything under the dashboard's "Reports & Analytics" section.
+     * Split out of showDashboard() purely to keep that method readable —
+     * this is still page-specific, not a reusable service.
+     *
+     * Design note: $batch/$programId scope every report here (a cohort
+     * lens on the whole section), but $employmentStatus is deliberately
+     * NOT applied to the rate/breakdown reports (employment-by-batch,
+     * industry distribution, gender breakdown, alignment) — filtering
+     * "Employed" alumni down to a chart of employment status would make
+     * the chart trivially 100/0%. It's applied only to the Employed
+     * Alumni table below, where picking "Unemployed" meaningfully swaps
+     * which list of names is shown.
+     */
+    private function buildEmploymentReports(?string $batch, ?string $programId, ?string $employmentStatus, int $hireMonths = 6): array
+    {
+        $alumniQuery = Alumnus::with(['user', 'program', 'industry']);
+        if ($batch) {
+            $alumniQuery->where('alumnus_batch', $batch);
+        }
+        if ($programId) {
+            $alumniQuery->where('program_id', $programId);
+        }
+        $allAlumni = $alumniQuery->get();
+        $employedAlumni = $allAlumni->where('alumnus_employment_status', true);
+
+        $totalAlumni = $allAlumni->count();
+        $employedCount = $employedAlumni->count();
+        $employmentRate = $totalAlumni > 0 ? round($employedCount / $totalAlumni * 100, 2) : 0;
+        $unemploymentRate = $totalAlumni > 0 ? round(100 - $employmentRate, 2) : 0;
+
+        // 1. Employment rate by batch/year
+        $employmentByBatch = $allAlumni->groupBy('alumnus_batch')
+            ->filter(fn ($group, $key) => $key !== null && $key !== '')
+            ->sortKeys()
+            ->map(function ($group) {
+                $total = $group->count();
+                $employed = $group->where('alumnus_employment_status', true)->count();
+                return ['total' => $total, 'employed' => $employed, 'rate' => $total > 0 ? round($employed / $total * 100, 2) : 0];
+            });
+
+        // Industry/sector distribution of employed alumni
+        $industryDistribution = $employedAlumni->groupBy(fn ($a) => $a->industry->industry_name ?? 'Unspecified')
+            ->map->count()
+            ->sortDesc();
+
+        // Employment rate by gender
+        $genderLabels = Alumnus::genderLabels();
+        $genderEmployment = $allAlumni->groupBy(fn ($a) => $a->alumnus_gender ?: '')
+            ->map(function ($group, $key) use ($genderLabels) {
+                $total = $group->count();
+                $employed = $group->where('alumnus_employment_status', true)->count();
+                return [
+                    'label' => $genderLabels[$key] ?? 'Unspecified',
+                    'total' => $total,
+                    'employed' => $employed,
+                    'rate' => $total > 0 ? round($employed / $total * 100, 2) : 0,
+                ];
+            })->values();
+
+        // Job-to-degree alignment, overall and per program (employed alumni only)
+        $overallAligned = $employedAlumni->filter->hasCourseAlignedJob()->count();
+        $alignmentRate = $employedCount > 0 ? round($overallAligned / $employedCount * 100, 2) : 0;
+        $programAlignment = $employedAlumni->groupBy(fn ($a) => $a->program->program_name ?? 'Unspecified')
+            ->map(function ($group) {
+                $total = $group->count();
+                $aligned = $group->filter->hasCourseAlignedJob()->count();
+                return ['total' => $total, 'aligned' => $aligned, 'rate' => $total > 0 ? round($aligned / $total * 100, 2) : 0];
+            })
+            ->sortByDesc('total');
+
+        // Employment interval — months from batch graduation (approximated as
+        // June of the batch year, PLV's school-year end) to first job date.
+        $employmentInterval = ['Within 6 months' => 0, '6–12 months' => 0, '1–2 years' => 0, 'Over 2 years' => 0];
+        foreach ($allAlumni as $a) {
+            if (!$a->alumnus_first_job_date || !$a->alumnus_batch) {
+                continue;
+            }
+            $graduation = Carbon::create((int) $a->alumnus_batch, 6, 1);
+            $months = max(0, $graduation->diffInMonths($a->alumnus_first_job_date, false));
+            $bucket = match (true) {
+                $months <= 6 => 'Within 6 months',
+                $months <= 12 => '6–12 months',
+                $months <= 24 => '1–2 years',
+                default => 'Over 2 years',
+            };
+            $employmentInterval[$bucket]++;
+        }
+
+        // Employed Alumni report — the one table where $employmentStatus
+        // actually changes which list is shown (see class doc note above).
+        $employedAlumniTable = $employmentStatus === 'unemployed'
+            ? $allAlumni->where('alumnus_employment_status', false)->sortByDesc('updated_at')->values()
+            : $allAlumni->where('alumnus_employment_status', true)->sortByDesc('alumnus_employment_date')->values();
+
+        // Job placement & hiring — same alumni cohort filters as jobPlacementRate.
+        $hiringBase = fn () => DB::table('job_applications')
+            ->join('alumni', 'alumni.user_id', '=', 'job_applications.alumnus_id')
+            ->join('job_postings', 'job_postings.job_posting_id', '=', 'job_applications.job_id')
+            ->when($batch, fn ($q) => $q->where('alumni.alumnus_batch', $batch))
+            ->when($programId, fn ($q) => $q->where('alumni.program_id', $programId));
+
+        $totalApplications = $hiringBase()->count();
+        $totalHired = $hiringBase()->where('job_applications.application_status', 'hired')->count();
+
+        // hired_at is set the moment an application is actually marked
+        // hired (JobApplicationController::hireApplication()) — using it
+        // instead of updated_at means a later, unrelated edit to the same
+        // row (e.g. a score correction) no longer shifts it to a different
+        // month here.
+        $hiresPerMonth = collect(range($hireMonths - 1, 0))->mapWithKeys(function ($i) use ($hiringBase) {
+            $month = now()->subMonths($i);
+            $count = $hiringBase()
+                ->where('job_applications.application_status', 'hired')
+                ->whereYear('job_applications.hired_at', $month->year)
+                ->whereMonth('job_applications.hired_at', $month->month)
+                ->count();
+            return [$month->format('M Y') => $count];
+        });
+
+        $topHiringCompanies = $hiringBase()
+            ->where('job_applications.application_status', 'hired')
+            ->select('job_postings.job_posting_company', DB::raw('count(*) as hires'))
+            ->groupBy('job_postings.job_posting_company')
+            ->orderByDesc('hires')
+            ->limit(5)
+            ->get();
+
+        // Registered vs pending/unregistered companies
+        $registeredCompanies = Employer::with(['user', 'industry'])->where('employer_approved', true)->latest('created_at')->get();
+        $pendingCompanies = Employer::with(['user', 'industry'])->where('employer_approved', false)->latest('created_at')->get();
+
+        return compact(
+            'totalAlumni', 'employedCount', 'employmentRate', 'unemploymentRate', 'employmentByBatch', 'industryDistribution',
+            'genderEmployment', 'programAlignment', 'alignmentRate', 'employmentInterval',
+            'employedAlumniTable', 'totalApplications', 'totalHired', 'hiresPerMonth', 'topHiringCompanies',
+            'registeredCompanies', 'pendingCompanies'
+        );
     }
 
     public function showSuperAdminProfile()

@@ -123,6 +123,14 @@
                                 class="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A]">
                         </div>
 
+                        <select id="faqRecipientFilter" onchange="filterFaqRows()"
+                            class="px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] bg-white text-slate-600">
+                            <option value="">All Recipients</option>
+                            @foreach (\App\Models\Faq::recipientLabels() as $recKey => $recLabel)
+                            <option value="{{ $recKey }}">{{ $recLabel }}</option>
+                            @endforeach
+                        </select>
+
                         <div class="flex items-center gap-2 flex-wrap justify-end">
                             <span class="text-xs font-semibold text-gray-500"><span id="faqSelectedCount">0</span> selected</span>
 
@@ -177,7 +185,7 @@
                                         'recipient' => $faq->faq_recipient,
                                     ];
                                 @endphp
-                                <tr class="border-b border-slate-100" data-search="{{ mb_strtolower($faq->faq_question) }}">
+                                <tr class="border-b border-slate-100" data-search="{{ mb_strtolower($faq->faq_question) }}" data-recipient="{{ $faq->faq_recipient }}">
                                     <td class="border-r border-slate-100">
                                         <input type="checkbox" class="faq-checkbox w-4 h-4 accent-[#1D264F] cursor-pointer" value="{{ $faq->faq_id }}" onchange="updateFaqBulkUI()">
                                     </td>
@@ -383,13 +391,14 @@
         const faqRecipientLabels = <?= json_encode(\App\Models\Faq::recipientLabels()) ?>;
         const faqRecipientBadgeClasses = <?= json_encode(\App\Models\Faq::recipientBadgeClasses()) ?>;
 
-        // ── SEARCH ──
+        // ── SEARCH + RECIPIENT FILTER ──
         function filterFaqRows() {
             const query = document.getElementById('faqSearchInput').value.trim().toLowerCase();
+            const recipient = document.getElementById('faqRecipientFilter').value;
             const rows = document.querySelectorAll('#faqsTbody tr[data-search]');
             let visibleCount = 0;
             rows.forEach(row => {
-                const match = row.dataset.search.includes(query);
+                const match = row.dataset.search.includes(query) && (!recipient || row.dataset.recipient === recipient);
                 row.style.display = match ? '' : 'none';
                 if (match) visibleCount++;
             });

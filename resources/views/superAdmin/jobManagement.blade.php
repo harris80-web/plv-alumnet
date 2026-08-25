@@ -575,6 +575,9 @@ $approved_count = $approved_jobs->count();
                 <select
                     class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-600 focus:outline-none">
                     <option>Select Program</option>
+                    @foreach ($programs as $program)
+                    <option>{{ $program->program_name }}</option>
+                    @endforeach
                 </select>
             </div>
             <hr class="border-slate-100">
@@ -636,7 +639,7 @@ $approved_count = $approved_jobs->count();
             </div>
         </div>
         <div class="p-6 border-t border-slate-100">
-            <button onclick="applyFilters()"
+            <button onclick="applyFilters(); toggleSidebar('filter-sidebar')"
                 class="w-full bg-[#0a0a23] text-white py-3 rounded text-sm font-bold tracking-widest hover:bg-black transition-colors uppercase">
                 Apply Filter
             </button>
@@ -1140,20 +1143,26 @@ $approved_count = $approved_jobs->count();
             const sideCompany = document.querySelector('#filter-sidebar input[placeholder="Enter Company Name"]')?.value.toLowerCase() || '';
             const sideProgram = document.querySelector('#filter-sidebar select')?.value.toLowerCase() || '';
 
+            // Labels wrap across lines in the source HTML (e.g. "Job\n    Setup"),
+            // so textContent has an internal line break that plain .trim() doesn't
+            // remove — normalize all whitespace runs to a single space before
+            // comparing, or these groups silently match zero checkboxes.
+            const normalize = (str) => (str || '').replace(/\s+/g, ' ').trim();
+
             const checkedTypes = [...document.querySelectorAll('#filter-sidebar input[type=checkbox]')].filter(cb =>
-                cb.closest('.space-y-2')?.previousElementSibling?.textContent.trim() === 'Job Type' && cb.checked
+                normalize(cb.closest('.space-y-2')?.previousElementSibling?.textContent) === 'Job Type' && cb.checked
             ).map(cb => cb.closest('label').textContent.trim().toLowerCase());
 
             const checkedSetups = [...document.querySelectorAll('#filter-sidebar input[type=checkbox]')].filter(cb =>
-                cb.closest('.space-y-2')?.previousElementSibling?.textContent.trim() === 'Job Setup' && cb.checked
+                normalize(cb.closest('.space-y-2')?.previousElementSibling?.textContent) === 'Job Setup' && cb.checked
             ).map(cb => cb.closest('label').textContent.trim().toLowerCase());
 
             const checkedDatePosted = [...document.querySelectorAll('#filter-sidebar input[type=checkbox]')].filter(cb =>
-                cb.closest('.grid')?.previousElementSibling?.textContent.trim() === 'Date Posted' && cb.checked
+                normalize(cb.closest('.grid')?.previousElementSibling?.textContent) === 'Date Posted' && cb.checked
             ).map(cb => cb.closest('label').textContent.trim().toLowerCase());
 
             const checkedClosing = [...document.querySelectorAll('#filter-sidebar input[type=checkbox]')].filter(cb =>
-                cb.closest('.grid')?.previousElementSibling?.textContent.trim() === 'Closing Date' && cb.checked
+                normalize(cb.closest('.grid')?.previousElementSibling?.textContent) === 'Closing Date' && cb.checked
             ).map(cb => cb.closest('label').textContent.trim().toLowerCase());
 
             const now = new Date();

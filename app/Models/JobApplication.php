@@ -14,12 +14,14 @@ class JobApplication extends Model
         'alumnus_id',
         'application_date',
         'application_status',
+        'hired_at',
         'application_score',
         'is_read',
     ];
 
     protected $casts = [
         'application_date' => 'datetime',
+        'hired_at' => 'datetime',
         'application_score' => 'decimal:2',
         'is_read' => 'boolean',
     ];

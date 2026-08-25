@@ -11,7 +11,7 @@ use Illuminate\Database\Seeder;
 class NoticeSeeder extends Seeder
 {
     /**
-     * Must run after AlumnusSeeder + AlumniPracticeSeeder — attaches a
+     * Must run after AlumnusSeeder + CohortSeeder — attaches a
      * random handful of existing alumni as "interested" on the event/seminar
      * rows so the Attendance column has real, non-zero counts to show
      * (announcements are left at 0 interest — nothing to "attend").

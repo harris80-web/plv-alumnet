@@ -572,7 +572,7 @@ $current_page = 'user_management';
                             <div class="relative w-64">
                                 <i data-lucide="search"
                                     class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                <input type="text" placeholder="Search"
+                                <input type="text" id="alumniSearchInput" onkeyup="filterAlumniRows()" placeholder="Search"
                                     class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A]">
                             </div>
                             <button onclick="toggleAlumniFilterSidebar()"
@@ -679,7 +679,7 @@ $current_page = 'user_management';
                                 </tr>
                             </thead>
 
-                            <tbody class="divide-y divide-slate-100">
+                            <tbody id="alumniTbody" class="divide-y divide-slate-100">
                                 @forelse ($alumni as $alumnus)
 
                                 @php
@@ -688,7 +688,15 @@ $current_page = 'user_management';
                                 ? 'bg-green-100 text-green-700 border-green-200'
                                 : 'bg-red-100 text-red-700 border-red-200';
                                 @endphp
-                                <tr class="hover:bg-slate-50/80 transition-colors text-center">
+                                <tr class="hover:bg-slate-50/80 transition-colors text-center"
+                                    data-search="{{ mb_strtolower(trim(($alumnus->user?->user_last_name ?? '') . ' ' . ($alumnus->user?->user_first_name ?? '') . ' ' . ($alumnus->user?->user_middle_name ?? '') . ' ' . ($alumnus->user?->user_email ?? ''))) }}"
+                                    data-idno="{{ mb_strtolower((string) $alumnus->user_id) }}"
+                                    data-lastname="{{ mb_strtolower($alumnus->user?->user_last_name ?? '') }}"
+                                    data-firstname="{{ mb_strtolower($alumnus->user?->user_first_name ?? '') }}"
+                                    data-middlename="{{ mb_strtolower($alumnus->user?->user_middle_name ?? '') }}"
+                                    data-program="{{ $alumnus->program->program_name ?? '' }}"
+                                    data-batch="{{ $alumnus->alumnus_batch }}"
+                                    data-status="{{ $status }}">
                                     <td class="px-3 py-3 border-r border-slate-100">
                                         <input type="checkbox" class="alumni-row-checkbox w-4 h-4 rounded border-slate-300 align-middle"
                                             value="{{ $alumnus->user_id }}" onchange="updateBulkDeactivateAlumniButton()">
@@ -790,6 +798,7 @@ $current_page = 'user_management';
                                 @endforelse
                             </tbody>
                         </table>
+                        <p id="alumniNoSearchResults" class="hidden text-center text-gray-400 py-10 text-xs">No matching alumni.</p>
                     </div>
                 </div>
                 <!-- END ALUMNI TAB -->
@@ -961,7 +970,7 @@ $current_page = 'user_management';
                                 <div class="relative w-64">
                                     <i data-lucide="search"
                                         class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                    <input type="text" placeholder="Search by Company Name"
+                                    <input type="text" id="employerSearchInput" onkeyup="filterEmployerRows()" placeholder="Search by Company Name"
                                         class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A]">
                                 </div>
                                 <button onclick="toggleEmployerFilter()"
@@ -994,9 +1003,15 @@ $current_page = 'user_management';
                                     </tr>
                                 </thead>
 
-                                <tbody class="divide-y divide-slate-100">
+                                <tbody id="employerTbody" class="divide-y divide-slate-100">
                                     @forelse ($employers->filter(fn($e) => $e->user?->user_active) as $employer)
-                                    <tr class="hover:bg-slate-50/80 transition-colors text-center">
+                                    <tr class="hover:bg-slate-50/80 transition-colors text-center"
+                                        data-search="{{ mb_strtolower($employer->employer_company_name ?? '') }}"
+                                        data-lastname="{{ mb_strtolower($employer->user?->user_last_name ?? '') }}"
+                                        data-firstname="{{ mb_strtolower($employer->user?->user_first_name ?? '') }}"
+                                        data-middlename="{{ mb_strtolower($employer->user?->user_middle_name ?? '') }}"
+                                        data-company="{{ mb_strtolower($employer->employer_company_name ?? '') }}"
+                                        data-industry="{{ mb_strtolower($employer->industry->industry_name ?? '') }}">
                                         <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
                                             {{ $loop->iteration }}
                                         </td>
@@ -1078,6 +1093,7 @@ $current_page = 'user_management';
                                     @endforelse
                                 </tbody>
                             </table>
+                            <p id="employerNoSearchResults" class="hidden text-center text-gray-400 py-10 text-xs">No matching employers.</p>
                         </div>
                     </div>
                 </div>
@@ -1460,72 +1476,53 @@ $current_page = 'user_management';
             <div class="flex-1 overflow-y-auto px-6 py-6 space-y-5">
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-[#0E0F3B]">Alumni ID No.</label>
-                    <input type="text" placeholder="Enter Alumni ID No."
+                    <input type="text" id="alumniFilterIdNo" placeholder="Enter Alumni ID No."
                         class="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-[#0E0F3B]">Last Name</label>
-                    <input type="text" placeholder="Enter Last Name"
+                    <input type="text" id="alumniFilterLastName" placeholder="Enter Last Name"
                         class="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-[#0E0F3B]">First Name</label>
-                    <input type="text" placeholder="Enter First Name"
+                    <input type="text" id="alumniFilterFirstName" placeholder="Enter First Name"
                         class="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-[#0E0F3B]">Middle Name</label>
-                    <input type="text" placeholder="Enter Middle Name"
+                    <input type="text" id="alumniFilterMiddleName" placeholder="Enter Middle Name"
                         class="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-[#0E0F3B]">Program</label>
-                    <select
+                    <select id="alumniFilterProgram"
                         class="w-full px-3 py-2 border border-slate-200 rounded text-sm text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white">
-                        <option selected disabled>Select Undergraduate Program</option>
-                        <option>Bachelor of Arts in Communication</option>
-                        <option>Bachelor of Early Childhood Education</option>
-                        <option>Bachelor of Science in Accountancy</option>
-                        <optgroup label="BS in Business Administration">
-                            <option>BSBA - Major in Financial Management</option>
-                            <option>BSBA - Major in Human Resource Management</option>
-                            <option>BSBA - Major in Marketing Management</option>
-                        </optgroup>
-                        <option>BSCE - Bachelor of Science in Civil Engineering</option>
-                        <option>BSEE - Bachelor of Science in Electrical Engineering</option>
-                        <option>BSIT - Bachelor of Science in Information Technology</option>
-                        <option>Bachelor of Science in Psychology</option>
-                        <option>Bachelor of Public Administration</option>
-                        <option>Bachelor of Science in Social Work</option>
-                        <optgroup label="Bachelor of Secondary Education">
-                            <option>BSEd - Major in English</option>
-                            <option>BSEd - Major in Filipino</option>
-                            <option>BSEd - Major in Mathematics</option>
-                            <option>BSEd - Major in Science</option>
-                            <option>BSEd - Major in Social Studies</option>
-                        </optgroup>
+                        <option value="">Select Undergraduate Program</option>
+                        @foreach ($programs as $program)
+                        <option value="{{ $program->program_name }}">{{ $program->program_name }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="space-y-1.5 border-b border-slate-100 pb-5">
                     <label class="text-xs font-bold text-[#0E0F3B]">Batch</label>
-                    <select
+                    <select id="alumniFilterBatch"
                         class="w-full px-3 py-2 border border-slate-200 rounded text-sm text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white">
-                        <option selected disabled>Select Batch</option>
-                        <option>2024</option>
-                        <option>2023</option>
+                        <option value="">Select Batch</option>
+                        @foreach ($alumni->pluck('alumnus_batch')->filter()->unique()->sortDesc()->values() as $batchYear)
+                        <option value="{{ $batchYear }}">{{ $batchYear }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="space-y-3 pt-2">
                     <p class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-wider">Account Status</p>
                     <div class="space-y-2">
                         <label class="flex items-center gap-3 cursor-pointer group">
-                            <input type="checkbox"
-                                class="w-4 h-4 rounded border-slate-300 text-[#0E0F3B] focus:ring-[#0E0F3B]">
+                            <input type="checkbox" class="alumni-filter-status w-4 h-4 rounded border-slate-300 text-[#0E0F3B] focus:ring-[#0E0F3B]" value="Active">
                             <span class="text-sm font-bold text-[#0E0F3B] group-hover:text-slate-600">Active</span>
                         </label>
                         <label class="flex items-center gap-3 cursor-pointer group border-b border-slate-100 pb-4">
-                            <input type="checkbox"
-                                class="w-4 h-4 rounded border-slate-300 text-[#0E0F3B] focus:ring-[#0E0F3B]">
+                            <input type="checkbox" class="alumni-filter-status w-4 h-4 rounded border-slate-300 text-[#0E0F3B] focus:ring-[#0E0F3B]" value="Deactivated">
                             <span class="text-sm font-bold text-[#0E0F3B] group-hover:text-slate-600">Deactivated</span>
                         </label>
                     </div>
@@ -1533,7 +1530,7 @@ $current_page = 'user_management';
             </div>
 
             <div class="p-6">
-                <button
+                <button onclick="filterAlumniRows(); toggleAlumniFilterSidebar()"
                     class="w-full py-3 bg-[#0E0F3B] hover:brightness-110 text-white rounded font-bold text-xs tracking-widest uppercase transition-all">
                     Apply Filter
                 </button>
@@ -1554,32 +1551,37 @@ $current_page = 'user_management';
             <div class="flex-1 overflow-y-auto p-6 space-y-5">
                 <div>
                     <label class="block text-xs font-bold text-[#0E0F3B] mb-1">Last Name</label>
-                    <input type="text" placeholder="Enter Last Name"
+                    <input type="text" id="employerFilterLastName" placeholder="Enter Last Name"
                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-[#0E0F3B] mb-1">First Name</label>
-                    <input type="text" placeholder="Enter First Name"
+                    <input type="text" id="employerFilterFirstName" placeholder="Enter First Name"
                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-[#0E0F3B] mb-1">Middle Name</label>
-                    <input type="text" placeholder="Enter Middle Name"
+                    <input type="text" id="employerFilterMiddleName" placeholder="Enter Middle Name"
                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-[#0E0F3B] mb-1">Company Name</label>
-                    <input type="text" placeholder="Enter Company Name"
+                    <input type="text" id="employerFilterCompany" placeholder="Enter Company Name"
                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-[#0E0F3B] mb-1">Industry/Sector</label>
-                    <input type="text" placeholder="Enter Industry/Sector"
-                        class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all placeholder:text-slate-400 text-[#0E0F3B]">
+                    <select id="employerFilterIndustry"
+                        class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all text-[#0E0F3B]">
+                        <option value="">Select Industry/Sector</option>
+                        @foreach ($industries as $industry)
+                        <option value="{{ mb_strtolower($industry->industry_name) }}">{{ $industry->industry_name }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
             <div class="p-6 bg-white border-t border-slate-100">
-                <button
+                <button onclick="filterEmployerRows(); toggleEmployerFilter()"
                     class="w-full py-3 bg-[#0E0F3B] text-white rounded font-bold text-xs uppercase tracking-widest hover:bg-[#1a1b4d] transition-all">
                     Apply Filter
                 </button>
@@ -2035,6 +2037,60 @@ $current_page = 'user_management';
                 panel.classList.add('translate-x-full');
                 setTimeout(() => sidebar.classList.add('invisible'), 300);
             }
+        }
+
+        // ── ALUMNI TAB: SEARCH + SIDEBAR FILTERS ──
+        function filterAlumniRows() {
+            const query = document.getElementById('alumniSearchInput').value.trim().toLowerCase();
+            const idNo = document.getElementById('alumniFilterIdNo').value.trim().toLowerCase();
+            const lastName = document.getElementById('alumniFilterLastName').value.trim().toLowerCase();
+            const firstName = document.getElementById('alumniFilterFirstName').value.trim().toLowerCase();
+            const middleName = document.getElementById('alumniFilterMiddleName').value.trim().toLowerCase();
+            const program = document.getElementById('alumniFilterProgram').value;
+            const batch = document.getElementById('alumniFilterBatch').value;
+            const statuses = [...document.querySelectorAll('.alumni-filter-status:checked')].map(cb => cb.value);
+
+            const rows = document.querySelectorAll('#alumniTbody tr[data-search]');
+            let visibleCount = 0;
+            rows.forEach(row => {
+                const match = row.dataset.search.includes(query) &&
+                    (!idNo || row.dataset.idno.includes(idNo)) &&
+                    (!lastName || row.dataset.lastname.includes(lastName)) &&
+                    (!firstName || row.dataset.firstname.includes(firstName)) &&
+                    (!middleName || row.dataset.middlename.includes(middleName)) &&
+                    (!program || row.dataset.program === program) &&
+                    (!batch || row.dataset.batch === batch) &&
+                    (statuses.length === 0 || statuses.includes(row.dataset.status));
+                row.style.display = match ? '' : 'none';
+                if (match) visibleCount++;
+            });
+            const noResults = document.getElementById('alumniNoSearchResults');
+            if (noResults) noResults.classList.toggle('hidden', visibleCount !== 0 || rows.length === 0);
+        }
+
+        // ── EMPLOYER TAB (Approved list): SEARCH + SIDEBAR FILTERS ──
+        function filterEmployerRows() {
+            const query = document.getElementById('employerSearchInput').value.trim().toLowerCase();
+            const lastName = document.getElementById('employerFilterLastName').value.trim().toLowerCase();
+            const firstName = document.getElementById('employerFilterFirstName').value.trim().toLowerCase();
+            const middleName = document.getElementById('employerFilterMiddleName').value.trim().toLowerCase();
+            const company = document.getElementById('employerFilterCompany').value.trim().toLowerCase();
+            const industry = document.getElementById('employerFilterIndustry').value;
+
+            const rows = document.querySelectorAll('#employerTbody tr[data-search]');
+            let visibleCount = 0;
+            rows.forEach(row => {
+                const match = row.dataset.search.includes(query) &&
+                    (!lastName || row.dataset.lastname.includes(lastName)) &&
+                    (!firstName || row.dataset.firstname.includes(firstName)) &&
+                    (!middleName || row.dataset.middlename.includes(middleName)) &&
+                    (!company || row.dataset.company.includes(company)) &&
+                    (!industry || row.dataset.industry === industry);
+                row.style.display = match ? '' : 'none';
+                if (match) visibleCount++;
+            });
+            const noResults = document.getElementById('employerNoSearchResults');
+            if (noResults) noResults.classList.toggle('hidden', visibleCount !== 0 || rows.length === 0);
         }
 
         /* ── Alumni Activate and Deactivate Modal ───────────────────────────────── */

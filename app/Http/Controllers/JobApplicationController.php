@@ -156,6 +156,7 @@ class JobApplicationController extends Controller
     private function hireApplication(JobApplication $application): void
     {
         $application->application_status = 'hired';
+        $application->hired_at = now();
         $application->save();
 
         $alumnus = $application->alumnus;

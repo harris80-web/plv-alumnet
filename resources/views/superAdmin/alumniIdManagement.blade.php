@@ -149,11 +149,17 @@
 
                         <!-- TOOLBAR: search + bulk actions -->
                         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-b border-slate-100">
-                            <div class="relative w-full md:w-72">
-                                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-                                <input type="text" id="searchInput" onkeyup="filterAlumniIdRows()"
-                                    placeholder="Search by name or reference no."
-                                    class="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A]">
+                            <div class="flex items-center gap-2 w-full md:w-auto">
+                                <div class="relative w-full md:w-72">
+                                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                                    <input type="text" id="searchInput" onkeyup="filterAlumniIdRows()"
+                                        placeholder="Search by name or reference no."
+                                        class="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A]">
+                                </div>
+                                <button type="button" onclick="toggleSidebar('alumniIdFilterSidebar')"
+                                    class="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:border-[#C73D1A] transition-all shrink-0">
+                                    <i data-lucide="filter" class="w-4 h-4"></i>
+                                </button>
                             </div>
 
                             <div class="flex items-center gap-2 flex-wrap">
@@ -209,7 +215,9 @@
                                             'updateUrl' => route('alumniId.updateStatus', $alumniIdRecord->id),
                                         ];
                                     @endphp
-                                    <tr class="border-b border-slate-100" data-search="{{ mb_strtolower($fullName . ' ' . $referenceNo) }}">
+                                    <tr class="border-b border-slate-100" data-search="{{ mb_strtolower($fullName . ' ' . $referenceNo) }}"
+                                        data-reference="{{ mb_strtolower($referenceNo) }}" data-program="{{ $alumniIdRecord->alumnus->program->program_name ?? '' }}"
+                                        data-submitted="{{ $alumniIdRecord->created_at->format('Y-m-d') }}" data-status="{{ $alumniIdRecord->status }}">
                                         <td class="border-r border-slate-100">
                                             <input type="checkbox" class="alumni-id-checkbox w-4 h-4 accent-[#1D264F] cursor-pointer" value="{{ $alumniIdRecord->id }}" onchange="updateAlumniIdBulkUI()">
                                         </td>
@@ -293,11 +301,17 @@
 
                         <!-- TOOLBAR: search + bulk edit -->
                         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-b border-slate-100">
-                            <div class="relative w-full md:w-72">
-                                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-                                <input type="text" id="yearbookSearchInput" onkeyup="filterYearbookRows()"
-                                    placeholder="Search by name or reference no."
-                                    class="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A]">
+                            <div class="flex items-center gap-2 w-full md:w-auto">
+                                <div class="relative w-full md:w-72">
+                                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                                    <input type="text" id="yearbookSearchInput" onkeyup="filterYearbookRows()"
+                                        placeholder="Search by name or reference no."
+                                        class="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A]">
+                                </div>
+                                <button type="button" onclick="toggleSidebar('yearbookFilterSidebar')"
+                                    class="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:border-[#C73D1A] transition-all shrink-0">
+                                    <i data-lucide="filter" class="w-4 h-4"></i>
+                                </button>
                             </div>
 
                             <div class="flex items-center gap-2 flex-wrap">
@@ -348,7 +362,9 @@
                                             'updateUrl' => route('alumniYearbook.update', $yearbookRecord->id),
                                         ];
                                     @endphp
-                                    <tr class="border-b border-slate-100" data-search="{{ mb_strtolower($ybFullName . ' ' . $ybReferenceNo) }}">
+                                    <tr class="border-b border-slate-100" data-search="{{ mb_strtolower($ybFullName . ' ' . $ybReferenceNo) }}"
+                                        data-reference="{{ mb_strtolower($ybReferenceNo) }}" data-batch="{{ $yearbookRecord->alumnus->alumnus_batch }}"
+                                        data-distribution="{{ $yearbookRecord->distribution_status }}" data-claiming="{{ $yearbookRecord->claiming_status }}">
                                         <td class="border-r border-slate-100">
                                             <input type="checkbox" class="yearbook-checkbox w-4 h-4 accent-[#1D264F] cursor-pointer" value="{{ $yearbookRecord->id }}" onchange="updateYearbookBulkUI()">
                                         </td>
@@ -393,6 +409,116 @@
 
             </div>
         </main>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" onclick="closeOpenSidebar()"
+        class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden transition-opacity"></div>
+
+    <!-- ══════════════════════ ALUMNI ID FILTER SIDEBAR ══════════════════════ -->
+    <div id="alumniIdFilterSidebar"
+        class="fixed top-0 right-0 h-full w-[320px] bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+        <div class="p-6 flex items-center justify-between border-b border-slate-100">
+            <h2 class="text-xl font-bold text-[#1e1b4b]">Filter by</h2>
+            <button type="button" onclick="toggleSidebar('alumniIdFilterSidebar')" class="text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            <div>
+                <label class="text-[13px] font-bold text-[#1e1b4b] block mb-2">Reference No.</label>
+                <input type="text" id="aidFilterReference" placeholder="Enter Reference No."
+                    class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#C73D1A]">
+            </div>
+            <div>
+                <label class="text-[13px] font-bold text-[#1e1b4b] block mb-2">Program</label>
+                <select id="aidFilterProgram"
+                    class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-600 focus:outline-none">
+                    <option value="">Select Program</option>
+                    @foreach ($programs as $program)
+                    <option value="{{ $program->program_name }}">{{ $program->program_name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="text-[13px] font-bold text-[#1e1b4b] block mb-2">Submission Date</label>
+                <input type="date" id="aidFilterDate"
+                    class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#C73D1A]">
+            </div>
+            <hr class="border-slate-100">
+            <div>
+                <label class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-wider block mb-3">Status</label>
+                <div class="space-y-2">
+                    @foreach (\App\Models\AlumniId::statusLabels() as $statusKey => $statusLabel)
+                    <label class="flex items-center gap-3 text-sm text-[#1e1b4b] font-medium">
+                        <input type="checkbox" class="aid-filter-status w-4 h-4 rounded border-slate-300" value="{{ $statusKey }}"> {{ $statusLabel }}
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        <div class="p-6 border-t border-slate-100">
+            <button type="button" onclick="filterAlumniIdRows(); toggleSidebar('alumniIdFilterSidebar')"
+                class="w-full bg-[#0a0a23] text-white py-3 rounded text-sm font-bold tracking-widest hover:bg-black transition-colors uppercase">
+                Apply Filter
+            </button>
+        </div>
+    </div>
+
+    <!-- ══════════════════════ YEARBOOK FILTER SIDEBAR ══════════════════════ -->
+    <div id="yearbookFilterSidebar"
+        class="fixed top-0 right-0 h-full w-[320px] bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+        <div class="p-6 flex items-center justify-between border-b border-slate-100">
+            <h2 class="text-xl font-bold text-[#1e1b4b]">Filter by</h2>
+            <button type="button" onclick="toggleSidebar('yearbookFilterSidebar')" class="text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            <div>
+                <label class="text-[13px] font-bold text-[#1e1b4b] block mb-2">Reference No.</label>
+                <input type="text" id="ybFilterReference" placeholder="Enter Reference No."
+                    class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#C73D1A]">
+            </div>
+            <div>
+                <label class="text-[13px] font-bold text-[#1e1b4b] block mb-2">Batch</label>
+                <select id="ybFilterBatch"
+                    class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-600 focus:outline-none">
+                    <option value="">Select Batch</option>
+                    @foreach ($batches as $batchYear)
+                    <option value="{{ $batchYear }}">{{ $batchYear }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <hr class="border-slate-100">
+            <div>
+                <label class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-wider block mb-3">Distribution Status</label>
+                <div class="space-y-2">
+                    @foreach (\App\Models\AlumniYearbook::distributionStatusLabels() as $distKey => $distLabel)
+                    <label class="flex items-center gap-3 text-sm text-[#1e1b4b] font-medium">
+                        <input type="checkbox" class="yb-filter-distribution w-4 h-4 rounded border-slate-300" value="{{ $distKey }}"> {{ $distLabel }}
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+            <hr class="border-slate-100">
+            <div>
+                <label class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-wider block mb-3">Claim Status</label>
+                <div class="space-y-2">
+                    @foreach (\App\Models\AlumniYearbook::claimingStatusLabels() as $claimKey => $claimLabel)
+                    <label class="flex items-center gap-3 text-sm text-[#1e1b4b] font-medium">
+                        <input type="checkbox" class="yb-filter-claiming w-4 h-4 rounded border-slate-300" value="{{ $claimKey }}"> {{ $claimLabel }}
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        <div class="p-6 border-t border-slate-100">
+            <button type="button" onclick="filterYearbookRows(); toggleSidebar('yearbookFilterSidebar')"
+                class="w-full bg-[#0a0a23] text-white py-3 rounded text-sm font-bold tracking-widest hover:bg-black transition-colors uppercase">
+                Apply Filter
+            </button>
+        </div>
     </div>
 
     <!-- VIEW / UPDATE STATUS MODAL (Alumni ID) -->
@@ -589,13 +715,38 @@
             });
         }
 
-        // ── ALUMNI ID: SEARCH ──
+        // ── SHARED FILTER SIDEBARS ──
+        function toggleSidebar(id) {
+            const sidebar = document.getElementById(id);
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('translate-x-full');
+            overlay.classList.toggle('hidden');
+            document.body.style.overflow = !sidebar.classList.contains('translate-x-full') ? 'hidden' : '';
+        }
+
+        function closeOpenSidebar() {
+            ['alumniIdFilterSidebar', 'yearbookFilterSidebar'].forEach(id => {
+                const sidebar = document.getElementById(id);
+                if (!sidebar.classList.contains('translate-x-full')) toggleSidebar(id);
+            });
+        }
+
+        // ── ALUMNI ID: SEARCH + SIDEBAR FILTERS ──
         function filterAlumniIdRows() {
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const refQuery = document.getElementById('aidFilterReference').value.trim().toLowerCase();
+            const program = document.getElementById('aidFilterProgram').value;
+            const date = document.getElementById('aidFilterDate').value;
+            const statuses = [...document.querySelectorAll('.aid-filter-status:checked')].map(cb => cb.value);
+
             const rows = document.querySelectorAll('#alumniIdsTbody tr[data-search]');
             let visibleCount = 0;
             rows.forEach(row => {
-                const match = row.dataset.search.includes(query);
+                const match = row.dataset.search.includes(query) &&
+                    (!refQuery || row.dataset.reference.includes(refQuery)) &&
+                    (!program || row.dataset.program === program) &&
+                    (!date || row.dataset.submitted === date) &&
+                    (statuses.length === 0 || statuses.includes(row.dataset.status));
                 row.style.display = match ? '' : 'none';
                 if (match) visibleCount++;
             });
@@ -693,13 +844,22 @@
             document.body.style.overflow = 'auto';
         }
 
-        // ── ALUMNI YEARBOOK: SEARCH ──
+        // ── ALUMNI YEARBOOK: SEARCH + SIDEBAR FILTERS ──
         function filterYearbookRows() {
             const query = document.getElementById('yearbookSearchInput').value.trim().toLowerCase();
+            const refQuery = document.getElementById('ybFilterReference').value.trim().toLowerCase();
+            const batch = document.getElementById('ybFilterBatch').value;
+            const distributions = [...document.querySelectorAll('.yb-filter-distribution:checked')].map(cb => cb.value);
+            const claimings = [...document.querySelectorAll('.yb-filter-claiming:checked')].map(cb => cb.value);
+
             const rows = document.querySelectorAll('#yearbooksTbody tr[data-search]');
             let visibleCount = 0;
             rows.forEach(row => {
-                const match = row.dataset.search.includes(query);
+                const match = row.dataset.search.includes(query) &&
+                    (!refQuery || row.dataset.reference.includes(refQuery)) &&
+                    (!batch || row.dataset.batch === batch) &&
+                    (distributions.length === 0 || distributions.includes(row.dataset.distribution)) &&
+                    (claimings.length === 0 || claimings.includes(row.dataset.claiming));
                 row.style.display = match ? '' : 'none';
                 if (match) visibleCount++;
             });

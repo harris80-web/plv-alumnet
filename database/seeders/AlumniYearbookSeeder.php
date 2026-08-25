@@ -23,7 +23,7 @@ class AlumniYearbookSeeder extends Seeder
 
     /**
      * One alumni_yearbooks row per existing Alumnus — must run after every
-     * seeder that creates alumni (AlumnusSeeder + AlumniPracticeSeeder), and
+     * seeder that creates alumni (AlumnusSeeder + CohortSeeder), and
      * skips anyone who already has a row so it's safe to re-run.
      */
     public function run(): void

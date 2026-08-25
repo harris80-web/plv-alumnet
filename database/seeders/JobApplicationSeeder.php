@@ -108,6 +108,7 @@ class JobApplicationSeeder extends Seeder
     private function hire(JobApplication $application, JobPosting $job, Alumnus $alumnus): void
     {
         $application->application_status = 'hired';
+        $application->hired_at = now();
         $application->save();
 
         $alumnus->alumnus_employment_status = true;

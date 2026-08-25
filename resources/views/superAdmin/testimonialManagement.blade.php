@@ -36,6 +36,7 @@
     $published_count = $testimonials->where('testimonial_post', 1)->count();
     $hidden_count = $testimonials->where('testimonial_post', 0)->count();
     $programs_count = $testimonials->map(fn($t) => $t->alumnus->program->program_id ?? null)->filter()->unique()->count();
+    $batches = $testimonials->map(fn($t) => $t->alumnus->alumnus_batch ?? null)->filter()->unique()->sortDesc()->values();
 @endphp
 
 <!DOCTYPE html>
@@ -249,7 +250,10 @@
                                 class="filter-dropdown-menu bg-white border border-slate-200 rounded-lg shadow-lg py-1 mt-1">
                                 <button onclick="setFilter('batch','All','batch-label','batch-dropdown')"
                                     class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">All</button>
-
+                                @foreach ($batches as $batch)
+                                <button onclick="setFilter('batch','{{ $batch }}','batch-label','batch-dropdown')"
+                                    class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-[#C73D1A]">{{ $batch }}</button>
+                                @endforeach
                             </div>
                         </div>
 

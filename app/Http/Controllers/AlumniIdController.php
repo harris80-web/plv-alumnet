@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AlumniId;
 use App\Models\AlumniYearbook;
+use App\Models\Program;
 use App\Models\UserNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -50,7 +51,10 @@ class AlumniIdController extends Controller
             'not_yet_claimed' => $yearbooks->where('claiming_status', 'not_yet_claimed')->count(),
         ];
 
-        return view('superAdmin.alumniIdManagement', compact('alumniIds', 'statusCounts', 'yearbooks', 'yearbookCounts'));
+        $programs = Program::orderBy('program_name')->get();
+        $batches = $yearbooks->pluck('alumnus.alumnus_batch')->filter()->unique()->sortDesc()->values();
+
+        return view('superAdmin.alumniIdManagement', compact('alumniIds', 'statusCounts', 'yearbooks', 'yearbookCounts', 'programs', 'batches'));
     }
 
     /** The single "Mark ..." button — advances exactly one stage. */

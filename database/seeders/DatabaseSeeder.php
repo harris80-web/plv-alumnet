@@ -28,14 +28,11 @@ class DatabaseSeeder extends Seeder
             SuperAdminSeeder::class,
             AlumnusSeeder::class,
             EmployerSeeder::class,
-            EmployerPracticeSeeder::class, // after EmployerSeeder/IndustrySeeder — bulk employers for JobPostingPracticeSeeder to post under
             AdminSeeder::class,
             AdminPracticeSeeder::class, // after AdminSeeder — more than one admin for the cross-review split to exercise
             JobSeeder::class, // after Employer/Industry/Program/Skills
-            JobPostingPracticeSeeder::class, // after JobSeeder/EmployerPracticeSeeder — bulk postings across every employer
             JobApplicationSeeder::class, // after Alumnus/Job
-            AlumniPracticeSeeder::class, // after Program/Section/Industry/Skills/Job (uses approved jobs)
-            AlumniPracticeSeeder2::class, // after AlumniPracticeSeeder — second wave, non-colliding emails, sees the larger job pool
+            CohortSeeder::class, // after every core seeder above — its own 49 alumni + 49 employers + job postings/applications, all self-contained
             AlumniYearbookSeeder::class, // after every alumni seeder (needs every alumnus to exist)
             NoticeSeeder::class, // after every alumni seeder (attaches interested alumni)
             NoticePracticeSeeder::class, // after NoticeSeeder + every alumni seeder

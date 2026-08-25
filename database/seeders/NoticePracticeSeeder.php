@@ -40,7 +40,7 @@ class NoticePracticeSeeder extends Seeder
      * category/recipient combination, but not enough to exercise pagination
      * (6 per page — see NoticeController::alumniAnnouncements/
      * alumniEventsAndSeminars). Adds a bulk pass spanning past and future
-     * dates. Must run after AlumnusSeeder + AlumniPracticeSeeder(2) so
+     * dates. Must run after AlumnusSeeder + CohortSeeder so
      * there's a real alumni pool to attach as "interested".
      */
     public function run(): void

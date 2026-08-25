@@ -114,11 +114,17 @@
 
                     <!-- TOOLBAR: search + add -->
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-b border-slate-100">
-                        <div class="relative w-full md:w-72">
-                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-                            <input type="text" id="noticeSearchInput" onkeyup="filterNoticeRows()"
-                                placeholder="Search by title"
-                                class="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A]">
+                        <div class="flex items-center gap-2 w-full md:w-auto">
+                            <div class="relative w-full md:w-72">
+                                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                                <input type="text" id="noticeSearchInput" onkeyup="filterNoticeRows()"
+                                    placeholder="Search by title"
+                                    class="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A]">
+                            </div>
+                            <button type="button" onclick="toggleSidebar('notice-filter-sidebar')"
+                                class="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:border-[#C73D1A] transition-all shrink-0">
+                                <i data-lucide="filter" class="w-4 h-4"></i>
+                            </button>
                         </div>
 
                         <button type="button" onclick="openAddNoticeModal()"
@@ -158,7 +164,8 @@
                                         'interestedNames' => $notice->interestedAlumniNames(),
                                     ];
                                 @endphp
-                                <tr class="border-b border-slate-100" data-search="{{ mb_strtolower($notice->title) }}">
+                                <tr class="border-b border-slate-100" data-search="{{ mb_strtolower($notice->title) }}"
+                                    data-id="{{ mb_strtolower((string) $notice->id) }}" data-category="{{ $notice->category }}" data-recipient="{{ $notice->recipient }}">
                                     <td class="border-r border-slate-100 font-semibold text-[#0E0F3B]">{{ $notice->id }}</td>
                                     <td class="border-r border-slate-100">
                                         <span class="px-2 py-1 rounded-full text-[9px] font-bold uppercase {{ $notice->categoryBadgeClass() }}">
@@ -217,6 +224,66 @@
 
             </div>
         </main>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" onclick="toggleSidebar('notice-filter-sidebar')"
+        class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden transition-opacity"></div>
+
+    <!-- ══════════════════════ FILTER SIDEBAR ══════════════════════ -->
+    <div id="notice-filter-sidebar"
+        class="fixed top-0 right-0 h-full w-[320px] bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+        <div class="p-6 flex items-center justify-between border-b border-slate-100">
+            <h2 class="text-xl font-bold text-[#1e1b4b]">Filter by</h2>
+            <button type="button" onclick="toggleSidebar('notice-filter-sidebar')" class="text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            <div>
+                <label class="text-[13px] font-bold text-[#1e1b4b] block mb-2">ID No.</label>
+                <input type="text" id="noticeFilterId" placeholder="Search by ID No."
+                    class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#C73D1A]">
+            </div>
+            <hr class="border-slate-100">
+            <div>
+                <label class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-wider block mb-3">Category</label>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-3 text-sm text-[#1e1b4b] font-medium">
+                        <input type="checkbox" class="notice-filter-category w-4 h-4 rounded border-slate-300" value="" checked
+                            onchange="handleNoticeAllCheckbox(this, '.notice-filter-category')"> All
+                    </label>
+                    @foreach (\App\Models\Notice::categoryLabels() as $catKey => $catLabel)
+                    <label class="flex items-center gap-3 text-sm text-[#1e1b4b] font-medium">
+                        <input type="checkbox" class="notice-filter-category w-4 h-4 rounded border-slate-300" value="{{ $catKey }}"
+                            onchange="handleNoticeSubCheckbox(this, '.notice-filter-category')"> {{ $catLabel }}
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+            <hr class="border-slate-100">
+            <div>
+                <label class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-wider block mb-3">Recipient</label>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-3 text-sm text-[#1e1b4b] font-medium">
+                        <input type="checkbox" class="notice-filter-recipient w-4 h-4 rounded border-slate-300" value="" checked
+                            onchange="handleNoticeAllCheckbox(this, '.notice-filter-recipient')"> All
+                    </label>
+                    @foreach (\App\Models\Notice::recipientLabels() as $recKey => $recLabel)
+                    <label class="flex items-center gap-3 text-sm text-[#1e1b4b] font-medium">
+                        <input type="checkbox" class="notice-filter-recipient w-4 h-4 rounded border-slate-300" value="{{ $recKey }}"
+                            onchange="handleNoticeSubCheckbox(this, '.notice-filter-recipient')"> {{ $recLabel }}
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        <div class="p-6 border-t border-slate-100">
+            <button type="button" onclick="filterNoticeRows(); toggleSidebar('notice-filter-sidebar')"
+                class="w-full bg-[#0a0a23] text-white py-3 rounded text-sm font-bold tracking-widest hover:bg-black transition-colors uppercase">
+                Apply Filter
+            </button>
+        </div>
     </div>
 
     <!-- ══════════════════════ ADD NOTICE MODAL ══════════════════════ -->
@@ -504,13 +571,43 @@
         const categoryBadgeClasses = <?= json_encode(\App\Models\Notice::categoryBadgeClasses()) ?>;
         const recipientLabels = <?= json_encode(\App\Models\Notice::recipientLabels()) ?>;
 
-        // ── SEARCH ──
+        // ── FILTER SIDEBAR ──
+        function toggleSidebar(id) {
+            const sidebar = document.getElementById(id);
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('translate-x-full');
+            overlay.classList.toggle('hidden');
+            document.body.style.overflow = !sidebar.classList.contains('translate-x-full') ? 'hidden' : '';
+        }
+
+        // Checking "All" clears every specific checkbox in the group (and
+        // vice versa) so the two states can't both be active at once.
+        function handleNoticeAllCheckbox(allCheckbox, groupSelector) {
+            if (!allCheckbox.checked) return;
+            document.querySelectorAll(groupSelector).forEach(cb => {
+                if (cb.value !== '') cb.checked = false;
+            });
+        }
+
+        function handleNoticeSubCheckbox(subCheckbox, groupSelector) {
+            if (!subCheckbox.checked) return;
+            document.querySelector(groupSelector + '[value=""]').checked = false;
+        }
+
+        // ── SEARCH + SIDEBAR FILTERS ──
         function filterNoticeRows() {
             const query = document.getElementById('noticeSearchInput').value.trim().toLowerCase();
+            const idQuery = document.getElementById('noticeFilterId').value.trim().toLowerCase();
+            const categories = [...document.querySelectorAll('.notice-filter-category:checked')].map(cb => cb.value).filter(Boolean);
+            const recipients = [...document.querySelectorAll('.notice-filter-recipient:checked')].map(cb => cb.value).filter(Boolean);
+
             const rows = document.querySelectorAll('#noticesTbody tr[data-search]');
             let visibleCount = 0;
             rows.forEach(row => {
-                const match = row.dataset.search.includes(query);
+                const match = row.dataset.search.includes(query) &&
+                    (!idQuery || row.dataset.id.includes(idQuery)) &&
+                    (categories.length === 0 || categories.includes(row.dataset.category)) &&
+                    (recipients.length === 0 || recipients.includes(row.dataset.recipient));
                 row.style.display = match ? '' : 'none';
                 if (match) visibleCount++;
             });

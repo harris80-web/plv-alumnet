@@ -31,10 +31,10 @@ class DeclineOnJobExpire extends Command
         //
         // 1. Find all job IDs that expired before today
         $expiredJobIds = JobPosting::where('job_closing_date', '<', Carbon::today())
-                                    ->pluck('id');
+                                    ->pluck('job_posting_id');
 
         // 2. Mass-update all 'shortlisted' applicants for those specific jobs to 'declined'
-        $updatedRows = JobApplication::whereIn('job_posting_id', $expiredJobIds)
+        $updatedRows = JobApplication::whereIn('job_id', $expiredJobIds)
             ->where('application_status', 'shortlisted')
             ->update(['application_status' => 'declined']);
 

@@ -658,8 +658,7 @@ $current_page = 'user_management';
                             <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                                 <tr>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700 w-10">
-                                        <input type="checkbox" id="selectAllAlumni" onchange="toggleAllAlumniCheckboxes(this)"
-                                            class="w-4 h-4 rounded border-slate-300 align-middle">
+                                        <input type="checkbox" id="selectAllAlumni" class="bulk-checkbox">
                                     </th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">ID</th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Last Name <i
@@ -698,8 +697,8 @@ $current_page = 'user_management';
                                     data-batch="{{ $alumnus->alumnus_batch }}"
                                     data-status="{{ $status }}">
                                     <td class="px-3 py-3 border-r border-slate-100">
-                                        <input type="checkbox" class="alumni-row-checkbox w-4 h-4 rounded border-slate-300 align-middle"
-                                            value="{{ $alumnus->user_id }}" onchange="updateBulkDeactivateAlumniButton()">
+                                        <input type="checkbox" class="alumni-row-checkbox bulk-checkbox"
+                                            value="{{ $alumnus->user_id }}">
                                     </td>
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
                                         {{ $loop->iteration }}
@@ -1826,28 +1825,19 @@ $current_page = 'user_management';
         }
 
         /* ── Alumni bulk-select + bulk deactivate ─────────────────── */
-        function toggleAllAlumniCheckboxes(headerCheckbox) {
-            document.querySelectorAll('.alumni-row-checkbox').forEach(cb => cb.checked = headerCheckbox.checked);
-            updateBulkDeactivateAlumniButton();
-        }
+        initBulkCheckboxGroup({
+            header: 'selectAllAlumni',
+            rowSelector: '.alumni-row-checkbox',
+            onChange: function (checkedValues, checkedCount) {
+                const btn = document.getElementById('bulkDeactivateAlumniBtn');
+                document.getElementById('bulkDeactivateAlumniCount').textContent = checkedCount;
+                btn.classList.toggle('hidden', checkedCount === 0);
+                btn.classList.toggle('flex', checkedCount > 0);
+            },
+        });
 
         function getSelectedAlumniIds() {
             return Array.from(document.querySelectorAll('.alumni-row-checkbox:checked')).map(cb => cb.value);
-        }
-
-        function updateBulkDeactivateAlumniButton() {
-            const checkboxes = document.querySelectorAll('.alumni-row-checkbox');
-            const selected = getSelectedAlumniIds();
-            const btn = document.getElementById('bulkDeactivateAlumniBtn');
-
-            document.getElementById('bulkDeactivateAlumniCount').textContent = selected.length;
-            btn.classList.toggle('hidden', selected.length === 0);
-            btn.classList.toggle('flex', selected.length > 0);
-
-            // Keep the header checkbox in sync when rows are (de)selected individually.
-            const selectAll = document.getElementById('selectAllAlumni');
-            selectAll.checked = checkboxes.length > 0 && selected.length === checkboxes.length;
-            selectAll.indeterminate = selected.length > 0 && selected.length < checkboxes.length;
         }
 
         function openBulkDeactivateAlumniModal() {

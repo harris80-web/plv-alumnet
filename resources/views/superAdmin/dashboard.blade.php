@@ -342,14 +342,14 @@
                 <!-- Filter Section Container -->
                 <div class="w-full bg-slate-100 px-6 py-4">
                     <form method="GET" action="{{ route('superAdmin.dashboard') }}"
-                        class="flex items-center gap-8 bg-white px-8 py-4 rounded-xl border border-slate-200 shadow-md text-sm font-medium text-slate-700">
+                        class="flex flex-nowrap items-center gap-3 bg-white px-6 py-4 rounded-xl border border-slate-200 shadow-md text-sm font-medium text-slate-700 overflow-x-auto">
 
                         <!-- Batch Year -->
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1.5 shrink-0">
                             <label class="whitespace-nowrap font-[Montserrat] font-semibold text-[#0E0F3B]">Batch
                                 Year:</label>
                             <select name="batch" onchange="this.form.submit()"
-                                class="border border-slate-300 rounded-md px-3 py-1.5 w-36 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
+                                class="border border-slate-300 rounded-md px-2 py-1.5 w-28 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
                                 <option value="" {{ !$dashboardFilters['batch'] ? 'selected' : '' }}>All Years</option>
                                 @foreach ($batches as $batchYear)
                                 <option value="{{ $batchYear }}" {{ (string) $dashboardFilters['batch'] === (string) $batchYear ? 'selected' : '' }}>{{ $batchYear }}</option>
@@ -358,11 +358,11 @@
                         </div>
 
                         <!-- Course -->
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1.5 shrink min-w-0">
                             <label
                                 class="whitespace-nowrap font-[Montserrat] font-semibold text-[#0E0F3B]">Course:</label>
                             <select name="program_id" onchange="this.form.submit()"
-                                class="border border-slate-300 rounded-md px-3 py-1.5 w-72 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
+                                class="border border-slate-300 rounded-md px-2 py-1.5 w-64 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
                                 <option value="" {{ !$dashboardFilters['program_id'] ? 'selected' : '' }}>All Programs</option>
                                 @foreach ($programs as $program)
                                 <option value="{{ $program->program_id }}" {{ (string) $dashboardFilters['program_id'] === (string) $program->program_id ? 'selected' : '' }}>{{ $program->program_name }}</option>
@@ -371,27 +371,27 @@
                         </div>
 
                         <!-- Employment Status -->
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1.5 shrink-0">
                             <label class="whitespace-nowrap font-[Montserrat] font-semibold text-[#0E0F3B]">Employment
                                 Status:</label>
                             <select name="employment_status" onchange="this.form.submit()"
-                                class="border border-slate-300 rounded-md px-3 py-1.5 w-48 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
+                                class="border border-slate-300 rounded-md px-2 py-1.5 w-32 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
                                 <option value="" {{ !$dashboardFilters['employment_status'] ? 'selected' : '' }}>All Statuses</option>
                                 <option value="employed" {{ $dashboardFilters['employment_status'] === 'employed' ? 'selected' : '' }}>Employed</option>
                                 <option value="unemployed" {{ $dashboardFilters['employment_status'] === 'unemployed' ? 'selected' : '' }}>Unemployed</option>
                             </select>
                         </div>
 
-                        @if (array_filter($dashboardFilters))
-                        <a href="{{ route('superAdmin.dashboard') }}" class="text-xs font-bold text-slate-400 hover:text-[#C73D1A] whitespace-nowrap">
-                            <i data-lucide="x" class="w-3 h-3 inline"></i> Clear
+                        <!-- Clear Filters Button -->
+                        <a href="{{ route('superAdmin.dashboard') }}"
+                            class="ml-auto shrink-0 whitespace-nowrap bg-slate-200 text-[10px] text-slate-600 px-3 py-1.5 rounded-md flex items-center gap-1 hover:bg-slate-300 transition shadow-sm font-semibold uppercase tracking-wide">
+                            <i data-lucide="x" class="w-3.5 h-3.5 shrink-0"></i> Clear Filters
                         </a>
-                        @endif
 
                         <!-- Export Button -->
-                        <a href="{{ route('superAdmin.dashboard.exportCsv', array_filter($dashboardFilters) + ['hire_months' => $hireMonths]) }}"
-                            class="ml-auto bg-[#C04828] text-[8px] text-white px-4 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-[#A03D22] transition shadow-sm font-semibold uppercase tracking-wide">
-                            <i data-lucide="download" class="w-3.5 h-3.5"></i> EXPORT CSV
+                        <a href="{{ route('superAdmin.dashboard.exportPdf', array_filter($dashboardFilters) + ['hire_months' => $hireMonths]) }}"
+                            class="shrink-0 whitespace-nowrap bg-[#C04828] text-[10px] text-white px-3 py-1.5 rounded-md flex items-center gap-1 hover:bg-[#A03D22] transition shadow-sm font-semibold uppercase tracking-wide">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 shrink-0"></i> EXPORT PDF
                         </a>
                     </form>
                 </div>

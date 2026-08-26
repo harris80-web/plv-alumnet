@@ -91,25 +91,6 @@
             scrollbar-width: none;
         }
 
-        input[type="checkbox"] {
-            appearance: none;
-            width: 1rem;
-            height: 1rem;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            background-color: white;
-            cursor: pointer;
-            transition: all 0.10s;
-        }
-
-        input[type="checkbox"]:checked {
-            background-color: #ED7A07;
-            border: none;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13.485 1.431a1.473 1.473 0 0 0-2.072 0L6.133 7.952 4.342 5.985a1.473 1.473 0 1 0-2.172 1.992l2.86 3.06a1.473 1.473 0 0 0 2.134.018l6.366-6.77a1.473 1.473 0 0 0-.045-2.834z'/%3E%3C/svg%3E");
-            background-size: 10px;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
     </style>
 </head>
 
@@ -302,8 +283,7 @@
                         <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                             <tr>
                                 <th class="px-4 py-4 font-semibold border-r border-slate-700">
-                                    <input type="checkbox" id="select-all" class="rounded"
-                                        onclick="toggleAllCheckboxes(this)">
+                                    <input type="checkbox" id="select-all" class="bulk-checkbox">
                                 </th>
                                 <th class="px-4 py-4 font-semibold border-r border-slate-700">Name</th>
                                 <th class="px-4 py-4 font-semibold border-r border-slate-700">Program <i
@@ -332,7 +312,7 @@
                                     data-batch="{{ $t->alumnus->alumnus_batch ?? '' }}" data-status="{{ $statusLabel }}"
                                     data-message="{{ $t->testimonial_body }}">
                                     <td class="px-4 py-3 border-r border-slate-100">
-                                        <input type="checkbox" class="row-checkbox rounded"
+                                        <input type="checkbox" class="row-checkbox bulk-checkbox"
                                             data-id="{{ $t->testimonial_id }}">
                                     </td>
                                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
@@ -570,18 +550,14 @@
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             initDropdowns();
-
-            document.querySelectorAll('.row-checkbox').forEach(cb => {
-                cb.addEventListener('change', updateBulkBar);
-            });
-            document.getElementById('select-all').addEventListener('change', updateBulkBar);
         });
 
         /* ── Checkbox ─────────────────────────────────────── */
-        function toggleAllCheckboxes(master) {
-            document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = master.checked);
-            updateBulkBar();
-        }
+        initBulkCheckboxGroup({
+            header: 'select-all',
+            rowSelector: '.row-checkbox',
+            onChange: updateBulkBar,
+        });
 
         /* ── Modal helpers ────────────────────────────────── */
         function closeModal(id) {

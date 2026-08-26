@@ -262,6 +262,7 @@ $title = $pageTitles[$currentPage] ?? 'Super Admin Panel';
 </div>
 
 @include('partials.ui-animations')
+@include('partials.bulk-checkbox')
 <script src="https://unpkg.com/lucide@latest"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <script>

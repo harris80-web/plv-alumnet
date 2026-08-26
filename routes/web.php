@@ -119,6 +119,7 @@ Route::get('/alumni/change-password', function () {
 
 Route::get('/superAdmin/dashboard', [UserController::class, 'showDashboard'])->name('superAdmin.dashboard');
 Route::get('/superAdmin/dashboard/export-csv', [UserController::class, 'exportDashboardReport'])->name('superAdmin.dashboard.exportCsv')->middleware('auth');
+Route::get('/superAdmin/dashboard/export-pdf', [UserController::class, 'exportDashboardReportPdf'])->name('superAdmin.dashboard.exportPdf')->middleware('auth');
 Route::get('/superAdmin/profile', [UserController::class, 'showSuperAdminProfile'])->name('superAdmin.profile');
 
 

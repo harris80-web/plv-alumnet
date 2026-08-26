@@ -166,7 +166,7 @@
                             <thead class="bg-[#0E0F3B] text-white">
                                 <tr>
                                     <th class="border-r border-slate-700 w-10">
-                                        <input type="checkbox" id="faqSelectAllCheckbox" onchange="toggleSelectAllFaqs(this)" class="w-4 h-4 cursor-pointer" title="Select all">
+                                        <input type="checkbox" id="faqSelectAllCheckbox" class="bulk-checkbox" title="Select all">
                                     </th>
                                     <th class="border-r border-slate-700">ID No.</th>
                                     <th class="border-r border-slate-700" style="width: 26%;">Question</th>
@@ -187,7 +187,7 @@
                                 @endphp
                                 <tr class="border-b border-slate-100" data-search="{{ mb_strtolower($faq->faq_question) }}" data-recipient="{{ $faq->faq_recipient }}">
                                     <td class="border-r border-slate-100">
-                                        <input type="checkbox" class="faq-checkbox w-4 h-4 accent-[#1D264F] cursor-pointer" value="{{ $faq->faq_id }}" onchange="updateFaqBulkUI()">
+                                        <input type="checkbox" class="faq-checkbox bulk-checkbox" value="{{ $faq->faq_id }}">
                                     </td>
                                     <td class="border-r border-slate-100 font-semibold text-[#0E0F3B]">{{ $faq->faq_id }}</td>
                                     <td class="border-r border-slate-100 text-left font-medium text-[#0E0F3B]">
@@ -420,21 +420,14 @@
         });
 
         // ── BULK SELECT ──
-        function toggleSelectAllFaqs(checkbox) {
-            document.querySelectorAll('.faq-checkbox').forEach(cb => {
-                if (cb.closest('tr').style.display !== 'none') cb.checked = checkbox.checked;
-            });
-            updateFaqBulkUI();
-        }
-
-        function updateFaqBulkUI() {
-            const checked = document.querySelectorAll('.faq-checkbox:checked');
-            document.getElementById('faqSelectedCount').textContent = checked.length;
-            document.querySelectorAll('[data-bulk-btn]').forEach(btn => btn.disabled = checked.length === 0);
-
-            const allBoxes = document.querySelectorAll('.faq-checkbox');
-            document.getElementById('faqSelectAllCheckbox').checked = allBoxes.length > 0 && checked.length === allBoxes.length;
-        }
+        initBulkCheckboxGroup({
+            header: 'faqSelectAllCheckbox',
+            rowSelector: '.faq-checkbox',
+            onChange: function (checkedValues, checkedCount) {
+                document.getElementById('faqSelectedCount').textContent = checkedCount;
+                document.querySelectorAll('[data-bulk-btn]').forEach(btn => btn.disabled = checkedCount === 0);
+            },
+        });
 
         function selectedFaqIds() {
             return [...document.querySelectorAll('.faq-checkbox:checked')].map(cb => cb.value);

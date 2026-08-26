@@ -272,51 +272,32 @@ $approved_count = $approved_jobs->count();
                                 <td class="font-medium text-black border-r border-slate-100">{{ $j->job_closing_date }}
                                 </td>
                                 <td class="text-center relative">
-                                    <div class="inline-block text-left relative">
-                                        <button
-                                            class="menu-button p-1.5 hover:bg-slate-100 rounded-full transition-colors">
-                                            <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                        </button>
-                                        <div class="action-dropdown bg-white border border-slate-200 rounded-md shadow-xl">
-                                            <div class="py-1">
-                                                <form action="{{ route('jobPosting.approve', $j->job_posting_id) }}"
-                                                    method="POST" class="w-full">
-                                                    @csrf
-                                                    <button type="button"
-                                                        onclick="openApprovalModal(this)"
-                                                        class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-green-50">
-                                                        <i data-lucide="check-circle" class="w-4 h-4 mr-3 text-green-500"></i> Approve
-                                                    </button>
-                                                </form>
-                                                <button type="button"
-                                                    onclick="openDeclineNotesModal({{ $j->job_posting_id }}, '{{ addslashes($j->job_posting_title) }}')"
-                                                    class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                    <i data-lucide="x-circle" class="w-4 h-4 mr-3"></i> Decline
-                                                </button>
-
-                                                @php
-                                                    $viewModalData = [
-                                                        'title' => $j->job_posting_title,
-                                                        'posted' => $j->created_at,
-                                                        'company' => $j->job_posting_company,
-                                                        'location' => $j->job_posting_address,
-                                                        'posted_by' => $j->user->user_first_name . ' ' . $j->user->user_last_name,
-                                                        'type' => $j->job_posting_employment_type,
-                                                        'setup' => $j->job_posting_setup,
-                                                        'program' => $j->programs->pluck('program_name')->join(', '),
-                                                        'industry' => $j->industry->industry_name ?? 'N/A',
-                                                        'closing' => $j->job_closing_date,
-                                                        'description' => $j->job_posting_description,
-                                                        'status' => 'Pending',
-                                                    ];
-                                                @endphp
-                                                <button onclick='openViewModal({{ $j->job_posting_id }}, @json($viewModalData))'
-                                                    class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 border-t border-slate-100">
-                                                    <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    @php
+                                        $viewModalData = [
+                                            'title' => $j->job_posting_title,
+                                            'posted' => $j->created_at,
+                                            'company' => $j->job_posting_company,
+                                            'location' => $j->job_posting_address,
+                                            'posted_by' => $j->user->user_first_name . ' ' . $j->user->user_last_name,
+                                            'type' => $j->job_posting_employment_type,
+                                            'setup' => $j->job_posting_setup,
+                                            'program' => $j->programs->pluck('program_name')->join(', '),
+                                            'industry' => $j->industry->industry_name ?? 'N/A',
+                                            'closing' => $j->job_closing_date,
+                                            'description' => $j->job_posting_description,
+                                            'status' => 'Pending',
+                                            'approveUrl' => route('jobPosting.approve', $j->job_posting_id),
+                                        ];
+                                    @endphp
+                                    {{-- Approve/Decline now live inside the View modal itself
+                                         (see openViewModal()'s #approveBtn/#declineBtn), so this
+                                         is just a direct view trigger — no dropdown needed for a
+                                         single action. --}}
+                                    <button onclick='openViewModal({{ $j->job_posting_id }}, @json($viewModalData))'
+                                        title="View"
+                                        class="p-1.5 hover:bg-blue-50 rounded-full transition-colors">
+                                        <i data-lucide="eye" class="w-4 h-4 text-blue-500"></i>
+                                    </button>
                                 </td>
                             </tr>
                             @empty
@@ -444,6 +425,7 @@ $approved_count = $approved_jobs->count();
                                                         'closing' => $j->job_closing_date,
                                                         'description' => $j->job_posting_description,
                                                         'status' => 'Approved',
+                                                        'deleteUrl' => route('jobPosting.delete', $j->job_posting_id),
                                                     ];
                                                 @endphp
                                                 <button onclick='openViewModal({{ $j->job_posting_id }}, @json($viewModalData))'
@@ -1273,11 +1255,11 @@ $approved_count = $approved_jobs->count();
                 deleteBtn.classList.add('hidden');
                 approveBtn.onclick = () => {
                     closeViewModal();
-                    openConfirmAction(jobId, 'approve', data.title);
+                    openApprovalModal(data.approveUrl);
                 };
                 declineBtn.onclick = () => {
                     closeViewModal();
-                    openConfirmAction(jobId, 'decline', data.title);
+                    openDeclineNotesModal(jobId, data.title);
                 };
             } else {
                 approveBtn.classList.add('hidden');
@@ -1285,7 +1267,7 @@ $approved_count = $approved_jobs->count();
                 deleteBtn.classList.remove('hidden');
                 deleteBtn.onclick = () => {
                     closeViewModal();
-                    openConfirmAction(jobId, 'delete', data.title);
+                    openDeleteModal(jobId, data.title, data.deleteUrl);
                 };
             }
 
@@ -1300,89 +1282,21 @@ $approved_count = $approved_jobs->count();
             document.body.style.overflow = 'auto';
         }
 
-        function openConfirmModal({
-            title,
-            message,
-            iconName,
-            iconBg,
-            iconColor,
-            btnBg,
-            btnText,
-            onConfirm
-        }) {
-            const content = document.getElementById('confirmContent');
-            document.getElementById('confirmTitle').innerText = title;
-            document.getElementById('confirmMessage').innerHTML = message;
-            document.getElementById('confirmIconContainer').className = `w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${iconBg}`;
-            const icon = document.getElementById('confirmIcon');
-            icon.setAttribute('data-lucide', iconName);
-            icon.className = `w-8 h-8 ${iconColor}`;
-            const yesBtn = document.getElementById('confirmYesBtn');
-            yesBtn.className = `flex-1 py-2.5 ${btnBg} text-white rounded-lg text-xs font-bold transition-all uppercase hover:brightness-110`;
-            yesBtn.innerText = btnText;
-            yesBtn.onclick = () => {
-                onConfirm();
-                closeConfirmModal();
-            };
-            lucide.createIcons();
-            document.getElementById('confirmModal').classList.remove('invisible');
-            setTimeout(() => content.classList.remove('scale-95'), 10);
-        }
-
         function closeConfirmModal() {
             const content = document.getElementById('confirmContent');
             content.classList.add('scale-95');
             setTimeout(() => document.getElementById('confirmModal').classList.add('invisible'), 200);
         }
 
-        function openConfirmAction(id, action, title) {
-            document.querySelectorAll('.action-dropdown.open').forEach(d => d.classList.remove('open'));
-            const configs = {
-                approve: {
-                    title: 'Approve Job Post',
-                    message: `Are you sure you want to <span class="font-bold text-green-600">approve</span> Job Post titled <b>${title}</b>?`,
-                    iconName: 'check-circle',
-                    iconBg: 'bg-green-100',
-                    iconColor: 'text-green-600',
-                    btnBg: 'bg-green-600',
-                    btnText: 'Yes, Approve',
-                    href: `admin_job_action.php?action=approve&id=${id}`
-                },
-                decline: {
-                    title: 'Decline Job Post',
-                    message: `Are you sure you want to <span class="font-bold text-red-600">decline</span> Job Post titled <b>${title}</b>?`,
-                    iconName: 'x-circle',
-                    iconBg: 'bg-red-100',
-                    iconColor: 'text-red-600',
-                    btnBg: 'bg-red-600',
-                    btnText: 'Yes, Decline',
-                    href: `admin_job_action.php?action=decline&id=${id}`
-                },
-                delete: {
-                    title: 'Delete Job Post',
-                    message: `Are you sure you want to <span class="font-bold text-red-600">delete</span> Job Post titled <b>${title}</b>?`,
-                    iconName: 'trash-2',
-                    iconBg: 'bg-red-100',
-                    iconColor: 'text-red-600',
-                    btnBg: 'bg-red-600',
-                    btnText: 'Yes, Delete',
-                    href: `admin_delete_job.php?id=${id}`
-                }
-            };
-            const c = configs[action];
-            openConfirmModal({
-                ...c,
-                onConfirm: () => {
-                    window.location.href = c.href;
-                }
-            });
-        }
-
         //JOB APPROVAL MODAL JS
-        let approvalForm = null;
+        // Fed a real route URL from openViewModal (data.approveUrl) rather than
+        // inferring a <form> from a clicked button — the old dropdown-based
+        // Approve button lived inside its own <form>, but this modal doesn't,
+        // so submission is built here instead.
+        let approvalUrl = null;
 
-        function openApprovalModal(btn) {
-            approvalForm = btn.closest('form');
+        function openApprovalModal(url) {
+            approvalUrl = url;
             const modal = document.getElementById('approvalModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -1393,12 +1307,21 @@ $approved_count = $approved_jobs->count();
             const modal = document.getElementById('approvalModal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
-            approvalForm = null;
+            approvalUrl = null;
         }
 
         function submitApproval() {
-            if (approvalForm) {
-                approvalForm.submit();
+            if (approvalUrl) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = approvalUrl;
+                const csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = '_token';
+                csrf.value = '{{ csrf_token() }}';
+                form.appendChild(csrf);
+                document.body.appendChild(form);
+                form.submit();
             }
             closeApprovalModal();
         }

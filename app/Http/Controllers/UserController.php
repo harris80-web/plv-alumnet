@@ -24,6 +24,7 @@ use App\Models\Testimonial;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class UserController extends Controller
 {
@@ -969,6 +970,31 @@ class UserController extends Controller
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="dashboard_report_' . now()->format('Y-m-d') . '.csv"',
         ]);
+    }
+
+    /**
+     * Same report as exportDashboardReport() (CSV), same filters, rendered
+     * as a formatted PDF instead — shares the same data-building methods so
+     * the two exports can never drift apart on what counts as "the report".
+     */
+    public function exportDashboardReportPdf()
+    {
+        $batch = request()->query('batch');
+        $programId = request()->query('program_id');
+        $employmentStatus = request()->query('employment_status');
+        $hireMonths = $this->resolveHireMonths(request()->query('hire_months'));
+
+        $stats = $this->buildOverviewStats($batch, $programId, $employmentStatus);
+        $r = $this->buildEmploymentReports($batch, $programId, $employmentStatus, $hireMonths);
+
+        $batchLabel = $batch ?: 'All';
+        $programLabel = $programId ? (Program::find($programId)->program_name ?? $programId) : 'All';
+        $statusLabel = $employmentStatus ? ucfirst($employmentStatus) : 'All';
+
+        $pdf = Pdf::loadView('superAdmin.dashboard-report-pdf', compact('stats', 'r', 'batchLabel', 'programLabel', 'statusLabel', 'hireMonths'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('dashboard_report_' . now()->format('Y-m-d') . '.pdf');
     }
 
     /**

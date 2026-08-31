@@ -124,6 +124,22 @@
     </div>
 
     <div class="section">
+        <h2>Employment by Month (Jan&ndash;Dec, all years)</h2>
+        <table>
+            <tr>
+                <th>Month</th>
+                <th>Alumni Employed</th>
+            </tr>
+            @foreach ($r['employmentByMonth'] as $month => $count)
+                <tr>
+                    <td>{{ $month }}</td>
+                    <td>{{ $count }}</td>
+                </tr>
+            @endforeach
+        </table>
+    </div>
+
+    <div class="section">
         <h2>Industry Distribution of Employed Alumni</h2>
         <table>
             <tr>
@@ -251,7 +267,7 @@
             @foreach ($r['employedAlumniTable'] as $a)
                 <tr>
                     <td>{{ trim(($a->user->user_first_name ?? '') . ' ' . ($a->user->user_last_name ?? '')) }}</td>
-                    <td>{{ $a->alumnus_batch }}</td>
+                    <td>{{ optional($a->alumnus_batch)->format('Y-m-d') }}</td>
                     <td>{{ $a->program->program_name ?? 'N/A' }}</td>
                     <td>{{ $a->alumnus_workplace_undisclosed ? 'Undisclosed' : ($a->alumnus_workplace ?? 'N/A') }}</td>
                     <td>{{ $a->alumnus_job_position ?? 'N/A' }}</td>

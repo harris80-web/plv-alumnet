@@ -29,6 +29,18 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class UserController extends Controller
 {
     /**
+     * Gate for every admin/super-admin-only action below. Several of these
+     * routes only ever had ->middleware('auth') (or nothing at all) — auth
+     * alone lets any logged-in alumnus or employer reach them, since there
+     * was no role check anywhere in the request path. Same pattern already
+     * used by NoticeController/FaqController/AlumniIdController.
+     */
+    private function authorizeStaff(): void
+    {
+        abort_unless(Auth::check() && in_array(Auth::user()->user_role, ['admin', 'super_admin'], true), 403);
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index()
@@ -271,17 +283,93 @@ class UserController extends Controller
 
     public function showUsers(User $user)
     {
+        $this->authorizeStaff();
         $sections = Section::all();
         $programs = Program::all();
         $industries = Industry::orderBy('industry_name')->get();
-        $employers = Employer::with(['user', 'industry'])->get();
-        $alumni = Alumnus::with('user')->get();
-        $admins = Office::with('user')->get();
-        return view('superAdmin.userManagement', compact('employers', 'alumni', 'admins', 'sections', 'programs', 'industries'));
+
+        // Each tab's table is paginated independently — all render on the
+        // same page load (tabs are a client-side show/hide, not separate
+        // requests), so each needs its own page-number query param
+        // (adminPage/alumniPage/employerPendingPage/employerApprovedPage)
+        // via ->paginate()'s $pageName argument, or clicking "page 2" on one
+        // table would also page every other table on the tab.
+        // Explicit ->orderBy() on every one of these — LIMIT/OFFSET without
+        // a deterministic order isn't just cosmetic once pagination is
+        // involved: MySQL doesn't guarantee stable row order across
+        // requests without one, so "page 1" could silently return different
+        // rows (or skip/duplicate rows across pages) from one load to the
+        // next. This never mattered when everything was fetched at once.
+        $admins = Office::with('user')
+            ->whereHas('user', fn ($q) => $q->where('user_role', 'admin'))
+            ->orderBy('user_id')
+            ->paginate(10, ['*'], 'adminPage')
+            ->withQueryString();
+
+        $alumni = Alumnus::with('user')
+            ->orderBy('user_id')
+            ->paginate(15, ['*'], 'alumniPage')
+            ->withQueryString();
+
+        // Same two-table split the view already renders (awaiting approval
+        // vs. approved/active) — split into two queries so each paginates
+        // over just its own rows instead of one ->get()->filter() pass.
+        $pendingEmployers = Employer::with(['user', 'industry'])
+            ->where('employer_approved', false)
+            ->orderBy('user_id')
+            ->paginate(10, ['*'], 'employerPendingPage')
+            ->withQueryString();
+
+        // Kept as `user_active` (not `employer_approved`) to match the
+        // table's existing filter exactly — a formerly-approved employer
+        // who's since been deactivated intentionally falls out of both
+        // tables here, same as before this change.
+        $approvedEmployers = Employer::with(['user', 'industry'])
+            ->whereHas('user', fn ($q) => $q->where('user_active', true))
+            ->orderBy('user_id')
+            ->paginate(10, ['*'], 'employerApprovedPage')
+            ->withQueryString();
+
+        // Metric cards summarize the WHOLE dataset per tab, not just the
+        // current page — computed separately via direct counts rather than
+        // ->count()/->filter() on the (now paginated) collections above,
+        // which would otherwise only reflect one page's worth of rows.
+        $adminStats = [
+            'total' => Office::whereHas('user', fn ($q) => $q->where('user_role', 'admin'))->count(),
+            'active' => Office::whereHas('user', fn ($q) => $q->where('user_role', 'admin')->where('user_active', true))->count(),
+            'inactive' => Office::whereHas('user', fn ($q) => $q->where('user_role', 'admin')->where('user_active', false))->count(),
+        ];
+        $alumniStats = [
+            'total' => Alumnus::count(),
+            'active' => Alumnus::whereHas('user', fn ($q) => $q->where('user_active', true))->count(),
+            'deactivated' => Alumnus::whereHas('user', fn ($q) => $q->where('user_active', false))->count(),
+            'newThisMonth' => Alumnus::whereHas('user', fn ($q) => $q->whereYear('created_at', now()->year)->whereMonth('created_at', now()->month))->count(),
+        ];
+        $employerStats = [
+            'total' => Employer::count(),
+            'awaitingApproval' => Employer::where('employer_approved', false)->count(),
+            'active' => Employer::whereHas('user', fn ($q) => $q->where('user_active', true))->count(),
+            'deactivated' => Employer::where('employer_approved', true)->whereHas('user', fn ($q) => $q->where('user_active', false))->count(),
+        ];
+
+        // Batch-year filter dropdown needs every year across ALL alumni, not
+        // just whichever page happens to be showing (same DISTINCT-YEAR
+        // pattern used by the dashboard's own batch filter).
+        $alumniBatchYears = Alumnus::whereNotNull('alumnus_batch')
+            ->selectRaw('DISTINCT YEAR(alumnus_batch) as year')
+            ->orderByDesc('year')
+            ->pluck('year');
+
+        return view('superAdmin.userManagement', compact(
+            'pendingEmployers', 'approvedEmployers', 'alumni', 'admins',
+            'sections', 'programs', 'industries',
+            'adminStats', 'alumniStats', 'employerStats', 'alumniBatchYears'
+        ));
     }
 
     public function approveEmployer($id)
     {
+        $this->authorizeStaff();
         $user = User::findOrFail($id);
 
         $user->update(['user_active' => 1]);
@@ -292,7 +380,7 @@ class UserController extends Controller
 
     public function rejectEmployer(Request $request, $id)
     {
-        
+        $this->authorizeStaff();
         $user = Employer::where('user_id', $id)->firstOrFail();
        
         $validated = $request->validate([
@@ -316,6 +404,7 @@ class UserController extends Controller
 
     public function addAlumnus(Request $request)
     {
+        $this->authorizeStaff();
         $validated = $request->validate([
             'user_first_name' => 'required|string|max:255',
             'user_last_name' => 'required|string|max:255',
@@ -323,7 +412,7 @@ class UserController extends Controller
             'user_suffix' => 'nullable|string|max:255',
             'alumnus_gender' => 'required|in:male,female,prefer_not_to_say',
             'program_id' => 'required|exists:programs,program_id',
-            'alumnus_batch' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+            'alumnus_batch' => 'required|date|after:1900-01-01|before_or_equal:' . now()->addYear()->toDateString(),
             'section_id' => 'required|exists:sections,section_id',
             'user_email' => 'required|email|max:255|unique:users,user_email',
         ]);
@@ -397,8 +486,9 @@ class UserController extends Controller
     /** Plain-text CSV, matching the columns importAlumniCsv() expects — the "Download Template" link in User Management. */
     public function downloadAlumniCsvTemplate()
     {
+        $this->authorizeStaff();
         $columns = ['first_name', 'middle_name', 'last_name', 'suffix', 'email', 'gender', 'program', 'section', 'batch'];
-        $example = ['Juan', 'Santos', 'Dela Cruz', '', 'juan.delacruz@example.com', 'male', 'BSIT', 'Section A', (string) date('Y')];
+        $example = ['Juan', 'Santos', 'Dela Cruz', '', 'juan.delacruz@example.com', 'male', 'BSIT', 'Section A', now()->subYears(2)->format('Y-m-d')];
 
         $callback = function () use ($columns, $example) {
             $handle = fopen('php://output', 'w');
@@ -421,6 +511,7 @@ class UserController extends Controller
      */
     public function importAlumniCsv(Request $request)
     {
+        $this->authorizeStaff();
         $request->validate([
             'csv_file' => ['required', 'file', 'mimes:csv,txt', 'max:5120'],
         ]);
@@ -507,8 +598,23 @@ class UserController extends Controller
                 continue;
             }
 
-            if (!ctype_digit($batch) || (int) $batch < 1900 || (int) $batch > (int) date('Y') + 1) {
-                $errors[] = "Row {$rowNum}: \"{$batch}\" is not a valid batch year.";
+            // A bare 4-digit year (old template / old exports still
+            // floating around) is accepted for convenience and normalized
+            // to April 15 of that year — same convention the migration
+            // backfilled existing records with. Anything else must parse
+            // as a real date.
+            if (ctype_digit($batch) && strlen($batch) === 4) {
+                $batchDate = Carbon::createFromDate((int) $batch, 4, 15);
+            } else {
+                try {
+                    $batchDate = Carbon::parse($batch);
+                } catch (\Exception $e) {
+                    $batchDate = null;
+                }
+            }
+
+            if (!$batchDate || $batchDate->year < 1900 || $batchDate->year > (int) date('Y') + 1) {
+                $errors[] = "Row {$rowNum}: \"{$batch}\" is not a valid batch date (expected YYYY-MM-DD).";
                 continue;
             }
 
@@ -522,7 +628,7 @@ class UserController extends Controller
                     'alumnus_gender' => $gender,
                     'program_id' => $program->program_id,
                     'section_id' => $section->section_id,
-                    'alumnus_batch' => (int) $batch,
+                    'alumnus_batch' => $batchDate->toDateString(),
                 ]);
                 $created++;
             } catch (\Exception $e) {
@@ -554,6 +660,7 @@ class UserController extends Controller
     /** Real data version of the alumni table's "Export CSV" button — mirrors the visible table's columns exactly. */
     public function exportAlumniCsv()
     {
+        $this->authorizeStaff();
         $alumni = Alumnus::with(['user', 'program', 'section'])->get();
 
         $callback = function () use ($alumni) {
@@ -570,7 +677,7 @@ class UserController extends Controller
                     Alumnus::genderLabels()[$alumnus->alumnus_gender] ?? '',
                     $alumnus->program->program_name ?? '',
                     $alumnus->section->section_name ?? '',
-                    $alumnus->alumnus_batch,
+                    optional($alumnus->alumnus_batch)->toDateString(),
                     $alumnus->user?->user_email,
                     $alumnus->user?->user_active ? 'Active' : 'Deactivated',
                 ]);
@@ -594,6 +701,7 @@ class UserController extends Controller
      */
     public function bulkDeactivateAlumni(Request $request)
     {
+        $this->authorizeStaff();
         $validated = $request->validate([
             'ids' => ['required', 'array', 'min:1'],
             'ids.*' => ['integer'],
@@ -620,6 +728,8 @@ class UserController extends Controller
 
     public function addAdmin(Request $request)
     {
+        // Route already restricts this to super_admin (routes/web.php) —
+        // only a super_admin ever chooses another admin's feature access.
         $validated = $request->validate([
             'user_first_name' => 'required|string|max:255',
             'user_last_name' => 'required|string|max:255',
@@ -629,6 +739,8 @@ class UserController extends Controller
             'user_email' => 'required|email|max:255|unique:users,user_email',
             'user_password' => 'required|string|min:8|confirmed',
             'user_password_confirmation' => 'required|string|min:8|same:user_password',
+            'permissions' => 'array',
+            'permissions.*' => 'string|in:' . implode(',', array_keys(Office::PERMISSIONS)),
         ]);
 
         try {
@@ -646,6 +758,7 @@ class UserController extends Controller
 
                 $user->office()->create([
                     'office_address' => $validated['office_address'],
+                    'permissions' => $validated['permissions'] ?? [],
                 ]);
             });
         } catch (\Exception $e) {
@@ -708,11 +821,11 @@ class UserController extends Controller
     {
         $user = Auth::user();
         if ($user->user_role == 'admin') {
-            // admin.dashboard is an unfinished placeholder view — admin and
-            // super_admin already share identical permissions on every real
-            // page (job management, notices, alumni ID, user management),
-            // and the shared sidebar's own "Dashboard" link already points
-            // here too, so this is the one real dashboard for both roles.
+            // admin.dashboard is an unfinished placeholder view. The real
+            // dashboard stays accessible to every admin regardless of their
+            // granular feature permissions (see Office::PERMISSIONS) — it's
+            // the landing page every admin needs somewhere to land on, and
+            // the shared sidebar's "Dashboard" link already points here too.
             return redirect()->route('superAdmin.dashboard');
         } else if ($user->user_role == 'super_admin') {
             return redirect()->route('superAdmin.dashboard');
@@ -755,16 +868,24 @@ class UserController extends Controller
 
     public function showDashboard()
     {
+        $this->authorizeStaff();
         // Batch/Course/Employment Status filter — see buildOverviewStats()
         // and buildEmploymentReports() for exactly how each report uses it.
         $batch = request()->query('batch');
         $programId = request()->query('program_id');
-        $employmentStatus = request()->query('employment_status');
+        $employmentStatus = $this->resolveEmploymentStatus(request()->query('employment_status'));
         $hireMonths = $this->resolveHireMonths(request()->query('hire_months'));
 
         $stats = $this->buildOverviewStats($batch, $programId, $employmentStatus);
 
-        $batches = Alumnus::whereNotNull('alumnus_batch')->distinct()->orderByDesc('alumnus_batch')->pluck('alumnus_batch');
+        // The Batch filter stays a single "graduation year" pick even
+        // though alumnus_batch is now a full date — DISTINCT YEAR(...)
+        // extracts the years actually present instead of every individual
+        // date (which would make the dropdown useless).
+        $batches = Alumnus::whereNotNull('alumnus_batch')
+            ->selectRaw('DISTINCT YEAR(alumnus_batch) as year')
+            ->orderByDesc('year')
+            ->pluck('year');
         $programs = Program::orderBy('program_name')->get();
         // hire_months lives outside $dashboardFilters on purpose — it always
         // has a value (default 6), and $dashboardFilters drives both the
@@ -799,11 +920,28 @@ class UserController extends Controller
         return in_array($value, $allowed, true) ? $value : 6;
     }
 
+    /**
+     * Normalizes the Employment Status filter to exactly 'employed',
+     * 'unemployed', or null (no filter) — every call site used to read the
+     * raw query string directly, and an unrecognized value (a typo, a
+     * tampered URL) landed differently depending on which one you hit:
+     * buildOverviewStats() treated anything non-empty-and-not-"employed" as
+     * unemployed, while buildEmploymentReports()'s Employed Alumni table
+     * treated anything not exactly "unemployed" as employed — so a bogus
+     * value could show an "unemployed" stat card next to an "employed"
+     * alumni list on the same page. Resolving it once, here, means all
+     * three entry points (page view, CSV export, PDF export) agree.
+     */
+    private function resolveEmploymentStatus(?string $raw): ?string
+    {
+        return in_array($raw, ['employed', 'unemployed'], true) ? $raw : null;
+    }
+
     private function buildOverviewStats(?string $batch, ?string $programId, ?string $employmentStatus): array
     {
         $applyAlumniFilters = function ($query, string $alumniTable = 'alumni') use ($batch, $programId, $employmentStatus) {
             if ($batch) {
-                $query->where("$alumniTable.alumnus_batch", $batch);
+                $query->whereYear("$alumniTable.alumnus_batch", $batch);
             }
             if ($programId) {
                 $query->where("$alumniTable.program_id", $programId);
@@ -852,9 +990,10 @@ class UserController extends Controller
      */
     public function exportDashboardReport()
     {
+        $this->authorizeStaff();
         $batch = request()->query('batch');
         $programId = request()->query('program_id');
-        $employmentStatus = request()->query('employment_status');
+        $employmentStatus = $this->resolveEmploymentStatus(request()->query('employment_status'));
         $hireMonths = $this->resolveHireMonths(request()->query('hire_months'));
 
         $stats = $this->buildOverviewStats($batch, $programId, $employmentStatus);
@@ -886,6 +1025,13 @@ class UserController extends Controller
             fputcsv($out, ['Batch', 'Total', 'Employed', 'Rate']);
             foreach ($r['employmentByBatch'] as $batchYear => $row) {
                 fputcsv($out, [$batchYear, $row['total'], $row['employed'], $row['rate'] . '%']);
+            }
+            fputcsv($out, []);
+
+            fputcsv($out, ['EMPLOYMENT BY MONTH (Jan–Dec, all years, when alumni actually got hired)']);
+            fputcsv($out, ['Month', 'Alumni Employed']);
+            foreach ($r['employmentByMonth'] as $month => $count) {
+                fputcsv($out, [$month, $count]);
             }
             fputcsv($out, []);
 
@@ -939,7 +1085,7 @@ class UserController extends Controller
             foreach ($r['employedAlumniTable'] as $a) {
                 fputcsv($out, [
                     trim(($a->user->user_first_name ?? '') . ' ' . ($a->user->user_last_name ?? '')),
-                    $a->alumnus_batch,
+                    optional($a->alumnus_batch)->toDateString(),
                     $a->program->program_name ?? 'N/A',
                     $a->alumnus_workplace_undisclosed ? 'Undisclosed' : ($a->alumnus_workplace ?? 'N/A'),
                     $a->alumnus_job_position ?? 'N/A',
@@ -979,9 +1125,10 @@ class UserController extends Controller
      */
     public function exportDashboardReportPdf()
     {
+        $this->authorizeStaff();
         $batch = request()->query('batch');
         $programId = request()->query('program_id');
-        $employmentStatus = request()->query('employment_status');
+        $employmentStatus = $this->resolveEmploymentStatus(request()->query('employment_status'));
         $hireMonths = $this->resolveHireMonths(request()->query('hire_months'));
 
         $stats = $this->buildOverviewStats($batch, $programId, $employmentStatus);
@@ -1015,7 +1162,7 @@ class UserController extends Controller
     {
         $alumniQuery = Alumnus::with(['user', 'program', 'industry']);
         if ($batch) {
-            $alumniQuery->where('alumnus_batch', $batch);
+            $alumniQuery->whereYear('alumnus_batch', $batch);
         }
         if ($programId) {
             $alumniQuery->where('program_id', $programId);
@@ -1029,7 +1176,7 @@ class UserController extends Controller
         $unemploymentRate = $totalAlumni > 0 ? round(100 - $employmentRate, 2) : 0;
 
         // 1. Employment rate by batch/year
-        $employmentByBatch = $allAlumni->groupBy('alumnus_batch')
+        $employmentByBatch = $allAlumni->groupBy(fn ($a) => $a->alumnus_batch?->year)
             ->filter(fn ($group, $key) => $key !== null && $key !== '')
             ->sortKeys()
             ->map(function ($group) {
@@ -1038,10 +1185,30 @@ class UserController extends Controller
                 return ['total' => $total, 'employed' => $employed, 'rate' => $total > 0 ? round($employed / $total * 100, 2) : 0];
             });
 
-        // Industry/sector distribution of employed alumni
-        $industryDistribution = $employedAlumni->groupBy(fn ($a) => $a->industry->industry_name ?? 'Unspecified')
-            ->map->count()
-            ->sortDesc();
+        // "Which month do alumni get employed" — a Jan–Dec seasonality
+        // count from alumnus_employment_date, pooled across every year in
+        // the (batch/program-filtered) cohort. alumnus_employment_date is
+        // set automatically when an application is marked hired in-system,
+        // and is editable on the alumnus's own profile for employment found
+        // outside the platform — so this reflects both, unlike "Hires per
+        // Month" below (system applications only).
+        $monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        $employedWithDate = $employedAlumni->filter(fn ($a) => $a->alumnus_employment_date);
+        $employmentByMonth = collect($monthLabels)->mapWithKeys(function ($label, $i) use ($employedWithDate) {
+            $count = $employedWithDate->filter(fn ($a) => $a->alumnus_employment_date->month === $i + 1)->count();
+            return [$label => $count];
+        });
+
+        // Industry/sector distribution of employed alumni — lists every
+        // industry in the system (0 shown for one with no employed alumni
+        // yet), not just the ones that happen to have a match right now.
+        $industryCounts = $employedAlumni->groupBy(fn ($a) => $a->industry->industry_name ?? 'Unspecified')->map->count();
+        $industryDistribution = Industry::orderBy('industry_name')->pluck('industry_name')
+            ->mapWithKeys(fn ($name) => [$name => $industryCounts->get($name, 0)]);
+        if ($industryCounts->has('Unspecified')) {
+            $industryDistribution->put('Unspecified', $industryCounts->get('Unspecified'));
+        }
+        $industryDistribution = $industryDistribution->sortDesc();
 
         // Employment rate by gender
         $genderLabels = Alumnus::genderLabels();
@@ -1060,22 +1227,34 @@ class UserController extends Controller
         // Job-to-degree alignment, overall and per program (employed alumni only)
         $overallAligned = $employedAlumni->filter->hasCourseAlignedJob()->count();
         $alignmentRate = $employedCount > 0 ? round($overallAligned / $employedCount * 100, 2) : 0;
-        $programAlignment = $employedAlumni->groupBy(fn ($a) => $a->program->program_name ?? 'Unspecified')
+        $programAlignmentCounts = $employedAlumni->groupBy(fn ($a) => $a->program->program_name ?? 'Unspecified')
             ->map(function ($group) {
                 $total = $group->count();
                 $aligned = $group->filter->hasCourseAlignedJob()->count();
                 return ['total' => $total, 'aligned' => $aligned, 'rate' => $total > 0 ? round($aligned / $total * 100, 2) : 0];
-            })
-            ->sortByDesc('total');
+            });
+        // Lists every program in the system, not just the ones with an
+        // employed match right now — unless a specific program is already
+        // selected via the Course filter, where only that one applies.
+        if ($programId) {
+            $programAlignment = $programAlignmentCounts->sortByDesc('total');
+        } else {
+            $emptyProgramRow = ['total' => 0, 'aligned' => 0, 'rate' => 0];
+            $programAlignment = Program::orderBy('program_name')->pluck('program_name')
+                ->mapWithKeys(fn ($name) => [$name => $programAlignmentCounts->get($name, $emptyProgramRow)]);
+            if ($programAlignmentCounts->has('Unspecified')) {
+                $programAlignment->put('Unspecified', $programAlignmentCounts->get('Unspecified'));
+            }
+            $programAlignment = $programAlignment->sortByDesc('total');
+        }
 
-        // Employment interval — months from batch graduation (approximated as
-        // June of the batch year, PLV's school-year end) to first job date.
+        // Employment interval — months from batch graduation date to first job date.
         $employmentInterval = ['Within 6 months' => 0, '6–12 months' => 0, '1–2 years' => 0, 'Over 2 years' => 0];
         foreach ($allAlumni as $a) {
             if (!$a->alumnus_first_job_date || !$a->alumnus_batch) {
                 continue;
             }
-            $graduation = Carbon::create((int) $a->alumnus_batch, 6, 1);
+            $graduation = Carbon::parse($a->alumnus_batch);
             $months = max(0, $graduation->diffInMonths($a->alumnus_first_job_date, false));
             $bucket = match (true) {
                 $months <= 6 => 'Within 6 months',
@@ -1090,13 +1269,13 @@ class UserController extends Controller
         // actually changes which list is shown (see class doc note above).
         $employedAlumniTable = $employmentStatus === 'unemployed'
             ? $allAlumni->where('alumnus_employment_status', false)->sortByDesc('updated_at')->values()
-            : $allAlumni->where('alumnus_employment_status', true)->sortByDesc('alumnus_employment_date')->values();
+            : $employedAlumni->sortByDesc('alumnus_employment_date')->values();
 
         // Job placement & hiring — same alumni cohort filters as jobPlacementRate.
         $hiringBase = fn () => DB::table('job_applications')
             ->join('alumni', 'alumni.user_id', '=', 'job_applications.alumnus_id')
             ->join('job_postings', 'job_postings.job_posting_id', '=', 'job_applications.job_id')
-            ->when($batch, fn ($q) => $q->where('alumni.alumnus_batch', $batch))
+            ->when($batch, fn ($q) => $q->whereYear('alumni.alumnus_batch', $batch))
             ->when($programId, fn ($q) => $q->where('alumni.program_id', $programId));
 
         $totalApplications = $hiringBase()->count();
@@ -1130,7 +1309,7 @@ class UserController extends Controller
         $pendingCompanies = Employer::with(['user', 'industry'])->where('employer_approved', false)->latest('created_at')->get();
 
         return compact(
-            'totalAlumni', 'employedCount', 'employmentRate', 'unemploymentRate', 'employmentByBatch', 'industryDistribution',
+            'totalAlumni', 'employedCount', 'employmentRate', 'unemploymentRate', 'employmentByBatch', 'employmentByMonth', 'industryDistribution',
             'genderEmployment', 'programAlignment', 'alignmentRate', 'employmentInterval',
             'employedAlumniTable', 'totalApplications', 'totalHired', 'hiresPerMonth', 'topHiringCompanies',
             'registeredCompanies', 'pendingCompanies'
@@ -1139,6 +1318,7 @@ class UserController extends Controller
 
     public function showSuperAdminProfile()
     {
+        $this->authorizeStaff();
         $user = Auth::user();
         return view('superAdmin.profile', compact('user'));
     }

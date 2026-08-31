@@ -242,7 +242,10 @@ class CohortSeeder extends Seeder
             $alumnus = $user->alumnus()->create([
                 'program_id' => $programCycle[$i],
                 'section_id' => $sectionIds->random(),
-                'alumnus_batch' => $batch,
+                // alumnus_batch is a real date column — commencement dates
+                // vary a bit (Mar–May) rather than all landing on the same
+                // day, so batch-grouped reports have realistic spread.
+                'alumnus_batch' => Carbon::create($batch, fake()->numberBetween(3, 5), fake()->numberBetween(1, 28)),
                 'alumnus_gender' => $genderPool[array_rand($genderPool)],
                 'alumnus_resume_summary' => fake()->sentence(rand(12, 20)),
                 'linkedin_url' => fake()->boolean(60) ? 'https://linkedin.com/in/' . Str::slug($first . '-' . $last) : null,

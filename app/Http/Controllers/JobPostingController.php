@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\DeclineShortlistedOnJobExpiry;
 use App\Mail\ApproveJobPostMail;
 use App\Mail\DeclineJobPostMail;
 use App\Mail\DeleteJobPostMail;
@@ -23,6 +24,12 @@ use Mews\Purifier\Facades\Purifier;
 
 class JobPostingController extends Controller
 {
+    /** Gate for the admin job-management actions below — see UserController::authorizeStaff() for why this exists. */
+    private function authorizeStaff(): void
+    {
+        abort_unless(Auth::check() && in_array(Auth::user()->user_role, ['admin', 'super_admin'], true), 403);
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -287,6 +294,7 @@ class JobPostingController extends Controller
         }
 
         $this->notifyJobPostingSubmitted($jobPost, Auth::user()->user_role);
+        $this->scheduleExpiryCheck($jobPost);
 
         if(Auth::user()->user_role === 'employer') {
             return redirect()->route('jobPosting.jobBoard')->with('success', 'Job posting added successfully!');
@@ -327,6 +335,24 @@ class JobPostingController extends Controller
         ])->all();
 
         UserNotification::insert($rows);
+    }
+
+    /**
+     * Queues the one-shot check that declines any still-'shortlisted'
+     * applicant once this posting's closing date has passed — see
+     * DeclineShortlistedOnJobExpiry for why this replaced a daily
+     * schedule entry. Call after create, and after any edit that changes
+     * job_closing_date (a no-op silently costs nothing if the date didn't
+     * actually move, but re-dispatching unconditionally on every edit
+     * would pile up redundant queued rows for postings whose date never
+     * changes).
+     */
+    private function scheduleExpiryCheck(JobPosting $job): void
+    {
+        $delay = DeclineShortlistedOnJobExpiry::delayFor($job);
+        if ($delay) {
+            DeclineShortlistedOnJobExpiry::dispatch($job->job_posting_id)->delay($delay);
+        }
     }
 
     public function showMyJobPosts(Request $request, $id)
@@ -412,8 +438,10 @@ class JobPostingController extends Controller
             ? Purifier::clean($validated['job_posting_description'], 'job_description')
             : null;
 
+        $closingDateChanged = false;
+
         try {
-            DB::transaction(function () use ($validated, $jobImage, $job, $selectedPrograms, $description) {
+            DB::transaction(function () use ($validated, $jobImage, $job, $selectedPrograms, $description, &$closingDateChanged) {
                 $job->update([
                     'job_posting_title' => $validated['job_posting_title'] ?? $job->job_posting_title,
                     'job_posting_company' => $validated['job_posting_company'] ?? $job->job_posting_company,
@@ -427,6 +455,7 @@ class JobPostingController extends Controller
                         ? ($validated['industry_id'] ?: null)
                         : $job->industry_id,
                 ]);
+                $closingDateChanged = $job->wasChanged('job_closing_date');
 
                 $job->programs()->sync($selectedPrograms);
                 $this->syncJobSkills($job, $validated['skills'] ?? []);
@@ -444,11 +473,16 @@ class JobPostingController extends Controller
             return back()->withErrors(['error' => 'Failed to upload job posting image. Please try again.']);
         }
 
+        if ($closingDateChanged) {
+            $this->scheduleExpiryCheck($job);
+        }
+
         return redirect()->route('jobPosting.myJobPosts', ['id' => $job->user_id]);
     }
 
     public function showJobManagement()
     {
+        $this->authorizeStaff();
         $programs = Program::all();
         $industries = Industry::all();
         $users = Auth::user();
@@ -474,9 +508,17 @@ class JobPostingController extends Controller
 
     public function approveJobPost($id)
     {
+        $this->authorizeStaff();
         $job = JobPosting::findOrFail($id);
         $job->update(['job_approved' => true]);
-        Mail::to($job->employer->user->user_email)->send(new ApproveJobPostMail($job));
+        // Queued, not sent inline — a synchronous SMTP failure here used to
+        // 500 the request AFTER job_approved was already saved, so the
+        // admin saw a raw error page while the approval had actually gone
+        // through and the notification below never ran. Queuing matches
+        // the pattern already used elsewhere (AlumnusController::deactivateAlumnus's
+        // DeactAlumniMail, bulk hire mail, etc.) and means a mail outage
+        // can never block or half-apply this action.
+        Mail::to($job->employer->user->user_email)->queue(new ApproveJobPostMail($job));
         UserNotification::create([
             'user_id' => $job->user_id,
             'type' => 'job_posting_approved',
@@ -488,13 +530,17 @@ class JobPostingController extends Controller
 
     public function declineJobPost(Request $request, $id)
     {
+        $this->authorizeStaff();
         $job = JobPosting::findOrFail($id);
 
         $validated = $request->validate([
             'decline-reason' => 'required|string|max:255',
         ]);
         Log::info("Job posting with ID {$job->job_posting_id}, from: {$job->user->user_first_name} {$job->user->user_last_name} declined. Reason: {$validated['decline-reason']}");
-        Mail::to($job->employer->user->user_email)->send(new DeclineJobPostMail($job));
+        // Queued for the same reason as approveJobPost() above — this used
+        // to run before $job->delete(), so a mail failure left the job
+        // un-deleted behind a raw 500 with no indication to the admin.
+        Mail::to($job->employer->user->user_email)->queue(new DeclineJobPostMail($job));
         UserNotification::create([
             'user_id' => $job->user_id,
             'type' => 'job_posting_rejected',
@@ -507,6 +553,7 @@ class JobPostingController extends Controller
 
      public function deleteJobPost(Request $request, $id)
     {
+        $this->authorizeStaff();
         $job = JobPosting::findOrFail($id);
 
         $validated = $request->validate([
@@ -515,7 +562,8 @@ class JobPostingController extends Controller
 
         // Log the deletion reason (you can also store this in a database table if needed)
         Log::info("Job posting with ID {$job->job_posting_id}, from: {$job->user->user_first_name} {$job->user->user_last_name} deleted. Reason: {$validated['delete-reason']}");
-        Mail::to($job->user->user_email)->send(new DeleteJobPostMail($job->user, $job, $validated['delete-reason']));
+        // Queued — see approveJobPost()'s comment above for why.
+        Mail::to($job->user->user_email)->queue(new DeleteJobPostMail($job->user, $job, $validated['delete-reason']));
         $job->delete();
 
         return back()->with('success', 'Job posting deleted successfully!');

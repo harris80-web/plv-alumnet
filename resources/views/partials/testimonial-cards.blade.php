@@ -21,7 +21,7 @@
         </div>
         <div>
             <h4 class="text-blue-900 font-bold uppercase text-lg">{{ $testimonial->alumnus->user->user_first_name }} {{ $testimonial->alumnus->user->user_last_name }}</h4>
-            <p class="text-blue-700 text-[10px] font-semibold mb-3 uppercase">{{ $testimonial->alumnus->program->program_name }}, Batch {{ $testimonial->alumnus->alumnus_batch }}</p>
+            <p class="text-blue-700 text-[10px] font-semibold mb-3 uppercase">{{ $testimonial->alumnus->program->program_name }}, Batch {{ optional($testimonial->alumnus->alumnus_batch)->format('Y') }}</p>
             <p class="text-gray-600 text-xs leading-relaxed">{{ $testimonial->testimonial_body }}</p>
         </div>
     </div>

@@ -92,7 +92,7 @@
         <div class="row">
             <span class="item-title">{{ $alumnus->program->program_name ?? '--' }}</span>
             @if($alumnus->alumnus_batch)
-                <span class="item-date">Batch {{ $alumnus->alumnus_batch }}</span>
+                <span class="item-date">Batch {{ $alumnus->alumnus_batch->format('Y') }}</span>
             @endif
         </div>
         <p class="item-sub">Pamantasan ng Lungsod ng Valenzuela (PLV)</p>

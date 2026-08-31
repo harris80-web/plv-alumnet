@@ -40,7 +40,7 @@ class Alumnus extends Model
         'alumnus_change_password' => 'boolean',
         'alumnus_workplace_undisclosed' => 'boolean',
         'alumnus_resume_completeness' => 'integer',
-        'alumnus_batch' => 'integer',
+        'alumnus_batch' => 'date',
         'alumnus_first_job_date' => 'date',
         'alumnus_employment_date' => 'date',
         'alumnus_employed_via_platform' => 'boolean',

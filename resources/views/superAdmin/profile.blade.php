@@ -74,7 +74,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Admin Profile | PLV-AlumNet</title>
+    <title>{{ $user->user_role === 'super_admin' ? 'Super Admin' : 'Admin' }} Profile | PLV-AlumNet</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/PLV-AlumNet LOGO.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -174,12 +174,12 @@
                         <div class="relative group">
                             <div
                                 class="w-32 h-32 bg-[#0a0f2c] rounded-full flex items-center justify-center overflow-hidden">
-                                @if ($user->user_profile_picture)
-                                    <img src="{{ asset('storage/' . $user->user_profile_picture) }}" alt="Profile Picture"
-                                        class="w-full h-full object-cover">
-                                @else
-                                    <i data-lucide="user" class="w-20 h-20 text-white opacity-20"></i>
-                                @endif
+                                <img id="profileImagePreview"
+                                    src="{{ $user->user_profile_picture ? asset('storage/' . $user->user_profile_picture) : '' }}"
+                                    alt="Profile Picture"
+                                    class="w-full h-full object-cover {{ $user->user_profile_picture ? '' : 'hidden' }}">
+                                <i id="profileImagePlaceholderIcon" data-lucide="user"
+                                    class="w-20 h-20 text-white opacity-20 {{ $user->user_profile_picture ? 'hidden' : '' }}"></i>
                             </div>
                             <!-- Camera Icon for Edit Mode -->
                             <button type="button" id="cameraBtn"
@@ -190,7 +190,7 @@
                             <!-- Positioned relative to the profile image container -->
                             <div id="photoMenu"
                                 class="hidden absolute top-full mt-2 left-1/2 -translate-x-1/2 md:left-32 md:top-10 md:translate-x-0 bg-white border rounded-xl shadow-xl p-2 w-48 z-20 text-[#0E0F3B] font-medium">
-                                <button type="button"
+                                <button type="button" onclick="openImageLightbox(document.getElementById('profileImagePreview').src)"
                                     class="flex items-center gap-3 w-full p-2.5 hover:bg-slate-100 rounded-lg text-sm transition-colors">
                                     <i data-lucide="user" class="w-4 h-4 text-slate-500"></i>
                                     See Profile Image
@@ -199,7 +199,8 @@
                                     class="flex items-center gap-3 w-full p-2.5 hover:bg-slate-100 rounded-lg text-sm cursor-pointer transition-colors">
                                     <i data-lucide="image" class="w-4 h-4 text-slate-500"></i>
                                     Choose Profile Image
-                                    <input type="file" name="user_profile_picture" class="hidden">
+                                    <input type="file" name="user_profile_picture" accept="image/*" class="hidden"
+                                        onchange="previewImageInput(this, 'profileImagePreview', 'profileImagePlaceholderIcon')">
                                 </label>
                             </div>
                         </div>
@@ -323,6 +324,8 @@
             </div>
         </main>
     </div>
+
+    @include('partials.image-lightbox')
 
     <script>
         lucide.createIcons();

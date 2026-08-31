@@ -117,10 +117,10 @@ Route::get('/alumni/change-password', function () {
     return view('alumni_change_password');
 })->name('alumni.changePassword');
 
-Route::get('/superAdmin/dashboard', [UserController::class, 'showDashboard'])->name('superAdmin.dashboard');
+Route::get('/superAdmin/dashboard', [UserController::class, 'showDashboard'])->name('superAdmin.dashboard')->middleware('auth');
 Route::get('/superAdmin/dashboard/export-csv', [UserController::class, 'exportDashboardReport'])->name('superAdmin.dashboard.exportCsv')->middleware('auth');
 Route::get('/superAdmin/dashboard/export-pdf', [UserController::class, 'exportDashboardReportPdf'])->name('superAdmin.dashboard.exportPdf')->middleware('auth');
-Route::get('/superAdmin/profile', [UserController::class, 'showSuperAdminProfile'])->name('superAdmin.profile');
+Route::get('/superAdmin/profile', [UserController::class, 'showSuperAdminProfile'])->name('superAdmin.profile')->middleware('auth');
 
 
 Route::get('/admin/dashboard', function () {
@@ -135,20 +135,20 @@ Route::get('/employer/dashboard', [EmployerController::class, 'dashboard'])->mid
 
 Route::get('/alumni/dashboard', [AlumniDashboardController::class, 'index'])->middleware(['auth'])->name('alumnus.dashboard');
 
-Route::get('/superAdmin/userManagement', [UserController::class, 'showUsers'])->name('superAdmin.userManagement');
+Route::get('/superAdmin/userManagement', [UserController::class, 'showUsers'])->name('superAdmin.userManagement')->middleware(['auth', 'feature:user_management']);
 
-Route::get('/alumniIdManagement', [AlumniIdController::class, 'index'])->name('alumniId.management')->middleware('auth');
-Route::post('/alumniId/{id}/mark', [AlumniIdController::class, 'mark'])->name('alumniId.mark')->middleware('auth');
-Route::post('/alumniId/{id}/updateStatus', [AlumniIdController::class, 'updateStatus'])->name('alumniId.updateStatus')->middleware('auth');
-Route::post('/alumniId/bulkUpdateStatus', [AlumniIdController::class, 'bulkUpdateStatus'])->name('alumniId.bulkUpdateStatus')->middleware('auth');
+Route::get('/alumniIdManagement', [AlumniIdController::class, 'index'])->name('alumniId.management')->middleware(['auth', 'feature:alumni_id_management']);
+Route::post('/alumniId/{id}/mark', [AlumniIdController::class, 'mark'])->name('alumniId.mark')->middleware(['auth', 'feature:alumni_id_management']);
+Route::post('/alumniId/{id}/updateStatus', [AlumniIdController::class, 'updateStatus'])->name('alumniId.updateStatus')->middleware(['auth', 'feature:alumni_id_management']);
+Route::post('/alumniId/bulkUpdateStatus', [AlumniIdController::class, 'bulkUpdateStatus'])->name('alumniId.bulkUpdateStatus')->middleware(['auth', 'feature:alumni_id_management']);
 
-Route::post('/alumniYearbook/{id}/update', [AlumniYearbookController::class, 'updateYearbook'])->name('alumniYearbook.update')->middleware('auth');
-Route::post('/alumniYearbook/bulkUpdate', [AlumniYearbookController::class, 'bulkUpdateYearbook'])->name('alumniYearbook.bulkUpdate')->middleware('auth');
+Route::post('/alumniYearbook/{id}/update', [AlumniYearbookController::class, 'updateYearbook'])->name('alumniYearbook.update')->middleware(['auth', 'feature:alumni_id_management']);
+Route::post('/alumniYearbook/bulkUpdate', [AlumniYearbookController::class, 'bulkUpdateYearbook'])->name('alumniYearbook.bulkUpdate')->middleware(['auth', 'feature:alumni_id_management']);
 
-Route::get('/notices', [NoticeController::class, 'index'])->name('notices.management')->middleware('auth');
-Route::post('/notices', [NoticeController::class, 'store'])->name('notices.store')->middleware('auth');
-Route::put('/notices/{notice}', [NoticeController::class, 'update'])->name('notices.update')->middleware('auth');
-Route::delete('/notices/{notice}', [NoticeController::class, 'destroy'])->name('notices.destroy')->middleware('auth');
+Route::get('/notices', [NoticeController::class, 'index'])->name('notices.management')->middleware(['auth', 'feature:notices']);
+Route::post('/notices', [NoticeController::class, 'store'])->name('notices.store')->middleware(['auth', 'feature:notices']);
+Route::put('/notices/{notice}', [NoticeController::class, 'update'])->name('notices.update')->middleware(['auth', 'feature:notices']);
+Route::delete('/notices/{notice}', [NoticeController::class, 'destroy'])->name('notices.destroy')->middleware(['auth', 'feature:notices']);
 
 Route::get('/alumni/events-seminars', [NoticeController::class, 'alumniEventsAndSeminars'])->name('notices.eventsSeminars')->middleware('auth');
 Route::get('/alumni/announcements', [NoticeController::class, 'alumniAnnouncements'])->name('notices.announcements')->middleware('auth');
@@ -156,16 +156,18 @@ Route::get('/employer/events-seminars', [NoticeController::class, 'employerEvent
 Route::get('/employer/announcements', [NoticeController::class, 'employerAnnouncements'])->name('notices.employerAnnouncements')->middleware('auth');
 Route::post('/notices/{notice}/toggleInterest', [NoticeController::class, 'toggleInterest'])->name('notices.toggleInterest')->middleware('auth');
 
-Route::get('/faqManagement', [FaqController::class, 'index'])->name('faqs.management')->middleware('auth');
-Route::post('/faqs', [FaqController::class, 'store'])->name('faqs.store')->middleware('auth');
-Route::post('/faqs/bulkDelete', [FaqController::class, 'bulkDestroy'])->name('faqs.bulkDestroy')->middleware('auth');
-Route::post('/faqs/bulkUpdateRecipient', [FaqController::class, 'bulkUpdateRecipient'])->name('faqs.bulkUpdateRecipient')->middleware('auth');
-Route::put('/faqs/{faq}', [FaqController::class, 'update'])->name('faqs.update')->middleware('auth');
-Route::delete('/faqs/{faq}', [FaqController::class, 'destroy'])->name('faqs.destroy')->middleware('auth');
+Route::get('/faqManagement', [FaqController::class, 'index'])->name('faqs.management')->middleware(['auth', 'feature:faqs']);
+Route::post('/faqs', [FaqController::class, 'store'])->name('faqs.store')->middleware(['auth', 'feature:faqs']);
+Route::post('/faqs/bulkDelete', [FaqController::class, 'bulkDestroy'])->name('faqs.bulkDestroy')->middleware(['auth', 'feature:faqs']);
+Route::post('/faqs/bulkUpdateRecipient', [FaqController::class, 'bulkUpdateRecipient'])->name('faqs.bulkUpdateRecipient')->middleware(['auth', 'feature:faqs']);
+Route::put('/faqs/{faq}', [FaqController::class, 'update'])->name('faqs.update')->middleware(['auth', 'feature:faqs']);
+Route::delete('/faqs/{faq}', [FaqController::class, 'destroy'])->name('faqs.destroy')->middleware(['auth', 'feature:faqs']);
 
-// ── Bell icon notifications (alumni + employer) ──
+// ── Bell icon notifications (every role) ──
 Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index')->middleware('auth');
 Route::post('/notifications/markAllRead', [NotificationController::class, 'markAllRead'])->name('notifications.markAllRead')->middleware('auth');
+// The dedicated "see all" page both bell dropdowns' "View all notifications" link to.
+Route::get('/notifications/all', [NotificationController::class, 'all'])->name('notifications.all')->middleware('auth');
 
 // ── Floating chatbot widget (alumni + employer) ──
 Route::post('/chatbot/start', [ChatbotController::class, 'start'])->name('widget.start')->middleware('auth');
@@ -173,14 +175,14 @@ Route::post('/chatbot/{ticket}/send', [ChatbotController::class, 'send'])->name(
 Route::get('/chatbot/{ticket}/poll', [ChatbotController::class, 'poll'])->name('widget.poll')->middleware('auth');
 
 // ── Admin: Chatbot & Messaging management ──
-Route::get('/chatbotMessaging', [ChatTicketController::class, 'index'])->name('chatbot.management')->middleware('auth');
-Route::post('/chatbotMessaging/settings', [ChatTicketController::class, 'updateSettings'])->name('chatbot.settings.update')->middleware('auth');
-Route::post('/chatbotMessaging/flags/{messageFlag}/action', [ChatTicketController::class, 'flagAction'])->name('chatbot.flagAction')->middleware('auth');
-Route::get('/chatbotMessaging/queue', [ChatTicketController::class, 'queueJson'])->name('chatbot.queue')->middleware('auth');
-Route::get('/chatbotMessaging/{ticket}/thread', [ChatTicketController::class, 'threadJson'])->name('chatbot.thread')->middleware('auth');
-Route::post('/chatbotMessaging/{ticket}/claim', [ChatTicketController::class, 'claim'])->name('chatbot.claim')->middleware('auth');
-Route::post('/chatbotMessaging/{ticket}/reply', [ChatTicketController::class, 'reply'])->name('chatbot.reply')->middleware('auth');
-Route::post('/chatbotMessaging/{ticket}/resolve', [ChatTicketController::class, 'resolve'])->name('chatbot.resolve')->middleware('auth');
+Route::get('/chatbotMessaging', [ChatTicketController::class, 'index'])->name('chatbot.management')->middleware(['auth', 'feature:messaging']);
+Route::post('/chatbotMessaging/settings', [ChatTicketController::class, 'updateSettings'])->name('chatbot.settings.update')->middleware(['auth', 'feature:messaging']);
+Route::post('/chatbotMessaging/flags/{messageFlag}/action', [ChatTicketController::class, 'flagAction'])->name('chatbot.flagAction')->middleware(['auth', 'feature:messaging']);
+Route::get('/chatbotMessaging/queue', [ChatTicketController::class, 'queueJson'])->name('chatbot.queue')->middleware(['auth', 'feature:messaging']);
+Route::get('/chatbotMessaging/{ticket}/thread', [ChatTicketController::class, 'threadJson'])->name('chatbot.thread')->middleware(['auth', 'feature:messaging']);
+Route::post('/chatbotMessaging/{ticket}/claim', [ChatTicketController::class, 'claim'])->name('chatbot.claim')->middleware(['auth', 'feature:messaging']);
+Route::post('/chatbotMessaging/{ticket}/reply', [ChatTicketController::class, 'reply'])->name('chatbot.reply')->middleware(['auth', 'feature:messaging']);
+Route::post('/chatbotMessaging/{ticket}/resolve', [ChatTicketController::class, 'resolve'])->name('chatbot.resolve')->middleware(['auth', 'feature:messaging']);
 
 Route::group(['middleware' => 'super_admin'], function () {
     //super admin routes
@@ -208,10 +210,18 @@ Route::group(['middleware' => 'alumni'], function () {
 
 
 //resource routes
-Route::get('/alumni/profile', [AlumnusController::class, 'showAlumniProfile'])->name('alumni.profile');
-Route::put('/alumni/updateProfile/{alumnus}', [AlumnusController::class, 'updateAlumniProfile'])->name('alumni.updateProfile');
-Route::put('/alumni/deactivate/{id}', [AlumnusController::class, 'deactivateAlumnus'])->name('alumni.deactivateAlumnus');
-Route::put('/alumni/activate/{id}', [AlumnusController::class, 'activateAlumnus'])->name('alumni.activateAlumnus');
+// Dead link fixed to redirect rather than deleted outright — laravel.log
+// shows a real hit on this exact URL 500ing on a nonexistent
+// AlumnusController::showAlumniProfile(); the actual profile page has
+// always lived at user.profile (UserController::showProfile()), so anyone
+// with this URL bookmarked lands on the right page instead of a 404.
+// Route::redirect() with a literal path ignores the app's base path (this
+// app isn't served from the domain root) — route()/redirect()->route()
+// resolve it correctly the same way the rest of the app already does.
+Route::get('/alumni/profile', fn () => redirect()->route('user.profile'));
+Route::put('/alumni/updateProfile/{alumnus}', [AlumnusController::class, 'updateAlumniProfile'])->name('alumni.updateProfile')->middleware('auth');
+Route::put('/alumni/deactivate/{id}', [AlumnusController::class, 'deactivateAlumnus'])->name('alumni.deactivateAlumnus')->middleware(['auth', 'feature:user_management']);
+Route::put('/alumni/activate/{id}', [AlumnusController::class, 'activateAlumnus'])->name('alumni.activateAlumnus')->middleware(['auth', 'feature:user_management']);
 Route::resource('alumni', AlumnusController::class)->middleware('auth');
 
 
@@ -227,7 +237,9 @@ Route::get('/messages/{conversation}/poll', [MessageController::class, 'poll'])-
 
 Route::resource('employers', EmployerController::class);
 Route::put('/employers/updateProfile/{employer}', [EmployerController::class, 'updateEmployerProfile'])->name('employers.updateProfile');
-Route::put('/employer/deactivate/{id}', [EmployerController::class, 'deactivateEmployer'])->name('employers.deactivateEmployer');
+// Was missing ->middleware('auth') entirely — any logged-in user, or a
+// direct unauthenticated POST, could deactivate an employer account.
+Route::put('/employer/deactivate/{id}', [EmployerController::class, 'deactivateEmployer'])->name('employers.deactivateEmployer')->middleware(['auth', 'feature:user_management']);
 
 Route::resource('events', EventController::class);
 
@@ -255,14 +267,20 @@ Route::get('/companies/{employer}/reviews', [EmployerReviewController::class, 'r
 Route::post('/job-postings/upload-image', [JobPostingController::class, 'uploadDescriptionImage'])->name('jobPosting.uploadDescriptionImage');
 Route::get('/myJobPosts/{id}', [JobPostingController::class, 'showMyJobPosts'])->name('jobPosting.myJobPosts');
 Route::post('/editJobPost/{id}', [JobPostingController::class, 'editJobPost'])->name('jobPosting.editJobPost');
-Route::get('/jobManagement', [JobPostingController::class, 'showJobManagement'])->name('jobPosting.jobManagement');
-Route::post('/approveJobPost/{id}', [JobPostingController::class, 'approveJobPost'])->name('jobPosting.approve');
-Route::post('/declineJobPost/{id}', [JobPostingController::class, 'declineJobPost'])->name('jobPosting.decline');
-Route::delete('/deleteJobPost/{id}', [JobPostingController::class, 'deleteJobPost'])->name('jobPosting.delete');
+Route::get('/jobManagement', [JobPostingController::class, 'showJobManagement'])->name('jobPosting.jobManagement')->middleware(['auth', 'feature:job_management']);
+Route::post('/approveJobPost/{id}', [JobPostingController::class, 'approveJobPost'])->name('jobPosting.approve')->middleware(['auth', 'feature:job_management']);
+Route::post('/declineJobPost/{id}', [JobPostingController::class, 'declineJobPost'])->name('jobPosting.decline')->middleware(['auth', 'feature:job_management']);
+Route::delete('/deleteJobPost/{id}', [JobPostingController::class, 'deleteJobPost'])->name('jobPosting.delete')->middleware(['auth', 'feature:job_management']);
 
 Route::resource('offices', OfficeController::class);
 Route::put('/offices/updateProfile/{office}', [OfficeController::class, 'updateOfficeProfile'])->name('offices.updateProfile');
-Route::delete('/admin/delete/{id}', [OfficeController::class, 'deleteAdmin'])->name('offices.deleteAdmin');
+// Admin-account management (create/delete admins, grant/edit their feature
+// permissions) is super_admin-only — an `admin` must never be able to
+// change its own or another admin's access, even one with every other
+// feature granted.
+Route::delete('/admin/delete/{id}', [OfficeController::class, 'deleteAdmin'])->name('offices.deleteAdmin')->middleware(['auth', 'super_admin']);
+Route::put('/admin/{id}/permissions', [OfficeController::class, 'updatePermissions'])->name('offices.updatePermissions')->middleware(['auth', 'super_admin']);
+Route::put('/admin/permissions/bulk', [OfficeController::class, 'bulkUpdatePermissions'])->name('offices.bulkUpdatePermissions')->middleware(['auth', 'super_admin']);
 
 Route::resource('password-reset-tokens', PasswordResetTokenController::class);
 Route::get('/forgotPasswordForm', [PasswordResetTokenController::class, 'index'])->name('passReset.forgotPassword');
@@ -281,30 +299,32 @@ Route::resource('sections', SectionController::class);
 Route::resource('seminars', SeminarController::class);
 
 Route::post('/submitTestimonial/{id}', [TestimonialController::class, 'submitTestimonial'])->name('testimonials.submit');
-Route::put('/testimonials/bulk-post', [TestimonialController::class, 'bulkPost'])->name('testimonials.bulkPost');
-Route::put('/testimonials/bulk-hide', [TestimonialController::class, 'bulkHide'])->name('testimonials.bulkHide');
-Route::put('/testimonials/bulk-delete', [TestimonialController::class, 'bulkDelete'])->name('testimonials.bulkDelete');
-Route::put('/postTestimonial/{id}', [TestimonialController::class, 'postTestimonial'])->name('testimonials.post');
-Route::delete('/deleteTestimonial/{id}', [TestimonialController::class, 'deleteTestimonial'])->name('testimonials.delete');
+Route::put('/testimonials/bulk-post', [TestimonialController::class, 'bulkPost'])->name('testimonials.bulkPost')->middleware(['auth', 'feature:testimonials']);
+Route::put('/testimonials/bulk-hide', [TestimonialController::class, 'bulkHide'])->name('testimonials.bulkHide')->middleware(['auth', 'feature:testimonials']);
+Route::put('/testimonials/bulk-delete', [TestimonialController::class, 'bulkDelete'])->name('testimonials.bulkDelete')->middleware(['auth', 'feature:testimonials']);
+Route::put('/postTestimonial/{id}', [TestimonialController::class, 'postTestimonial'])->name('testimonials.post')->middleware(['auth', 'feature:testimonials']);
+Route::delete('/deleteTestimonial/{id}', [TestimonialController::class, 'deleteTestimonial'])->name('testimonials.delete')->middleware(['auth', 'feature:testimonials']);
 // Must come before Route::resource('testimonials', ...) below — that
 // resource registers GET /testimonials/{testimonial}, which otherwise
 // greedily matches "cards" as an id and 404s before this route is ever
 // reached (same reason the bulk-* routes above also precede it).
 Route::get('/testimonials/cards', [TestimonialController::class, 'cardsFragment'])->name('testimonials.cardsFragment');
 Route::resource('testimonials', TestimonialController::class);
-Route::get('/testimonialManagement', [TestimonialController::class, 'showTestimonials'])->name('testimonials.manage');
+Route::get('/testimonialManagement', [TestimonialController::class, 'showTestimonials'])->name('testimonials.manage')->middleware(['auth', 'feature:testimonials']);
 
 
 Route::post('/users/storeEmployer', [UserController::class, 'storeEmployer'])->name('users.storeEmployer');
 Route::post('/users/login', [UserController::class, 'login'])->name('users.login');
-Route::post('/users/approve/{id}', [UserController::class, 'approveEmployer'])->name('users.approveEmployer');
-Route::put('/users/reject/{id}', [UserController::class, 'rejectEmployer'])->name('users.rejectEmployer');
-Route::post('/users/addAlumnus', [UserController::class, 'addAlumnus'])->name('users.addAlumnus');
-Route::get('/users/alumni/csv-template', [UserController::class, 'downloadAlumniCsvTemplate'])->name('users.downloadAlumniCsvTemplate')->middleware('auth');
-Route::post('/users/alumni/import-csv', [UserController::class, 'importAlumniCsv'])->name('users.importAlumniCsv')->middleware('auth');
-Route::get('/users/alumni/export-csv', [UserController::class, 'exportAlumniCsv'])->name('users.exportAlumniCsv')->middleware('auth');
-Route::put('/users/alumni/bulk-deactivate', [UserController::class, 'bulkDeactivateAlumni'])->name('users.bulkDeactivateAlumni')->middleware('auth');
-Route::post('/users/addAdmin', [UserController::class, 'addAdmin'])->name('users.addAdmin');
+Route::post('/users/approve/{id}', [UserController::class, 'approveEmployer'])->name('users.approveEmployer')->middleware(['auth', 'feature:user_management']);
+Route::put('/users/reject/{id}', [UserController::class, 'rejectEmployer'])->name('users.rejectEmployer')->middleware(['auth', 'feature:user_management']);
+Route::post('/users/addAlumnus', [UserController::class, 'addAlumnus'])->name('users.addAlumnus')->middleware(['auth', 'feature:user_management']);
+Route::get('/users/alumni/csv-template', [UserController::class, 'downloadAlumniCsvTemplate'])->name('users.downloadAlumniCsvTemplate')->middleware(['auth', 'feature:user_management']);
+Route::post('/users/alumni/import-csv', [UserController::class, 'importAlumniCsv'])->name('users.importAlumniCsv')->middleware(['auth', 'feature:user_management']);
+Route::get('/users/alumni/export-csv', [UserController::class, 'exportAlumniCsv'])->name('users.exportAlumniCsv')->middleware(['auth', 'feature:user_management']);
+Route::put('/users/alumni/bulk-deactivate', [UserController::class, 'bulkDeactivateAlumni'])->name('users.bulkDeactivateAlumni')->middleware(['auth', 'feature:user_management']);
+// Creating an admin account (and therefore choosing its initial feature
+// permissions) is super_admin-only — see the offices.* routes above.
+Route::post('/users/addAdmin', [UserController::class, 'addAdmin'])->name('users.addAdmin')->middleware(['auth', 'super_admin']);
 Route::get('/showChangePassword', [UserController::class, 'showChangePassword'])->name('users.showChangePassword');
 Route::put('/changePassword', [UserController::class, 'changePassword'])->name('users.changePassword');
 Route::resource('users', UserController::class);

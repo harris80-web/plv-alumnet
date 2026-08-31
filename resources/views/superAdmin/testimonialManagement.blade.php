@@ -36,7 +36,7 @@
     $published_count = $testimonials->where('testimonial_post', 1)->count();
     $hidden_count = $testimonials->where('testimonial_post', 0)->count();
     $programs_count = $testimonials->map(fn($t) => $t->alumnus->program->program_id ?? null)->filter()->unique()->count();
-    $batches = $testimonials->map(fn($t) => $t->alumnus->alumnus_batch ?? null)->filter()->unique()->sortDesc()->values();
+    $batches = $testimonials->map(fn($t) => $t->alumnus->alumnus_batch?->year)->filter()->unique()->sortDesc()->values();
 @endphp
 
 <!DOCTYPE html>
@@ -309,7 +309,7 @@
                                 <tr class="hover:bg-slate-50/80 transition-colors text-center"
                                     data-id="{{ $t->testimonial_id }}" data-name="{{ $t->alumnus->user->user_first_name }}"
                                     data-program="{{ $t->alumnus->program->program_name ?? '' }}"
-                                    data-batch="{{ $t->alumnus->alumnus_batch ?? '' }}" data-status="{{ $statusLabel }}"
+                                    data-batch="{{ optional($t->alumnus->alumnus_batch)->format('Y') }}" data-status="{{ $statusLabel }}"
                                     data-message="{{ $t->testimonial_body }}">
                                     <td class="px-4 py-3 border-r border-slate-100">
                                         <input type="checkbox" class="row-checkbox bulk-checkbox"
@@ -320,7 +320,7 @@
                                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
                                         {{ $t->alumnus->program->program_name ?? '—' }}</td>
                                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $t->alumnus->alumnus_batch ?? '—' }}</td>
+                                        {{ optional($t->alumnus->alumnus_batch)->format('Y') ?: '—' }}</td>
                                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100 text-left">
                                         {{ $msgPreview }}</td>
                                     <td class="px-4 py-3 border-r border-slate-100">
@@ -473,7 +473,7 @@
     'id' => $t->testimonial_id,
     'name' => $t->alumnus->user->user_first_name,
     'program' => $t->alumnus->program->program_name ?? '—',
-    'batch' => $t->alumnus->alumnus_batch ?? '—',
+    'batch' => optional($t->alumnus->alumnus_batch)->format('Y') ?: '—',
     'message' => $t->testimonial_body,
     'status' => $t->testimonial_post ? 'Published' : 'Hidden',
 ])->values()) ?>;

@@ -6,11 +6,18 @@ use App\Models\Testimonial;
 use App\Models\User;
 use App\Models\UserNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class TestimonialController extends Controller
 {
+    /** Gate for the admin moderation actions below — see UserController::authorizeStaff() for why this exists. */
+    private function authorizeStaff(): void
+    {
+        abort_unless(Auth::check() && in_array(Auth::user()->user_role, ['admin', 'super_admin'], true), 403);
+    }
+
     /**
      * AJAX target for the "Alumni Testimonials" pagination on both the
      * public homepage and the alumni dashboard (see
@@ -148,12 +155,14 @@ class TestimonialController extends Controller
 
     public function showTestimonials()
     {
+        $this->authorizeStaff();
         $testimonials = Testimonial::with(['alumnus.user', 'alumnus.program'])->get();
         return view('superAdmin.testimonialManagement', compact('testimonials'));
     }
 
     public function postTestimonial($id)
     {
+        $this->authorizeStaff();
         $testimonial = Testimonial::findOrFail($id);
 
         if ($testimonial->testimonial_post) {
@@ -169,6 +178,7 @@ class TestimonialController extends Controller
     }
     public function deleteTestimonial($id)
     {
+        $this->authorizeStaff();
         $testimonial = Testimonial::findOrFail($id);
 
         Log::info("Admin with ID {$testimonial->testimonial_id}: {$testimonial->alumnus->user->user_first_name} {$testimonial->alumnus->user->user_last_name} deleted. Message: {$testimonial->testimonial_body}");
@@ -180,6 +190,7 @@ class TestimonialController extends Controller
 
     public function bulkPost(Request $request)
     {
+        $this->authorizeStaff();
         $ids = explode(',', $request->input('ids'));
         Testimonial::whereIn('testimonial_id', $ids)->update(['testimonial_post' => true]);
         return back()->with('success', 'Selected testimonials published successfully!');
@@ -187,6 +198,7 @@ class TestimonialController extends Controller
 
     public function bulkHide(Request $request)
     {
+        $this->authorizeStaff();
         $ids = explode(',', $request->input('ids'));
         Testimonial::whereIn('testimonial_id', $ids)->update(['testimonial_post' => false]);
         return back()->with('success', 'Selected testimonials hidden successfully!');
@@ -194,8 +206,9 @@ class TestimonialController extends Controller
 
     public function bulkDelete(Request $request)
     {
+        $this->authorizeStaff();
         $ids = explode(',', $request->input('ids'));
-        Testimonial::whereIn('testimonial_id', $ids)->update(['testimonial_post' => false]);
-        return back()->with('success', 'Selected testimonials hidden successfully!');
+        Testimonial::whereIn('testimonial_id', $ids)->delete();
+        return back()->with('success', 'Selected testimonials deleted successfully!');
     }
 }

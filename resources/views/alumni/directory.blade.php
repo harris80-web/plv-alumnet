@@ -124,7 +124,7 @@
                                 'name' => trim($alumnus->user->user_first_name . ' ' . $alumnus->user->user_middle_name . ' ' . $alumnus->user->user_last_name . ' ' . $alumnus->user->user_suffix),
                                 'photo' => $alumnus->user->user_profile_picture ? asset('storage/' . $alumnus->user->user_profile_picture) : null,
                                 'program' => $alumnus->program->program_name ?? 'Not specified',
-                                'batch' => $alumnus->alumnus_batch,
+                                'batch' => optional($alumnus->alumnus_batch)->format('Y'),
                                 'section' => $alumnus->section->section_name ?? 'N/A',
                                 'employment' => $alumnus->alumnus_employment_status ? 'Employed' : 'Unemployed',
                                 'industry' => $alumnus->industry->industry_name ?? null,
@@ -141,7 +141,7 @@
                             <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $alumnus->user->user_middle_name }}</td>
                             <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $alumnus->user->user_suffix }}</td>
                             <td class="px-4 py-3 font-medium text-black border-r border-slate-100 leading-tight">{{ $alumnus->program->program_name ?? 'N/A' }}</td>
-                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $alumnus->alumnus_batch }}</td>
+                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ optional($alumnus->alumnus_batch)->format('Y') }}</td>
                             <td class="px-4 py-3 text-center relative">
                                 @if ($alumnus->user_id !== auth()->id())
                                 <div class="relative inline-block text-left">

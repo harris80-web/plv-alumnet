@@ -157,7 +157,7 @@
         <div class="p-6 space-y-4 text-sm border-b border-gray-100">
             <div class="flex justify-between gap-3">
                 <span class="font-bold text-[#C73D1A] shrink-0">Batch</span>
-                <span class="text-gray-700 text-right">{{ $activeContact->alumnus->alumnus_batch ?? '—' }}</span>
+                <span class="text-gray-700 text-right">{{ $activeContact->alumnus->alumnus_batch?->format('Y') ?? '—' }}</span>
             </div>
             <div class="flex justify-between gap-3">
                 <span class="font-bold text-[#C73D1A] shrink-0">Employment</span>

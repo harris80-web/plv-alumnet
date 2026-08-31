@@ -77,7 +77,7 @@
                     </h3>
                     <p class="text-sm font-semibold text-[#ED7A07] uppercase mt-1">
                         {{ $user->alumnus->program->program_name ?? 'Not specified' }} &bull; Alumni Batch
-                        {{ $user->alumnus->alumnus_batch ?? '--' }}
+                        {{ $user->alumnus->alumnus_batch?->format('Y') ?? '--' }}
                     </p>
                 </div>
             </div>

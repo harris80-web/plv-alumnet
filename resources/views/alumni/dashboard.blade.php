@@ -511,7 +511,7 @@
         @else
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             @foreach ($upcomingNotices as $notice)
-            <a href="{{ route('notices.eventsSeminars', ['tab' => $notice->category === 'seminar' ? 'seminar' : 'events']) }}"
+            <a href="{{ route('notices.eventsSeminars', ['tab' => $notice->category === 'seminar' ? 'seminar' : 'events', 'notice' => $notice->id]) }}"
                 class="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition-shadow">
                 <div class="h-40">
                     <img src="{{ $notice->thumbnailUrl() }}" class="w-full h-full object-cover mix-blend-multiply">
@@ -555,7 +555,7 @@
         @else
         <div class="space-y-4">
             @foreach ($recentAnnouncements as $notice)
-            <a href="{{ route('notices.announcements') }}" class="flex items-center gap-4 bg-white shadow-md rounded-lg border border-gray-100 p-4 hover:shadow-lg transition-shadow">
+            <a href="{{ route('notices.announcements', ['notice' => $notice->id]) }}" class="flex items-center gap-4 bg-white shadow-md rounded-lg border border-gray-100 p-4 hover:shadow-lg transition-shadow">
                 <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
                     <i class="fa-solid fa-bullhorn text-amber-600"></i>
                 </div>

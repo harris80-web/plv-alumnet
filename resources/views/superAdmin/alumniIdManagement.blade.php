@@ -351,7 +351,7 @@
                                         $ybModalData = [
                                             'reference' => $ybReferenceNo,
                                             'name' => $ybFullName,
-                                            'batch' => $yearbookRecord->alumnus->alumnus_batch,
+                                            'batch' => optional($yearbookRecord->alumnus->alumnus_batch)->format('Y'),
                                             'lastUpdate' => optional($yearbookRecord->status_updated_at)->format('M d, Y h:i A') ?? 'Never',
                                             'updatedBy' => $ybUpdatedByName,
                                             'claimingStatus' => $yearbookRecord->claiming_status,
@@ -363,14 +363,14 @@
                                         ];
                                     @endphp
                                     <tr class="border-b border-slate-100" data-search="{{ mb_strtolower($ybFullName . ' ' . $ybReferenceNo) }}"
-                                        data-reference="{{ mb_strtolower($ybReferenceNo) }}" data-batch="{{ $yearbookRecord->alumnus->alumnus_batch }}"
+                                        data-reference="{{ mb_strtolower($ybReferenceNo) }}" data-batch="{{ optional($yearbookRecord->alumnus->alumnus_batch)->format('Y') }}"
                                         data-distribution="{{ $yearbookRecord->distribution_status }}" data-claiming="{{ $yearbookRecord->claiming_status }}">
                                         <td class="border-r border-slate-100">
                                             <input type="checkbox" class="yearbook-checkbox bulk-checkbox" value="{{ $yearbookRecord->id }}">
                                         </td>
                                         <td class="border-r border-slate-100 font-semibold text-[#0E0F3B]">{{ $ybReferenceNo }}</td>
                                         <td class="border-r border-slate-100">{{ $ybFullName }}</td>
-                                        <td class="border-r border-slate-100">{{ $yearbookRecord->alumnus->alumnus_batch }}</td>
+                                        <td class="border-r border-slate-100">{{ optional($yearbookRecord->alumnus->alumnus_batch)->format('Y') }}</td>
                                         <td class="border-r border-slate-100">
                                             <span class="px-2 py-1 rounded-full text-[9px] font-bold uppercase {{ $yearbookRecord->distributionBadgeClass() }}">
                                                 {{ $yearbookRecord->distributionStatusLabel() }}

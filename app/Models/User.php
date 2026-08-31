@@ -116,4 +116,23 @@ class User extends Authenticatable
     {
         return (bool) $this->user_muted;
     }
+
+    /**
+     * Gate for the granular admin RBAC feature — super_admin always has
+     * every feature; an `admin` account only has what's checked in
+     * Office::permissions (see Office::PERMISSIONS for the feature list).
+     * Any other role never has admin features.
+     */
+    public function canAccessAdminFeature(string $feature): bool
+    {
+        if ($this->user_role === 'super_admin') {
+            return true;
+        }
+
+        if ($this->user_role !== 'admin') {
+            return false;
+        }
+
+        return (bool) $this->office?->hasPermission($feature);
+    }
 }

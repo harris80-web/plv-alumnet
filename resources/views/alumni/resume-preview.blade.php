@@ -52,7 +52,7 @@
         <div class="flex justify-between items-baseline flex-wrap gap-x-2">
             <p class="font-semibold text-gray-900">{{ $alumnus->program->program_name ?? '--' }}</p>
             @if($alumnus->alumnus_batch)
-                <p class="text-xs text-gray-500">Batch {{ $alumnus->alumnus_batch }}</p>
+                <p class="text-xs text-gray-500">Batch {{ $alumnus->alumnus_batch->format('Y') }}</p>
             @endif
         </div>
         <p class="text-xs text-gray-500 italic">Pamantasan ng Lungsod ng Valenzuela (PLV)</p>

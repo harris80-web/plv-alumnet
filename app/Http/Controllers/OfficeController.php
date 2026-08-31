@@ -113,8 +113,56 @@ class OfficeController extends Controller
             $user->update(['user_profile_picture' => $path]);
         }
 
-        return redirect()->route('user.profile')
+        // Not user.profile — for an `admin` that resolves to
+        // admin.profile, an unfinished, unstyled placeholder view (no
+        // header/sidebar at all). superAdmin.profile is the one real
+        // profile page both admin and super_admin actually use (see
+        // UserController::showSuperAdminProfile(), which authorizeStaff()
+        // already allows for both roles) and the page this form lives on.
+        return redirect()->route('superAdmin.profile')
             ->with('success', 'Profile updated successfully!');
+    }
+
+    /**
+     * Single-admin permission edit — the "View Profile" modal's Save button
+     * in userManagement.blade.php. Route already restricted to super_admin
+     * (see routes/web.php), so no role check needed here.
+     */
+    public function updatePermissions(Request $request, $id)
+    {
+        $admin = User::where('user_id', $id)->where('user_role', 'admin')->firstOrFail();
+
+        $validated = $request->validate([
+            'permissions' => 'array',
+            'permissions.*' => 'string|in:' . implode(',', array_keys(Office::PERMISSIONS)),
+        ]);
+
+        $admin->office()->update(['permissions' => $validated['permissions'] ?? []]);
+
+        return back()->with('success', 'Permissions updated for ' . $admin->user_first_name . ' ' . $admin->user_last_name . '.');
+    }
+
+    /**
+     * Bulk permission edit — applies the exact same permission set to every
+     * selected admin, overwriting whatever each one had before (not merged
+     * in). Mirrors the ids[] + validated-array pattern already used by
+     * UserController::bulkDeactivateAlumni() and the testimonials/FAQ bulk
+     * endpoints.
+     */
+    public function bulkUpdatePermissions(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer',
+            'permissions' => 'array',
+            'permissions.*' => 'string|in:' . implode(',', array_keys(Office::PERMISSIONS)),
+        ]);
+
+        $adminIds = User::whereIn('user_id', $validated['ids'])->where('user_role', 'admin')->pluck('user_id');
+
+        Office::whereIn('user_id', $adminIds)->update(['permissions' => json_encode($validated['permissions'] ?? [])]);
+
+        return back()->with('success', 'Permissions updated for ' . $adminIds->count() . ' admin' . ($adminIds->count() === 1 ? '' : 's') . '.');
     }
 
     public function deleteAdmin(Request $request, $id)

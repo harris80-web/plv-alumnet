@@ -292,7 +292,7 @@
         @else
         <div class="space-y-4">
             @foreach ($recentAnnouncements as $notice)
-            <a href="{{ route('notices.employerAnnouncements') }}" class="flex items-center gap-4 bg-white shadow-md rounded-lg border border-gray-100 p-4 hover:shadow-lg transition-shadow">
+            <a href="{{ route('notices.employerAnnouncements', ['notice' => $notice->id]) }}" class="flex items-center gap-4 bg-white shadow-md rounded-lg border border-gray-100 p-4 hover:shadow-lg transition-shadow">
                 <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
                     <i class="fa-solid fa-bullhorn text-amber-600"></i>
                 </div>

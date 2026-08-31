@@ -63,11 +63,13 @@
                     <div class="relative w-40 h-40">
 
                         <div class="w-full h-full bg-[#0E0F3B] rounded-full flex items-center justify-center border-4 border-white shadow-lg overflow-hidden">
-                            @if ($user->user_profile_picture)
-                            <img src="{{ asset('storage/' . $user->user_profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover">
-                            @else
-                            <i class="fa-solid fa-user text-7xl text-white mt-4"></i>
-                            @endif
+                            <img id="profileImagePreview"
+                                src="{{ $user->user_profile_picture ? asset('storage/' . $user->user_profile_picture) : '' }}"
+                                alt="Profile Picture"
+                                class="w-full h-full object-cover {{ $user->user_profile_picture ? '' : 'hidden' }}"
+                                style="{{ $user->user_profile_picture ? '' : 'display:none' }}">
+                            <i id="profileImagePlaceholderIcon" class="fa-solid fa-user text-7xl text-white mt-4 {{ $user->user_profile_picture ? 'hidden' : '' }}"
+                                style="{{ $user->user_profile_picture ? 'display:none' : '' }}"></i>
 
                         </div>
 
@@ -77,12 +79,13 @@
                             </button>
 
                             <div id="photoOptions" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50">
-                                <button class="w-full text-left px-4 py-2 text-sm text-[#0E0F3B] hover:font-bold hover:bg-gray-100 flex items-center gap-3">
+                                <button type="button" onclick="openImageLightbox(document.getElementById('profileImagePreview').src)" class="w-full text-left px-4 py-2 text-sm text-[#0E0F3B] hover:font-bold hover:bg-gray-100 flex items-center gap-3">
                                     <i class="fa-solid fa-image text-[#0E0F3B]"></i> View Profile Image
                                 </button>
                                 <label for="user_profile_picture" class="w-full text-left px-4 py-2 text-sm text-[#0E0F3B] hover:font-bold hover:bg-gray-100 flex items-center gap-3 cursor-pointer mb-0">
                                     <i class="fa-solid fa-upload text-[#0E0F3B]"></i> Upload an Image
-                                    <input type="file" name="user_profile_picture" id="user_profile_picture" class="hidden">
+                                    <input type="file" name="user_profile_picture" id="user_profile_picture" accept="image/*" class="hidden"
+                                        onchange="previewImageInput(this, 'profileImagePreview', 'profileImagePlaceholderIcon')">
                                 </label>
                             </div>
                         </div>
@@ -120,7 +123,7 @@
                         </div>
                         <div class="min-w-0">
                             <p class="text-xs font-bold text-orange-600 uppercase">Batch</p>
-                            <h3 class="text-sm font-semibold text-[#0E0F3B] uppercase truncate">{{ $user->alumnus->alumnus_batch ?? 'Not specified' }}</h3>
+                            <h3 class="text-sm font-semibold text-[#0E0F3B] uppercase truncate">{{ $user->alumnus->alumnus_batch?->format('Y') ?? 'Not specified' }}</h3>
                         </div>
                     </div>
 
@@ -269,9 +272,15 @@
             </div>
 
             <div class="flex justify-end gap-4 mt-12">
-                <button class="px-10 py-2 border-2 border-[#0E0F3B] text-[#0E0F3B] font-bold rounded-lg transition-all duration-200 uppercase tracking-widest text-sm hover:bg-[#0E0F3B] hover:text-white active:scale-95">
+                {{-- Was a plain <button> with no type — inside a <form>, that
+                     defaults to type="submit", so Cancel was actually submitting
+                     the (unchanged) profile form and showing the "Profile
+                     updated successfully!" message. An <a> tag can't submit a
+                     form, so it can't regress the same way. --}}
+                <a href="{{ route('user.profile') }}"
+                    class="px-10 py-2 border-2 border-[#0E0F3B] text-[#0E0F3B] font-bold rounded-lg transition-all duration-200 uppercase tracking-widest text-sm hover:bg-[#0E0F3B] hover:text-white active:scale-95 inline-flex items-center justify-center">
                     Cancel
-                </button>
+                </a>
                 <button type="submit" class="px-10 py-2 bg-[#0E0F3B] text-white font-bold rounded-lg hover:bg-[#1D46A4] transition uppercase tracking-widest text-sm shadow-lg">
                     Save
                 </button>
@@ -287,6 +296,7 @@
     @endif
 
     @include('partials.footer-alumni')
+    @include('partials.image-lightbox')
 
 </body>
 

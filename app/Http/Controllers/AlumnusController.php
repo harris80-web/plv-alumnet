@@ -6,7 +6,7 @@ use App\Mail\ActivateAlumniMail;
 use App\Mail\DeactAlumniMail;
 use App\Models\Alumnus;
 use App\Models\Program;
-use Illuminate\Foundation\Auth\User;
+use App\Models\User;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +18,12 @@ use Illuminate\Support\Facades\Storage;
 
 class AlumnusController extends Controller
 {
+    /** Gate for the admin-only account actions below — see UserController::authorizeStaff() for why this exists. */
+    private function authorizeStaff(): void
+    {
+        abort_unless(Auth::check() && in_array(Auth::user()->user_role, ['admin', 'super_admin'], true), 403);
+    }
+
     /**
      * Alumni Directory — search/filter over alumni who opted into a public
      * profile (Alumnus::scopePublicProfiles()). Alumni-only: this is the
@@ -45,13 +51,19 @@ class AlumnusController extends Controller
         }
 
         if ($batch = $request->input('batch')) {
-            $query->where('alumnus_batch', $batch);
+            $query->whereYear('alumnus_batch', $batch);
         }
 
         $alumni = $query->orderByDesc('alumnus_batch')->paginate(10)->withQueryString();
 
         $programs = Program::orderBy('program_name')->get();
-        $batches = Alumnus::publicProfiles()->distinct()->orderByDesc('alumnus_batch')->pluck('alumnus_batch');
+        // Batch filter dropdown stays a year pick — DISTINCT YEAR(...) since
+        // alumnus_batch is now a full date, not distinct exact dates.
+        $batches = Alumnus::publicProfiles()
+            ->whereNotNull('alumnus_batch')
+            ->selectRaw('DISTINCT YEAR(alumnus_batch) as year')
+            ->orderByDesc('year')
+            ->pluck('year');
         $filters = $request->only(['search', 'program', 'batch']);
 
         return view('alumni.directory', compact('alumni', 'programs', 'batches', 'filters'));
@@ -115,6 +127,13 @@ class AlumnusController extends Controller
     }
     public function updateAlumniProfile(Request $request, $alumnus)
     {
+        // Self-service only — this route has no ownership check at all
+        // previously, so any logged-in user could edit any other
+        // alumnus's profile by changing the id in the URL/request. Only
+        // resources/views/alumni/edit-profile.blade.php posts here, always
+        // with the logged-in user's own id, so there's no legitimate case
+        // (staff included) that needs this to accept a different id.
+        abort_unless(Auth::check() && Auth::id() == $alumnus, 403);
 
         $user = User::where('user_id', $alumnus)->firstOrFail();
         $validated = $request->validate([
@@ -205,42 +224,43 @@ class AlumnusController extends Controller
 
     public function deactivateAlumnus(Request $request, $id)
     {
+        $this->authorizeStaff();
         $alumnus = Alumnus::where('user_id', $id)->firstOrFail();
 
         $validated = $request->validate([
             'deactivate-reason' => 'required|string|max:255',
         ]);
 
-        try {
-            $alumnus->user->update([
-                'user_active' => false,
-            ]);
-            Log::info("Alumnus with ID {$alumnus->user->user_id}: {$alumnus->user->user_first_name} {$alumnus->user->user_last_name} deactivated. Reason: {$request['deactivate-reason']}");
+        $alumnus->user->update([
+            'user_active' => false,
+        ]);
+        Log::info("Alumnus with ID {$alumnus->user->user_id}: {$alumnus->user->user_first_name} {$alumnus->user->user_last_name} deactivated. Reason: {$request['deactivate-reason']}");
 
-            Mail::to($alumnus->user->user_email)->send(new DeactAlumniMail($alumnus->user, $request['deactivate-reason']));
-        } catch (\Exception $e) {
-            return back()->with('error', 'An error occurred while deactivating the alumnus. Please try again later.');
-        }
+        // Queued, not sent inline — this used to wrap the DB update AND the
+        // mail send in the same try/catch, so an SMTP failure made the
+        // catch return "An error occurred... Please try again later" even
+        // though the account was already deactivated. Queuing (matching
+        // JobPostingController's approve/decline/delete — see comment
+        // there) removes mail delivery from this request's success path
+        // entirely.
+        Mail::to($alumnus->user->user_email)->queue(new DeactAlumniMail($alumnus->user, $request['deactivate-reason']));
 
         return back()->with('success', 'Alumnus deactivated successfully!');
     }
 
     public function activateAlumnus(Request $request, $id)
     {
+        $this->authorizeStaff();
         $alumnus = Alumnus::where('user_id', $id)->firstOrFail();
 
-
         if (!$alumnus->user->user_active) {
-            try {
-                $alumnus->user->update([
-                    'user_active' => true,
-                ]);
-                Log::info("Alumnus with ID {$alumnus->user->user_id}: {$alumnus->user->user_first_name} {$alumnus->user->user_last_name} deactivated. Reason: {$request['deactivate-reason']}");
+            $alumnus->user->update([
+                'user_active' => true,
+            ]);
+            Log::info("Alumnus with ID {$alumnus->user->user_id}: {$alumnus->user->user_first_name} {$alumnus->user->user_last_name} activated.");
 
-                Mail::to($alumnus->user->user_email)->send(new ActivateAlumniMail($alumnus->user));
-            } catch (\Exception $e) {
-                return back()->with('error', 'An error occurred while activating the alumnus. Please try again later.');
-            }
+            Mail::to($alumnus->user->user_email)->queue(new ActivateAlumniMail($alumnus->user));
+
             return back()->with('success', 'Alumnus activated successfully!');
         }
 

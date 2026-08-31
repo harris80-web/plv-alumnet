@@ -63,6 +63,7 @@
             @foreach ($notices as $notice)
             <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 flex flex-col h-full transition-transform hover:scale-[1.01] cursor-pointer"
                 onclick="openNoticeDetailModal(this)"
+                data-notice-id="{{ $notice->id }}"
                 data-category="{{ $notice->category }}"
                 data-title="{{ $notice->title }}"
                 data-thumbnail="{{ $notice->thumbnailUrl() }}"
@@ -100,6 +101,21 @@
     </main>
 
     @include('partials.notice-detail-modal')
+
+    <script>
+        // Deep-link from the dashboard's "Announcements" cards (?notice=123)
+        // — auto-opens that notice's detail modal once its card is on the
+        // page. No-ops silently if the id is missing or its card isn't on
+        // the current page (e.g. it's since been pushed past page 1).
+        window.addEventListener('DOMContentLoaded', function () {
+            const openNoticeId = @json($openNoticeId);
+            if (!openNoticeId) return;
+            const card = document.querySelector('[data-notice-id="' + openNoticeId + '"]');
+            if (card) {
+                openNoticeDetailModal(card);
+            }
+        });
+    </script>
 
     @include($user->user_role === 'employer' ? 'partials.footer-employer' : 'partials.footer-alumni')
 </body>

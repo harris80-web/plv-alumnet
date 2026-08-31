@@ -363,172 +363,7 @@
         </div>
     </div>
 
-    <!-- POST A NEW JOB MODAL-->
-    <div id="postJobModal" class="fixed inset-0 z-[110] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-
-        <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl relative flex flex-col min-h-[600px] max-h-[90vh] overflow-y-auto my-8">
-
-            <form class="flex flex-col flex-1" action="{{ route('jobPosting.addJobPost', ['id' => $users->user_id]) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-
-                <button type="button" onclick="closePostModal()" class="absolute top-11 right-8 text-gray-300 hover:text-gray-500 transition-colors z-10">
-                    <i class="fas fa-times-circle text-2xl"></i>
-                </button>
-
-                <div class="w-full pt-12 text-center">
-                    <h2 class="inline-block text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent tracking-tight">
-                        POST A NEW JOB
-                    </h2>
-                </div>
-
-                <div class="flex flex-col md:flex-row flex-1">
-
-                    <!-- IMAGE UPLOAD -->
-                    <div class="md:w-1/3 flex flex-col items-center justify-center p-8 bg-white">
-                        <div id="imageFrame" class="w-full aspect-square border-4 border-[#1D264F] rounded-[2rem] flex flex-col items-center justify-center p-2 shadow-sm relative overflow-hidden">
-
-                            <div id="uploadPlaceholder" class="flex flex-col items-center justify-center">
-                                <i class="fas fa-upload text-6xl text-[#1D264F] mb-4"></i>
-                                <button type="button" onclick="document.getElementById('jobImageInput').click()" class="bg-[#1D264F] text-white px-8 py-2 rounded-full font-bold text-xs tracking-widest hover:bg-[#0E0F3B] transition-colors">
-                                    UPLOAD
-                                </button>
-                            </div>
-
-                            <img id="jobImagePreview" src="#" class="hidden w-full h-full object-cover rounded-[1.6rem]" />
-
-                            <input type="file" name="job_posting_image" id="jobImageInput" accept="image/*" class="hidden" onchange="previewJobImage(this)">
-
-                            <button id="changeImgBtn" type="button" onclick="document.getElementById('jobImageInput').click()" class="hidden absolute bottom-4 bg-white/80 backdrop-blur-sm text-[#1D264F] px-4 py-1 rounded-full font-bold text-[10px] hover:bg-white transition-all">
-                                CHANGE IMAGE
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- FORM FIELDS -->
-                    <div class="md:w-2/3 p-10 pt-6 space-y-4">
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Job Title <span class="text-red-500">*</span></label>
-                                <input type="text" name="job_posting_title" placeholder="e.g., Senior Full Stack Developer"
-                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
-                            </div>
-
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Company Name <span class="text-red-500">*</span></label>
-                                <input type="text" name="job_posting_company" value="@if ($users->user_role == 'alumni'){{ $users->employer_company_name }}@else{{ $users->employer->employer_company_name }}@endif" readonly
-                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
-                            </div>
-                        </div>
-
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Company Address <span class="text-red-500">*</span></label>
-                            <input type="text" name="job_posting_address" placeholder="Enter Company address"
-                                class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Job Type <span class="text-red-500">*</span></label>
-                                <select name="job_posting_employment_type"
-                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em_1em]">
-                                    <option>Select Type (e.g., Full-time)</option>
-                                    <option>Full-Time</option>
-                                    <option>Part-Time</option>
-                                    <option>Freelance</option>
-                                </select>
-                            </div>
-
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Job Setup <span class="text-red-500">*</span></label>
-                                <select name="job_posting_setup"
-                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] appearance-none">
-                                    <option>Select Setup (e.g., Remote)</option>
-                                    <option>Remote</option>
-                                    <option>On-Site</option>
-                                    <option>Hybrid</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- COURSE -->
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Recommended Course/Program <span class="text-red-500">*</span></label>
-
-                            <div id="course-input-container" class="space-y-2">
-                                <div class="flex items-center gap-3 course-row">
-                                    <select name="program[]"
-                                        class="w-full flex-1 border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white">
-                                        <option selected disabled>Select Undergraduate Program</option>
-                                        @foreach($programs as $program)
-                                        <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
-                                        @endforeach
-                                    </select>
-
-                                    <button type="button" onclick="addCourseField()"
-                                        class="bg-[#1D264F] text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#0E0F3B] transition-colors">
-                                        <i class="fas fa-plus text-xs"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <p id="course-limit-msg" class="text-[9px] text-gray-400 italic hidden">
-                                Maximum of 3 programs reached.
-                            </p>
-                        </div>
-
-                        <!-- INDUSTRY -->
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Industry / Sector</label>
-                            <select name="industry_id"
-                                class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white">
-                                <option value="">Select Industry</option>
-                                @foreach($industries as $industry)
-                                <option value="{{ $industry->industry_id }}">{{ $industry->industry_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        @include('partials.job-posting-skills-field', ['uid' => 'create'])
-
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-[#1D264F] uppercase">Job Description <span class="text-red-500">*</span></label>
-                            @include('partials.rich-text-editor', ['uid' => 'create', 'fieldName' => 'job_posting_description'])
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Closing / Validity Date <span class="text-red-500">*</span></label>
-                                <input type="date" name="job_closing_date"
-                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] text-gray-400">
-                            </div>
-
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">Hiring Limit <span class="text-red-500">*</span></label>
-                                <input type="number" name="hiring_limit" min="1" value="1" placeholder="e.g., 2"
-                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
-                            </div>
-                        </div>
-
-                        <!-- ACTION BUTTONS -->
-                        <div class="flex justify-end gap-4 mt-8">
-                            <button type="button" onclick="closePostModal()"
-                                class="px-10 py-2 border-2 border-[#1D264F] text-[#1D264F] rounded-md font-bold text-sm hover:bg-[#0E0F3B] hover:text-white transition-colors">
-                                CANCEL
-                            </button>
-
-                            <button type="submit"
-                                class="px-12 py-2 bg-[#0E0F3B] text-white rounded-md font-bold text-sm hover:bg-blue-900 transition-colors">
-                                POST
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
-
-            </form>
-        </div>
-    </div>
+    @include('partials.post-job-modal', ['jobPoster' => $users])
 
     <!-- EDIT JOB MODAL -->
     <div id="editPostModal"
@@ -556,9 +391,9 @@
                     <div class="md:w-1/3 flex flex-col items-center justify-center p-8 bg-white">
                         <div id="editImageFrame-{{ $job->job_posting_id }}" class="w-full aspect-square border-4 border-[#1D264F] rounded-[2rem] flex flex-col items-center justify-center p-2 shadow-sm relative overflow-hidden">
 
-                            <img src="{{ asset('storage/' . $job->job_posting_image) }}" class="w-full h-full object-cover rounded-[1.6rem]" />
+                            <img id="editJobImagePreview-{{ $job->job_posting_id }}" src="{{ asset('storage/' . $job->job_posting_image) }}" class="w-full h-full object-cover rounded-[1.6rem]" />
 
-                            <input type="file" name="job_posting_image" id="editJobImageInput-{{ $job->job_posting_id }}" accept="image/*" class="hidden" onchange="previewJobImage(this)">
+                            <input type="file" name="job_posting_image" id="editJobImageInput-{{ $job->job_posting_id }}" accept="image/*" class="hidden" onchange="previewJobImage(this, null, null, 'editJobImagePreview-{{ $job->job_posting_id }}', null)">
 
                             <button type="button" onclick="document.getElementById('editJobImageInput-{{ $job->job_posting_id }}').click()" class="absolute bottom-4 bg-white/80 backdrop-blur-sm text-[#1D264F] px-4 py-1 rounded-full font-bold text-[10px] hover:bg-white transition-all">
                                 CHANGE IMAGE
@@ -822,74 +657,12 @@
         }, 2000);
     }
 
-    // POST A NEW JOB MODAL
-    function openPostJobModal() {
-        document.getElementById('postJobModal').classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closePostModal() {
-        document.getElementById('postJobModal').classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }
-
-    window.addEventListener('click', (e) => {
-        if (e.target === document.getElementById('postJobModal')) closePostModal();
-    });
-
-    // POST A NEW JOB MODAL - UPLOAD IMAGE
-    function previewJobImage(input) {
-        const frame = document.getElementById('imageFrame');
-        const placeholder = document.getElementById('uploadPlaceholder');
-        const preview = document.getElementById('jobImagePreview');
-        const changeBtn = document.getElementById('changeImgBtn');
-
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.classList.remove('hidden');
-                changeBtn.classList.remove('hidden');
-                placeholder.classList.add('hidden');
-                frame.classList.remove('p-6');
-                frame.classList.add('p-0');
-            }
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    // POST A NEW JOB MODAL - ADD COURSE FIELD
-    // containerId/msgId default to the "Post a New Job" modal's own ids so
-    // its existing onclick="addCourseField()" calls (no args) keep working
-    // unchanged. The per-job Edit Job form passes its own ids explicitly
-    // (editCourseInputContainer-{id} / editCourseLimitMsg-{id}) — this used
-    // to be hardcoded to the create form's ids, so clicking "+" inside Edit
-    // silently added a row to the hidden create form instead of the visible
-    // edit form.
-    function addCourseField(containerId = 'course-input-container', msgId = 'course-limit-msg') {
-        const container = document.getElementById(containerId);
-        const rows = container.getElementsByClassName('course-row');
-
-        if (rows.length < 3) {
-            const newRow = rows[0].cloneNode(true);
-            const select = newRow.querySelector('select');
-            select.selectedIndex = 0;
-            const btn = newRow.querySelector('button');
-            btn.innerHTML = '<i class="fas fa-minus text-xs"></i>';
-            btn.classList.replace('bg-[#1D264F]', 'bg-red-500');
-            btn.setAttribute('onclick', "removeCourseField(this, '" + msgId + "')");
-            container.appendChild(newRow);
-
-            if (rows.length === 3) {
-                document.getElementById(msgId)?.classList.remove('hidden');
-            }
-        }
-    }
-
-    function removeCourseField(button, msgId = 'course-limit-msg') {
-        button.closest('.course-row').remove();
-        document.getElementById(msgId)?.classList.add('hidden');
-    }
+    // "Post a New Job" modal JS (open/close, image preview, add/remove
+    // program row, client validation, confirm/pending flow) now lives in
+    // partials/post-job-modal.blade.php, shared with jobBoard.blade.php.
+    // previewJobImage()/addCourseField()/removeCourseField() from that
+    // partial are still what the Edit Job Post form below calls with its
+    // own explicit ids (editJobImagePreview-{id}, editCourseInputContainer-{id}, etc.).
 
     // EDIT JOB POST MODAL
     let currentEditId = null;

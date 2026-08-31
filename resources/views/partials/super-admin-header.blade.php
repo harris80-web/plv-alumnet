@@ -1,9 +1,14 @@
 <?php
 $currentPage = basename(request()->path()) . '.blade.php';
 
+// "Super Admin" only for an actual super_admin — a plain `admin` viewing
+// their own profile/this header shouldn't see a title implying a role they
+// don't have.
+$roleLabel = (auth()->user()?->user_role === 'super_admin') ? 'Super Admin' : 'Admin';
+
 $pageTitles = [
     'dashboard.blade.php'       => 'Dashboard',
-    'profile.blade.php'         => 'Super Admin Profile',
+    'profile.blade.php'         => $roleLabel . ' Profile',
     'userManagement.blade.php' => 'User Management',
     'jobManagement.blade.php'   => 'Job Placement Management',
     'alumniIdManagement.blade.php'     => 'Alumni ID & Yearbook Management',
@@ -13,7 +18,12 @@ $pageTitles = [
     'faqManagement.blade.php'            => 'Manage FAQs'
 ];
 
-$title = $pageTitles[$currentPage] ?? 'Super Admin Panel';
+// notifications.all's URL (/notifications/all) doesn't fit the single-segment
+// "basename of the path" lookup every other page above uses (it'd resolve to
+// the ambiguous key "all.blade.php"), so it's matched by route name instead.
+$title = request()->routeIs('notifications.all')
+    ? 'Notifications'
+    : ($pageTitles[$currentPage] ?? $roleLabel . ' Panel');
 ?>
 
 <style>
@@ -92,10 +102,10 @@ $title = $pageTitles[$currentPage] ?? 'Super Admin Panel';
                 <span class="text-xs text-slate-400">You're all caught up</span>
             </div>
 
-            <div onclick="expandNotifications(event)"
-                class="text-center text-xs py-2 border-t border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+            <a href="{{ route('notifications.all') }}"
+                class="block text-center text-xs py-2 border-t border-slate-200 hover:bg-slate-50 transition">
                 View all notifications
-            </div>
+            </a>
         </div>
 
         <!-- Settings -->
@@ -324,16 +334,6 @@ $title = $pageTitles[$currentPage] ?? 'Super Admin Panel';
         if (!isOpen) {
             openMenu('header-settings-menu');
             document.getElementById('settings-btn').classList.add('active');
-        }
-    }
-
-    /* ── Expand Notifications ─────────────────────────────────── */
-    function expandNotifications(e) {
-        e.stopPropagation();
-        const list = document.getElementById('notif-list');
-        if (list) {
-            list.classList.remove('max-h-64');
-            list.classList.add('max-h-[500px]');
         }
     }
 

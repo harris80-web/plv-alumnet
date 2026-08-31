@@ -28,13 +28,17 @@ class DeclineOnJobExpire extends Command
      */
     public function handle()
     {
-        //
         // 1. Find all job IDs that expired before today
+        // JobPosting's primary key is job_posting_id, not id — this table
+        // has no `id` column at all, so this threw "Unknown column 'id'"
+        // on every run and never got past this line.
         $expiredJobIds = JobPosting::where('job_closing_date', '<', Carbon::today())
-                                    ->pluck('id');
+                                    ->pluck('job_posting_id');
 
         // 2. Mass-update all 'shortlisted' applicants for those specific jobs to 'declined'
-        $updatedRows = JobApplication::whereIn('job_posting_id', $expiredJobIds)
+        // job_applications' foreign key to job_postings is job_id, not
+        // job_posting_id — same class of bug as above.
+        $updatedRows = JobApplication::whereIn('job_id', $expiredJobIds)
             ->where('application_status', 'shortlisted')
             ->update(['application_status' => 'declined']);
 

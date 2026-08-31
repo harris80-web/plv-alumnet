@@ -15,6 +15,10 @@
             <p class="text-gray-500 text-sm">No notifications</p>
         </div>
     </div>
+    <a href="{{ route('notifications.all') }}"
+        class="block text-center text-xs font-semibold text-[#0E0F3B] py-2.5 border-t hover:bg-gray-50 transition-colors">
+        View all notifications
+    </a>
 </div>
 
 <div id="userSidebar" class="fixed top-0 right-0 h-full w-80 bg-white z-[70] shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
@@ -44,7 +48,7 @@
                     @if(auth()->user()->user_role === 'employer')
                         {{ auth()->user()->employer->employer_company_name ?? 'Company' }}
                     @else
-                        Alumni Batch {{ auth()->user()->alumnus->alumnus_batch ?? '—' }}
+                        Alumni Batch {{ auth()->user()->alumnus->alumnus_batch?->format('Y') ?? '—' }}
                     @endif
                 </p>
             </div>

@@ -537,12 +537,44 @@
                     <!-- Job-to-Degree Alignment -->
                     <div class="chart-card">
                         <div class="card-title">Job-to-Degree Alignment by Program/Course</div>
-                        <div class="card-sub">% of employed alumni whose job matches their degree field ({{ $alignmentRate }}% overall)</div>
-                        <div style="margin-top:10px; height:160px;">
-                            <canvas id="chartAlignment"></canvas>
+                        <div class="card-sub">% of employed alumni whose job matches their degree field ({{ $alignmentRate }}% overall) &mdash; every program</div>
+                        <div style="margin-top:10px; height:220px; overflow-y:auto;">
+                            <div style="height:{{ max(160, $programAlignment->count() * 26) }}px;">
+                                <canvas id="chartAlignment"></canvas>
+                            </div>
                         </div>
                     </div>
 
+                </div>
+
+                <!-- Employed Alumni per Batch -->
+                <div class="chart-card mb-4">
+                    <div class="card-title">Employed Alumni per Batch</div>
+                    <div class="card-sub">Employed headcount and rate for every graduation batch</div>
+                    <div style="margin-top:10px; max-height:220px; overflow-y:auto;">
+                        <table class="w-full text-left" style="font-size:11px; border-collapse:collapse;">
+                            <thead>
+                                <tr style="position:sticky; top:0; background:#fff;">
+                                    <th style="padding:6px 10px; color:#0E0F3B; border-bottom:1px solid #e5e7eb;">Batch</th>
+                                    <th style="padding:6px 10px; color:#0E0F3B; border-bottom:1px solid #e5e7eb;">Total Alumni</th>
+                                    <th style="padding:6px 10px; color:#0E0F3B; border-bottom:1px solid #e5e7eb;">Employed</th>
+                                    <th style="padding:6px 10px; color:#0E0F3B; border-bottom:1px solid #e5e7eb;">Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($employmentByBatch as $batchYear => $row)
+                                <tr>
+                                    <td style="padding:6px 10px; border-bottom:1px solid #f1f5f9;">{{ $batchYear }}</td>
+                                    <td style="padding:6px 10px; border-bottom:1px solid #f1f5f9;">{{ $row['total'] }}</td>
+                                    <td style="padding:6px 10px; border-bottom:1px solid #f1f5f9;">{{ $row['employed'] }}</td>
+                                    <td style="padding:6px 10px; border-bottom:1px solid #f1f5f9;">{{ $row['rate'] }}%</td>
+                                </tr>
+                                @empty
+                                <tr><td colspan="4" style="padding:6px 10px; color:#9ca3af;">No batches match the current filters.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- Row 3b: Gender + Employment Interval -->
@@ -566,6 +598,15 @@
                         </div>
                     </div>
 
+                </div>
+
+                <!-- Employment by Month -->
+                <div class="chart-card mb-4">
+                    <div class="card-title">Employment by Month</div>
+                    <div class="card-sub">Which month alumni get employed (Jan&ndash;Dec, all years) &mdash; includes employment recorded from a system hire and employment alumni added themselves on their profile</div>
+                    <div style="margin-top:10px; height:160px;">
+                        <canvas id="chartEmploymentByMonth"></canvas>
+                    </div>
                 </div>
 
                 <!-- System Overview Heading -->
@@ -645,10 +686,10 @@
                                 style="width:100%; padding:6px 10px; font-size:12px; border:1px solid #d1d5db; border-radius:6px; font-family:'Montserrat',sans-serif; outline:none;">
                         </div>
                     </div>
-                    <div style="overflow-x:auto;">
+                    <div style="overflow-x:auto; overflow-y:auto; max-height:420px;">
                         <table style="width:100%; border-collapse:collapse; font-size:11px;">
                             <thead>
-                                <tr style="background:#0E0F3B; color:#fff; text-align:left;">
+                                <tr style="background:#0E0F3B; color:#fff; text-align:left; position:sticky; top:0; z-index:1;">
                                     <th style="padding:8px 10px;">Name</th>
                                     <th style="padding:8px 10px;">Batch</th>
                                     <th style="padding:8px 10px;">Program</th>
@@ -664,7 +705,7 @@
                                 @php $fullName = trim(($a->user->user_first_name ?? '') . ' ' . ($a->user->user_last_name ?? '')); @endphp
                                 <tr data-search="{{ mb_strtolower($fullName) }}" style="border-top:1px solid #f1f5f9;">
                                     <td style="padding:7px 10px; font-weight:600; color:#0E0F3B;">{{ $fullName }}</td>
-                                    <td style="padding:7px 10px;">{{ $a->alumnus_batch }}</td>
+                                    <td style="padding:7px 10px;">{{ optional($a->alumnus_batch)->format('Y') }}</td>
                                     <td style="padding:7px 10px;">{{ $a->program->program_name ?? 'N/A' }}</td>
                                     <td style="padding:7px 10px;">{{ $a->alumnus_workplace_undisclosed ? 'Undisclosed' : ($a->alumnus_workplace ?? 'N/A') }}</td>
                                     <td style="padding:7px 10px;">{{ $a->alumnus_job_position ?? 'N/A' }}</td>
@@ -948,8 +989,8 @@
         }
     });
 
-    // 4. Job-to-Degree Alignment — horizontal bar (real data, top 8 programs by employed headcount)
-    const alignmentEntries = @json($programAlignment->take(8));
+    // 4. Job-to-Degree Alignment — horizontal bar (every program; card scrolls if the list is tall)
+    const alignmentEntries = @json($programAlignment);
     new Chart(document.getElementById('chartAlignment'), {
         type: 'bar',
         data: {
@@ -1011,6 +1052,30 @@
                 label: 'Alumni',
                 data: Object.values(intervalData),
                 backgroundColor: '#1a3a6e',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: fontDef } },
+                y: { grid: { color: gridColor }, ticks: { font: fontDef, precision: 0 } }
+            }
+        }
+    });
+
+    // 4c-2. Employment by Month — bar (Jan-Dec, alumnus_employment_date, all years pooled)
+    const employmentByMonth = @json($employmentByMonth);
+    new Chart(document.getElementById('chartEmploymentByMonth'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(employmentByMonth),
+            datasets: [{
+                label: 'Alumni Employed',
+                data: Object.values(employmentByMonth),
+                backgroundColor: '#0e7c66',
                 borderRadius: 4
             }]
         },

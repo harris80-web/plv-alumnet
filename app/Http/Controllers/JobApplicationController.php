@@ -184,6 +184,10 @@ class JobApplicationController extends Controller
         $alumnus->alumnus_employed_via_platform = true;
         if (!$alumnus->alumnus_first_job_date) {
             $alumnus->alumnus_first_job_date = now();
+            // A hire through an in-system job posting is a regular job, not
+            // an internship — set explicitly (not left null) so this counts
+            // as "answered: no" the same way a self-reported first job does.
+            $alumnus->alumnus_first_job_is_internship = false;
         }
         $alumnus->save();
 

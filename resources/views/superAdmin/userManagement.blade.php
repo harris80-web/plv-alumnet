@@ -621,122 +621,8 @@ $current_page = 'user_management';
                     <!-- Awaiting Approval -->
                     <div class="mb-6">
                         <p class="text-sm font-semibold text-orange-600 mb-3">Employers Awaiting Approval:</p>
-                        <div class="bg-white rounded-lg shadow-sm border border-slate-200">
-                            <table class="w-full text-left text-[10px]">
-                                <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
-                                    <tr>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700"><i
-                                                data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i>
-                                        </th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Company Name</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Full Name</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Industry</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Document</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Official Website
-                                            URL</th>
-                                        <th class="px-4 py-4 font-semibold text-center">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100">
-                                    @forelse ($pendingEmployers as $employer)
-                                    <tr class="hover:bg-slate-50/80 transition-colors text-center">
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $loop->iteration }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->employer_company_name }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->user?->user_first_name }}
-                                            {{ $employer->user?->user_middle_name }}
-                                            {{ $employer->user?->user_last_name }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->user?->user_email }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->industry?->industry_name ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            <a href="{{ asset('storage/' . $employer->employer_company_document) }}" target="_blank" class="text-blue-500 hover:underline">
-                                                {{ asset('storage/' . $employer->employer_company_document) ? 'View Document' : 'Not Uploaded' }}
-                                            </a>
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->employer_website_url ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-4 py-3 text-center relative">
-                                            <div class="inline-block text-left">
-                                                <button
-                                                    class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                                    <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                                </button>
-                                                <div
-                                                    class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl ring-1 ring-black ring-opacity-5 z-50 hidden">
-                                                    <div class="py-1">
-                                                        <!-- <form
-                                                                                        action="{{ route('users.approveEmployer', $employer->user_id) }}"
-                                                                                        method="POST">
-                                                                                        @csrf
-                                                                                        <button type="submit"
-                                                                                            class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-emerald-50 transition-colors whitespace-nowrap">
-                                                                                            <i data-lucide="check-circle"
-                                                                                                class="w-4 h-4 mr-3 text-emerald-500"></i> Approve
-                                                                                            Employer
-                                                                                        </button>
-                                                                                    </form>
-                                                                                    <button
-                                                                                        onclick="openEmployerConfirm('reject', '{{ $employer->employer_company_name }}')"
-                                                                                        class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-orange-50 transition-colors whitespace-nowrap">
-                                                                                        <i data-lucide="x-circle"
-                                                                                            class="w-4 h-4 mr-3 text-orange-500"></i> Reject
-                                                                                        Employer
-                                                                                    </button> -->
-                                                        <button
-                                                            onclick="openEmployerConfirm('approve', '{{ $employer->employer_company_name }}', {{ $employer->user_id }})"
-                                                            class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-emerald-50 transition-colors whitespace-nowrap">
-                                                            <i data-lucide="check-circle"
-                                                                class="w-4 h-4 mr-3 text-emerald-500"></i> Approve
-                                                            Employer
-                                                        </button>
-                                                        <button
-                                                            onclick="openEmployerConfirm('reject', '{{ $employer->employer_company_name }}', {{ $employer->user_id }})"
-                                                            class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-orange-50 transition-colors whitespace-nowrap">
-                                                            <i data-lucide="x-circle"
-                                                                class="w-4 h-4 mr-3 text-orange-500"></i> Reject
-                                                            Employer
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div style="display:none;">
-                                                    <form id="approveEmployerForm_{{ $employer->user_id }}"
-                                                        action="{{ route('users.approveEmployer', $employer->user_id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                    </form>
-
-                                                    <form id="rejectEmployerForm_{{ $employer->user_id }}"
-                                                        action="{{ route('users.rejectEmployer', $employer->user_id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <input type="hidden" name="reject-reason"
-                                                            id="rejectEmployerReason_{{ $employer->user_id }}">
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="7" class="px-4 py-8 text-center text-slate-400 text-sm">No
-                                            employers awaiting approval.</td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                            {{ $pendingEmployers->onEachSide(1)->links('partials.pagination') }}
+                        <div id="employerPendingTableWrap" class="bg-white rounded-lg shadow-sm border border-slate-200">
+                            @include('partials.user-management.employer-pending-table')
                         </div>
                     </div>
 
@@ -755,123 +641,23 @@ $current_page = 'user_management';
                                     <i data-lucide="filter" class="w-4 h-4"></i>
                                 </button>
                             </div>
-                            <button onclick="exportEmployersToCSV()"
-                                class="bg-[#C73D1A] hover:bg-[#a83215] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
-                                <i data-lucide="download" class="w-4 h-4"></i>
-                                EXPORT CSV
-                            </button>
+                            <div class="flex gap-2">
+                                <!-- Bulk Deactivate -->
+                                <button type="button" id="bulkDeactivateEmployerBtn" onclick="openBulkDeactivateEmployerModal()"
+                                    class="hidden bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg text-sm font-semibold items-center gap-2 shadow-sm transition-all">
+                                    <i data-lucide="user-minus" class="w-4 h-4"></i>
+                                    DEACTIVATE SELECTED (<span id="bulkDeactivateEmployerCount">0</span>)
+                                </button>
+                                <button onclick="exportEmployersToCSV()"
+                                    class="bg-[#C73D1A] hover:bg-[#a83215] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                    EXPORT CSV
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="bg-white rounded-lg shadow-sm border border-slate-200">
-                            <table class="w-full text-left text-[10px]">
-                                <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
-                                    <tr>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700"><i
-                                                data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i>
-                                        </th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Company Name</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Full Name</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Industry</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Contact</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Official Website
-                                            URL</th>
-                                        <th class="px-4 py-4 font-semibold text-center">Actions</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody id="employerTbody" class="divide-y divide-slate-100">
-                                    @forelse ($approvedEmployers as $employer)
-                                    <tr class="hover:bg-slate-50/80 transition-colors text-center"
-                                        data-search="{{ mb_strtolower($employer->employer_company_name ?? '') }}"
-                                        data-lastname="{{ mb_strtolower($employer->user?->user_last_name ?? '') }}"
-                                        data-firstname="{{ mb_strtolower($employer->user?->user_first_name ?? '') }}"
-                                        data-middlename="{{ mb_strtolower($employer->user?->user_middle_name ?? '') }}"
-                                        data-company="{{ mb_strtolower($employer->employer_company_name ?? '') }}"
-                                        data-industry="{{ mb_strtolower($employer->industry->industry_name ?? '') }}">
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $loop->iteration }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->employer_company_name }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->user?->user_first_name }}
-                                            {{ $employer->user?->user_middle_name }}
-                                            {{ $employer->user?->user_last_name }}
-                                            {{ $employer->user?->user_suffix ?? '' }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->user?->user_email }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->industry->industry_name ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->employer_contact_number ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->employer_website_url ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-4 py-3 text-center relative">
-                                            <div class="inline-block text-left">
-                                                <button
-                                                    class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                                    <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                                </button>
-                                                <div
-                                                    class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
-                                                    <div class="py-1">
-                                                        <button type="button"
-                                                            class="view-modal-btn flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 transition-colors"
-                                                            data-last-name="{{ $employer->user->user_last_name }}"
-                                                            data-first-name="{{ $employer->user->user_first_name }}"
-                                                            data-middle-name="{{ $employer->user->user_middle_name }}"
-                                                            data-suffix="{{ $employer->user->user_suffix ?? '' }}"
-                                                            data-email="{{ $employer->user->user_email }}"
-                                                            data-contact="{{ $employer->employer_contact_number ?? 'N/A' }}"
-                                                            data-company="{{ $employer->employer_company_name }}"
-                                                            data-industry="{{ $employer->industry->industry_name ?? 'N/A' }}"
-                                                            data-position="{{ $employer->employer_position ?? 'N/A' }}"
-                                                            data-year="{{ $employer->employer_year_established ?? 'N/A' }}"
-                                                            data-size="{{ $employer->employer_company_size ?? 'N/A' }}"
-                                                            data-url="{{ $employer->employer_website_url ?? 'N/A' }}">
-                                                            <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i>
-                                                            View Employer
-                                                        </button>
-                                                        <hr class="my-1 border-slate-100">
-                                                        <button
-                                                            onclick="openEmployerDeactivateModal('{{ $employer->user->user_first_name }}', '{{ $employer->user->user_last_name }}', {{ $employer->user_id }})"
-                                                            class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                            <i data-lucide="user-minus" class="w-4 h-4 mr-3"></i>
-                                                            Deactivate Account
-                                                        </button>
-                                                    </div>
-
-                                                </div>
-                                                <div style="display:none;">
-                                                    <form id="employerDeactivateForm_{{ $employer->user_id }}"
-                                                        action="{{ route('employers.deactivateEmployer', $employer->user_id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <input type="hidden" name="deactivate-reason"
-                                                            id="employerDeactivateReason_{{ $employer->user_id }}">
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="9" class="px-4 py-8 text-center text-slate-400 text-sm">No approved
-                                            employers yet.</td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                            <p id="employerNoSearchResults" class="hidden text-center text-gray-400 py-10 text-xs">No matching employers.</p>
-                            {{ $approvedEmployers->onEachSide(1)->links('partials.pagination') }}
+                        <div id="employerApprovedTableWrap" class="bg-white rounded-lg shadow-sm border border-slate-200">
+                            @include('partials.user-management.employer-approved-table')
                         </div>
                     </div>
                 </div>
@@ -1247,6 +1033,56 @@ $current_page = 'user_management';
         @method('PUT')
         <div id="bulkDeactivateAlumniIdsContainer"></div>
         <input type="hidden" name="deactivate-reason" id="bulkDeactivateAlumniReasonInput">
+    </form>
+
+    <!-- ===== BULK DEACTIVATE EMPLOYER MODAL ===== -->
+    <div id="bulkDeactivateEmployerModal"
+        class="fixed inset-0 z-[100] flex items-center justify-center invisible transition-all duration-300">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeBulkDeactivateEmployerModal()"></div>
+        <div id="bulkDeactivateEmployerContent"
+            class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
+            <div class="p-8 text-center">
+                <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="user-minus" class="w-8 h-8 text-red-500"></i>
+                </div>
+                <h3 class="text-[#0E0F3B] text-xl font-bold mb-1">Deactivate Selected Accounts</h3>
+                <p id="bulkDeactivateEmployerName" class="text-slate-400 text-xs font-medium mb-3"></p>
+                <p class="text-slate-500 text-sm leading-relaxed mb-4">
+                    Are you sure you want to <span class="font-bold text-red-600">deactivate</span> these accounts?
+                </p>
+                <div class="text-left">
+                    <label class="text-xs font-bold text-[#0E0F3B] uppercase tracking-wider block mb-2">
+                        Reason for Deactivation <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="bulkDeactivateEmployerReason" rows="3"
+                        placeholder="Enter reason for deactivating these accounts..."
+                        class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 resize-none transition-all"></textarea>
+                    <div id="bulkDeactivateEmployerError"
+                        class="hidden mt-2 flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                        <i data-lucide="circle-alert" class="w-3.5 h-3.5 mt-0.5 shrink-0 text-red-500"></i>
+                        <span class="text-red-600 text-xs font-medium">Please provide a reason before
+                            deactivating.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="px-8 pb-8 flex gap-3">
+                <button onclick="closeBulkDeactivateEmployerModal()"
+                    class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all uppercase">
+                    Cancel
+                </button>
+                <button id="bulkDeactivateEmployerSubmitBtn" onclick="submitBulkDeactivateEmployer()"
+                    class="flex-1 py-2.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-all uppercase">
+                    Yes, Deactivate
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <form id="bulkDeactivateEmployerForm" action="{{ route('employers.bulkDeactivateEmployer') }}" method="POST" class="hidden">
+        @csrf
+        @method('PUT')
+        <div id="bulkDeactivateEmployerIdsContainer"></div>
+        <input type="hidden" name="deactivate-reason" id="bulkDeactivateEmployerReasonInput">
     </form>
 
     <!-- ==================== ALUMNI FILTER SIDEBAR ==================== -->
@@ -1783,6 +1619,110 @@ $current_page = 'user_management';
             },
         });
 
+        /* ── Employer bulk-select + bulk deactivate ───────────────── */
+        function initEmployerBulkCheckboxes() {
+            initBulkCheckboxGroup({
+                header: 'selectAllEmployers',
+                rowSelector: '.employer-row-checkbox',
+                onChange: function (checkedValues, checkedCount) {
+                    const btn = document.getElementById('bulkDeactivateEmployerBtn');
+                    document.getElementById('bulkDeactivateEmployerCount').textContent = checkedCount;
+                    btn.classList.toggle('hidden', checkedCount === 0);
+                    btn.classList.toggle('flex', checkedCount > 0);
+                },
+            });
+        }
+        initEmployerBulkCheckboxes();
+
+        function getSelectedEmployerIds() {
+            return Array.from(document.querySelectorAll('.employer-row-checkbox:checked')).map(cb => cb.value);
+        }
+
+        function openBulkDeactivateEmployerModal() {
+            const selected = getSelectedEmployerIds();
+            if (selected.length === 0) return;
+
+            document.getElementById('bulkDeactivateEmployerName').textContent = selected.length + ' account(s) selected';
+            document.getElementById('bulkDeactivateEmployerReason').value = '';
+            document.getElementById('bulkDeactivateEmployerError').classList.add('hidden');
+
+            const modal = document.getElementById('bulkDeactivateEmployerModal');
+            const content = document.getElementById('bulkDeactivateEmployerContent');
+            lucide.createIcons();
+            modal.classList.remove('invisible');
+            setTimeout(() => content.classList.remove('scale-95'), 10);
+        }
+
+        function closeBulkDeactivateEmployerModal() {
+            const modal = document.getElementById('bulkDeactivateEmployerModal');
+            const content = document.getElementById('bulkDeactivateEmployerContent');
+            content.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('invisible'), 200);
+        }
+
+        function submitBulkDeactivateEmployer() {
+            const reason = document.getElementById('bulkDeactivateEmployerReason').value.trim();
+            const error = document.getElementById('bulkDeactivateEmployerError');
+            if (!reason) {
+                error.classList.remove('hidden');
+                lucide.createIcons();
+                return;
+            }
+
+            const container = document.getElementById('bulkDeactivateEmployerIdsContainer');
+            container.innerHTML = '';
+            getSelectedEmployerIds().forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = id;
+                container.appendChild(input);
+            });
+
+            document.getElementById('bulkDeactivateEmployerReasonInput').value = reason;
+            document.getElementById('bulkDeactivateEmployerForm').submit();
+        }
+
+        /* ── No-reload (AJAX) pagination ───────────────────────────
+           Swaps just one table's wrapper innerHTML on a page-link click
+           instead of letting the link do a normal full-page navigation —
+           the rest of the page (scroll position, the other tab/table,
+           anything the user had open) never moves. Re-binds pagination
+           links on the freshly-fetched markup too, since those are new
+           DOM nodes with no listeners of their own. */
+        function initAjaxTablePagination(wrapId, pageParam, fetchUrl, reinit) {
+            const wrap = document.getElementById(wrapId);
+            if (!wrap) return;
+
+            function bind() {
+                wrap.querySelectorAll('nav[aria-label="Pagination"] a[href]').forEach(function (link) {
+                    link.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const page = new URL(this.href).searchParams.get(pageParam) || 1;
+                        fetch(fetchUrl + '?' + pageParam + '=' + page, {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        })
+                            .then(function (r) { return r.text(); })
+                            .then(function (html) {
+                                wrap.innerHTML = html;
+                                if (window.lucide) lucide.createIcons();
+                                initDropdowns();
+                                if (reinit) reinit();
+                                bind();
+                            });
+                    });
+                });
+            }
+
+            bind();
+        }
+
+        initAjaxTablePagination('employerPendingTableWrap', 'employerPendingPage', "{{ route('users.employerPendingFragment') }}");
+        initAjaxTablePagination('employerApprovedTableWrap', 'employerApprovedPage', "{{ route('users.employerApprovedFragment') }}", function () {
+            initEmployerBulkCheckboxes();
+            initViewEmployerButtons();
+        });
+
         /* ── Admin bulk-select + bulk permission edit ─────────────── */
         const BULK_ADMIN_PERMISSIONS_URL = "{{ route('offices.bulkUpdatePermissions') }}";
 
@@ -2312,12 +2252,14 @@ $current_page = 'user_management';
         }
 
         /* ── View Employer Modal ────────────────────────────────── */
-        document.addEventListener('DOMContentLoaded', function() {
+        function initViewEmployerButtons() {
             const modal = document.getElementById('viewEmployerModal');
             const viewButtons = document.querySelectorAll('.view-modal-btn');
 
             viewButtons.forEach(button => {
-                button.addEventListener('click', function() {
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                newButton.addEventListener('click', function() {
                     const fields = {
                         'modalLastName': 'data-last-name',
                         'modalFirstName': 'data-first-name',
@@ -2344,7 +2286,10 @@ $current_page = 'user_management';
                     if (dropdown) dropdown.classList.add('hidden');
                 });
             });
-        }); /* ── Employer Deactivate Modal ──────────────────────────── */
+        }
+        document.addEventListener('DOMContentLoaded', initViewEmployerButtons);
+
+        /* ── Employer Deactivate Modal ──────────────────────────── */
         function openEmployerDeactivateModal(firstName, lastName, userId) {
             const modal = document.getElementById('deactivateEmployerModal');
             const content = document.getElementById('deactivateEmployerContent');

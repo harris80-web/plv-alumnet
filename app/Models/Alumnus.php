@@ -21,6 +21,7 @@ class Alumnus extends Model
         'industry_id',
         'alumnus_employment_status',
         'alumnus_first_job_date',
+        'alumnus_first_job_is_internship',
         'alumnus_workplace',
         'alumnus_workplace_undisclosed',
         'alumnus_job_position',
@@ -42,6 +43,7 @@ class Alumnus extends Model
         'alumnus_resume_completeness' => 'integer',
         'alumnus_batch' => 'date',
         'alumnus_first_job_date' => 'date',
+        'alumnus_first_job_is_internship' => 'boolean',
         'alumnus_employment_date' => 'date',
         'alumnus_employed_via_platform' => 'boolean',
     ];
@@ -102,6 +104,21 @@ class Alumnus extends Model
             && $this->program
             && $this->industry
             && $this->program->isAlignedWithIndustry($this->industry);
+    }
+
+    /**
+     * True when this alumnus's first-ever job predates their own
+     * graduation batch date — e.g. an internship or a job that started
+     * while they were still a student. Needs both dates set; used by the
+     * admin dashboard's employment-interval report (UserController::
+     * buildEmploymentReports()) so "before graduation" isn't silently
+     * clamped into the "within 6 months" bucket like it used to be.
+     */
+    public function wasEmployedBeforeGraduation(): bool
+    {
+        return $this->alumnus_first_job_date
+            && $this->alumnus_batch
+            && $this->alumnus_first_job_date->lt($this->alumnus_batch);
     }
 
     public function educations()

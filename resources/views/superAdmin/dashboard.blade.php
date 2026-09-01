@@ -389,7 +389,7 @@
                         </a>
 
                         <!-- Export Button -->
-                        <a href="{{ route('superAdmin.dashboard.exportPdf', array_filter($dashboardFilters) + ['hire_months' => $hireMonths]) }}"
+                        <a href="{{ route('superAdmin.dashboard.exportPdf', array_filter($dashboardFilters) + ['hire_months' => $hireMonths, 'top_companies' => $topCompaniesLimit]) }}"
                             class="shrink-0 whitespace-nowrap bg-[#C04828] text-[10px] text-white px-3 py-1.5 rounded-md flex items-center gap-1 hover:bg-[#A03D22] transition shadow-sm font-semibold uppercase tracking-wide">
                             <i data-lucide="file-text" class="w-3.5 h-3.5 shrink-0"></i> EXPORT PDF
                         </a>
@@ -600,10 +600,57 @@
 
                 </div>
 
+                <!-- Job Before Graduation & Internships -->
+                <div class="chart-card mb-4">
+                    <div class="card-title">Job Before Graduation &amp; Internships</div>
+                    <div class="card-sub">Of alumni with a recorded first job</div>
+                    <div class="grid grid-cols-3 gap-4 mt-3">
+                        <div class="stat-card">
+                            <div class="s-top">
+                                <span class="s-label">Employed Before Graduation</span>
+                            </div>
+                            <div class="s-value">{{ $beforeGraduationCount }} <span style="font-size:13px;color:#9ca3af;">({{ $beforeGraduationRate }}%)</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="s-top">
+                                <span class="s-label">First Job Was an Internship</span>
+                            </div>
+                            <div class="s-value">{{ $internshipCount }} <span style="font-size:13px;color:#9ca3af;">({{ $internshipRate }}%)</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="s-top">
+                                <span class="s-label">Before Graduation &amp; an Internship</span>
+                            </div>
+                            <div class="s-value">{{ $beforeGraduationInternshipCount }}</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Employment by Month -->
+                @php
+                    // Reflects the Batch/Course filters actually applied to
+                    // this chart's data (see buildEmploymentReports() —
+                    // $employmentByMonth is built from the same
+                    // batch/program-filtered $allAlumni as every other
+                    // report here) — this used to just say "all years"
+                    // unconditionally even with a Batch filter applied,
+                    // which read as if the filter wasn't being respected.
+                    // "All years" still refers to employment years pooled
+                    // together, not graduation years — those alumni can
+                    // have been hired anywhere from graduation to now.
+                    $selectedProgramName = $dashboardFilters['program_id']
+                        ? ($programs->firstWhere('program_id', $dashboardFilters['program_id'])->program_name ?? null)
+                        : null;
+                @endphp
                 <div class="chart-card mb-4">
                     <div class="card-title">Employment by Month</div>
-                    <div class="card-sub">Which month alumni get employed (Jan&ndash;Dec, all years) &mdash; includes employment recorded from a system hire and employment alumni added themselves on their profile</div>
+                    <div class="card-sub">Which month alumni get employed (Jan&ndash;Dec, pooled across
+                        employment years) for
+                        {{ $dashboardFilters['batch'] ? $dashboardFilters['batch'] . ' batch' : 'all batches' }}
+                        @if ($selectedProgramName)
+                            &middot; {{ $selectedProgramName }}
+                        @endif
+                        &mdash; includes employment recorded from a system hire and employment alumni added themselves on their profile</div>
                     <div style="margin-top:10px; height:160px;">
                         <canvas id="chartEmploymentByMonth"></canvas>
                     </div>
@@ -630,8 +677,19 @@
                         <div class="s-value">{{ $totalHired }}</div>
                     </div>
                     <div class="chart-card" style="grid-column: span 2;">
-                        <div class="card-title">Top Hiring Companies</div>
-                        <div class="card-sub">Most hires among current filters</div>
+                        <div class="flex items-center justify-between gap-3" style="flex-wrap:wrap;">
+                            <div>
+                                <div class="card-title">Top Hiring Companies</div>
+                                <div class="card-sub">Most hires among current filters</div>
+                            </div>
+                            <select id="topCompaniesSelect" onchange="updateTopCompanies(this.value)"
+                                style="border:1px solid #d1d5db; border-radius:6px; padding:5px 10px; font-size:12px; font-family:'Montserrat',sans-serif; outline:none; color:#374151;">
+                                <option value="5" {{ $topCompaniesLimit === 5 ? 'selected' : '' }}>Top 5</option>
+                                <option value="10" {{ $topCompaniesLimit === 10 ? 'selected' : '' }}>Top 10</option>
+                                <option value="15" {{ $topCompaniesLimit === 15 ? 'selected' : '' }}>Top 15</option>
+                                <option value="20" {{ $topCompaniesLimit === 20 ? 'selected' : '' }}>Top 20</option>
+                            </select>
+                        </div>
                         <div class="ind-bar-wrap">
                             @forelse ($topHiringCompanies as $row)
                             @php $maxHires = $topHiringCompanies->max('hires') ?: 1; @endphp
@@ -872,6 +930,12 @@
     function updateHiresRange(months) {
         const url = new URL(window.location.href);
         url.searchParams.set('hire_months', months);
+        window.location.href = url.toString();
+    }
+
+    function updateTopCompanies(count) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('top_companies', count);
         window.location.href = url.toString();
     }
 

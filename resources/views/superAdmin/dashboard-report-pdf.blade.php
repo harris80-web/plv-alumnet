@@ -124,7 +124,8 @@
     </div>
 
     <div class="section">
-        <h2>Employment by Month (Jan&ndash;Dec, all years)</h2>
+        <h2>Employment by Month (Jan&ndash;Dec, pooled across employment years)</h2>
+        <p class="subheading">Batch: {{ $batchLabel }} | Program: {{ $programLabel }}</p>
         <table>
             <tr>
                 <th>Month</th>
@@ -212,6 +213,25 @@
     </div>
 
     <div class="section">
+        <h2>Job Before Graduation &amp; Internships</h2>
+        <p class="subheading">Of alumni with a recorded first job</p>
+        <table class="stat-table">
+            <tr>
+                <td>Employed Before Graduation</td>
+                <td>{{ $r['beforeGraduationCount'] }} ({{ $r['beforeGraduationRate'] }}%)</td>
+            </tr>
+            <tr>
+                <td>First Job Was an Internship</td>
+                <td>{{ $r['internshipCount'] }} ({{ $r['internshipRate'] }}%)</td>
+            </tr>
+            <tr>
+                <td>Before Graduation AND an Internship</td>
+                <td>{{ $r['beforeGraduationInternshipCount'] }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
         <h2>Job Placement &amp; Hiring</h2>
         <table class="stat-table">
             <tr>
@@ -223,7 +243,7 @@
                 <td>{{ $r['totalHired'] }}</td>
             </tr>
         </table>
-        <p class="subheading">Top Hiring Companies</p>
+        <p class="subheading">Top {{ $topCompaniesLimit }} Hiring Companies</p>
         <table>
             <tr>
                 <th>Company</th>

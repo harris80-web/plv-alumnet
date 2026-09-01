@@ -145,6 +145,7 @@ class AlumnusController extends Controller
             'alumnus_job_position' => 'nullable|string|max:255',
             'alumnus_employment_date' => 'nullable|date|before_or_equal:today',
             'alumnus_first_job_date' => 'nullable|date|before_or_equal:today',
+            'alumnus_first_job_is_internship' => 'nullable|boolean',
             'user_email' => 'required|email|unique:users,user_email,' . $user->user_id . ',user_id',
             'user_number' => 'nullable|string|max:20',
         ]);
@@ -197,6 +198,13 @@ class AlumnusController extends Controller
                     // ignored rather than overwriting the real first date.
                     'alumnus_first_job_date' => $alumni->alumnus_first_job_date
                         ?? (empty($validated['alumnus_first_job_date']) ? null : $validated['alumnus_first_job_date']),
+                    // Same set-once lifecycle as alumnus_first_job_date
+                    // itself — the checkbox only ever appears in the form
+                    // alongside that still-editable date field, so it's only
+                    // meaningful the one time the date is actually being set.
+                    'alumnus_first_job_is_internship' => $alumni->alumnus_first_job_date
+                        ? $alumni->alumnus_first_job_is_internship
+                        : (empty($validated['alumnus_first_job_date']) ? null : !empty($validated['alumnus_first_job_is_internship'])),
                 ]);
 
                 $alumni->user->update([

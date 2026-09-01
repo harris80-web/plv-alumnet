@@ -234,12 +234,21 @@
                         <p class="text-[10px] text-gray-400 mt-1">
                             Already recorded — this can only be set once.
                         </p>
+                        @if($user->alumnus->alumnus_first_job_is_internship)
+                        <p class="text-[10px] font-bold text-orange-600 mt-1">
+                            <i class="fas fa-check-circle"></i> Recorded as an internship.
+                        </p>
+                        @endif
                         @else
-                        <input type="date" name="alumnus_first_job_date" max="{{ now()->format('Y-m-d') }}"
+                        <input type="date" name="alumnus_first_job_date" id="alumnus_first_job_date" max="{{ now()->format('Y-m-d') }}"
                             class="w-full border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
                         <p class="text-[10px] text-gray-400 mt-1">
                             Set automatically when you're hired through a job post here — only fill this in yourself if your first job didn't come from the system. You can only set this once.
                         </p>
+                        <label class="flex items-center gap-2 mt-2 text-xs text-[#0E0F3B]">
+                            <input type="checkbox" name="alumnus_first_job_is_internship" value="1" class="rounded border-[#0E0F3B]">
+                            This was an internship / OJT, not a regular job.
+                        </label>
                         @endif
                     </div>
                 </div>

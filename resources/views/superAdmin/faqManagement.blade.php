@@ -383,6 +383,8 @@
         </div>
     </div>
 
+    @include('partials.confirm-modal')
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             if (window.lucide) lucide.createIcons();
@@ -436,36 +438,54 @@
         function submitBulkFaqRecipient(recipientKey, recipientLabel) {
             const ids = selectedFaqIds();
             if (ids.length === 0) return;
-            if (!confirm(`Set recipient to "${recipientLabel}" for ${ids.length} selected FAQ(s)?`)) return;
-
-            const form = document.getElementById('bulkFaqRecipientForm');
-            document.getElementById('bulkFaqRecipientInput').value = recipientKey;
-            form.querySelectorAll('input[name="ids[]"]').forEach(el => el.remove());
-            ids.forEach(id => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'ids[]';
-                input.value = id;
-                form.appendChild(input);
+            openConfirmModal({
+                title: 'Bulk Set Recipient',
+                message: `Are you sure you want to set recipient to <span class="font-bold text-blue-600">"${recipientLabel}"</span> for <b>${ids.length}</b> selected FAQ(s)?`,
+                iconName: 'refresh-ccw',
+                iconBg: 'bg-blue-100',
+                iconColor: 'text-blue-600',
+                btnBg: 'bg-blue-600',
+                btnText: 'Yes, Update',
+                onConfirm: () => {
+                    const form = document.getElementById('bulkFaqRecipientForm');
+                    document.getElementById('bulkFaqRecipientInput').value = recipientKey;
+                    form.querySelectorAll('input[name="ids[]"]').forEach(el => el.remove());
+                    ids.forEach(id => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'ids[]';
+                        input.value = id;
+                        form.appendChild(input);
+                    });
+                    form.submit();
+                }
             });
-            form.submit();
         }
 
         function submitBulkFaqDelete() {
             const ids = selectedFaqIds();
             if (ids.length === 0) return;
-            if (!confirm(`Delete ${ids.length} selected FAQ(s)? This cannot be undone.`)) return;
-
-            const form = document.getElementById('bulkFaqDeleteForm');
-            form.querySelectorAll('input[name="ids[]"]').forEach(el => el.remove());
-            ids.forEach(id => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'ids[]';
-                input.value = id;
-                form.appendChild(input);
+            openConfirmModal({
+                title: 'Bulk Delete FAQs',
+                message: `Are you sure you want to <span class="font-bold text-red-600">delete</span> <b>${ids.length}</b> selected FAQ(s)? This cannot be undone.`,
+                iconName: 'trash-2',
+                iconBg: 'bg-red-100',
+                iconColor: 'text-red-600',
+                btnBg: 'bg-red-600',
+                btnText: 'Yes, Delete',
+                onConfirm: () => {
+                    const form = document.getElementById('bulkFaqDeleteForm');
+                    form.querySelectorAll('input[name="ids[]"]').forEach(el => el.remove());
+                    ids.forEach(id => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'ids[]';
+                        input.value = id;
+                        form.appendChild(input);
+                    });
+                    form.submit();
+                }
             });
-            form.submit();
         }
 
         // ── ADD MODAL ──
@@ -528,15 +548,24 @@
         // ── DELETE (single) ──
         function confirmDeleteFaq(question, url) {
             document.querySelectorAll('.action-dropdown').forEach(d => d.classList.add('hidden'));
-            if (!confirm('Delete "' + question + '"? This cannot be undone.')) return;
-
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = url;
-            form.innerHTML = '<input type="hidden" name="_token" value="{{ csrf_token() }}">' +
-                '<input type="hidden" name="_method" value="DELETE">';
-            document.body.appendChild(form);
-            form.submit();
+            openConfirmModal({
+                title: 'Delete FAQ',
+                message: `Are you sure you want to <span class="font-bold text-red-600">delete</span> "<b>${question}</b>"? This cannot be undone.`,
+                iconName: 'trash-2',
+                iconBg: 'bg-red-100',
+                iconColor: 'text-red-600',
+                btnBg: 'bg-red-600',
+                btnText: 'Yes, Delete',
+                onConfirm: () => {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = url;
+                    form.innerHTML = '<input type="hidden" name="_token" value="{{ csrf_token() }}">' +
+                        '<input type="hidden" name="_method" value="DELETE">';
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
         }
 
         window.addEventListener('click', function (event) {

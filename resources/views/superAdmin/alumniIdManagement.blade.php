@@ -702,6 +702,8 @@
         </div>
     </div>
 
+    @include('partials.confirm-modal')
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             if (window.lucide) lucide.createIcons();
@@ -770,19 +772,28 @@
         function submitBulkStatus(status, label) {
             const ids = getCheckedAlumniIds();
             if (ids.length === 0) return;
-            if (!confirm('Set ' + ids.length + ' selected alumni ID(s) to "' + label + '"?')) return;
-
-            const form = document.getElementById('bulkStatusForm');
-            form.querySelectorAll('input[name="ids[]"]').forEach(el => el.remove());
-            ids.forEach(id => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'ids[]';
-                input.value = id;
-                form.appendChild(input);
+            openConfirmModal({
+                title: 'Bulk Status Update',
+                message: `Are you sure you want to set <b>${ids.length}</b> selected alumni ID(s) to <span class="font-bold text-blue-600">"${label}"</span>?`,
+                iconName: 'refresh-ccw',
+                iconBg: 'bg-blue-100',
+                iconColor: 'text-blue-600',
+                btnBg: 'bg-blue-600',
+                btnText: 'Yes, Update',
+                onConfirm: () => {
+                    const form = document.getElementById('bulkStatusForm');
+                    form.querySelectorAll('input[name="ids[]"]').forEach(el => el.remove());
+                    ids.forEach(id => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'ids[]';
+                        input.value = id;
+                        form.appendChild(input);
+                    });
+                    document.getElementById('bulkStatusInput').value = status;
+                    form.submit();
+                }
             });
-            document.getElementById('bulkStatusInput').value = status;
-            form.submit();
         }
 
         // ── ALUMNI ID: VIEW / UPDATE MODAL ──

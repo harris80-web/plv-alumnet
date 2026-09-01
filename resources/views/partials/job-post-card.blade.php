@@ -18,6 +18,7 @@
     $companyUpvotes = $employer?->upvoteCount() ?? 0;
     $companyDownvotes = $employer?->downvoteCount() ?? 0;
     $myCompanyVote = $isAlumni && $employer ? $employer->reviews->firstWhere('alumnus_id', $user->user_id) : null;
+    $isEmployer = $user && $user->user_role === 'employer';
 @endphp
 
 <div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row relative hover:shadow-lg transition-shadow md:min-h-[340px]">
@@ -62,6 +63,12 @@
                 <p class="text-gray-600">
                     {{ $job->job_posting_company }}
                 </p>
+
+                @if ($employer && !$isEmployer)
+                <a href="{{ route('employerReviews.index', ['employer' => $employer->user_id, 'back' => url()->full()]) }}" class="reviews-link text-xs font-bold text-[#1D46A4] hover:underline inline-flex items-center gap-1.5 mt-1" data-employer-id="{{ $employer->user_id }}">
+                    <i class="fas fa-comment-dots"></i> Reviews (<span class="reviews-count">{{ $companyUpvotes + $companyDownvotes }}</span>)
+                </a>
+                @endif
 
                 <p class="text-gray-500 text-sm">
                     {{ $job->job_posting_address }}
@@ -179,9 +186,8 @@
             </div>
         </div>
 
-        @if ($employer)
-        <div class="mt-4 flex items-center justify-between border-t pt-4">
-            @if ($isAlumni)
+        @if ($employer && $isAlumni)
+        <div class="mt-4 flex items-center border-t pt-4">
             <div class="flex items-center gap-2">
                 <button type="button" class="vote-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors {{ $myCompanyVote?->vote === 'upvote' ? 'bg-green-600 text-white border-green-600' : 'border-gray-300 text-gray-500 hover:border-green-500 hover:text-green-600' }}"
                     data-employer-id="{{ $employer->user_id }}" data-vote-type="upvote"
@@ -194,13 +200,6 @@
                     <i class="fas fa-thumbs-down"></i> <span class="vote-count">{{ $companyDownvotes }}</span>
                 </button>
             </div>
-            @else
-            <div></div>
-            @endif
-
-            <a href="{{ route('employerReviews.index', ['employer' => $employer->user_id, 'back' => url()->full()]) }}" class="reviews-link text-xs font-bold text-[#1D46A4] hover:underline flex items-center gap-1.5" data-employer-id="{{ $employer->user_id }}">
-                <i class="fas fa-comment-dots"></i> Reviews (<span class="reviews-count">{{ $companyUpvotes + $companyDownvotes }}</span>)
-            </a>
         </div>
         @endif
 

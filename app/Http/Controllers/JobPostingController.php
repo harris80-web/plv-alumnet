@@ -480,13 +480,13 @@ class JobPostingController extends Controller
         return redirect()->route('jobPosting.myJobPosts', ['id' => $job->user_id]);
     }
 
-    public function showJobManagement()
+    /**
+     * Shared base query for job-management (both the full page and the two
+     * AJAX pagination fragments below) — same role-scoping either way, kept
+     * in one place so those three call sites can't drift out of sync.
+     */
+    private function jobManagementBaseQuery()
     {
-        $this->authorizeStaff();
-        $programs = Program::all();
-        $industries = Industry::all();
-        $users = Auth::user();
-
         $user = Auth::user();
         $query = JobPosting::query()->with('user');
 
@@ -502,8 +502,68 @@ class JobPostingController extends Controller
             });
         }
 
-        $jobPostings = $query->latest()->get();
-        return view('superAdmin.jobManagement', compact('jobPostings', 'programs', 'industries', 'users'));
+        return $query;
+    }
+
+    public function showJobManagement()
+    {
+        $this->authorizeStaff();
+        $programs = Program::all();
+        $industries = Industry::all();
+        $users = Auth::user();
+
+        // Two independently-paginated queries (own pageName each) instead of
+        // one ->get() split into $pending_jobs/$approved_jobs after the
+        // fact in the view — that approach can't paginate since the whole
+        // collection has to be fetched up front. Metric-card counts are
+        // computed separately (not read off the paginators) so they always
+        // reflect the WHOLE dataset, not just the current page.
+        $pendingJobs = $this->jobManagementBaseQuery()
+            ->where('job_approved', 0)
+            ->orderByDesc('created_at')
+            ->paginate(10, ['*'], 'pendingPage');
+
+        $approvedJobs = $this->jobManagementBaseQuery()
+            ->where('job_approved', 1)
+            ->orderByDesc('created_at')
+            ->paginate(10, ['*'], 'approvedPage');
+
+        $totalJobs = $this->jobManagementBaseQuery()->count();
+        $pendingCount = $pendingJobs->total();
+        $approvedCount = $approvedJobs->total();
+
+        return view('superAdmin.jobManagement', compact(
+            'pendingJobs', 'approvedJobs', 'totalJobs', 'pendingCount', 'approvedCount',
+            'programs', 'industries', 'users'
+        ));
+    }
+
+    /**
+     * AJAX pagination endpoints for the Pending/Approved job tables —
+     * mirrors UserController::employerPendingFragment()/employerApprovedFragment():
+     * each returns just its own table partial (rows + pagination nav) so a
+     * page-link click can swap it in via fetch() without a full reload.
+     */
+    public function jobManagementPendingFragment()
+    {
+        $this->authorizeStaff();
+        $pendingJobs = $this->jobManagementBaseQuery()
+            ->where('job_approved', 0)
+            ->orderByDesc('created_at')
+            ->paginate(10, ['*'], 'pendingPage');
+
+        return view('partials.job-management.pending-table', compact('pendingJobs'));
+    }
+
+    public function jobManagementApprovedFragment()
+    {
+        $this->authorizeStaff();
+        $approvedJobs = $this->jobManagementBaseQuery()
+            ->where('job_approved', 1)
+            ->orderByDesc('created_at')
+            ->paginate(10, ['*'], 'approvedPage');
+
+        return view('partials.job-management.approved-table', compact('approvedJobs'));
     }
 
     public function approveJobPost($id)

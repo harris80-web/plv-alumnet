@@ -367,6 +367,45 @@ class UserController extends Controller
         ));
     }
 
+    /**
+     * AJAX pagination endpoints for the two Employer-tab tables on
+     * userManagement.blade.php — each returns just the table's own
+     * partial (rows + pagination nav) so a page-link click can swap it in
+     * via fetch() instead of reloading the whole page and losing scroll
+     * position. Deliberately separate, single-purpose endpoints (rather
+     * than one endpoint branching on $request->wantsJson() inside
+     * showUsers()) so each fragment only needs to run its own query, not
+     * all four of showUsers()'s paginators, and so its own ?page= doesn't
+     * collide with the other tables' pageName-scoped query params.
+     */
+    public function employerPendingFragment(Request $request)
+    {
+        $this->authorizeStaff();
+        // Same 'employerPendingPage' pageName as showUsers() uses for the
+        // initial render, so the pagination links this partial renders (and
+        // the ones the initial page renders) always use the same query
+        // param name — the client-side fetch logic reads that param off
+        // whichever link was clicked and doesn't need to know or care
+        // whether it's looking at the first page load or a later fragment.
+        $pendingEmployers = Employer::with(['user', 'industry'])
+            ->where('employer_approved', false)
+            ->orderBy('user_id')
+            ->paginate(10, ['*'], 'employerPendingPage');
+
+        return view('partials.user-management.employer-pending-table', compact('pendingEmployers'));
+    }
+
+    public function employerApprovedFragment(Request $request)
+    {
+        $this->authorizeStaff();
+        $approvedEmployers = Employer::with(['user', 'industry'])
+            ->whereHas('user', fn ($q) => $q->where('user_active', true))
+            ->orderBy('user_id')
+            ->paginate(10, ['*'], 'employerApprovedPage');
+
+        return view('partials.user-management.employer-approved-table', compact('approvedEmployers'));
+    }
+
     public function approveEmployer($id)
     {
         $this->authorizeStaff();
@@ -875,6 +914,7 @@ class UserController extends Controller
         $programId = request()->query('program_id');
         $employmentStatus = $this->resolveEmploymentStatus(request()->query('employment_status'));
         $hireMonths = $this->resolveHireMonths(request()->query('hire_months'));
+        $topCompaniesLimit = $this->resolveTopCompaniesLimit(request()->query('top_companies'));
 
         $stats = $this->buildOverviewStats($batch, $programId, $employmentStatus);
 
@@ -887,17 +927,17 @@ class UserController extends Controller
             ->orderByDesc('year')
             ->pluck('year');
         $programs = Program::orderBy('program_name')->get();
-        // hire_months lives outside $dashboardFilters on purpose — it always
-        // has a value (default 6), and $dashboardFilters drives both the
-        // sticky select values AND the "Clear" link's visibility check,
-        // which should only fire for an actually-applied batch/program/
-        // status filter, not the hire-range default.
+        // hire_months/top_companies live outside $dashboardFilters on
+        // purpose — they always have a value (defaults 6/5), and
+        // $dashboardFilters drives both the sticky select values AND the
+        // "Clear" link's visibility check, which should only fire for an
+        // actually-applied batch/program/status filter, not these defaults.
         $dashboardFilters = ['batch' => $batch, 'program_id' => $programId, 'employment_status' => $employmentStatus];
 
-        $reports = $this->buildEmploymentReports($batch, $programId, $employmentStatus, $hireMonths);
+        $reports = $this->buildEmploymentReports($batch, $programId, $employmentStatus, $hireMonths, $topCompaniesLimit);
 
         return view('superAdmin.dashboard', array_merge(
-            compact('stats', 'batches', 'programs', 'dashboardFilters', 'hireMonths'),
+            compact('stats', 'batches', 'programs', 'dashboardFilters', 'hireMonths', 'topCompaniesLimit'),
             $reports
         ));
     }
@@ -918,6 +958,15 @@ class UserController extends Controller
         $value = (int) $raw;
 
         return in_array($value, $allowed, true) ? $value : 6;
+    }
+
+    /** How many rows the "Top Hiring Companies" list shows — was hardcoded to 5. */
+    private function resolveTopCompaniesLimit(?string $raw): int
+    {
+        $allowed = [5, 10, 15, 20];
+        $value = (int) $raw;
+
+        return in_array($value, $allowed, true) ? $value : 5;
     }
 
     /**
@@ -995,15 +1044,16 @@ class UserController extends Controller
         $programId = request()->query('program_id');
         $employmentStatus = $this->resolveEmploymentStatus(request()->query('employment_status'));
         $hireMonths = $this->resolveHireMonths(request()->query('hire_months'));
+        $topCompaniesLimit = $this->resolveTopCompaniesLimit(request()->query('top_companies'));
 
         $stats = $this->buildOverviewStats($batch, $programId, $employmentStatus);
-        $r = $this->buildEmploymentReports($batch, $programId, $employmentStatus, $hireMonths);
+        $r = $this->buildEmploymentReports($batch, $programId, $employmentStatus, $hireMonths, $topCompaniesLimit);
 
         $batchLabel = $batch ?: 'All';
         $programLabel = $programId ? (Program::find($programId)->program_name ?? $programId) : 'All';
         $statusLabel = $employmentStatus ? ucfirst($employmentStatus) : 'All';
 
-        $callback = function () use ($stats, $r, $batchLabel, $programLabel, $statusLabel, $hireMonths) {
+        $callback = function () use ($stats, $r, $batchLabel, $programLabel, $statusLabel, $hireMonths, $topCompaniesLimit) {
             $out = fopen('php://output', 'w');
 
             fputcsv($out, ['PLV-AlumNet — Admin Dashboard Report Export']);
@@ -1028,7 +1078,7 @@ class UserController extends Controller
             }
             fputcsv($out, []);
 
-            fputcsv($out, ['EMPLOYMENT BY MONTH (Jan–Dec, all years, when alumni actually got hired)']);
+            fputcsv($out, ["EMPLOYMENT BY MONTH (Jan–Dec, pooled across employment years, when alumni actually got hired) — Batch: $batchLabel | Program: $programLabel"]);
             fputcsv($out, ['Month', 'Alumni Employed']);
             foreach ($r['employmentByMonth'] as $month => $count) {
                 fputcsv($out, [$month, $count]);
@@ -1063,11 +1113,17 @@ class UserController extends Controller
             }
             fputcsv($out, []);
 
+            fputcsv($out, ['JOB BEFORE GRADUATION & INTERNSHIPS (of alumni with a recorded first job)']);
+            fputcsv($out, ['Employed Before Graduation', $r['beforeGraduationCount'], $r['beforeGraduationRate'] . '%']);
+            fputcsv($out, ['First Job Was an Internship', $r['internshipCount'], $r['internshipRate'] . '%']);
+            fputcsv($out, ['Before Graduation AND an Internship', $r['beforeGraduationInternshipCount']]);
+            fputcsv($out, []);
+
             fputcsv($out, ['JOB PLACEMENT & HIRING']);
             fputcsv($out, ['Total Applications', $r['totalApplications']]);
             fputcsv($out, ['Total Hired', $r['totalHired']]);
             fputcsv($out, []);
-            fputcsv($out, ['Top Hiring Companies']);
+            fputcsv($out, ["Top $topCompaniesLimit Hiring Companies"]);
             fputcsv($out, ['Company', 'Hires']);
             foreach ($r['topHiringCompanies'] as $row) {
                 fputcsv($out, [$row->job_posting_company, $row->hires]);
@@ -1130,15 +1186,16 @@ class UserController extends Controller
         $programId = request()->query('program_id');
         $employmentStatus = $this->resolveEmploymentStatus(request()->query('employment_status'));
         $hireMonths = $this->resolveHireMonths(request()->query('hire_months'));
+        $topCompaniesLimit = $this->resolveTopCompaniesLimit(request()->query('top_companies'));
 
         $stats = $this->buildOverviewStats($batch, $programId, $employmentStatus);
-        $r = $this->buildEmploymentReports($batch, $programId, $employmentStatus, $hireMonths);
+        $r = $this->buildEmploymentReports($batch, $programId, $employmentStatus, $hireMonths, $topCompaniesLimit);
 
         $batchLabel = $batch ?: 'All';
         $programLabel = $programId ? (Program::find($programId)->program_name ?? $programId) : 'All';
         $statusLabel = $employmentStatus ? ucfirst($employmentStatus) : 'All';
 
-        $pdf = Pdf::loadView('superAdmin.dashboard-report-pdf', compact('stats', 'r', 'batchLabel', 'programLabel', 'statusLabel', 'hireMonths'))
+        $pdf = Pdf::loadView('superAdmin.dashboard-report-pdf', compact('stats', 'r', 'batchLabel', 'programLabel', 'statusLabel', 'hireMonths', 'topCompaniesLimit'))
             ->setPaper('a4', 'portrait');
 
         return $pdf->download('dashboard_report_' . now()->format('Y-m-d') . '.pdf');
@@ -1158,7 +1215,7 @@ class UserController extends Controller
      * Alumni table below, where picking "Unemployed" meaningfully swaps
      * which list of names is shown.
      */
-    private function buildEmploymentReports(?string $batch, ?string $programId, ?string $employmentStatus, int $hireMonths = 6): array
+    private function buildEmploymentReports(?string $batch, ?string $programId, ?string $employmentStatus, int $hireMonths = 6, int $topCompaniesLimit = 5): array
     {
         $alumniQuery = Alumnus::with(['user', 'program', 'industry']);
         if ($batch) {
@@ -1249,9 +1306,18 @@ class UserController extends Controller
         }
 
         // Employment interval — months from batch graduation date to first job date.
-        $employmentInterval = ['Within 6 months' => 0, '6–12 months' => 0, '1–2 years' => 0, 'Over 2 years' => 0];
+        // "Before Graduation" is its own bucket (checked first, via
+        // Alumnus::wasEmployedBeforeGraduation()) rather than being clamped
+        // into "Within 6 months" by the old max(0, ...) — see
+        // $beforeGraduationCount/$internshipCount below for the dedicated
+        // report on exactly this group.
+        $employmentInterval = ['Before Graduation' => 0, 'Within 6 months' => 0, '6–12 months' => 0, '1–2 years' => 0, 'Over 2 years' => 0];
         foreach ($allAlumni as $a) {
             if (!$a->alumnus_first_job_date || !$a->alumnus_batch) {
+                continue;
+            }
+            if ($a->wasEmployedBeforeGraduation()) {
+                $employmentInterval['Before Graduation']++;
                 continue;
             }
             $graduation = Carbon::parse($a->alumnus_batch);
@@ -1264,6 +1330,26 @@ class UserController extends Controller
             };
             $employmentInterval[$bucket]++;
         }
+
+        // "Job Before Graduation" & "From an Internship" — both answered
+        // only once an alumnus has a recorded first-job date (self-reported
+        // via edit-profile, or auto-set on an in-system hire — see
+        // AlumnusController::updateAlumniProfile()/JobApplicationController::
+        // hireApplicant()), so the denominator here is alumni with that date
+        // set, not the whole cohort — matching $employmentInterval above.
+        $firstJobKnownAlumni = $allAlumni->filter(fn ($a) => $a->alumnus_first_job_date);
+        $beforeGraduationAlumni = $firstJobKnownAlumni->filter->wasEmployedBeforeGraduation();
+        $beforeGraduationCount = $beforeGraduationAlumni->count();
+        $beforeGraduationRate = $firstJobKnownAlumni->count() > 0
+            ? round($beforeGraduationCount / $firstJobKnownAlumni->count() * 100, 2)
+            : 0;
+
+        $internshipAlumni = $firstJobKnownAlumni->filter(fn ($a) => $a->alumnus_first_job_is_internship);
+        $internshipCount = $internshipAlumni->count();
+        $internshipRate = $firstJobKnownAlumni->count() > 0
+            ? round($internshipCount / $firstJobKnownAlumni->count() * 100, 2)
+            : 0;
+        $beforeGraduationInternshipCount = $beforeGraduationAlumni->filter(fn ($a) => $a->alumnus_first_job_is_internship)->count();
 
         // Employed Alumni report — the one table where $employmentStatus
         // actually changes which list is shown (see class doc note above).
@@ -1301,7 +1387,7 @@ class UserController extends Controller
             ->select('job_postings.job_posting_company', DB::raw('count(*) as hires'))
             ->groupBy('job_postings.job_posting_company')
             ->orderByDesc('hires')
-            ->limit(5)
+            ->limit($topCompaniesLimit)
             ->get();
 
         // Registered vs pending/unregistered companies
@@ -1311,6 +1397,7 @@ class UserController extends Controller
         return compact(
             'totalAlumni', 'employedCount', 'employmentRate', 'unemploymentRate', 'employmentByBatch', 'employmentByMonth', 'industryDistribution',
             'genderEmployment', 'programAlignment', 'alignmentRate', 'employmentInterval',
+            'beforeGraduationCount', 'beforeGraduationRate', 'internshipCount', 'internshipRate', 'beforeGraduationInternshipCount',
             'employedAlumniTable', 'totalApplications', 'totalHired', 'hiresPerMonth', 'topHiringCompanies',
             'registeredCompanies', 'pendingCompanies'
         );

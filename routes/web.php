@@ -136,6 +136,8 @@ Route::get('/employer/dashboard', [EmployerController::class, 'dashboard'])->mid
 Route::get('/alumni/dashboard', [AlumniDashboardController::class, 'index'])->middleware(['auth'])->name('alumnus.dashboard');
 
 Route::get('/superAdmin/userManagement', [UserController::class, 'showUsers'])->name('superAdmin.userManagement')->middleware(['auth', 'feature:user_management']);
+Route::get('/superAdmin/userManagement/employer/pending-page', [UserController::class, 'employerPendingFragment'])->name('users.employerPendingFragment')->middleware(['auth', 'feature:user_management']);
+Route::get('/superAdmin/userManagement/employer/approved-page', [UserController::class, 'employerApprovedFragment'])->name('users.employerApprovedFragment')->middleware(['auth', 'feature:user_management']);
 
 Route::get('/alumniIdManagement', [AlumniIdController::class, 'index'])->name('alumniId.management')->middleware(['auth', 'feature:alumni_id_management']);
 Route::post('/alumniId/{id}/mark', [AlumniIdController::class, 'mark'])->name('alumniId.mark')->middleware(['auth', 'feature:alumni_id_management']);
@@ -240,6 +242,7 @@ Route::put('/employers/updateProfile/{employer}', [EmployerController::class, 'u
 // Was missing ->middleware('auth') entirely — any logged-in user, or a
 // direct unauthenticated POST, could deactivate an employer account.
 Route::put('/employer/deactivate/{id}', [EmployerController::class, 'deactivateEmployer'])->name('employers.deactivateEmployer')->middleware(['auth', 'feature:user_management']);
+Route::put('/users/employer/bulk-deactivate', [EmployerController::class, 'bulkDeactivateEmployer'])->name('employers.bulkDeactivateEmployer')->middleware(['auth', 'feature:user_management']);
 
 Route::resource('events', EventController::class);
 
@@ -268,6 +271,8 @@ Route::post('/job-postings/upload-image', [JobPostingController::class, 'uploadD
 Route::get('/myJobPosts/{id}', [JobPostingController::class, 'showMyJobPosts'])->name('jobPosting.myJobPosts');
 Route::post('/editJobPost/{id}', [JobPostingController::class, 'editJobPost'])->name('jobPosting.editJobPost');
 Route::get('/jobManagement', [JobPostingController::class, 'showJobManagement'])->name('jobPosting.jobManagement')->middleware(['auth', 'feature:job_management']);
+Route::get('/jobManagement/pending-page', [JobPostingController::class, 'jobManagementPendingFragment'])->name('jobPosting.pendingFragment')->middleware(['auth', 'feature:job_management']);
+Route::get('/jobManagement/approved-page', [JobPostingController::class, 'jobManagementApprovedFragment'])->name('jobPosting.approvedFragment')->middleware(['auth', 'feature:job_management']);
 Route::post('/approveJobPost/{id}', [JobPostingController::class, 'approveJobPost'])->name('jobPosting.approve')->middleware(['auth', 'feature:job_management']);
 Route::post('/declineJobPost/{id}', [JobPostingController::class, 'declineJobPost'])->name('jobPosting.decline')->middleware(['auth', 'feature:job_management']);
 Route::delete('/deleteJobPost/{id}', [JobPostingController::class, 'deleteJobPost'])->name('jobPosting.delete')->middleware(['auth', 'feature:job_management']);

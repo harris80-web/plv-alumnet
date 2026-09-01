@@ -342,14 +342,14 @@
                 <!-- Filter Section Container -->
                 <div class="w-full bg-slate-100 px-6 py-4">
                     <form method="GET" action="{{ route('superAdmin.dashboard') }}"
-                        class="flex items-center gap-8 bg-white px-8 py-4 rounded-xl border border-slate-200 shadow-md text-sm font-medium text-slate-700">
+                        class="flex flex-nowrap items-center gap-3 bg-white px-6 py-4 rounded-xl border border-slate-200 shadow-md text-sm font-medium text-slate-700 overflow-x-auto">
 
                         <!-- Batch Year -->
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1.5 shrink-0">
                             <label class="whitespace-nowrap font-[Montserrat] font-semibold text-[#0E0F3B]">Batch
                                 Year:</label>
                             <select name="batch" onchange="this.form.submit()"
-                                class="border border-slate-300 rounded-md px-3 py-1.5 w-36 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
+                                class="border border-slate-300 rounded-md px-2 py-1.5 w-28 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
                                 <option value="" {{ !$dashboardFilters['batch'] ? 'selected' : '' }}>All Years</option>
                                 @foreach ($batches as $batchYear)
                                 <option value="{{ $batchYear }}" {{ (string) $dashboardFilters['batch'] === (string) $batchYear ? 'selected' : '' }}>{{ $batchYear }}</option>
@@ -358,11 +358,11 @@
                         </div>
 
                         <!-- Course -->
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1.5 shrink min-w-0">
                             <label
                                 class="whitespace-nowrap font-[Montserrat] font-semibold text-[#0E0F3B]">Course:</label>
                             <select name="program_id" onchange="this.form.submit()"
-                                class="border border-slate-300 rounded-md px-3 py-1.5 w-72 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
+                                class="border border-slate-300 rounded-md px-2 py-1.5 w-64 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
                                 <option value="" {{ !$dashboardFilters['program_id'] ? 'selected' : '' }}>All Programs</option>
                                 @foreach ($programs as $program)
                                 <option value="{{ $program->program_id }}" {{ (string) $dashboardFilters['program_id'] === (string) $program->program_id ? 'selected' : '' }}>{{ $program->program_name }}</option>
@@ -371,27 +371,27 @@
                         </div>
 
                         <!-- Employment Status -->
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1.5 shrink-0">
                             <label class="whitespace-nowrap font-[Montserrat] font-semibold text-[#0E0F3B]">Employment
                                 Status:</label>
                             <select name="employment_status" onchange="this.form.submit()"
-                                class="border border-slate-300 rounded-md px-3 py-1.5 w-48 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
+                                class="border border-slate-300 rounded-md px-2 py-1.5 w-32 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
                                 <option value="" {{ !$dashboardFilters['employment_status'] ? 'selected' : '' }}>All Statuses</option>
                                 <option value="employed" {{ $dashboardFilters['employment_status'] === 'employed' ? 'selected' : '' }}>Employed</option>
                                 <option value="unemployed" {{ $dashboardFilters['employment_status'] === 'unemployed' ? 'selected' : '' }}>Unemployed</option>
                             </select>
                         </div>
 
-                        @if (array_filter($dashboardFilters))
-                        <a href="{{ route('superAdmin.dashboard') }}" class="text-xs font-bold text-slate-400 hover:text-[#C73D1A] whitespace-nowrap">
-                            <i data-lucide="x" class="w-3 h-3 inline"></i> Clear
+                        <!-- Clear Filters Button -->
+                        <a href="{{ route('superAdmin.dashboard') }}"
+                            class="ml-auto shrink-0 whitespace-nowrap bg-slate-200 text-[10px] text-slate-600 px-3 py-1.5 rounded-md flex items-center gap-1 hover:bg-slate-300 transition shadow-sm font-semibold uppercase tracking-wide">
+                            <i data-lucide="x" class="w-3.5 h-3.5 shrink-0"></i> Clear Filters
                         </a>
-                        @endif
 
                         <!-- Export Button -->
-                        <a href="{{ route('superAdmin.dashboard.exportCsv', array_filter($dashboardFilters) + ['hire_months' => $hireMonths]) }}"
-                            class="ml-auto bg-[#C04828] text-[8px] text-white px-4 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-[#A03D22] transition shadow-sm font-semibold uppercase tracking-wide">
-                            <i data-lucide="download" class="w-3.5 h-3.5"></i> EXPORT CSV
+                        <a href="{{ route('superAdmin.dashboard.exportPdf', array_filter($dashboardFilters) + ['hire_months' => $hireMonths, 'top_companies' => $topCompaniesLimit]) }}"
+                            class="shrink-0 whitespace-nowrap bg-[#C04828] text-[10px] text-white px-3 py-1.5 rounded-md flex items-center gap-1 hover:bg-[#A03D22] transition shadow-sm font-semibold uppercase tracking-wide">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 shrink-0"></i> EXPORT PDF
                         </a>
                     </form>
                 </div>
@@ -537,12 +537,44 @@
                     <!-- Job-to-Degree Alignment -->
                     <div class="chart-card">
                         <div class="card-title">Job-to-Degree Alignment by Program/Course</div>
-                        <div class="card-sub">% of employed alumni whose job matches their degree field ({{ $alignmentRate }}% overall)</div>
-                        <div style="margin-top:10px; height:160px;">
-                            <canvas id="chartAlignment"></canvas>
+                        <div class="card-sub">% of employed alumni whose job matches their degree field ({{ $alignmentRate }}% overall) &mdash; every program</div>
+                        <div style="margin-top:10px; height:220px; overflow-y:auto;">
+                            <div style="height:{{ max(160, $programAlignment->count() * 26) }}px;">
+                                <canvas id="chartAlignment"></canvas>
+                            </div>
                         </div>
                     </div>
 
+                </div>
+
+                <!-- Employed Alumni per Batch -->
+                <div class="chart-card mb-4">
+                    <div class="card-title">Employed Alumni per Batch</div>
+                    <div class="card-sub">Employed headcount and rate for every graduation batch</div>
+                    <div style="margin-top:10px; max-height:220px; overflow-y:auto;">
+                        <table class="w-full text-left" style="font-size:11px; border-collapse:collapse;">
+                            <thead>
+                                <tr style="position:sticky; top:0; background:#fff;">
+                                    <th style="padding:6px 10px; color:#0E0F3B; border-bottom:1px solid #e5e7eb;">Batch</th>
+                                    <th style="padding:6px 10px; color:#0E0F3B; border-bottom:1px solid #e5e7eb;">Total Alumni</th>
+                                    <th style="padding:6px 10px; color:#0E0F3B; border-bottom:1px solid #e5e7eb;">Employed</th>
+                                    <th style="padding:6px 10px; color:#0E0F3B; border-bottom:1px solid #e5e7eb;">Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($employmentByBatch as $batchYear => $row)
+                                <tr>
+                                    <td style="padding:6px 10px; border-bottom:1px solid #f1f5f9;">{{ $batchYear }}</td>
+                                    <td style="padding:6px 10px; border-bottom:1px solid #f1f5f9;">{{ $row['total'] }}</td>
+                                    <td style="padding:6px 10px; border-bottom:1px solid #f1f5f9;">{{ $row['employed'] }}</td>
+                                    <td style="padding:6px 10px; border-bottom:1px solid #f1f5f9;">{{ $row['rate'] }}%</td>
+                                </tr>
+                                @empty
+                                <tr><td colspan="4" style="padding:6px 10px; color:#9ca3af;">No batches match the current filters.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- Row 3b: Gender + Employment Interval -->
@@ -568,6 +600,62 @@
 
                 </div>
 
+                <!-- Job Before Graduation & Internships -->
+                <div class="chart-card mb-4">
+                    <div class="card-title">Job Before Graduation &amp; Internships</div>
+                    <div class="card-sub">Of alumni with a recorded first job</div>
+                    <div class="grid grid-cols-3 gap-4 mt-3">
+                        <div class="stat-card">
+                            <div class="s-top">
+                                <span class="s-label">Employed Before Graduation</span>
+                            </div>
+                            <div class="s-value">{{ $beforeGraduationCount }} <span style="font-size:13px;color:#9ca3af;">({{ $beforeGraduationRate }}%)</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="s-top">
+                                <span class="s-label">First Job Was an Internship</span>
+                            </div>
+                            <div class="s-value">{{ $internshipCount }} <span style="font-size:13px;color:#9ca3af;">({{ $internshipRate }}%)</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="s-top">
+                                <span class="s-label">Before Graduation &amp; an Internship</span>
+                            </div>
+                            <div class="s-value">{{ $beforeGraduationInternshipCount }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employment by Month -->
+                @php
+                    // Reflects the Batch/Course filters actually applied to
+                    // this chart's data (see buildEmploymentReports() —
+                    // $employmentByMonth is built from the same
+                    // batch/program-filtered $allAlumni as every other
+                    // report here) — this used to just say "all years"
+                    // unconditionally even with a Batch filter applied,
+                    // which read as if the filter wasn't being respected.
+                    // "All years" still refers to employment years pooled
+                    // together, not graduation years — those alumni can
+                    // have been hired anywhere from graduation to now.
+                    $selectedProgramName = $dashboardFilters['program_id']
+                        ? ($programs->firstWhere('program_id', $dashboardFilters['program_id'])->program_name ?? null)
+                        : null;
+                @endphp
+                <div class="chart-card mb-4">
+                    <div class="card-title">Employment by Month</div>
+                    <div class="card-sub">Which month alumni get employed (Jan&ndash;Dec, pooled across
+                        employment years) for
+                        {{ $dashboardFilters['batch'] ? $dashboardFilters['batch'] . ' batch' : 'all batches' }}
+                        @if ($selectedProgramName)
+                            &middot; {{ $selectedProgramName }}
+                        @endif
+                        &mdash; includes employment recorded from a system hire and employment alumni added themselves on their profile</div>
+                    <div style="margin-top:10px; height:160px;">
+                        <canvas id="chartEmploymentByMonth"></canvas>
+                    </div>
+                </div>
+
                 <!-- System Overview Heading -->
                 <div class="mb-2 ml-1 mt-6">
                     <span
@@ -589,8 +677,19 @@
                         <div class="s-value">{{ $totalHired }}</div>
                     </div>
                     <div class="chart-card" style="grid-column: span 2;">
-                        <div class="card-title">Top Hiring Companies</div>
-                        <div class="card-sub">Most hires among current filters</div>
+                        <div class="flex items-center justify-between gap-3" style="flex-wrap:wrap;">
+                            <div>
+                                <div class="card-title">Top Hiring Companies</div>
+                                <div class="card-sub">Most hires among current filters</div>
+                            </div>
+                            <select id="topCompaniesSelect" onchange="updateTopCompanies(this.value)"
+                                style="border:1px solid #d1d5db; border-radius:6px; padding:5px 10px; font-size:12px; font-family:'Montserrat',sans-serif; outline:none; color:#374151;">
+                                <option value="5" {{ $topCompaniesLimit === 5 ? 'selected' : '' }}>Top 5</option>
+                                <option value="10" {{ $topCompaniesLimit === 10 ? 'selected' : '' }}>Top 10</option>
+                                <option value="15" {{ $topCompaniesLimit === 15 ? 'selected' : '' }}>Top 15</option>
+                                <option value="20" {{ $topCompaniesLimit === 20 ? 'selected' : '' }}>Top 20</option>
+                            </select>
+                        </div>
                         <div class="ind-bar-wrap">
                             @forelse ($topHiringCompanies as $row)
                             @php $maxHires = $topHiringCompanies->max('hires') ?: 1; @endphp
@@ -645,10 +744,10 @@
                                 style="width:100%; padding:6px 10px; font-size:12px; border:1px solid #d1d5db; border-radius:6px; font-family:'Montserrat',sans-serif; outline:none;">
                         </div>
                     </div>
-                    <div style="overflow-x:auto;">
+                    <div style="overflow-x:auto; overflow-y:auto; max-height:420px;">
                         <table style="width:100%; border-collapse:collapse; font-size:11px;">
                             <thead>
-                                <tr style="background:#0E0F3B; color:#fff; text-align:left;">
+                                <tr style="background:#0E0F3B; color:#fff; text-align:left; position:sticky; top:0; z-index:1;">
                                     <th style="padding:8px 10px;">Name</th>
                                     <th style="padding:8px 10px;">Batch</th>
                                     <th style="padding:8px 10px;">Program</th>
@@ -664,7 +763,7 @@
                                 @php $fullName = trim(($a->user->user_first_name ?? '') . ' ' . ($a->user->user_last_name ?? '')); @endphp
                                 <tr data-search="{{ mb_strtolower($fullName) }}" style="border-top:1px solid #f1f5f9;">
                                     <td style="padding:7px 10px; font-weight:600; color:#0E0F3B;">{{ $fullName }}</td>
-                                    <td style="padding:7px 10px;">{{ $a->alumnus_batch }}</td>
+                                    <td style="padding:7px 10px;">{{ optional($a->alumnus_batch)->format('Y') }}</td>
                                     <td style="padding:7px 10px;">{{ $a->program->program_name ?? 'N/A' }}</td>
                                     <td style="padding:7px 10px;">{{ $a->alumnus_workplace_undisclosed ? 'Undisclosed' : ($a->alumnus_workplace ?? 'N/A') }}</td>
                                     <td style="padding:7px 10px;">{{ $a->alumnus_job_position ?? 'N/A' }}</td>
@@ -834,6 +933,12 @@
         window.location.href = url.toString();
     }
 
+    function updateTopCompanies(count) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('top_companies', count);
+        window.location.href = url.toString();
+    }
+
     const fontDef = { family: 'Montserrat', size: 10 };
     const gridColor = 'rgba(0,0,0,0.05)';
     Chart.defaults.font = fontDef;
@@ -948,8 +1053,8 @@
         }
     });
 
-    // 4. Job-to-Degree Alignment — horizontal bar (real data, top 8 programs by employed headcount)
-    const alignmentEntries = @json($programAlignment->take(8));
+    // 4. Job-to-Degree Alignment — horizontal bar (every program; card scrolls if the list is tall)
+    const alignmentEntries = @json($programAlignment);
     new Chart(document.getElementById('chartAlignment'), {
         type: 'bar',
         data: {
@@ -1011,6 +1116,30 @@
                 label: 'Alumni',
                 data: Object.values(intervalData),
                 backgroundColor: '#1a3a6e',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: fontDef } },
+                y: { grid: { color: gridColor }, ticks: { font: fontDef, precision: 0 } }
+            }
+        }
+    });
+
+    // 4c-2. Employment by Month — bar (Jan-Dec, alumnus_employment_date, all years pooled)
+    const employmentByMonth = @json($employmentByMonth);
+    new Chart(document.getElementById('chartEmploymentByMonth'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(employmentByMonth),
+            datasets: [{
+                label: 'Alumni Employed',
+                data: Object.values(employmentByMonth),
+                backgroundColor: '#0e7c66',
                 borderRadius: 4
             }]
         },

@@ -22,8 +22,12 @@
         @csrf
         @method('PUT')
         <div>
-            <img src="{{ asset('storage/' . $user->profile_picture) ?? "No image set" }}" alt="Profile Picture">
-            <input type="file" name="user_profile_picture" id="profile_picture">
+            <img id="profileImagePreview"
+                src="{{ $user->user_profile_picture ? asset('storage/' . $user->user_profile_picture) : '' }}"
+                alt="Profile Picture" class="{{ $user->user_profile_picture ? '' : 'hidden' }}">
+            <button type="button" onclick="openImageLightbox(document.getElementById('profileImagePreview').src)">View current image</button>
+            <input type="file" name="user_profile_picture" id="profile_picture" accept="image/*"
+                onchange="previewImageInput(this, 'profileImagePreview', null)">
         </div>
         <div>
             <label for="user_first_name">First Name</label>
@@ -59,6 +63,8 @@
         </div>
         <button type="submit">Update Profile</button>
     </form>
-    
+
+    @include('partials.image-lightbox')
+
 </body>
 </html>

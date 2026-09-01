@@ -89,14 +89,20 @@ class JobApplicationController extends Controller
             return redirect()->back()->with('noResume', 'flex');
         }
 
-        // Check if the user has already applied for this job
+        // Idempotent, not a toggle — every real "Apply" button on the job
+        // board/dashboard becomes a disabled "APPLIED" badge the moment
+        // this succeeds, with no unapply affordance anywhere in the UI, so
+        // this used to only ever run a second time via a double-submit
+        // (slow network retry, browser back+resubmit, a stale cached
+        // page). It silently withdrew the alumnus's application with zero
+        // confirmation. A repeat request now just confirms the existing
+        // application instead of deleting it.
         $existingApplication = JobApplication::where('alumnus_id', $alumniId)
             ->where('job_id', $jobPostingId)
             ->first();
 
         if ($existingApplication) {
-            $existingApplication->delete();
-            return redirect()->back();
+            return redirect()->route('jobPosting.jobBoard')->with('success', 'You have already applied to this job.');
         }
 
         $match = app(JobMatchService::class)->scoreFor($job, $alumni);
@@ -178,6 +184,10 @@ class JobApplicationController extends Controller
         $alumnus->alumnus_employed_via_platform = true;
         if (!$alumnus->alumnus_first_job_date) {
             $alumnus->alumnus_first_job_date = now();
+            // A hire through an in-system job posting is a regular job, not
+            // an internship — set explicitly (not left null) so this counts
+            // as "answered: no" the same way a self-reported first job does.
+            $alumnus->alumnus_first_job_is_internship = false;
         }
         $alumnus->save();
 

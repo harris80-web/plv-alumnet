@@ -235,4 +235,41 @@ class EmployerController extends Controller
         
         return back()->with('success', 'Employer deactivated successfully!');
     }
+
+    /**
+     * Bulk counterpart to deactivateEmployer() above — same user_active flip
+     * + DeactEmployerMail, just over a batch. Mirrors
+     * UserController::bulkDeactivateAlumni()'s "drop out of the batch"
+     * philosophy: silently skips any selected id that's already inactive
+     * (or not an employer id at all) rather than erroring the whole request.
+     * Mail is queued (not ->send()) for the same reason bulkDeactivateAlumni
+     * queues it — a synchronous SMTP failure partway through a batch would
+     * otherwise leave later ids un-deactivated while earlier ones already
+     * went through.
+     */
+    public function bulkDeactivateEmployer(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer'],
+            'deactivate-reason' => ['required', 'string', 'max:255'],
+        ]);
+
+        $employers = Employer::with('user')
+            ->whereIn('user_id', $validated['ids'])
+            ->whereHas('user', fn ($q) => $q->where('user_active', true))
+            ->get();
+
+        foreach ($employers as $employer) {
+            $employer->user->update(['user_active' => false]);
+            Log::info("Employer with ID {$employer->user_id}: {$employer->user->user_first_name} {$employer->user->user_last_name} deactivated (bulk). Reason: {$validated['deactivate-reason']}");
+            Mail::to($employer->user->user_email)->queue(new DeactEmployerMail($employer->user, $validated['deactivate-reason']));
+        }
+
+        if ($employers->isEmpty()) {
+            return back()->with('error', 'None of the selected accounts could be deactivated (already inactive?).');
+        }
+
+        return back()->with('success', $employers->count() . ' employer account(s) deactivated.');
+    }
 }

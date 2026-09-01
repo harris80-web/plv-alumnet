@@ -46,6 +46,7 @@ function icon_class($page_name, $current_page)
                 <span class="sidebar-text hidden opacity-0 whitespace-nowrap">Dashboard</span>
             </a>
 
+            @if (Auth::user()->canAccessAdminFeature('user_management'))
             <a href="{{ route('superAdmin.userManagement') }}"
                 data-tooltip="User Management"
                 class="nav-link relative group flex items-center h-10 transition-all {{ $current_page === 'user_management' ? 'bg-white/10 border-l-4 border-orange-500 pl-4' : 'hover:bg-white/10 px-5 group' }}">
@@ -54,7 +55,9 @@ function icon_class($page_name, $current_page)
                 </div>
                 <span class="sidebar-text hidden opacity-0 whitespace-nowrap">User Management</span>
             </a>
+            @endif
 
+            @if (Auth::user()->canAccessAdminFeature('job_management'))
             <a href="{{ route('jobPosting.jobManagement') }}"
                 data-tooltip="Job Placement Management"
                 class="nav-link relative group flex items-center h-10 transition-all {{ $current_page === 'job_management' ? 'bg-white/10 border-l-4 border-orange-500 pl-4' : 'hover:bg-white/10 px-5 group' }}">
@@ -63,7 +66,9 @@ function icon_class($page_name, $current_page)
                 </div>
                 <span class="sidebar-text hidden opacity-0 whitespace-nowrap">Job Placement Management</span>
             </a>
+            @endif
 
+            @if (Auth::user()->canAccessAdminFeature('alumni_id_management'))
             <a href="{{ route('alumniId.management') }}"
                 data-tooltip="Alumni ID & Yearbook Management"
                 class="nav-link relative group flex items-center h-10 transition-all {{ $current_page === 'alumni_id_management' ? 'bg-white/10 border-l-4 border-orange-500 pl-4' : 'hover:bg-white/10 px-5 group' }}">
@@ -72,7 +77,9 @@ function icon_class($page_name, $current_page)
                 </div>
                 <span class="sidebar-text hidden opacity-0 whitespace-nowrap">Alumni ID & Yearbook Management</span>
             </a>
+            @endif
 
+            @if (Auth::user()->canAccessAdminFeature('notices'))
             <a href="{{ route('notices.management') }}"
                 data-tooltip="Notices & Events Management"
                 class="nav-link relative group flex items-center h-10 transition-all {{ $current_page === 'notices' ? 'bg-white/10 border-l-4 border-orange-500 pl-4' : 'hover:bg-white/10 px-5 group' }}">
@@ -81,7 +88,9 @@ function icon_class($page_name, $current_page)
                 </div>
                 <span class="sidebar-text hidden opacity-0 whitespace-nowrap">Notices & Events Management</span>
             </a>
+            @endif
 
+            @if (Auth::user()->canAccessAdminFeature('messaging'))
             <a href="{{ route('chatbot.management') }}"
                 data-tooltip="Chatbot & Messaging Management"
                 class="nav-link relative group flex items-center h-10 transition-all {{ $current_page === 'messaging' ? 'bg-white/10 border-l-4 border-orange-500 pl-4' : 'hover:bg-white/10 px-5 group' }}">
@@ -90,7 +99,9 @@ function icon_class($page_name, $current_page)
                 </div>
                 <span class="sidebar-text hidden opacity-0 whitespace-nowrap">Chatbot & Messaging Management</span>
             </a>
+            @endif
 
+            @if (Auth::user()->canAccessAdminFeature('testimonials'))
             <a href="{{ route('testimonials.manage') }}"
                 data-tooltip="Testimonial Management"
                 class="nav-link relative group flex items-center h-10 transition-all {{ $current_page === 'testimonials' ? 'bg-white/10 border-l-4 border-orange-500 pl-4' : 'hover:bg-white/10 px-5 group' }}">
@@ -99,7 +110,9 @@ function icon_class($page_name, $current_page)
                 </div>
                 <span class="sidebar-text hidden opacity-0 whitespace-nowrap">Testimonial Management</span>
             </a>
+            @endif
 
+            @if (Auth::user()->canAccessAdminFeature('faqs'))
             <a href="{{ route('faqs.management') }}"
                 data-tooltip="Manage FAQs"
                 class="nav-link relative group flex items-center h-10 transition-all {{ $current_page === 'faqs' ? 'bg-white/10 border-l-4 border-orange-500 pl-4' : 'hover:bg-white/10 px-5 group' }}">
@@ -108,6 +121,7 @@ function icon_class($page_name, $current_page)
                 </div>
                 <span class="sidebar-text hidden opacity-0 whitespace-nowrap">Manage FAQs</span>
             </a>
+            @endif
         </nav>
 
         <div class="mt-auto">

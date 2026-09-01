@@ -1,66 +1,4 @@
-<!--<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    @vite('resources/css/app.css')
-    @vite('resources/js/app.js')
-</head>
-
-<body>
-    <div class="flex flex-col w-full items-center">
-        <h1>Job Management</h1>
-        <br><br><br>
-        @foreach($jobPostings as $job)
-        @if ($job->job_approved == 0)
-
-
-        <div class="flex w-[80vw]">
-            <h2>{{ $job->job_posting_title }}</h2>
-            <p><strong>Company:</strong> {{ $job->job_posting_company }}</p>
-            <p><strong>Location:</strong> {{ $job->job_posting_address }}</p>
-            <p><strong>Posted by:</strong> {{ $job->user->user_first_name }} {{ $job->user->user_last_name }}</p>
-            <p><strong>Job type:</strong> {{ $job->job_posting_employment_type }}</p>
-            <p><strong>Job setup:</strong> {{ $job->job_posting_setup }}</p>
-            <p><strong>Recommended program:</strong>
-                @foreach ($job->programs as $program)
-                {{ $program->program_name }}
-                <br><br>
-                @endforeach
-            </p>
-            <p><strong>Description:</strong> {{ $job->job_posting_description }}</p>
-            <p><strong>Valid until:</strong> {{ $job->job_closing_date }}</p>
-
-            <br><br><br>
-            <form action="{{ route('jobPosting.approve', $job->job_posting_id) }}" method="POST">
-                @csrf
-                <button type="submit">
-                    Approve
-                </button>
-            </form>
-        </div>
-        @endif
-        @endforeach
-        <br><br><br>
-
-        <br><br><br>
-
-
-</body>
-
-</html>-->
-
 <?php $current_page = 'job_management'; ?>
-
-@php
-$pending_jobs = $jobPostings->where('job_approved', 0);
-$approved_jobs = $jobPostings->where('job_approved', 1);
-$total_jobs = $jobPostings->count();
-$pending_count = $pending_jobs->count();
-$approved_count = $approved_jobs->count();
-@endphp
 
 <!DOCTYPE html>
 <html lang="en">
@@ -193,15 +131,15 @@ $approved_count = $approved_jobs->count();
                 <!-- Stat Cards -->
                 <div class="grid grid-cols-4 gap-4 mb-6">
                     <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                        <p class="text-2xl font-bold text-slate-800">{{ $total_jobs }}</p>
+                        <p class="text-2xl font-bold text-slate-800">{{ $totalJobs }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Total Job Posts</p>
                     </div>
                     <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                        <p class="text-2xl font-bold text-[#ED7A07]">{{ $pending_count }}</p>
+                        <p class="text-2xl font-bold text-[#ED7A07]">{{ $pendingCount }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Pending Approval</p>
                     </div>
                     <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                        <p class="text-2xl font-bold text-green-500">{{ $approved_count }}</p>
+                        <p class="text-2xl font-bold text-green-500">{{ $approvedCount }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Approved Job Posts</p>
                     </div>
                     <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
@@ -211,122 +149,8 @@ $approved_count = $approved_jobs->count();
 
                 <!-- ══ PENDING TABLE ══ -->
                 <p class="text-xs font-bold text-[#C73D1A] mb-3">Job Posts pending for approval:</p>
-                <div class="bg-white rounded-lg shadow-sm border border-slate-200 mb-6 w-full">
-                    <table class="jobs-table">
-                        <thead class="bg-[#0E0F3B] text-white">
-                            <tr>
-                                <th class="border-r border-slate-700">ID</th>
-                                <th class="border-r border-slate-700">Job Title</th>
-                                <th class="border-r border-slate-700">Company Name <i data-lucide="chevron-down"
-                                        class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-                                <th class="border-r border-slate-700">Location <i data-lucide="chevron-down"
-                                        class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-                                <th class="border-r border-slate-700">Posted By <i data-lucide="chevron-down"
-                                        class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-                                <th class="border-r border-slate-700">Job Type <i data-lucide="chevron-down"
-                                        class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-                                <th class="border-r border-slate-700">Job Setup <i data-lucide="chevron-down"
-                                        class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-                                <th class="border-r border-slate-700">Recommended Program <i data-lucide="chevron-down"
-                                        class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-                                <th class="border-r border-slate-700">Status <i data-lucide="chevron-down"
-                                        class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-                                <th class="border-r border-slate-700">Posting Date</th>
-                                <th class="border-r border-slate-700">Closing Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @forelse ($pending_jobs as $j)
-
-                            <tr class="hover:bg-slate-50/80 transition-colors">
-                                <td class="font-medium text-black border-r border-slate-100">{{ $loop->iteration }}</td>
-                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_title }}
-                                </td>
-                                <td class="font-medium text-black border-r border-slate-100">
-                                    {{ $j->job_posting_company }}
-                                </td>
-                                <td class="font-medium text-black border-r border-slate-100">
-                                    {{ $j->job_posting_address }}
-                                </td>
-                                <td class="font-medium text-black border-r border-slate-100">
-                                    {{ $j->user->user_first_name }} {{ $j->user->user_last_name }}
-                                </td>
-                                <td class="font-medium text-black border-r border-slate-100">
-                                    {{ $j->job_posting_employment_type }}
-                                </td>
-                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_setup }}
-                                </td>
-                                <td class="font-medium text-black border-r border-slate-100">
-                                    @foreach ($j->programs as $program)
-                                    {{ $program->program_name }}<br>
-                                    @endforeach
-                                </td>
-                                <td class="border-r border-slate-100">
-                                    <span
-                                        class="px-2 py-1 rounded-full border text-[7px] font-bold bg-amber-100 text-amber-600 border-amber-200 inline-block whitespace-nowrap ">
-                                        PENDING
-                                    </span>
-                                </td>
-                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_date }} </td>
-                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_closing_date }}
-                                </td>
-                                <td class="text-center relative">
-                                    <div class="inline-block text-left relative">
-                                        <button
-                                            class="menu-button p-1.5 hover:bg-slate-100 rounded-full transition-colors">
-                                            <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                        </button>
-                                        <div class="action-dropdown bg-white border border-slate-200 rounded-md shadow-xl">
-                                            <div class="py-1">
-                                                <form action="{{ route('jobPosting.approve', $j->job_posting_id) }}"
-                                                    method="POST" class="w-full">
-                                                    @csrf
-                                                    <button type="button"
-                                                        onclick="openApprovalModal(this)"
-                                                        class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-green-50">
-                                                        <i data-lucide="check-circle" class="w-4 h-4 mr-3 text-green-500"></i> Approve
-                                                    </button>
-                                                </form>
-                                                <button type="button"
-                                                    onclick="openDeclineNotesModal({{ $j->job_posting_id }}, '{{ addslashes($j->job_posting_title) }}')"
-                                                    class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                    <i data-lucide="x-circle" class="w-4 h-4 mr-3"></i> Decline
-                                                </button>
-
-                                                @php
-                                                    $viewModalData = [
-                                                        'title' => $j->job_posting_title,
-                                                        'posted' => $j->created_at,
-                                                        'company' => $j->job_posting_company,
-                                                        'location' => $j->job_posting_address,
-                                                        'posted_by' => $j->user->user_first_name . ' ' . $j->user->user_last_name,
-                                                        'type' => $j->job_posting_employment_type,
-                                                        'setup' => $j->job_posting_setup,
-                                                        'program' => $j->programs->pluck('program_name')->join(', '),
-                                                        'industry' => $j->industry->industry_name ?? 'N/A',
-                                                        'closing' => $j->job_closing_date,
-                                                        'description' => $j->job_posting_description,
-                                                        'status' => 'Pending',
-                                                    ];
-                                                @endphp
-                                                <button onclick='openViewModal({{ $j->job_posting_id }}, @json($viewModalData))'
-                                                    class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 border-t border-slate-100">
-                                                    <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="10" class="text-center py-8 text-slate-400 text-sm">No pending job posts.
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                <div id="jobPendingTableWrap" class="bg-white rounded-lg shadow-sm border border-slate-200 mb-6 w-full">
+                    @include('partials.job-management.pending-table')
                 </div>
 
                 <!-- Search / Filter / Export Row -->
@@ -356,120 +180,8 @@ $approved_count = $approved_jobs->count();
                 </div>
 
                 <!-- ══ ALL JOBS TABLE ══ -->
-                <div class="bg-white rounded-lg shadow-sm border border-slate-200 w-full">
-                    <table class="jobs-table">
-                        <thead class="bg-[#0E0F3B] text-white">
-                            <tr>
-                                <th class="border-r border-slate-700">ID</th>
-                                <th class="border-r border-slate-700">Job Title</th>
-                                <th class="border-r border-slate-700">Company Name <i data-lucide="chevron-down"
-                                        class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-                                <th class="border-r border-slate-700">Location <i data-lucide="chevron-down"
-                                        class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-                                <th class="border-r border-slate-700">Posted By <i data-lucide="chevron-down"
-                                        class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-                                <th class="border-r border-slate-700">Job Type <i data-lucide="chevron-down"
-                                        class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-                                <th class="border-r border-slate-700">Job Setup <i data-lucide="chevron-down"
-                                        class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-                                <th class="border-r border-slate-700">Recommended Program <i data-lucide="chevron-down"
-                                        class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-                                <th class="border-r border-slate-700">Status <i data-lucide="chevron-down"
-                                        class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-                                <th class="border-r border-slate-700">Posting Date</th>
-                                <th class="border-r border-slate-700">Closing Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100" id="jobs-tbody">
-                            @forelse ($approved_jobs as $j)
-                            <tr class="hover:bg-slate-50/80 transition-colors"
-
-                                data-title="{{ strtolower($j->job_posting_title) }}"
-                                data-company="{{ strtolower($j->job_posting_company) }}"
-                                data-type="{{ $j->job_posting_employment_type }}"
-                                data-setup="{{ $j->job_posting_setup }}"
-                                data-program="{{ $j->programs->pluck('program_name')->join(', ') }}"
-                                data-datetime="{{ $j->created_at }}" data-closing="{{ $j->job_closing_date }}">
-                                <td class="font-medium text-black border-r border-slate-100">{{ $loop->iteration }}</td>
-                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_title }}
-                                </td>
-                                <td class="font-medium text-black border-r border-slate-100">
-                                    {{ $j->job_posting_company }}
-                                </td>
-                                <td class="font-medium text-black border-r border-slate-100">
-                                    {{ $j->job_posting_address }}
-                                </td>
-                                <td class="font-medium text-black border-r border-slate-100">
-                                    {{ $j->user->user_first_name }} {{ $j->user->user_last_name }}
-                                </td>
-                                <td class="font-medium text-black border-r border-slate-100">
-                                    {{ $j->job_posting_employment_type }}
-                                </td>
-                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_setup }}
-                                </td>
-                                <td class="font-medium text-black border-r border-slate-100">
-                                    @foreach ($j->programs as $program)
-                                    {{ $program->program_name }}<br>
-                                    @endforeach
-                                </td>
-                                <td class="border-r border-slate-100">
-                                    <span
-                                        class="px-2 py-1 rounded-full border text-[6px] font-semibold bg-green-100 text-green-600 border-green-200 inline-block whitespace-nowrap">
-                                        APPROVED
-                                    </span>
-                                </td>
-                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_date }}</td>
-                                <td class="font-medium text-black border-r border-slate-100">{{ $j->job_closing_date }}
-                                </td>
-                                <td class="text-center relative">
-                                    <div class="inline-block text-left relative">
-                                        <button
-                                            class="menu-button p-1.5 hover:bg-slate-100 rounded-full transition-colors">
-                                            <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                        </button>
-                                        <div class="action-dropdown bg-white border border-slate-200 rounded-md shadow-xl">
-                                            <div class="py-1">
-                                                @php
-                                                    $viewModalData = [
-                                                        'title' => $j->job_posting_title,
-                                                        'posted' => $j->created_at,
-                                                        'company' => $j->job_posting_company,
-                                                        'location' => $j->job_posting_address,
-                                                        'posted_by' => $j->user->user_first_name . ' ' . $j->user->user_last_name,
-                                                        'type' => $j->job_posting_employment_type,
-                                                        'setup' => $j->job_posting_setup,
-                                                        'program' => $j->programs->pluck('program_name')->join(', '),
-                                                        'industry' => $j->industry->industry_name ?? 'N/A',
-                                                        'closing' => $j->job_closing_date,
-                                                        'description' => $j->job_posting_description,
-                                                        'status' => 'Approved',
-                                                    ];
-                                                @endphp
-                                                <button onclick='openViewModal({{ $j->job_posting_id }}, @json($viewModalData))'
-                                                    class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50">
-                                                    <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View
-                                                </button>
-                                                <button type="button"
-                                                    onclick="openDeleteModal({{ $j->job_posting_id }}, '{{ addslashes($j->job_posting_title) }}', '{{ route('jobPosting.delete', $j->job_posting_id) }}')"
-                                                    class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                    <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i> Delete
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="10" class="text-center py-8 text-slate-400 text-sm">No approved job posts.
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                    <div id="empty-state" class="hidden text-center py-12 text-slate-400 text-sm">No job posts found.
-                    </div>
+                <div id="jobApprovedTableWrap" class="bg-white rounded-lg shadow-sm border border-slate-200 w-full">
+                    @include('partials.job-management.approved-table')
                 </div>
 
             </div><!-- end overflow-y-auto -->
@@ -516,33 +228,7 @@ $approved_count = $approved_jobs->count();
         </div>
     </div>
 
-    <!-- Confirm Modal -->
-    <div id="confirmModal"
-        class="fixed inset-0 z-[100] flex items-center justify-center invisible transition-all duration-300">
-        <div class="absolute inset-0 bg-[#0E0F3B]/40 backdrop-blur-sm" onclick="closeConfirmModal()"></div>
-        <div id="confirmContent"
-            class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
-            <div class="p-8 text-center">
-                <div id="confirmIconContainer"
-                    class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i id="confirmIcon" data-lucide="alert-triangle" class="w-8 h-8"></i>
-                </div>
-                <h3 id="confirmTitle" class="text-[#0E0F3B] text-xl font-bold mb-2">Confirmation</h3>
-                <p id="confirmMessage" class="text-slate-500 text-sm leading-relaxed">Are you sure you want to proceed?
-                </p>
-            </div>
-            <div class="px-8 pb-8 flex gap-3">
-                <button onclick="closeConfirmModal()"
-                    class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all uppercase">
-                    Cancel
-                </button>
-                <button id="confirmYesBtn"
-                    class="flex-1 py-2.5 text-white rounded-lg text-xs font-bold transition-all uppercase hover:brightness-110">
-                    Yes, Proceed
-                </button>
-            </div>
-        </div>
-    </div>
+    @include('partials.confirm-modal')
 
     <!-- Sidebar Overlay -->
     <div id="sidebar-overlay" onclick="toggleSidebar('filter-sidebar')"
@@ -1129,6 +815,44 @@ $approved_count = $approved_jobs->count();
             document.querySelectorAll('.action-dropdown.open').forEach(d => d.classList.remove('open'));
         });
 
+        /* ── No-reload (AJAX) pagination ───────────────────────────
+           Swaps just one table's wrapper innerHTML on a page-link click
+           instead of letting the link do a normal full-page navigation —
+           the rest of the page (scroll position, the other table, filters)
+           never moves. Re-binds pagination links on the freshly-fetched
+           markup too, since those are new DOM nodes with no listeners of
+           their own. Same pattern as userManagement.blade.php's employer
+           tables. */
+        function initAjaxTablePagination(wrapId, pageParam, fetchUrl, reinit) {
+            const wrap = document.getElementById(wrapId);
+            if (!wrap) return;
+
+            function bind() {
+                wrap.querySelectorAll('nav[aria-label="Pagination"] a[href]').forEach(function (link) {
+                    link.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const page = new URL(this.href).searchParams.get(pageParam) || 1;
+                        fetch(fetchUrl + '?' + pageParam + '=' + page, {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        })
+                            .then(function (r) { return r.text(); })
+                            .then(function (html) {
+                                wrap.innerHTML = html;
+                                if (window.lucide) lucide.createIcons();
+                                initMenuButtons();
+                                if (reinit) reinit();
+                                bind();
+                            });
+                    });
+                });
+            }
+
+            bind();
+        }
+
+        initAjaxTablePagination('jobPendingTableWrap', 'pendingPage', "{{ route('jobPosting.pendingFragment') }}");
+        initAjaxTablePagination('jobApprovedTableWrap', 'approvedPage', "{{ route('jobPosting.approvedFragment') }}", applyFilters);
+
         function toggleSidebar(id) {
             const sidebar = document.getElementById(id);
             const overlay = document.getElementById('sidebar-overlay');
@@ -1273,11 +997,11 @@ $approved_count = $approved_jobs->count();
                 deleteBtn.classList.add('hidden');
                 approveBtn.onclick = () => {
                     closeViewModal();
-                    openConfirmAction(jobId, 'approve', data.title);
+                    openApprovalModal(data.approveUrl);
                 };
                 declineBtn.onclick = () => {
                     closeViewModal();
-                    openConfirmAction(jobId, 'decline', data.title);
+                    openDeclineNotesModal(jobId, data.title);
                 };
             } else {
                 approveBtn.classList.add('hidden');
@@ -1285,7 +1009,7 @@ $approved_count = $approved_jobs->count();
                 deleteBtn.classList.remove('hidden');
                 deleteBtn.onclick = () => {
                     closeViewModal();
-                    openConfirmAction(jobId, 'delete', data.title);
+                    openDeleteModal(jobId, data.title, data.deleteUrl);
                 };
             }
 
@@ -1296,93 +1020,18 @@ $approved_count = $approved_jobs->count();
 
         function closeViewModal() {
             document.getElementById('viewJobModal').classList.add('hidden');
-            document.getElementById('viewJobModal').style.display = 'none';
             document.body.style.overflow = 'auto';
         }
 
-        function openConfirmModal({
-            title,
-            message,
-            iconName,
-            iconBg,
-            iconColor,
-            btnBg,
-            btnText,
-            onConfirm
-        }) {
-            const content = document.getElementById('confirmContent');
-            document.getElementById('confirmTitle').innerText = title;
-            document.getElementById('confirmMessage').innerHTML = message;
-            document.getElementById('confirmIconContainer').className = `w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${iconBg}`;
-            const icon = document.getElementById('confirmIcon');
-            icon.setAttribute('data-lucide', iconName);
-            icon.className = `w-8 h-8 ${iconColor}`;
-            const yesBtn = document.getElementById('confirmYesBtn');
-            yesBtn.className = `flex-1 py-2.5 ${btnBg} text-white rounded-lg text-xs font-bold transition-all uppercase hover:brightness-110`;
-            yesBtn.innerText = btnText;
-            yesBtn.onclick = () => {
-                onConfirm();
-                closeConfirmModal();
-            };
-            lucide.createIcons();
-            document.getElementById('confirmModal').classList.remove('invisible');
-            setTimeout(() => content.classList.remove('scale-95'), 10);
-        }
-
-        function closeConfirmModal() {
-            const content = document.getElementById('confirmContent');
-            content.classList.add('scale-95');
-            setTimeout(() => document.getElementById('confirmModal').classList.add('invisible'), 200);
-        }
-
-        function openConfirmAction(id, action, title) {
-            document.querySelectorAll('.action-dropdown.open').forEach(d => d.classList.remove('open'));
-            const configs = {
-                approve: {
-                    title: 'Approve Job Post',
-                    message: `Are you sure you want to <span class="font-bold text-green-600">approve</span> Job Post titled <b>${title}</b>?`,
-                    iconName: 'check-circle',
-                    iconBg: 'bg-green-100',
-                    iconColor: 'text-green-600',
-                    btnBg: 'bg-green-600',
-                    btnText: 'Yes, Approve',
-                    href: `admin_job_action.php?action=approve&id=${id}`
-                },
-                decline: {
-                    title: 'Decline Job Post',
-                    message: `Are you sure you want to <span class="font-bold text-red-600">decline</span> Job Post titled <b>${title}</b>?`,
-                    iconName: 'x-circle',
-                    iconBg: 'bg-red-100',
-                    iconColor: 'text-red-600',
-                    btnBg: 'bg-red-600',
-                    btnText: 'Yes, Decline',
-                    href: `admin_job_action.php?action=decline&id=${id}`
-                },
-                delete: {
-                    title: 'Delete Job Post',
-                    message: `Are you sure you want to <span class="font-bold text-red-600">delete</span> Job Post titled <b>${title}</b>?`,
-                    iconName: 'trash-2',
-                    iconBg: 'bg-red-100',
-                    iconColor: 'text-red-600',
-                    btnBg: 'bg-red-600',
-                    btnText: 'Yes, Delete',
-                    href: `admin_delete_job.php?id=${id}`
-                }
-            };
-            const c = configs[action];
-            openConfirmModal({
-                ...c,
-                onConfirm: () => {
-                    window.location.href = c.href;
-                }
-            });
-        }
-
         //JOB APPROVAL MODAL JS
-        let approvalForm = null;
+        // Fed a real route URL from openViewModal (data.approveUrl) rather than
+        // inferring a <form> from a clicked button — the old dropdown-based
+        // Approve button lived inside its own <form>, but this modal doesn't,
+        // so submission is built here instead.
+        let approvalUrl = null;
 
-        function openApprovalModal(btn) {
-            approvalForm = btn.closest('form');
+        function openApprovalModal(url) {
+            approvalUrl = url;
             const modal = document.getElementById('approvalModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -1393,12 +1042,21 @@ $approved_count = $approved_jobs->count();
             const modal = document.getElementById('approvalModal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
-            approvalForm = null;
+            approvalUrl = null;
         }
 
         function submitApproval() {
-            if (approvalForm) {
-                approvalForm.submit();
+            if (approvalUrl) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = approvalUrl;
+                const csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = '_token';
+                csrf.value = '{{ csrf_token() }}';
+                form.appendChild(csrf);
+                document.body.appendChild(form);
+                form.submit();
             }
             closeApprovalModal();
         }

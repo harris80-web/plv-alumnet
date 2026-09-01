@@ -185,7 +185,7 @@
                                 <thead class="bg-[#0E0F3B] text-white">
                                     <tr>
                                         <th class="border-r border-slate-700 w-10">
-                                            <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAllAlumniIds(this)" class="w-4 h-4 cursor-pointer" title="Select all">
+                                            <input type="checkbox" id="selectAllCheckbox" class="bulk-checkbox" title="Select all">
                                         </th>
                                         <th class="border-r border-slate-700">Reference No.</th>
                                         <th class="border-r border-slate-700">Student Full Name</th>
@@ -219,7 +219,7 @@
                                         data-reference="{{ mb_strtolower($referenceNo) }}" data-program="{{ $alumniIdRecord->alumnus->program->program_name ?? '' }}"
                                         data-submitted="{{ $alumniIdRecord->created_at->format('Y-m-d') }}" data-status="{{ $alumniIdRecord->status }}">
                                         <td class="border-r border-slate-100">
-                                            <input type="checkbox" class="alumni-id-checkbox w-4 h-4 accent-[#1D264F] cursor-pointer" value="{{ $alumniIdRecord->id }}" onchange="updateAlumniIdBulkUI()">
+                                            <input type="checkbox" class="alumni-id-checkbox bulk-checkbox" value="{{ $alumniIdRecord->id }}">
                                         </td>
                                         <td class="border-r border-slate-100 font-semibold text-[#0E0F3B]">{{ $referenceNo }}</td>
                                         <td class="border-r border-slate-100">{{ $fullName }}</td>
@@ -328,7 +328,7 @@
                                 <thead class="bg-[#0E0F3B] text-white">
                                     <tr>
                                         <th class="border-r border-slate-700 w-10">
-                                            <input type="checkbox" id="yearbookSelectAllCheckbox" onchange="toggleSelectAllYearbooks(this)" class="w-4 h-4 cursor-pointer" title="Select all">
+                                            <input type="checkbox" id="yearbookSelectAllCheckbox" class="bulk-checkbox" title="Select all">
                                         </th>
                                         <th class="border-r border-slate-700">Reference No.</th>
                                         <th class="border-r border-slate-700">Full Name</th>
@@ -351,7 +351,7 @@
                                         $ybModalData = [
                                             'reference' => $ybReferenceNo,
                                             'name' => $ybFullName,
-                                            'batch' => $yearbookRecord->alumnus->alumnus_batch,
+                                            'batch' => optional($yearbookRecord->alumnus->alumnus_batch)->format('Y'),
                                             'lastUpdate' => optional($yearbookRecord->status_updated_at)->format('M d, Y h:i A') ?? 'Never',
                                             'updatedBy' => $ybUpdatedByName,
                                             'claimingStatus' => $yearbookRecord->claiming_status,
@@ -363,14 +363,14 @@
                                         ];
                                     @endphp
                                     <tr class="border-b border-slate-100" data-search="{{ mb_strtolower($ybFullName . ' ' . $ybReferenceNo) }}"
-                                        data-reference="{{ mb_strtolower($ybReferenceNo) }}" data-batch="{{ $yearbookRecord->alumnus->alumnus_batch }}"
+                                        data-reference="{{ mb_strtolower($ybReferenceNo) }}" data-batch="{{ optional($yearbookRecord->alumnus->alumnus_batch)->format('Y') }}"
                                         data-distribution="{{ $yearbookRecord->distribution_status }}" data-claiming="{{ $yearbookRecord->claiming_status }}">
                                         <td class="border-r border-slate-100">
-                                            <input type="checkbox" class="yearbook-checkbox w-4 h-4 accent-[#1D264F] cursor-pointer" value="{{ $yearbookRecord->id }}" onchange="updateYearbookBulkUI()">
+                                            <input type="checkbox" class="yearbook-checkbox bulk-checkbox" value="{{ $yearbookRecord->id }}">
                                         </td>
                                         <td class="border-r border-slate-100 font-semibold text-[#0E0F3B]">{{ $ybReferenceNo }}</td>
                                         <td class="border-r border-slate-100">{{ $ybFullName }}</td>
-                                        <td class="border-r border-slate-100">{{ $yearbookRecord->alumnus->alumnus_batch }}</td>
+                                        <td class="border-r border-slate-100">{{ optional($yearbookRecord->alumnus->alumnus_batch)->format('Y') }}</td>
                                         <td class="border-r border-slate-100">
                                             <span class="px-2 py-1 rounded-full text-[9px] font-bold uppercase {{ $yearbookRecord->distributionBadgeClass() }}">
                                                 {{ $yearbookRecord->distributionStatusLabel() }}
@@ -702,6 +702,8 @@
         </div>
     </div>
 
+    @include('partials.confirm-modal')
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             if (window.lucide) lucide.createIcons();
@@ -758,44 +760,40 @@
             return [...document.querySelectorAll('.alumni-id-checkbox:checked')].map(cb => cb.value);
         }
 
-        function updateAlumniIdBulkUI() {
-            const count = getCheckedAlumniIds().length;
-            document.getElementById('selectedCount').textContent = count;
-            document.querySelectorAll('.bulk-status-btn').forEach(btn => btn.disabled = count === 0);
-
-            const rows = document.querySelectorAll('#alumniIdsTbody tr[data-search]');
-            const visibleCheckboxes = [...rows].filter(r => r.style.display !== 'none').map(r => r.querySelector('.alumni-id-checkbox')).filter(Boolean);
-            const selectAll = document.getElementById('selectAllCheckbox');
-            if (selectAll) {
-                selectAll.checked = visibleCheckboxes.length > 0 && visibleCheckboxes.every(cb => cb.checked);
-            }
-        }
-
-        function toggleSelectAllAlumniIds(source) {
-            document.querySelectorAll('#alumniIdsTbody tr[data-search]').forEach(row => {
-                if (row.style.display === 'none') return; // respect the current search filter
-                const cb = row.querySelector('.alumni-id-checkbox');
-                if (cb) cb.checked = source.checked;
-            });
-            updateAlumniIdBulkUI();
-        }
+        initBulkCheckboxGroup({
+            header: 'selectAllCheckbox',
+            rowSelector: '.alumni-id-checkbox',
+            onChange: function (checkedValues, checkedCount) {
+                document.getElementById('selectedCount').textContent = checkedCount;
+                document.querySelectorAll('.bulk-status-btn').forEach(btn => btn.disabled = checkedCount === 0);
+            },
+        });
 
         function submitBulkStatus(status, label) {
             const ids = getCheckedAlumniIds();
             if (ids.length === 0) return;
-            if (!confirm('Set ' + ids.length + ' selected alumni ID(s) to "' + label + '"?')) return;
-
-            const form = document.getElementById('bulkStatusForm');
-            form.querySelectorAll('input[name="ids[]"]').forEach(el => el.remove());
-            ids.forEach(id => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'ids[]';
-                input.value = id;
-                form.appendChild(input);
+            openConfirmModal({
+                title: 'Bulk Status Update',
+                message: `Are you sure you want to set <b>${ids.length}</b> selected alumni ID(s) to <span class="font-bold text-blue-600">"${label}"</span>?`,
+                iconName: 'refresh-ccw',
+                iconBg: 'bg-blue-100',
+                iconColor: 'text-blue-600',
+                btnBg: 'bg-blue-600',
+                btnText: 'Yes, Update',
+                onConfirm: () => {
+                    const form = document.getElementById('bulkStatusForm');
+                    form.querySelectorAll('input[name="ids[]"]').forEach(el => el.remove());
+                    ids.forEach(id => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'ids[]';
+                        input.value = id;
+                        form.appendChild(input);
+                    });
+                    document.getElementById('bulkStatusInput').value = status;
+                    form.submit();
+                }
             });
-            document.getElementById('bulkStatusInput').value = status;
-            form.submit();
         }
 
         // ── ALUMNI ID: VIEW / UPDATE MODAL ──
@@ -871,27 +869,14 @@
             return [...document.querySelectorAll('.yearbook-checkbox:checked')].map(cb => cb.value);
         }
 
-        function updateYearbookBulkUI() {
-            const count = getCheckedYearbookIds().length;
-            document.getElementById('yearbookSelectedCount').textContent = count;
-            document.getElementById('yearbookBulkEditBtn').disabled = count === 0;
-
-            const rows = document.querySelectorAll('#yearbooksTbody tr[data-search]');
-            const visibleCheckboxes = [...rows].filter(r => r.style.display !== 'none').map(r => r.querySelector('.yearbook-checkbox')).filter(Boolean);
-            const selectAll = document.getElementById('yearbookSelectAllCheckbox');
-            if (selectAll) {
-                selectAll.checked = visibleCheckboxes.length > 0 && visibleCheckboxes.every(cb => cb.checked);
-            }
-        }
-
-        function toggleSelectAllYearbooks(source) {
-            document.querySelectorAll('#yearbooksTbody tr[data-search]').forEach(row => {
-                if (row.style.display === 'none') return; // respect the current search filter
-                const cb = row.querySelector('.yearbook-checkbox');
-                if (cb) cb.checked = source.checked;
-            });
-            updateYearbookBulkUI();
-        }
+        initBulkCheckboxGroup({
+            header: 'yearbookSelectAllCheckbox',
+            rowSelector: '.yearbook-checkbox',
+            onChange: function (checkedValues, checkedCount) {
+                document.getElementById('yearbookSelectedCount').textContent = checkedCount;
+                document.getElementById('yearbookBulkEditBtn').disabled = checkedCount === 0;
+            },
+        });
 
         // ── ALUMNI YEARBOOK: MODAL (single view + bulk edit share this) ──
         function switchYearbookModalTab(tab) {

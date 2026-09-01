@@ -32,7 +32,7 @@
     }
 </style>
 
-<body class="bg-gray-50">
+<body class="bg-gray-50 min-h-screen flex flex-col">
     @if (!$user)
     @include('partials.header-general')
     @elseif($user->user_role === 'alumni')
@@ -41,7 +41,7 @@
     @include('partials.header-employer')
     @endif
 
-    <main class="max-w-4xl mx-auto p-6">
+    <main class="max-w-4xl mx-auto p-6 w-full flex-1">
         <a href="{{ $backUrl }}" class="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-[#C73D1A] transition-colors mb-6">
             <i class="fas fa-arrow-left"></i> Back
         </a>
@@ -112,7 +112,7 @@
                     </span>
                 </div>
                 @if ($review->review_body)
-                <p class="text-sm text-gray-600 mt-4 leading-relaxed">{{ $review->review_body }}</p>
+                <p class="text-sm text-gray-600 mt-4 leading-relaxed break-words whitespace-pre-line">{{ $review->review_body }}</p>
                 @endif
             </div>
             @empty

@@ -562,6 +562,8 @@
         </div>
     </div>
 
+    @include('partials.confirm-modal')
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             if (window.lucide) lucide.createIcons();
@@ -756,15 +758,24 @@
         // ── DELETE ──
         function confirmDeleteNotice(title, url) {
             document.querySelectorAll('.action-dropdown').forEach(d => d.classList.add('hidden'));
-            if (!confirm('Delete "' + title + '"? This cannot be undone.')) return;
-
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = url;
-            form.innerHTML = '<input type="hidden" name="_token" value="{{ csrf_token() }}">' +
-                '<input type="hidden" name="_method" value="DELETE">';
-            document.body.appendChild(form);
-            form.submit();
+            openConfirmModal({
+                title: 'Delete Notice',
+                message: `Are you sure you want to <span class="font-bold text-red-600">delete</span> "<b>${title}</b>"? This cannot be undone.`,
+                iconName: 'trash-2',
+                iconBg: 'bg-red-100',
+                iconColor: 'text-red-600',
+                btnBg: 'bg-red-600',
+                btnText: 'Yes, Delete',
+                onConfirm: () => {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = url;
+                    form.innerHTML = '<input type="hidden" name="_token" value="{{ csrf_token() }}">' +
+                        '<input type="hidden" name="_method" value="DELETE">';
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
         }
 
         window.addEventListener('click', function (event) {

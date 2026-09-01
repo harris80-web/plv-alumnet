@@ -203,16 +203,23 @@ class NoticeController extends Controller
         $activeTab = $request->query('tab') === 'seminar' ? 'seminar' : 'events';
         $category = $activeTab === 'seminar' ? 'seminar' : 'event';
 
+        // Past events/seminars are done — this listing is "what's coming up",
+        // not an archive (see Notice::scopeUpcoming()).
         $notices = Notice::category($category)
             ->visibleToAlumni()
+            ->upcoming()
             ->orderBy('event_datetime')
             ->paginate(6)
             ->withQueryString();
 
         $interestedNoticeIds = Auth::user()->alumnus->interestedNotices->pluck('id')->all();
         $user = Auth::user();
+        // Deep-link from the dashboard's "Campus Events" cards (?notice=123)
+        // — the view auto-opens this notice's detail modal on load, if it's
+        // present on the current page.
+        $openNoticeId = $request->query('notice');
 
-        return view('alumni.eventsSeminars', compact('notices', 'activeTab', 'interestedNoticeIds', 'user'));
+        return view('alumni.eventsSeminars', compact('notices', 'activeTab', 'interestedNoticeIds', 'user', 'openNoticeId'));
     }
 
     public function alumniAnnouncements(Request $request)
@@ -226,8 +233,12 @@ class NoticeController extends Controller
             ->withQueryString();
 
         $user = Auth::user();
+        // Deep-link from the dashboard's "Announcements" cards (?notice=123)
+        // — the view auto-opens this notice's detail modal on load, if it's
+        // present on the current page.
+        $openNoticeId = $request->query('notice');
 
-        return view('alumni.announcements', compact('notices', 'user'));
+        return view('alumni.announcements', compact('notices', 'user', 'openNoticeId'));
     }
 
     /**
@@ -247,16 +258,19 @@ class NoticeController extends Controller
         $activeTab = $request->query('tab') === 'seminar' ? 'seminar' : 'events';
         $category = $activeTab === 'seminar' ? 'seminar' : 'event';
 
+        // Same "upcoming only" rule as alumniEventsAndSeminars() above.
         $notices = Notice::category($category)
             ->visibleToEmployer()
+            ->upcoming()
             ->orderBy('event_datetime')
             ->paginate(6)
             ->withQueryString();
 
         $user = Auth::user();
         $interestedNoticeIds = [];
+        $openNoticeId = $request->query('notice');
 
-        return view('alumni.eventsSeminars', compact('notices', 'activeTab', 'interestedNoticeIds', 'user'));
+        return view('alumni.eventsSeminars', compact('notices', 'activeTab', 'interestedNoticeIds', 'user', 'openNoticeId'));
     }
 
     /** Employer counterpart to alumniAnnouncements() — see employerEventsAndSeminars() for why the same view is reused. */
@@ -271,8 +285,9 @@ class NoticeController extends Controller
             ->withQueryString();
 
         $user = Auth::user();
+        $openNoticeId = $request->query('notice');
 
-        return view('alumni.announcements', compact('notices', 'user'));
+        return view('alumni.announcements', compact('notices', 'user', 'openNoticeId'));
     }
 
     /** Toggles the current alumnus's interest — one click marks/unmarks, no separate "cancel" flow needed. */

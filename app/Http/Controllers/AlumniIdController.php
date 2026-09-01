@@ -52,7 +52,10 @@ class AlumniIdController extends Controller
         ];
 
         $programs = Program::orderBy('program_name')->get();
-        $batches = $yearbooks->pluck('alumnus.alumnus_batch')->filter()->unique()->sortDesc()->values();
+        // Batch filter dropdown stays a "graduation year" pick even though
+        // alumnus_batch is now a full date — extract the year here rather
+        // than listing every unique exact date.
+        $batches = $yearbooks->pluck('alumnus.alumnus_batch')->filter()->map(fn ($d) => $d->year)->unique()->sortDesc()->values();
 
         return view('superAdmin.alumniIdManagement', compact('alumniIds', 'statusCounts', 'yearbooks', 'yearbookCounts', 'programs', 'batches'));
     }

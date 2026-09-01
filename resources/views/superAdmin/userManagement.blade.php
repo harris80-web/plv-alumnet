@@ -1,257 +1,3 @@
-<!--DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    @vite('resources/css/app.css')
-    @vite('resources/js/app.js')
-</head>
-
-<body>
-    <div class="flex flex-col w-full items-center">
-        <h1>User Management</h1>
-        <br><br><br>
-        <div>
-            <h2 class="flex justify-center font-bold">Employer management</h2>
-            @foreach ($employers as $employer)
-            
-
-                <div class="flex gap-4 border-2 border-gray-300 rounded-lg p-4 mb-4">
-                    <div>{{ $loop->iteration }}</div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Company name:</h2>
-                        <p>{{ $employer->employer_company_name }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Website URL:</h2>
-                        <p>{{ $employer->employer_website_url ?? 'N/A' }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>First name:</h2>
-                        <p>{{ $employer->user?->user_first_name }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Last name:</h2>
-                        <p>{{ $employer->user?->user_last_name }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Email:</h2>
-                        <p>{{ $employer->user?->user_email }}</p>
-                    </div>
-                    <form action="{{ route('users.approveEmployer', $employer->user_id) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                            Approve
-                        </button>
-                    </form>
-
-                </div>
-           
-            @endforeach
-
-        </div>
-        <br><br><br>
-        <div>
-            @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
-            <h2 class="font-bold">Alumni management</h2>
-            <div>
-                <form action="{{ route('users.addAlumnus') }}" method="POST">
-                    @csrf
-                    <div>
-                        <label for="user_first_name">First Name:</label>
-                        <input type="text" id="user_first_name" name="user_first_name" class="border-2 border-gray-300 rounded-lg p-1">
-                    </div>
-                    <div>
-                        <label for="user_last_name">Last Name:</label>
-                        <input type="text" id="user_last_name" name="user_last_name" class="border-2 border-gray-300 rounded-lg p-1">
-                    </div>
-                    <div>
-                        <label for="user_middle_name">Middle Name:</label>
-                        <input type="text" id="user_middle_name" name="user_middle_name" class="border-2 border-gray-300 rounded-lg p-1">
-                    </div>
-                    <div>
-                        <label for="user_suffix">Suffix:</label>
-                        <input type="text" id="user_suffix" name="user_suffix" class="border-2 border-gray-300 rounded-lg p-1">
-                    </div>
-                    <div>
-                        <label for="program_id">Program:</label>
-                        <select name="program_id" id="program_id" class="border-2 border-gray-300 rounded-lg p-1">
-                            @foreach ($programs as $program)
-                            <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label for="alumnus_batch">Batch:</label>
-                        <input type="number" id="alumnus_batch" name="alumnus_batch" class="border-2 border-gray-300 rounded-lg p-1">
-                    </div>
-                    <div>
-                        <label for="alumnus_section">Section:</label>
-                        <select name="section_id" id="alumnus_section" class="border-2 border-gray-300 rounded-lg p-1">
-                            @foreach ($sections as $section)
-                            <option value="{{ $section->section_id }}">{{ $section->section_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label for="user_email">Email:</label>
-                        <input type="email" id="user_email" name="user_email" class="border-2 border-gray-300 rounded-lg p-1">
-                    </div>
-                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                        Add Alumni
-                    </button>
-                </form>
-            </div>
-            <div class="flex flex-col">
-                @foreach ($alumni as $alumnus)
-                <div class="flex gap-4 border-2 border-gray-300 rounded-lg p-4 mb-4">
-                    <div>{{ $loop->iteration }}</div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>First name:</h2>
-                        <p>{{ $alumnus->user->user_first_name }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Last name:</h2>
-                        <p>{{ $alumnus->user->user_last_name }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Middle name:</h2>
-                        <p>{{ $alumnus->user->user_middle_name }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Suffix:</h2>
-                        <p>{{ $alumnus->user->user_suffix }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Program:</h2>
-                        <p>{{ $alumnus->program->program_name }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Batch:</h2>
-                        <p>{{ $alumnus->alumnus_batch }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Section:</h2>
-                        <p>{{ $alumnus->section->section_name }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Email:</h2>
-                        <p>{{ $alumnus->user->user_email }}</p>
-                    </div>
-
-                </div>
-                @endforeach
-            </div>
-
-        </div>
-        <br><br><br>
-        <div>
-            @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
-            <h2 class="font-bold">Admin management</h2>
-            <div>
-                <form action="{{ route('users.addAdmin') }}" method="POST">
-                    @csrf
-                    <div>
-                        <label for="user_first_name">First Name:</label>
-                        <input type="text" id="user_first_name" name="user_first_name" class="border-2 border-gray-300 rounded-lg p-1">
-                    </div>
-                    <div>
-                        <label for="user_last_name">Last Name:</label>
-                        <input type="text" id="user_last_name" name="user_last_name" class="border-2 border-gray-300 rounded-lg p-1">
-                    </div>
-                    <div>
-                        <label for="user_middle_name">Middle Name:</label>
-                        <input type="text" id="user_middle_name" name="user_middle_name" class="border-2 border-gray-300 rounded-lg p-1">
-                    </div>
-                    <div>
-                        <label for="user_suffix">Suffix:</label>
-                        <input type="text" id="user_suffix" name="user_suffix" class="border-2 border-gray-300 rounded-lg p-1">
-                    </div>
-                    <div>
-                        <label for="office_address">Address:</label>
-                        <input type="text" name="office_address" class="border-2 border-gray-300 rounded-lg p-1">
-                    </div>
-                    <div>
-                        <label for="user_email">Email:</label>
-                        <input type="email" id="user_email" name="user_email" class="border-2 border-gray-300 rounded-lg p-1">
-                    </div>
-                    <div>
-                        <label for="user_password">Password:</label>
-                        <input type="password" id="user_password" name="user_password" class="border-2 border-gray-300 rounded-lg p-1">
-                    </div>
-                    <div>
-                        <label for="user_password_confirmation">Confirm password:</label>
-                        <input type="password" id="user_password_confirmation" name="user_password_confirmation" class="border-2 border-gray-300 rounded-lg p-1">
-                    </div>
-                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                        Add Admin
-                    </button>
-                </form>
-            </div>
-            <div class="flex flex-col">
-                @foreach ($admins as $admin)
-                <div class="flex gap-4 border-2 border-gray-300 rounded-lg p-4 mb-4">
-                    <div>{{ $loop->iteration }}</div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>First name:</h2>
-                        <p>{{ $admin->user->user_first_name }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Last name:</h2>
-                        <p>{{ $admin->user->user_last_name }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Middle name:</h2>
-                        <p>{{ $admin->user->user_middle_name }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Suffix:</h2>
-                        <p>{{ $admin->user->user_suffix }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Address:</h2>
-                        <p>{{ $admin->office_address }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Account status:</h2>
-                        <p>{{ $admin->user->user_active }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Date created:</h2>
-                        <p>{{ $admin->user->created_at->format('Y-m-d') }}</p>
-                    </div>
-                    <div class="flex flex-col items-center border-2 border-gray-300 rounded-lg p-1">
-                        <h2>Email:</h2>
-                        <p>{{ $admin->user->user_email }}</p>
-                    </div>
-
-                </div>
-                @endforeach
-            </div>
-
-        </div>
-
-</body>
-
-</html>-->
 
 @php
 $current_page = 'user_management';
@@ -355,15 +101,19 @@ $current_page = 'user_management';
 
             @include('partials.super-admin-header')
             @include('partials.success')
+            @php $isSuperAdmin = Auth::user()->user_role == 'super_admin'; @endphp
             <!-- Tabs -->
             <div class="bg-white px-8 flex gap-8 border-b border-slate-200 shrink-0 shadow-md">
+                @if ($isSuperAdmin)
                 <button id="tab-admin"
                     class="tab-btn active py-3 px-2 flex items-center gap-2 text-sm transition-colors"
                     onclick="switchTab('admin')">
                     <i data-lucide="user-cog" class="w-4 h-4"></i>
                     Admin
                 </button>
-                <button id="tab-alumni" class="tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors"
+                @endif
+                <button id="tab-alumni"
+                    class="tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors {{ $isSuperAdmin ? '' : 'active' }}"
                     onclick="switchTab('alumni')">
                     <i data-lucide="book-user" class="w-4 h-4"></i>
                     Alumni
@@ -385,14 +135,14 @@ $current_page = 'user_management';
 
                         <!-- Total Admins -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-800">{{ $admins->count() }}</p>
+                            <p class="text-2xl font-bold text-slate-800">{{ $adminStats['total'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total Admin</p>
                         </div>
 
                         <!-- Active Admins -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-green-500">
-                                {{ $admins->filter(fn($a) => $a->user->user_active)->count() }}
+                                {{ $adminStats['active'] }}
                             </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Active Admin</p>
                         </div>
@@ -400,7 +150,7 @@ $current_page = 'user_management';
                         <!-- Inactive Admins -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-[#C73D1A]">
-                                {{ $admins->filter(fn($a) => $a->user->user_active == 0)->count() }}
+                                {{ $adminStats['inactive'] }}
                             </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Inactive Admin</p>
                         </div>
@@ -423,11 +173,22 @@ $current_page = 'user_management';
                                 class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-transparent">
                         </div>
 
-                        <button onclick="document.getElementById('addAdminModal').classList.add('open')"
-                            class="bg-[#1D46A4] hover:bg-[#0E0F3B] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
-                            <i data-lucide="plus" class="w-4 h-4"></i>
-                            ADD ADMIN
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <!-- Bulk Actions (visible only when admin rows are checked) -->
+                            <div id="bulkAdminActions" class="hidden items-center gap-2">
+                                <span id="bulkAdminCount" class="text-xs font-medium text-slate-500 mr-1"></span>
+                                <button type="button" onclick="openBulkAdminPermissionsModal()"
+                                    class="flex items-center gap-1.5 px-3 py-2 bg-transparent hover:bg-[#1D46A4] text-[#1D46A4] hover:text-white text-xs font-medium rounded-lg border border-[#1D46A4] transition-all uppercase">
+                                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Edit Permissions
+                                </button>
+                            </div>
+
+                            <button onclick="document.getElementById('addAdminModal').classList.add('open')"
+                                class="bg-[#1D46A4] hover:bg-[#0E0F3B] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                ADD ADMIN
+                            </button>
+                        </div>
                     </div>
                     @if ($errors->any())
                     <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
@@ -443,6 +204,9 @@ $current_page = 'user_management';
                         <table class="w-full text-left text-[11px]">
                             <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                                 <tr>
+                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">
+                                        <input type="checkbox" id="selectAllAdmins" class="bulk-checkbox">
+                                    </th>
                                     <th class="px-4 py-4 font-semibold border-r border-slate-700">Last Name</th>
                                     <th class="px-4 py-4 font-semibold border-r border-slate-700">First Name</th>
                                     <th class="px-4 py-4 font-semibold border-r border-slate-700">Middle Name</th>
@@ -456,8 +220,10 @@ $current_page = 'user_management';
                             </thead>
                             <tbody class="divide-y divide-slate-100 text-center">
                                 @forelse ($admins as $admin)
-                                @if ($admin->user->user_role == "admin")
                                 <tr class="hover:bg-slate-50/80 transition-colors font-medium">
+                                    <td class="px-4 py-4 border-r border-slate-100">
+                                        <input type="checkbox" class="admin-row-checkbox bulk-checkbox" value="{{ $admin->user_id }}">
+                                    </td>
                                     <td class="px-4 py-4 text-black border-r border-slate-100">
                                         {{ $admin->user->user_last_name }}
                                     </td>
@@ -494,8 +260,18 @@ $current_page = 'user_management';
                                             <div
                                                 class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
                                                 <div class="py-1">
-                                                    <button
-                                                        class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 transition-colors">
+                                                    <button type="button"
+                                                        class="view-admin-modal-btn flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 transition-colors"
+                                                        data-last-name="{{ $admin->user->user_last_name }}"
+                                                        data-first-name="{{ $admin->user->user_first_name }}"
+                                                        data-middle-name="{{ $admin->user->user_middle_name ?? '' }}"
+                                                        data-suffix="{{ $admin->user->user_suffix ?? '' }}"
+                                                        data-email="{{ $admin->user->user_email }}"
+                                                        data-address="{{ $admin->office_address }}"
+                                                        data-status="{{ $admin->user->user_active ? 'Active' : 'Inactive' }}"
+                                                        data-joined="{{ $admin->user->created_at->format('M d, Y') }}"
+                                                        data-user-id="{{ $admin->user_id }}"
+                                                        data-permissions="{{ implode(',', $admin->permissions ?? []) }}">
                                                         <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i>
                                                         View Profile
                                                     </button>
@@ -513,16 +289,16 @@ $current_page = 'user_management';
                                         </div>
                                     </td>
                                 </tr>
-                                @endif
 
                                 @empty
                                 <tr>
-                                    <td colspan="9" class="px-4 py-8 text-center text-slate-400 text-sm">No admins
+                                    <td colspan="10" class="px-4 py-8 text-center text-slate-400 text-sm">No admins
                                         found.</td>
                                 </tr>
                                 @endforelse
                             </tbody>
                         </table>
+                        {{ $admins->onEachSide(1)->links('partials.pagination') }}
                     </div>
                 </div>
                 <!-- END ADMIN TAB -->
@@ -530,20 +306,20 @@ $current_page = 'user_management';
 
 
                 <!-- ==================== ALUMNI TAB ==================== -->
-                <div id="content-alumni" class="tab-content">
+                <div id="content-alumni" class="tab-content {{ $isSuperAdmin ? '' : 'active' }}">
                     <!-- ==================== METRIC CARDS ==================== -->
                     <div class="grid grid-cols-4 gap-4 mb-6">
 
                         <!-- Total Alumni -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-800">{{ $alumni->count() }}</p>
+                            <p class="text-2xl font-bold text-slate-800">{{ $alumniStats['total'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total Alumni</p>
                         </div>
 
                         <!-- Active Accounts -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-green-500">
-                                {{ $alumni->filter(fn($a) => $a->user?->user_active)->count() }}
+                                {{ $alumniStats['active'] }}
                             </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Active Accounts</p>
                         </div>
@@ -551,7 +327,7 @@ $current_page = 'user_management';
                         <!-- Deactivated Accounts -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-[#C73D1A]">
-                                {{ $alumni->filter(fn($a) => !$a->user?->user_active)->count() }}
+                                {{ $alumniStats['deactivated'] }}
                             </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Deactivated Accounts</p>
                         </div>
@@ -559,7 +335,7 @@ $current_page = 'user_management';
                         <!-- New This Month -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-amber-400">
-                                {{ $alumni->filter(fn($a) => $a->user?->created_at->month == now()->month && $a->user->created_at->year == now()->year)->count() }}
+                                {{ $alumniStats['newThisMonth'] }}
                             </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">New This Month</p>
                         </div>
@@ -658,8 +434,7 @@ $current_page = 'user_management';
                             <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                                 <tr>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700 w-10">
-                                        <input type="checkbox" id="selectAllAlumni" onchange="toggleAllAlumniCheckboxes(this)"
-                                            class="w-4 h-4 rounded border-slate-300 align-middle">
+                                        <input type="checkbox" id="selectAllAlumni" class="bulk-checkbox">
                                     </th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">ID</th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Last Name <i
@@ -695,11 +470,11 @@ $current_page = 'user_management';
                                     data-firstname="{{ mb_strtolower($alumnus->user?->user_first_name ?? '') }}"
                                     data-middlename="{{ mb_strtolower($alumnus->user?->user_middle_name ?? '') }}"
                                     data-program="{{ $alumnus->program->program_name ?? '' }}"
-                                    data-batch="{{ $alumnus->alumnus_batch }}"
+                                    data-batch="{{ optional($alumnus->alumnus_batch)->format('Y') }}"
                                     data-status="{{ $status }}">
                                     <td class="px-3 py-3 border-r border-slate-100">
-                                        <input type="checkbox" class="alumni-row-checkbox w-4 h-4 rounded border-slate-300 align-middle"
-                                            value="{{ $alumnus->user_id }}" onchange="updateBulkDeactivateAlumniButton()">
+                                        <input type="checkbox" class="alumni-row-checkbox bulk-checkbox"
+                                            value="{{ $alumnus->user_id }}">
                                     </td>
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
                                         {{ $loop->iteration }}
@@ -727,7 +502,7 @@ $current_page = 'user_management';
                                         {{ $alumnus->section->section_name ?? 'N/A' }}
                                     </td>
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $alumnus->alumnus_batch }}
+                                        {{ optional($alumnus->alumnus_batch)->format('Y') }}
                                     </td>
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
                                         {{ $alumnus->user?->user_email }}
@@ -799,6 +574,7 @@ $current_page = 'user_management';
                             </tbody>
                         </table>
                         <p id="alumniNoSearchResults" class="hidden text-center text-gray-400 py-10 text-xs">No matching alumni.</p>
+                        {{ $alumni->onEachSide(1)->links('partials.pagination') }}
                     </div>
                 </div>
                 <!-- END ALUMNI TAB -->
@@ -811,7 +587,7 @@ $current_page = 'user_management';
                         <!-- Total Employer -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-slate-800">
-                                {{ $employers->count() }}
+                                {{ $employerStats['total'] }}
                             </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total Employer</p>
                         </div>
@@ -819,7 +595,7 @@ $current_page = 'user_management';
                         <!-- Awaiting Approval -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-amber-400">
-                                {{ $employers->filter(fn($e) => !$e->employer_approved)->count() }}
+                                {{ $employerStats['awaitingApproval'] }}
                             </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Awaiting Approval</p>
                         </div>
@@ -827,7 +603,7 @@ $current_page = 'user_management';
                         <!-- Active Accounts -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-green-500">
-                                {{ $employers->filter(fn($e) => $e->user?->user_active)->count() }}
+                                {{ $employerStats['active'] }}
                             </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Active Employers</p>
                         </div>
@@ -835,7 +611,7 @@ $current_page = 'user_management';
                         <!-- Deactivated Accounts -->
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-[#C73D1A]">
-                                {{ $employers->filter(fn($e) => !$e->user?->user_active && $e->employer_approved)->count() }}
+                                {{ $employerStats['deactivated'] }}
                             </p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Deactivated Accounts</p>
                         </div>
@@ -845,121 +621,8 @@ $current_page = 'user_management';
                     <!-- Awaiting Approval -->
                     <div class="mb-6">
                         <p class="text-sm font-semibold text-orange-600 mb-3">Employers Awaiting Approval:</p>
-                        <div class="bg-white rounded-lg shadow-sm border border-slate-200">
-                            <table class="w-full text-left text-[10px]">
-                                <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
-                                    <tr>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700"><i
-                                                data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i>
-                                        </th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Company Name</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Full Name</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Industry</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Document</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Official Website
-                                            URL</th>
-                                        <th class="px-4 py-4 font-semibold text-center">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100">
-                                    @forelse ($employers->filter(fn($e) => !$e->employer_approved) as $employer)
-                                    <tr class="hover:bg-slate-50/80 transition-colors text-center">
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $loop->iteration }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->employer_company_name }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->user?->user_first_name }}
-                                            {{ $employer->user?->user_middle_name }}
-                                            {{ $employer->user?->user_last_name }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->user?->user_email }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->industry?->industry_name ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            <a href="{{ asset('storage/' . $employer->employer_company_document) }}" target="_blank" class="text-blue-500 hover:underline">
-                                                {{ asset('storage/' . $employer->employer_company_document) ? 'View Document' : 'Not Uploaded' }}
-                                            </a>
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->employer_website_url ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-4 py-3 text-center relative">
-                                            <div class="inline-block text-left">
-                                                <button
-                                                    class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                                    <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                                </button>
-                                                <div
-                                                    class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl ring-1 ring-black ring-opacity-5 z-50 hidden">
-                                                    <div class="py-1">
-                                                        <!-- <form
-                                                                                        action="{{ route('users.approveEmployer', $employer->user_id) }}"
-                                                                                        method="POST">
-                                                                                        @csrf
-                                                                                        <button type="submit"
-                                                                                            class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-emerald-50 transition-colors whitespace-nowrap">
-                                                                                            <i data-lucide="check-circle"
-                                                                                                class="w-4 h-4 mr-3 text-emerald-500"></i> Approve
-                                                                                            Employer
-                                                                                        </button>
-                                                                                    </form>
-                                                                                    <button
-                                                                                        onclick="openEmployerConfirm('reject', '{{ $employer->employer_company_name }}')"
-                                                                                        class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-orange-50 transition-colors whitespace-nowrap">
-                                                                                        <i data-lucide="x-circle"
-                                                                                            class="w-4 h-4 mr-3 text-orange-500"></i> Reject
-                                                                                        Employer
-                                                                                    </button> -->
-                                                        <button
-                                                            onclick="openEmployerConfirm('approve', '{{ $employer->employer_company_name }}', {{ $employer->user_id }})"
-                                                            class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-emerald-50 transition-colors whitespace-nowrap">
-                                                            <i data-lucide="check-circle"
-                                                                class="w-4 h-4 mr-3 text-emerald-500"></i> Approve
-                                                            Employer
-                                                        </button>
-                                                        <button
-                                                            onclick="openEmployerConfirm('reject', '{{ $employer->employer_company_name }}', {{ $employer->user_id }})"
-                                                            class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-orange-50 transition-colors whitespace-nowrap">
-                                                            <i data-lucide="x-circle"
-                                                                class="w-4 h-4 mr-3 text-orange-500"></i> Reject
-                                                            Employer
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div style="display:none;">
-                                                    <form id="approveEmployerForm_{{ $employer->user_id }}"
-                                                        action="{{ route('users.approveEmployer', $employer->user_id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                    </form>
-
-                                                    <form id="rejectEmployerForm_{{ $employer->user_id }}"
-                                                        action="{{ route('users.rejectEmployer', $employer->user_id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <input type="hidden" name="reject-reason"
-                                                            id="rejectEmployerReason_{{ $employer->user_id }}">
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="7" class="px-4 py-8 text-center text-slate-400 text-sm">No
-                                            employers awaiting approval.</td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                        <div id="employerPendingTableWrap" class="bg-white rounded-lg shadow-sm border border-slate-200">
+                            @include('partials.user-management.employer-pending-table')
                         </div>
                     </div>
 
@@ -978,122 +641,23 @@ $current_page = 'user_management';
                                     <i data-lucide="filter" class="w-4 h-4"></i>
                                 </button>
                             </div>
-                            <button onclick="exportEmployersToCSV()"
-                                class="bg-[#C73D1A] hover:bg-[#a83215] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
-                                <i data-lucide="download" class="w-4 h-4"></i>
-                                EXPORT CSV
-                            </button>
+                            <div class="flex gap-2">
+                                <!-- Bulk Deactivate -->
+                                <button type="button" id="bulkDeactivateEmployerBtn" onclick="openBulkDeactivateEmployerModal()"
+                                    class="hidden bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg text-sm font-semibold items-center gap-2 shadow-sm transition-all">
+                                    <i data-lucide="user-minus" class="w-4 h-4"></i>
+                                    DEACTIVATE SELECTED (<span id="bulkDeactivateEmployerCount">0</span>)
+                                </button>
+                                <button onclick="exportEmployersToCSV()"
+                                    class="bg-[#C73D1A] hover:bg-[#a83215] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                    EXPORT CSV
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="bg-white rounded-lg shadow-sm border border-slate-200">
-                            <table class="w-full text-left text-[10px]">
-                                <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
-                                    <tr>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700"><i
-                                                data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i>
-                                        </th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Company Name</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Full Name</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Industry</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Contact</th>
-                                        <th class="px-4 py-4 font-semibold border-r border-slate-700">Official Website
-                                            URL</th>
-                                        <th class="px-4 py-4 font-semibold text-center">Actions</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody id="employerTbody" class="divide-y divide-slate-100">
-                                    @forelse ($employers->filter(fn($e) => $e->user?->user_active) as $employer)
-                                    <tr class="hover:bg-slate-50/80 transition-colors text-center"
-                                        data-search="{{ mb_strtolower($employer->employer_company_name ?? '') }}"
-                                        data-lastname="{{ mb_strtolower($employer->user?->user_last_name ?? '') }}"
-                                        data-firstname="{{ mb_strtolower($employer->user?->user_first_name ?? '') }}"
-                                        data-middlename="{{ mb_strtolower($employer->user?->user_middle_name ?? '') }}"
-                                        data-company="{{ mb_strtolower($employer->employer_company_name ?? '') }}"
-                                        data-industry="{{ mb_strtolower($employer->industry->industry_name ?? '') }}">
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $loop->iteration }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->employer_company_name }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->user?->user_first_name }}
-                                            {{ $employer->user?->user_middle_name }}
-                                            {{ $employer->user?->user_last_name }}
-                                            {{ $employer->user?->user_suffix ?? '' }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->user?->user_email }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->industry->industry_name ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->employer_contact_number ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                            {{ $employer->employer_website_url ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-4 py-3 text-center relative">
-                                            <div class="inline-block text-left">
-                                                <button
-                                                    class="menu-button p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                                    <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
-                                                </button>
-                                                <div
-                                                    class="dropdown-menu absolute right-4 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl z-50 hidden">
-                                                    <div class="py-1">
-                                                        <button type="button"
-                                                            class="view-modal-btn flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 transition-colors"
-                                                            data-last-name="{{ $employer->user->user_last_name }}"
-                                                            data-first-name="{{ $employer->user->user_first_name }}"
-                                                            data-middle-name="{{ $employer->user->user_middle_name }}"
-                                                            data-suffix="{{ $employer->user->user_suffix ?? '' }}"
-                                                            data-email="{{ $employer->user->user_email }}"
-                                                            data-contact="{{ $employer->employer_contact_number ?? 'N/A' }}"
-                                                            data-company="{{ $employer->employer_company_name }}"
-                                                            data-industry="{{ $employer->industry->industry_name ?? 'N/A' }}"
-                                                            data-position="{{ $employer->employer_position ?? 'N/A' }}"
-                                                            data-year="{{ $employer->employer_year_established ?? 'N/A' }}"
-                                                            data-size="{{ $employer->employer_company_size ?? 'N/A' }}"
-                                                            data-url="{{ $employer->employer_website_url ?? 'N/A' }}">
-                                                            <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i>
-                                                            View Employer
-                                                        </button>
-                                                        <hr class="my-1 border-slate-100">
-                                                        <button
-                                                            onclick="openEmployerDeactivateModal('{{ $employer->user->user_first_name }}', '{{ $employer->user->user_last_name }}', {{ $employer->user_id }})"
-                                                            class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                            <i data-lucide="user-minus" class="w-4 h-4 mr-3"></i>
-                                                            Deactivate Account
-                                                        </button>
-                                                    </div>
-
-                                                </div>
-                                                <div style="display:none;">
-                                                    <form id="employerDeactivateForm_{{ $employer->user_id }}"
-                                                        action="{{ route('employers.deactivateEmployer', $employer->user_id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <input type="hidden" name="deactivate-reason"
-                                                            id="employerDeactivateReason_{{ $employer->user_id }}">
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="9" class="px-4 py-8 text-center text-slate-400 text-sm">No approved
-                                            employers yet.</td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                            <p id="employerNoSearchResults" class="hidden text-center text-gray-400 py-10 text-xs">No matching employers.</p>
+                        <div id="employerApprovedTableWrap" class="bg-white rounded-lg shadow-sm border border-slate-200">
+                            @include('partials.user-management.employer-approved-table')
                         </div>
                     </div>
                 </div>
@@ -1184,6 +748,18 @@ $current_page = 'user_management';
                                 <i data-lucide="eye" class="w-4 h-4"></i>
                             </button>
                         </div>
+                    </div>
+
+                    <div class="pt-2 pb-1 border-b border-slate-100">
+                        <p class="text-[10px] font-bold text-[#C73D1A] uppercase">Feature Access</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 py-1">
+                        @foreach (\App\Models\Office::PERMISSIONS as $key => $label)
+                        <label class="flex items-center gap-2 text-sm text-[#0E0F3B]">
+                            <input type="checkbox" name="permissions[]" value="{{ $key }}" checked>
+                            {{ $label }}
+                        </label>
+                        @endforeach
                     </div>
                 </div>
 
@@ -1302,7 +878,7 @@ $current_page = 'user_management';
                     </div>
                     <div class="flex items-center gap-4">
                         <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Batch:</label>
-                        <input type="number" name="alumnus_batch" placeholder="Enter Batch here" required
+                        <input type="date" name="alumnus_batch" max="{{ now()->addYear()->toDateString() }}" required
                             class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                     </div>
                     <div class="flex items-center gap-4">
@@ -1459,6 +1035,56 @@ $current_page = 'user_management';
         <input type="hidden" name="deactivate-reason" id="bulkDeactivateAlumniReasonInput">
     </form>
 
+    <!-- ===== BULK DEACTIVATE EMPLOYER MODAL ===== -->
+    <div id="bulkDeactivateEmployerModal"
+        class="fixed inset-0 z-[100] flex items-center justify-center invisible transition-all duration-300">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeBulkDeactivateEmployerModal()"></div>
+        <div id="bulkDeactivateEmployerContent"
+            class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
+            <div class="p-8 text-center">
+                <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="user-minus" class="w-8 h-8 text-red-500"></i>
+                </div>
+                <h3 class="text-[#0E0F3B] text-xl font-bold mb-1">Deactivate Selected Accounts</h3>
+                <p id="bulkDeactivateEmployerName" class="text-slate-400 text-xs font-medium mb-3"></p>
+                <p class="text-slate-500 text-sm leading-relaxed mb-4">
+                    Are you sure you want to <span class="font-bold text-red-600">deactivate</span> these accounts?
+                </p>
+                <div class="text-left">
+                    <label class="text-xs font-bold text-[#0E0F3B] uppercase tracking-wider block mb-2">
+                        Reason for Deactivation <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="bulkDeactivateEmployerReason" rows="3"
+                        placeholder="Enter reason for deactivating these accounts..."
+                        class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 resize-none transition-all"></textarea>
+                    <div id="bulkDeactivateEmployerError"
+                        class="hidden mt-2 flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                        <i data-lucide="circle-alert" class="w-3.5 h-3.5 mt-0.5 shrink-0 text-red-500"></i>
+                        <span class="text-red-600 text-xs font-medium">Please provide a reason before
+                            deactivating.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="px-8 pb-8 flex gap-3">
+                <button onclick="closeBulkDeactivateEmployerModal()"
+                    class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all uppercase">
+                    Cancel
+                </button>
+                <button id="bulkDeactivateEmployerSubmitBtn" onclick="submitBulkDeactivateEmployer()"
+                    class="flex-1 py-2.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-all uppercase">
+                    Yes, Deactivate
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <form id="bulkDeactivateEmployerForm" action="{{ route('employers.bulkDeactivateEmployer') }}" method="POST" class="hidden">
+        @csrf
+        @method('PUT')
+        <div id="bulkDeactivateEmployerIdsContainer"></div>
+        <input type="hidden" name="deactivate-reason" id="bulkDeactivateEmployerReasonInput">
+    </form>
+
     <!-- ==================== ALUMNI FILTER SIDEBAR ==================== -->
     <div id="filterSidebar" class="fixed inset-0 z-50 invisible transition-all duration-300">
         <div class="absolute inset-0 bg-black/20 backdrop-blur-sm" onclick="toggleAlumniFilterSidebar()"></div>
@@ -1509,7 +1135,7 @@ $current_page = 'user_management';
                     <select id="alumniFilterBatch"
                         class="w-full px-3 py-2 border border-slate-200 rounded text-sm text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white">
                         <option value="">Select Batch</option>
-                        @foreach ($alumni->pluck('alumnus_batch')->filter()->unique()->sortDesc()->values() as $batchYear)
+                        @foreach ($alumniBatchYears as $batchYear)
                         <option value="{{ $batchYear }}">{{ $batchYear }}</option>
                         @endforeach
                     </select>
@@ -1633,6 +1259,132 @@ $current_page = 'user_management';
                     Yes, Proceed
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- ==================== VIEW ADMIN MODAL ==================== -->
+    <div id="viewAdminModal"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/60 backdrop-blur-sm px-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden">
+            <div class="bg-[#0E0F3B] px-7 py-4 flex justify-between items-center">
+                <h2 class="text-white text-lg font-bold">View Admin</h2>
+                <button onclick="closeAdminViewModal()" class="text-gray-300 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="px-7 py-5 space-y-5">
+                <section>
+                    <div class="flex gap-5">
+                        <div
+                            class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center border border-gray-200 shrink-0">
+                            <i data-lucide="user-round" class="w-10 h-10 text-slate-400"></i>
+                        </div>
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-3 flex-grow">
+                            <div>
+                                <p class="text-[10px] text-gray-500 font-bold uppercase">Last Name</p>
+                                <p id="adminModalLastName" class="text-[#0E0F3B] font-medium text-sm">--</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-gray-500 font-bold uppercase">First Name</p>
+                                <p id="adminModalFirstName" class="text-[#0E0F3B] font-medium text-sm">--</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-gray-500 font-bold uppercase">Middle Name</p>
+                                <p id="adminModalMiddleName" class="text-[#0E0F3B] font-medium text-sm">--</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-gray-500 font-bold uppercase">Suffix</p>
+                                <p id="adminModalSuffix" class="text-[#0E0F3B] font-medium text-sm">--</p>
+                            </div>
+                            <div class="col-span-2">
+                                <p class="text-[10px] text-gray-500 font-bold uppercase">Email</p>
+                                <p id="adminModalEmail" class="text-[#0E0F3B] font-medium text-sm break-all">--</p>
+                            </div>
+                            <div class="col-span-2">
+                                <p class="text-[10px] text-gray-500 font-bold uppercase">Office / Address</p>
+                                <p id="adminModalAddress" class="text-[#0E0F3B] font-medium text-sm">--</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-gray-500 font-bold uppercase">Status</p>
+                                <p id="adminModalStatus" class="text-[#0E0F3B] font-medium text-sm">--</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-gray-500 font-bold uppercase">Date Joined</p>
+                                <p id="adminModalJoined" class="text-[#0E0F3B] font-medium text-sm">--</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <hr class="border-slate-100">
+
+                <section>
+                    <h3 class="text-[#D95D39] font-bold text-xs uppercase mb-3 tracking-wider">Feature Access</h3>
+                    <div id="adminModalPermissions" class="grid grid-cols-2 gap-x-4 gap-y-2">
+                        @foreach (\App\Models\Office::PERMISSIONS as $key => $label)
+                        <label class="flex items-center gap-2 text-sm text-[#0E0F3B]">
+                            <input type="checkbox" class="admin-modal-permission-checkbox" value="{{ $key }}">
+                            {{ $label }}
+                        </label>
+                        @endforeach
+                    </div>
+                    <p id="adminModalPermissionsSaved" class="hidden text-xs font-medium text-green-600 mt-2">Permissions saved.</p>
+                </section>
+            </div>
+
+            <div class="px-7 py-3.5 bg-gray-50 border-t border-slate-100 flex justify-end gap-2">
+                <button onclick="closeAdminViewModal()"
+                    class="px-8 py-2 border border-slate-300 text-slate-600 rounded font-bold uppercase text-sm">Close</button>
+                <button onclick="saveAdminPermissions()"
+                    class="px-8 py-2 bg-[#1D46A4] hover:bg-[#0E0F3B] text-white rounded font-bold uppercase text-sm transition-colors">Save
+                    Permissions</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Hidden form submitted by saveAdminPermissions() / submitBulkAdminPermissions() -->
+    <form id="admin-permissions-form" method="POST" class="hidden">
+        @csrf
+        @method('PUT')
+    </form>
+
+    <!-- ==================== BULK EDIT ADMIN PERMISSIONS MODAL ==================== -->
+    <div id="bulkAdminPermissionsModal"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/60 backdrop-blur-sm px-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden">
+            <div class="bg-[#0E0F3B] px-7 py-4 flex justify-between items-center">
+                <h2 class="text-white text-lg font-bold">Bulk Edit Permissions</h2>
+                <button onclick="closeBulkAdminPermissionsModal()" class="text-gray-300 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="px-7 py-5 space-y-4">
+                <p id="bulkAdminPermissionsCount" class="text-sm text-slate-600"></p>
+                <div class="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
+                    <i data-lucide="circle-alert" class="w-3.5 h-3.5 mt-0.5 shrink-0 text-amber-600"></i>
+                    <span class="text-amber-700 text-xs font-medium">This replaces each selected admin's current
+                        feature access with exactly what's checked below.</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-4 gap-y-2">
+                    @foreach (\App\Models\Office::PERMISSIONS as $key => $label)
+                    <label class="flex items-center gap-2 text-sm text-[#0E0F3B]">
+                        <input type="checkbox" class="bulk-admin-permission-checkbox" value="{{ $key }}">
+                        {{ $label }}
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="px-7 py-3.5 bg-gray-50 border-t border-slate-100 flex justify-end gap-2">
+                <button onclick="closeBulkAdminPermissionsModal()"
+                    class="px-8 py-2 border border-slate-300 text-slate-600 rounded font-bold uppercase text-sm">Cancel</button>
+                <button onclick="submitBulkAdminPermissions()"
+                    class="px-8 py-2 bg-[#1D46A4] hover:bg-[#0E0F3B] text-white rounded font-bold uppercase text-sm transition-colors">Apply</button>
+            </div>
+
         </div>
     </div>
 
@@ -1783,7 +1535,37 @@ $current_page = 'user_management';
             document.getElementById('content-' + tab).classList.add('active');
             lucide.createIcons();
             initDropdowns();
+
+            // Keep the URL in sync (no reload) so a pagination link clicked
+            // afterward — which DOES reload the page — lands back on this
+            // same tab instead of resetting to the default one.
+            const url = new URL(window.location);
+            url.searchParams.set('tab', tab);
+            history.replaceState(null, '', url);
+
+            // Pagination links were rendered server-side against whatever
+            // query string the ORIGINAL page load had — they don't know
+            // about a tab switched client-side afterward. Patch every
+            // pagination link's own `tab` param to match, so clicking
+            // "page 2" from here actually lands back on this tab.
+            document.querySelectorAll('nav[aria-label="Pagination"] a[href]').forEach(function(link) {
+                const linkUrl = new URL(link.href);
+                linkUrl.searchParams.set('tab', tab);
+                link.href = linkUrl.toString();
+            });
         }
+
+        // Runs once on load too (not just on a manual tab click) — restores
+        // whichever tab was active before a pagination-triggered reload if
+        // ?tab= is present, and either way makes sure the pagination links'
+        // `tab` param above gets patched in from the very first render.
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabParam = new URLSearchParams(window.location.search).get('tab');
+            const activeBtn = document.querySelector('.tab-btn.active');
+            const defaultTab = activeBtn ? activeBtn.id.replace('tab-', '') : 'alumni';
+            const tab = (tabParam && document.getElementById('tab-' + tabParam)) ? tabParam : defaultTab;
+            switchTab(tab);
+        });
 
         /* ── Dropdown menus ─────────────────────────────────────── */
         function initDropdowns() {
@@ -1826,28 +1608,182 @@ $current_page = 'user_management';
         }
 
         /* ── Alumni bulk-select + bulk deactivate ─────────────────── */
-        function toggleAllAlumniCheckboxes(headerCheckbox) {
-            document.querySelectorAll('.alumni-row-checkbox').forEach(cb => cb.checked = headerCheckbox.checked);
-            updateBulkDeactivateAlumniButton();
+        initBulkCheckboxGroup({
+            header: 'selectAllAlumni',
+            rowSelector: '.alumni-row-checkbox',
+            onChange: function (checkedValues, checkedCount) {
+                const btn = document.getElementById('bulkDeactivateAlumniBtn');
+                document.getElementById('bulkDeactivateAlumniCount').textContent = checkedCount;
+                btn.classList.toggle('hidden', checkedCount === 0);
+                btn.classList.toggle('flex', checkedCount > 0);
+            },
+        });
+
+        /* ── Employer bulk-select + bulk deactivate ───────────────── */
+        function initEmployerBulkCheckboxes() {
+            initBulkCheckboxGroup({
+                header: 'selectAllEmployers',
+                rowSelector: '.employer-row-checkbox',
+                onChange: function (checkedValues, checkedCount) {
+                    const btn = document.getElementById('bulkDeactivateEmployerBtn');
+                    document.getElementById('bulkDeactivateEmployerCount').textContent = checkedCount;
+                    btn.classList.toggle('hidden', checkedCount === 0);
+                    btn.classList.toggle('flex', checkedCount > 0);
+                },
+            });
+        }
+        initEmployerBulkCheckboxes();
+
+        function getSelectedEmployerIds() {
+            return Array.from(document.querySelectorAll('.employer-row-checkbox:checked')).map(cb => cb.value);
+        }
+
+        function openBulkDeactivateEmployerModal() {
+            const selected = getSelectedEmployerIds();
+            if (selected.length === 0) return;
+
+            document.getElementById('bulkDeactivateEmployerName').textContent = selected.length + ' account(s) selected';
+            document.getElementById('bulkDeactivateEmployerReason').value = '';
+            document.getElementById('bulkDeactivateEmployerError').classList.add('hidden');
+
+            const modal = document.getElementById('bulkDeactivateEmployerModal');
+            const content = document.getElementById('bulkDeactivateEmployerContent');
+            lucide.createIcons();
+            modal.classList.remove('invisible');
+            setTimeout(() => content.classList.remove('scale-95'), 10);
+        }
+
+        function closeBulkDeactivateEmployerModal() {
+            const modal = document.getElementById('bulkDeactivateEmployerModal');
+            const content = document.getElementById('bulkDeactivateEmployerContent');
+            content.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('invisible'), 200);
+        }
+
+        function submitBulkDeactivateEmployer() {
+            const reason = document.getElementById('bulkDeactivateEmployerReason').value.trim();
+            const error = document.getElementById('bulkDeactivateEmployerError');
+            if (!reason) {
+                error.classList.remove('hidden');
+                lucide.createIcons();
+                return;
+            }
+
+            const container = document.getElementById('bulkDeactivateEmployerIdsContainer');
+            container.innerHTML = '';
+            getSelectedEmployerIds().forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = id;
+                container.appendChild(input);
+            });
+
+            document.getElementById('bulkDeactivateEmployerReasonInput').value = reason;
+            document.getElementById('bulkDeactivateEmployerForm').submit();
+        }
+
+        /* ── No-reload (AJAX) pagination ───────────────────────────
+           Swaps just one table's wrapper innerHTML on a page-link click
+           instead of letting the link do a normal full-page navigation —
+           the rest of the page (scroll position, the other tab/table,
+           anything the user had open) never moves. Re-binds pagination
+           links on the freshly-fetched markup too, since those are new
+           DOM nodes with no listeners of their own. */
+        function initAjaxTablePagination(wrapId, pageParam, fetchUrl, reinit) {
+            const wrap = document.getElementById(wrapId);
+            if (!wrap) return;
+
+            function bind() {
+                wrap.querySelectorAll('nav[aria-label="Pagination"] a[href]').forEach(function (link) {
+                    link.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const page = new URL(this.href).searchParams.get(pageParam) || 1;
+                        fetch(fetchUrl + '?' + pageParam + '=' + page, {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        })
+                            .then(function (r) { return r.text(); })
+                            .then(function (html) {
+                                wrap.innerHTML = html;
+                                if (window.lucide) lucide.createIcons();
+                                initDropdowns();
+                                if (reinit) reinit();
+                                bind();
+                            });
+                    });
+                });
+            }
+
+            bind();
+        }
+
+        initAjaxTablePagination('employerPendingTableWrap', 'employerPendingPage', "{{ route('users.employerPendingFragment') }}");
+        initAjaxTablePagination('employerApprovedTableWrap', 'employerApprovedPage', "{{ route('users.employerApprovedFragment') }}", function () {
+            initEmployerBulkCheckboxes();
+            initViewEmployerButtons();
+        });
+
+        /* ── Admin bulk-select + bulk permission edit ─────────────── */
+        const BULK_ADMIN_PERMISSIONS_URL = "{{ route('offices.bulkUpdatePermissions') }}";
+
+        initBulkCheckboxGroup({
+            header: 'selectAllAdmins',
+            rowSelector: '.admin-row-checkbox',
+            onChange: function (checkedValues, checkedCount) {
+                const bar = document.getElementById('bulkAdminActions');
+                document.getElementById('bulkAdminCount').textContent = checkedCount + ' selected';
+                bar.classList.toggle('hidden', checkedCount === 0);
+                bar.classList.toggle('flex', checkedCount > 0);
+            },
+        });
+
+        function getSelectedAdminIds() {
+            return Array.from(document.querySelectorAll('.admin-row-checkbox:checked')).map(cb => cb.value);
+        }
+
+        function openBulkAdminPermissionsModal() {
+            const ids = getSelectedAdminIds();
+            if (ids.length === 0) return;
+            document.getElementById('bulkAdminPermissionsCount').textContent =
+                ids.length + ' admin' + (ids.length === 1 ? '' : 's') + ' selected';
+            document.querySelectorAll('.bulk-admin-permission-checkbox').forEach(cb => cb.checked = false);
+            lucide.createIcons();
+            document.getElementById('bulkAdminPermissionsModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBulkAdminPermissionsModal() {
+            document.getElementById('bulkAdminPermissionsModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function submitBulkAdminPermissions() {
+            const ids = getSelectedAdminIds();
+            if (ids.length === 0) return;
+            const checked = Array.from(document.querySelectorAll('.bulk-admin-permission-checkbox:checked')).map(cb => cb.value);
+
+            const form = document.getElementById('admin-permissions-form');
+            form.action = BULK_ADMIN_PERMISSIONS_URL;
+            form.querySelectorAll('input[name="permissions[]"], input[name="ids[]"]').forEach(el => el.remove());
+            ids.forEach(function(id) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = id;
+                form.appendChild(input);
+            });
+            checked.forEach(function(val) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'permissions[]';
+                input.value = val;
+                form.appendChild(input);
+            });
+            form.submit();
         }
 
         function getSelectedAlumniIds() {
             return Array.from(document.querySelectorAll('.alumni-row-checkbox:checked')).map(cb => cb.value);
-        }
-
-        function updateBulkDeactivateAlumniButton() {
-            const checkboxes = document.querySelectorAll('.alumni-row-checkbox');
-            const selected = getSelectedAlumniIds();
-            const btn = document.getElementById('bulkDeactivateAlumniBtn');
-
-            document.getElementById('bulkDeactivateAlumniCount').textContent = selected.length;
-            btn.classList.toggle('hidden', selected.length === 0);
-            btn.classList.toggle('flex', selected.length > 0);
-
-            // Keep the header checkbox in sync when rows are (de)selected individually.
-            const selectAll = document.getElementById('selectAllAlumni');
-            selectAll.checked = checkboxes.length > 0 && selected.length === checkboxes.length;
-            selectAll.indeterminate = selected.length > 0 && selected.length < checkboxes.length;
         }
 
         function openBulkDeactivateAlumniModal() {
@@ -1963,9 +1899,12 @@ $current_page = 'user_management';
             const filename = 'approved_employers_' + new Date().toISOString().slice(0, 10) + '.csv';
             const csv = [];
 
-            // Find the table within the employer section
-            // If you use tabs, ensure the selector finds the visible table
-            const table = document.querySelector('#content-employer table') || document.querySelector('table');
+            // #content-employer has TWO tables (pending-approval, then
+            // approved) — a bare 'table' selector always grabbed the first
+            // one, so this button (labeled/filenamed for approved
+            // employers) was silently exporting the pending queue instead.
+            // #employerTbody is the approved table's own tbody specifically.
+            const table = document.getElementById('employerTbody')?.closest('table') || document.querySelector('table');
             const rows = table.querySelectorAll("tr");
 
             for (let i = 0; i < rows.length; i++) {
@@ -2249,13 +2188,78 @@ $current_page = 'user_management';
             setTimeout(() => modal.classList.add('invisible'), 200);
         }
 
-        /* ── View Employer Modal ────────────────────────────────── */
+        /* ── View/Edit Admin Modal ──────────────────────────────── */
+        const ADMIN_PERMISSIONS_URL_TEMPLATE = "{{ route('offices.updatePermissions', ['id' => '__ID__']) }}";
+        let currentAdminUserId = null;
+
         document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('viewAdminModal');
+            const viewButtons = document.querySelectorAll('.view-admin-modal-btn');
+
+            viewButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const fields = {
+                        'adminModalLastName': 'data-last-name',
+                        'adminModalFirstName': 'data-first-name',
+                        'adminModalMiddleName': 'data-middle-name',
+                        'adminModalSuffix': 'data-suffix',
+                        'adminModalEmail': 'data-email',
+                        'adminModalAddress': 'data-address',
+                        'adminModalStatus': 'data-status',
+                        'adminModalJoined': 'data-joined'
+                    };
+
+                    for (const [id, attribute] of Object.entries(fields)) {
+                        const element = document.getElementById(id);
+                        if (element) element.textContent = this.getAttribute(attribute) || '--';
+                    }
+
+                    currentAdminUserId = this.getAttribute('data-user-id');
+                    const granted = (this.getAttribute('data-permissions') || '').split(',').filter(Boolean);
+                    document.querySelectorAll('.admin-modal-permission-checkbox').forEach(cb => {
+                        cb.checked = granted.includes(cb.value);
+                    });
+                    document.getElementById('adminModalPermissionsSaved').classList.add('hidden');
+
+                    modal.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+
+                    const dropdown = this.closest('.dropdown-menu');
+                    if (dropdown) dropdown.classList.add('hidden');
+                });
+            });
+        });
+
+        function saveAdminPermissions() {
+            if (!currentAdminUserId) return;
+            const checked = Array.from(document.querySelectorAll('.admin-modal-permission-checkbox:checked')).map(cb => cb.value);
+            const form = document.getElementById('admin-permissions-form');
+            form.action = ADMIN_PERMISSIONS_URL_TEMPLATE.replace('__ID__', currentAdminUserId);
+            form.querySelectorAll('input[name="permissions[]"]').forEach(el => el.remove());
+            checked.forEach(function(val) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'permissions[]';
+                input.value = val;
+                form.appendChild(input);
+            });
+            form.submit();
+        }
+
+        function closeAdminViewModal() {
+            document.getElementById('viewAdminModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        /* ── View Employer Modal ────────────────────────────────── */
+        function initViewEmployerButtons() {
             const modal = document.getElementById('viewEmployerModal');
             const viewButtons = document.querySelectorAll('.view-modal-btn');
 
             viewButtons.forEach(button => {
-                button.addEventListener('click', function() {
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                newButton.addEventListener('click', function() {
                     const fields = {
                         'modalLastName': 'data-last-name',
                         'modalFirstName': 'data-first-name',
@@ -2282,7 +2286,10 @@ $current_page = 'user_management';
                     if (dropdown) dropdown.classList.add('hidden');
                 });
             });
-        }); /* ── Employer Deactivate Modal ──────────────────────────── */
+        }
+        document.addEventListener('DOMContentLoaded', initViewEmployerButtons);
+
+        /* ── Employer Deactivate Modal ──────────────────────────── */
         function openEmployerDeactivateModal(firstName, lastName, userId) {
             const modal = document.getElementById('deactivateEmployerModal');
             const content = document.getElementById('deactivateEmployerContent');

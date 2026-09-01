@@ -1,20 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&family=Poppins:wght@300;400;600;700&family=Inter:wght@400;500;700&display=swap"
-        rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-
-<body>
+{{--
+    This partial is @include()'d into another page's <body> — see the
+    matching comment in partials/footer-alumni.blade.php for why it must
+    not carry its own <!DOCTYPE html>/<html>/<head>/<body> wrapper: a
+    duplicate, later-loading copy of FontAwesome here was winning a CSS
+    specificity tie against Tailwind's `.hidden` utility, permanently
+    un-hiding any `<i class="fa-... hidden">` placeholder icon (e.g. the
+    profile-picture/company-logo upload preview on the employer Edit
+    Profile page) regardless of the `hidden` class. All of these resources
+    are already loaded once by the page itself.
+--}}
     <footer class="bg-[#0E0F3B] text-white flex flex-col">
         <div class="flex px-5 py-5 justify-between ">
 
@@ -105,7 +99,6 @@
             <p class="font-[Montserrat] font-semibold text-[15px]">©2025 PLV-AlumNet | All Rights Reserved</p>
         </div>
     </footer>
-    <script src="https://unpkg.com/lucide@latest"></script>
 
     <script>
         lucide.createIcons();
@@ -122,6 +115,3 @@
         });
 
     </script>
-</body>
-
-</html>

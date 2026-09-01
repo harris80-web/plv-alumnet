@@ -36,7 +36,7 @@
     $published_count = $testimonials->where('testimonial_post', 1)->count();
     $hidden_count = $testimonials->where('testimonial_post', 0)->count();
     $programs_count = $testimonials->map(fn($t) => $t->alumnus->program->program_id ?? null)->filter()->unique()->count();
-    $batches = $testimonials->map(fn($t) => $t->alumnus->alumnus_batch ?? null)->filter()->unique()->sortDesc()->values();
+    $batches = $testimonials->map(fn($t) => $t->alumnus->alumnus_batch?->year)->filter()->unique()->sortDesc()->values();
 @endphp
 
 <!DOCTYPE html>
@@ -91,25 +91,6 @@
             scrollbar-width: none;
         }
 
-        input[type="checkbox"] {
-            appearance: none;
-            width: 1rem;
-            height: 1rem;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            background-color: white;
-            cursor: pointer;
-            transition: all 0.10s;
-        }
-
-        input[type="checkbox"]:checked {
-            background-color: #ED7A07;
-            border: none;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13.485 1.431a1.473 1.473 0 0 0-2.072 0L6.133 7.952 4.342 5.985a1.473 1.473 0 1 0-2.172 1.992l2.86 3.06a1.473 1.473 0 0 0 2.134.018l6.366-6.77a1.473 1.473 0 0 0-.045-2.834z'/%3E%3C/svg%3E");
-            background-size: 10px;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
     </style>
 </head>
 
@@ -302,8 +283,7 @@
                         <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                             <tr>
                                 <th class="px-4 py-4 font-semibold border-r border-slate-700">
-                                    <input type="checkbox" id="select-all" class="rounded"
-                                        onclick="toggleAllCheckboxes(this)">
+                                    <input type="checkbox" id="select-all" class="bulk-checkbox">
                                 </th>
                                 <th class="px-4 py-4 font-semibold border-r border-slate-700">Name</th>
                                 <th class="px-4 py-4 font-semibold border-r border-slate-700">Program <i
@@ -329,10 +309,10 @@
                                 <tr class="hover:bg-slate-50/80 transition-colors text-center"
                                     data-id="{{ $t->testimonial_id }}" data-name="{{ $t->alumnus->user->user_first_name }}"
                                     data-program="{{ $t->alumnus->program->program_name ?? '' }}"
-                                    data-batch="{{ $t->alumnus->alumnus_batch ?? '' }}" data-status="{{ $statusLabel }}"
+                                    data-batch="{{ optional($t->alumnus->alumnus_batch)->format('Y') }}" data-status="{{ $statusLabel }}"
                                     data-message="{{ $t->testimonial_body }}">
                                     <td class="px-4 py-3 border-r border-slate-100">
-                                        <input type="checkbox" class="row-checkbox rounded"
+                                        <input type="checkbox" class="row-checkbox bulk-checkbox"
                                             data-id="{{ $t->testimonial_id }}">
                                     </td>
                                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
@@ -340,7 +320,7 @@
                                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
                                         {{ $t->alumnus->program->program_name ?? '—' }}</td>
                                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $t->alumnus->alumnus_batch ?? '—' }}</td>
+                                        {{ optional($t->alumnus->alumnus_batch)->format('Y') ?: '—' }}</td>
                                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100 text-left">
                                         {{ $msgPreview }}</td>
                                     <td class="px-4 py-3 border-r border-slate-100">
@@ -459,33 +439,7 @@
         </div>
     </div>
 
-    <!-- ===== CONFIRM MODAL ===== -->
-    <div id="confirmModal"
-        class="fixed inset-0 z-[100] flex items-center justify-center invisible transition-all duration-300">
-        <div class="absolute inset-0 bg-[#0E0F3B]/40 backdrop-blur-sm" onclick="closeConfirmModal()"></div>
-        <div id="confirmContent"
-            class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
-            <div class="p-8 text-center">
-                <div id="confirmIconContainer"
-                    class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i id="confirmIcon" data-lucide="alert-triangle" class="w-8 h-8"></i>
-                </div>
-                <h3 id="confirmTitle" class="text-[#0E0F3B] text-xl font-bold mb-2">Confirmation</h3>
-                <p id="confirmMessage" class="text-slate-500 text-sm leading-relaxed">Are you sure you want to proceed?
-                </p>
-            </div>
-            <div class="px-8 pb-8 flex gap-3">
-                <button onclick="closeConfirmModal()"
-                    class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all uppercase">
-                    Cancel
-                </button>
-                <button id="confirmYesBtn"
-                    class="flex-1 py-2.5 text-white rounded-lg text-xs font-bold transition-all uppercase hover:brightness-110">
-                    Yes, Proceed
-                </button>
-            </div>
-        </div>
-    </div>
+    @include('partials.confirm-modal')
 
 
     <script>
@@ -493,7 +447,7 @@
     'id' => $t->testimonial_id,
     'name' => $t->alumnus->user->user_first_name,
     'program' => $t->alumnus->program->program_name ?? '—',
-    'batch' => $t->alumnus->alumnus_batch ?? '—',
+    'batch' => optional($t->alumnus->alumnus_batch)->format('Y') ?: '—',
     'message' => $t->testimonial_body,
     'status' => $t->testimonial_post ? 'Published' : 'Hidden',
 ])->values()) ?>;
@@ -570,18 +524,14 @@
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             initDropdowns();
-
-            document.querySelectorAll('.row-checkbox').forEach(cb => {
-                cb.addEventListener('change', updateBulkBar);
-            });
-            document.getElementById('select-all').addEventListener('change', updateBulkBar);
         });
 
         /* ── Checkbox ─────────────────────────────────────── */
-        function toggleAllCheckboxes(master) {
-            document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = master.checked);
-            updateBulkBar();
-        }
+        initBulkCheckboxGroup({
+            header: 'select-all',
+            rowSelector: '.row-checkbox',
+            onChange: updateBulkBar,
+        });
 
         /* ── Modal helpers ────────────────────────────────── */
         function closeModal(id) {
@@ -615,44 +565,6 @@
 
             document.querySelectorAll('.action-dropdown').forEach(m => m.classList.add('hidden'));
             document.getElementById('view-modal').classList.add('open');
-        }
-
-        /* ── Confirm Modal ────────────────────────────────── */
-        function openConfirmModal({
-            title,
-            message,
-            iconName,
-            iconBg,
-            iconColor,
-            btnBg,
-            btnText,
-            onConfirm
-        }) {
-            const modal = document.getElementById('confirmModal');
-            const content = document.getElementById('confirmContent');
-            document.getElementById('confirmTitle').innerText = title;
-            document.getElementById('confirmMessage').innerHTML = message;
-            document.getElementById('confirmIconContainer').className =
-                `w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${iconBg}`;
-            const icon = document.getElementById('confirmIcon');
-            icon.setAttribute('data-lucide', iconName);
-            icon.className = `w-8 h-8 ${iconColor}`;
-            const yesBtn = document.getElementById('confirmYesBtn');
-            yesBtn.className = `flex-1 py-2.5 ${btnBg} text-white rounded-lg text-xs font-bold transition-all uppercase hover:brightness-110`;
-            yesBtn.innerText = btnText;
-            yesBtn.onclick = () => {
-                onConfirm();
-                closeConfirmModal();
-            };
-            lucide.createIcons();
-            modal.classList.remove('invisible');
-            setTimeout(() => content.classList.remove('scale-95'), 10);
-        }
-
-        function closeConfirmModal() {
-            const content = document.getElementById('confirmContent');
-            content.classList.add('scale-95');
-            setTimeout(() => document.getElementById('confirmModal').classList.add('invisible'), 200);
         }
 
         function openDeleteConfirm(id, name) {

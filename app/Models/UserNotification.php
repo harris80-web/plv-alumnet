@@ -44,6 +44,30 @@ class UserNotification extends Model
             'body' => $this->body,
             'read' => $this->read_at !== null,
             'timeLabel' => $this->created_at->diffForHumans(),
+            'targetUrl' => $this->targetUrl(),
         ];
+    }
+
+    /**
+     * Where clicking this notification should go — only for types with one
+     * unambiguous, role-correct destination page (no specific-record deep
+     * link, since none of these types store which job/application/etc. they
+     * were about). alumni_id_status and yearbook_status are deliberately
+     * left unmapped: there's no confirmed alumnus-facing page for either
+     * yet, and linking to the admin-only management page would 403 the
+     * alumnus who actually receives these.
+     */
+    public function targetUrl(): ?string
+    {
+        return match ($this->type) {
+            'job_posting_submitted' => route('jobPosting.jobManagement'),
+            'employer_registration_pending' => route('superAdmin.userManagement'),
+            'testimonial_submitted' => route('testimonials.manage'),
+            'live_agent_escalation' => route('chatbot.management'),
+            'job_posting_approved', 'job_posting_rejected' => route('jobPosting.myJobPosts', ['id' => $this->user_id]),
+            'job_application_hired', 'job_application_declined', 'job_application_shortlisted' => route('jobPosting.myApplications'),
+            'message_mute', 'message_warning' => route('messages.index'),
+            default => null,
+        };
     }
 }

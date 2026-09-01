@@ -243,7 +243,10 @@ class AlumnusSeeder extends Seeder
             $alumnus = $user->alumnus()->create([
                 'program_id' => $programId,
                 'section_id' => $sectionId,
-                'alumnus_batch' => $data['batch'],
+                // alumnus_batch is a real date column — April 15 of the
+                // seed data's batch year, matching the same convention used
+                // to backfill existing rows in the batch-date migration.
+                'alumnus_batch' => \Carbon\Carbon::create($data['batch'], 4, 15),
                 'alumnus_gender' => $data['gender'],
                 'alumnus_resume_summary' => $data['summary'],
                 'linkedin_url' => 'https://linkedin.com/in/' . str($data['first'] . '-' . $data['last'])->slug(),

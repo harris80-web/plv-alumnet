@@ -1,20 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&family=Poppins:wght@300;400;600;700&family=Inter:wght@400;500;700&display=swap"
-        rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-
-<body>
+{{--
+    This partial is @include()'d into another page's <body> — it must NOT
+    carry its own <!DOCTYPE html>/<html>/<head>/<body> wrapper. The
+    duplicate <link>/<script> tags that used to live here (fonts, a SECOND
+    copy of FontAwesome, Tailwind CDN, lucide) loaded a second, later copy
+    of FontAwesome's CSS on every page using this footer. Because that
+    second copy landed after Tailwind's `.hidden{display:none}` rule in the
+    cascade and both have equal specificity, FontAwesome's own
+    `display:inline-block` rule silently won the tie — permanently
+    un-hiding any `<i class="fa-... hidden">` element regardless of the
+    `hidden` class (this is what broke the profile-picture placeholder icon
+    toggle on the alumni Edit Profile page: the stored photo AND the
+    "no photo" icon both stayed visible, overlapping). All of these
+    resources are already loaded once by the page itself.
+--}}
     <footer class="bg-[#0E0F3B] text-white flex flex-col">
         <div class="flex px-5 py-5 justify-between ">
 
@@ -105,7 +103,6 @@
             <p class="font-[Montserrat] font-semibold text-[15px]">©2025 PLV-AlumNet | All Rights Reserved</p>
         </div>
     </footer>
-    <script src="https://unpkg.com/lucide@latest"></script>
 
     <script>
         lucide.createIcons();
@@ -122,6 +119,3 @@
         });
 
     </script>
-</body>
-
-</html>

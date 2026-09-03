@@ -6,27 +6,31 @@
     partials/job-management/pending-table.blade.php for why.
     Expects: $approvedJobs (paginator of JobPosting, with user loaded).
 --}}
+<div class="overflow-x-auto">
 <table class="jobs-table">
     <thead class="bg-[#0E0F3B] text-white">
         <tr>
             <th class="border-r border-slate-700">ID</th>
-            <th class="border-r border-slate-700">Job Title</th>
-            <th class="border-r border-slate-700">Company Name <i data-lucide="chevron-down"
+            <th data-sort class="border-r border-slate-700">Job Title <i data-lucide="chevron-down"
                     class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-            <th class="border-r border-slate-700">Location <i data-lucide="chevron-down"
+            <th data-sort class="border-r border-slate-700">Company Name <i data-lucide="chevron-down"
                     class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-            <th class="border-r border-slate-700">Posted By <i data-lucide="chevron-down"
+            <th data-sort class="border-r border-slate-700">Location <i data-lucide="chevron-down"
                     class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-            <th class="border-r border-slate-700">Job Type <i data-lucide="chevron-down"
+            <th data-sort class="border-r border-slate-700">Posted By <i data-lucide="chevron-down"
                     class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-            <th class="border-r border-slate-700">Job Setup <i data-lucide="chevron-down"
+            <th data-sort class="border-r border-slate-700">Job Type <i data-lucide="chevron-down"
                     class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-            <th class="border-r border-slate-700">Recommended Program <i data-lucide="chevron-down"
+            <th data-sort class="border-r border-slate-700">Job Setup <i data-lucide="chevron-down"
                     class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-            <th class="border-r border-slate-700">Status <i data-lucide="chevron-down"
+            <th data-sort class="border-r border-slate-700">Recommended Program <i data-lucide="chevron-down"
                     class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-            <th class="border-r border-slate-700">Posting Date</th>
-            <th class="border-r border-slate-700">Closing Date</th>
+            <th data-sort class="border-r border-slate-700">Status <i data-lucide="chevron-down"
+                    class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
+            <th data-sort class="border-r border-slate-700">Posting Date <i data-lucide="chevron-down"
+                    class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
+            <th data-sort class="border-r border-slate-700">Closing Date <i data-lucide="chevron-down"
+                    class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -112,12 +116,23 @@
         </tr>
         @empty
         <tr>
-            <td colspan="10" class="text-center py-8 text-slate-400 text-sm">No approved job posts.
+            <td colspan="12" class="text-center py-8 text-slate-400 text-sm">No approved job posts.
             </td>
         </tr>
         @endforelse
     </tbody>
 </table>
+</div>
 <div id="empty-state" class="hidden text-center py-12 text-slate-400 text-sm">No job posts found.
 </div>
-{{ $approvedJobs->onEachSide(1)->links('partials.pagination') }}
+<div class="px-4 py-3">
+    @include('partials.table-pagination-bar', [
+        'id' => 'jobApprovedTable',
+        'mode' => 'ajax',
+        'paginator' => $approvedJobs,
+        'perPageParam' => 'job_approved_per_page',
+        'fetchUrl' => route('jobPosting.approvedFragment'),
+        'wrapId' => 'jobApprovedTableWrap',
+        'reinitFn' => 'applyFilters',
+    ])
+</div>

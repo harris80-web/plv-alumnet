@@ -521,12 +521,12 @@ class JobPostingController extends Controller
         $pendingJobs = $this->jobManagementBaseQuery()
             ->where('job_approved', 0)
             ->orderByDesc('created_at')
-            ->paginate(10, ['*'], 'pendingPage');
+            ->paginate($this->resolvePerPage(10, 'job_pending_per_page'), ['*'], 'pendingPage');
 
         $approvedJobs = $this->jobManagementBaseQuery()
             ->where('job_approved', 1)
             ->orderByDesc('created_at')
-            ->paginate(10, ['*'], 'approvedPage');
+            ->paginate($this->resolvePerPage(10, 'job_approved_per_page'), ['*'], 'approvedPage');
 
         $totalJobs = $this->jobManagementBaseQuery()->count();
         $pendingCount = $pendingJobs->total();
@@ -550,7 +550,7 @@ class JobPostingController extends Controller
         $pendingJobs = $this->jobManagementBaseQuery()
             ->where('job_approved', 0)
             ->orderByDesc('created_at')
-            ->paginate(10, ['*'], 'pendingPage');
+            ->paginate($this->resolvePerPage(10, 'job_pending_per_page'), ['*'], 'pendingPage');
 
         return view('partials.job-management.pending-table', compact('pendingJobs'));
     }
@@ -561,7 +561,7 @@ class JobPostingController extends Controller
         $approvedJobs = $this->jobManagementBaseQuery()
             ->where('job_approved', 1)
             ->orderByDesc('created_at')
-            ->paginate(10, ['*'], 'approvedPage');
+            ->paginate($this->resolvePerPage(10, 'job_approved_per_page'), ['*'], 'approvedPage');
 
         return view('partials.job-management.approved-table', compact('approvedJobs'));
     }

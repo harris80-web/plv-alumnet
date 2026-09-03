@@ -7,16 +7,15 @@
     of the page (scroll position, other tabs, the toolbar) never moves.
     Expects: $pendingEmployers (paginator of Employer, with user/industry loaded).
 --}}
-<table class="w-full text-left text-[10px]">
+<div class="overflow-x-auto">
+<table class="w-full text-left text-[10px] whitespace-nowrap">
     <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
         <tr>
-            <th class="px-4 py-4 font-semibold border-r border-slate-700"><i
-                    data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i>
-            </th>
-            <th class="px-4 py-4 font-semibold border-r border-slate-700">Company Name</th>
-            <th class="px-4 py-4 font-semibold border-r border-slate-700">Full Name</th>
-            <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
-            <th class="px-4 py-4 font-semibold border-r border-slate-700">Industry</th>
+            <th class="px-4 py-4 font-semibold border-r border-slate-700 w-10">#</th>
+            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Company Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Full Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Email <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Industry <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
             <th class="px-4 py-4 font-semibold border-r border-slate-700">Document</th>
             <th class="px-4 py-4 font-semibold border-r border-slate-700">Official Website
                 URL</th>
@@ -103,4 +102,14 @@
         @endforelse
     </tbody>
 </table>
-{{ $pendingEmployers->onEachSide(1)->links('partials.pagination') }}
+</div>
+<div class="px-4 py-3">
+    @include('partials.table-pagination-bar', [
+        'id' => 'employerPendingTable',
+        'mode' => 'ajax',
+        'paginator' => $pendingEmployers,
+        'perPageParam' => 'employer_pending_per_page',
+        'fetchUrl' => route('users.employerPendingFragment'),
+        'wrapId' => 'employerPendingTableWrap',
+    ])
+</div>

@@ -89,6 +89,13 @@
                 headerEl.checked = visible.length > 0 && checked.length === visible.length;
                 headerEl.indeterminate = checked.length > 0 && checked.length < visible.length;
             }
+            // Light-blue highlight on any row whose checkbox is checked —
+            // covers both a direct click on the row checkbox and rows
+            // toggled indirectly via the header "select all" checkbox.
+            visible.forEach(function (cb) {
+                var tr = cb.closest('tr');
+                if (tr) tr.classList.toggle('bg-blue-50', cb.checked);
+            });
             if (onChange) onChange(checked.map(function (cb) { return cb.value; }), checked.length, visible.length);
             return checked;
         }

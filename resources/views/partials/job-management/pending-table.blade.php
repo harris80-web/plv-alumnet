@@ -7,27 +7,31 @@
     the rest of the page (scroll position, the approved table, filters)
     never moves. Expects: $pendingJobs (paginator of JobPosting, with user loaded).
 --}}
+<div class="overflow-x-auto">
 <table class="jobs-table">
     <thead class="bg-[#0E0F3B] text-white">
         <tr>
             <th class="border-r border-slate-700">ID</th>
-            <th class="border-r border-slate-700">Job Title</th>
-            <th class="border-r border-slate-700">Company Name <i data-lucide="chevron-down"
+            <th data-sort class="border-r border-slate-700">Job Title <i data-lucide="chevron-down"
                     class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-            <th class="border-r border-slate-700">Location <i data-lucide="chevron-down"
+            <th data-sort class="border-r border-slate-700">Company Name <i data-lucide="chevron-down"
                     class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-            <th class="border-r border-slate-700">Posted By <i data-lucide="chevron-down"
+            <th data-sort class="border-r border-slate-700">Location <i data-lucide="chevron-down"
                     class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-            <th class="border-r border-slate-700">Job Type <i data-lucide="chevron-down"
+            <th data-sort class="border-r border-slate-700">Posted By <i data-lucide="chevron-down"
                     class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-            <th class="border-r border-slate-700">Job Setup <i data-lucide="chevron-down"
+            <th data-sort class="border-r border-slate-700">Job Type <i data-lucide="chevron-down"
                     class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-            <th class="border-r border-slate-700">Recommended Program <i data-lucide="chevron-down"
+            <th data-sort class="border-r border-slate-700">Job Setup <i data-lucide="chevron-down"
                     class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-            <th class="border-r border-slate-700">Status <i data-lucide="chevron-down"
+            <th data-sort class="border-r border-slate-700">Recommended Program <i data-lucide="chevron-down"
                     class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
-            <th class="border-r border-slate-700">Posting Date</th>
-            <th class="border-r border-slate-700">Closing Date</th>
+            <th data-sort class="border-r border-slate-700">Status <i data-lucide="chevron-down"
+                    class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
+            <th data-sort class="border-r border-slate-700">Posting Date <i data-lucide="chevron-down"
+                    class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
+            <th data-sort class="border-r border-slate-700">Closing Date <i data-lucide="chevron-down"
+                    class="inline w-3 h-3 ml-0.5 sort-icon"></i></th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -97,10 +101,20 @@
         </tr>
         @empty
         <tr>
-            <td colspan="10" class="text-center py-8 text-slate-400 text-sm">No pending job posts.
+            <td colspan="12" class="text-center py-8 text-slate-400 text-sm">No pending job posts.
             </td>
         </tr>
         @endforelse
     </tbody>
 </table>
-{{ $pendingJobs->onEachSide(1)->links('partials.pagination') }}
+</div>
+<div class="px-4 py-3">
+    @include('partials.table-pagination-bar', [
+        'id' => 'jobPendingTable',
+        'mode' => 'ajax',
+        'paginator' => $pendingJobs,
+        'perPageParam' => 'job_pending_per_page',
+        'fetchUrl' => route('jobPosting.pendingFragment'),
+        'wrapId' => 'jobPendingTableWrap',
+    ])
+</div>

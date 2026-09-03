@@ -1,20 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('mails.layout')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    @vite('resources/css/app.css')
-    @vite('resources/js/app.js')
-</head>
+@section('title', 'Reset Your PLV-AlumNet Password')
+@section('preheader', 'Reset the password for your PLV-AlumNet account.')
 
-<body>
-    <h1 class="text-2xl font-bold">Reset password</h1>
-    <p>Hello, {{ $user->user_full_name }}!</p>
-    <p>You have requested to reset your password. You can do so by clicking the link below:</p>
-    <p><a href="{{ route('passReset.resetPassword', ['token' => $token]) }}" class="text-blue-500">Reset Password</a></p>
-    <p>If you did not request a password reset, please ignore this email.</p>
-</body>
+@section('content')
 
-</html>
+    <!-- Heading -->
+    <h1 style="margin:0 0 20px 0; font-family:'Montserrat', Arial, sans-serif; font-size:28px; line-height:1.3; font-weight:800; text-align:center;">
+        <span style="color:#0E0F3B;">Reset Your </span><span style="color:#C73D1A; background:linear-gradient(90deg,#C73D1A,#ED7A07); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">Password</span>
+    </h1>
+
+    <!-- Intro text -->
+    <p style="margin:0 0 24px 0; font-size:14px; line-height:1.6; color:#4B4B63; text-align:center;">
+        We received a request to reset the password for the PLV-AlumNet account registered to <strong style="color:#0E0F3B;">{{ $user->email }}</strong>. Click the button below to choose a new password.
+    </p>
+
+    <!-- Reset button -->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">
+        <tr>
+            <td align="center" style="border-radius:8px; background-color:#0E0F3B;">
+                <a href="{{ route('passReset.resetPassword', ['token' => $token]) }}"
+                    style="display:inline-block; padding:14px 40px; font-family:'Montserrat', Arial, sans-serif; font-size:14px; font-weight:700; letter-spacing:.5px; color:#ffffff; text-decoration:none; border-radius:8px;">
+                    Reset Password
+                </a>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Notice box -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+        style="background-color:#FBEAEA; border-radius:8px;">
+        <tr>
+            <td align="center" style="padding:14px 18px;">
+                <p style="margin:0; font-size:13px; line-height:1.5; font-weight:600; color:#C73D1A; text-align:center;">
+                    &#9888; If you did not request this, you can safely ignore this email — your password will remain unchanged.
+                </p>
+            </td>
+        </tr>
+    </table>
+
+@endsection

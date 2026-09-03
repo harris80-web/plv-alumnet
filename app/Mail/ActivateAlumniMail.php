@@ -39,7 +39,7 @@ class ActivateAlumniMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'mails.activeAlumni',
+            view: 'mails.activateAlumni',
         );
     }
 

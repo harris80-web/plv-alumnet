@@ -301,14 +301,23 @@ class UserController extends Controller
         // rows (or skip/duplicate rows across pages) from one load to the
         // next. This never mattered when everything was fetched at once.
         $admins = Office::with('user')
-            ->whereHas('user', fn ($q) => $q->where('user_role', 'admin'))
+            ->whereHas('user', function ($q) {
+                $q->where('user_role', 'admin');
+                if ($search = trim((string) request('admin_search'))) {
+                    $q->where(function ($q2) use ($search) {
+                        $q2->where('user_first_name', 'like', "%{$search}%")
+                            ->orWhere('user_last_name', 'like', "%{$search}%")
+                            ->orWhere('user_email', 'like', "%{$search}%");
+                    });
+                }
+            })
             ->orderBy('user_id')
-            ->paginate(10, ['*'], 'adminPage')
+            ->paginate($this->resolvePerPage(10, 'admin_per_page'), ['*'], 'adminPage')
             ->withQueryString();
 
         $alumni = Alumnus::with('user')
             ->orderBy('user_id')
-            ->paginate(15, ['*'], 'alumniPage')
+            ->paginate($this->resolvePerPage(15, 'alumni_per_page'), ['*'], 'alumniPage')
             ->withQueryString();
 
         // Same two-table split the view already renders (awaiting approval
@@ -317,7 +326,7 @@ class UserController extends Controller
         $pendingEmployers = Employer::with(['user', 'industry'])
             ->where('employer_approved', false)
             ->orderBy('user_id')
-            ->paginate(10, ['*'], 'employerPendingPage')
+            ->paginate($this->resolvePerPage(10, 'employer_pending_per_page'), ['*'], 'employerPendingPage')
             ->withQueryString();
 
         // Kept as `user_active` (not `employer_approved`) to match the
@@ -327,7 +336,7 @@ class UserController extends Controller
         $approvedEmployers = Employer::with(['user', 'industry'])
             ->whereHas('user', fn ($q) => $q->where('user_active', true))
             ->orderBy('user_id')
-            ->paginate(10, ['*'], 'employerApprovedPage')
+            ->paginate($this->resolvePerPage(10, 'employer_approved_per_page'), ['*'], 'employerApprovedPage')
             ->withQueryString();
 
         // Metric cards summarize the WHOLE dataset per tab, not just the
@@ -390,7 +399,7 @@ class UserController extends Controller
         $pendingEmployers = Employer::with(['user', 'industry'])
             ->where('employer_approved', false)
             ->orderBy('user_id')
-            ->paginate(10, ['*'], 'employerPendingPage');
+            ->paginate($this->resolvePerPage(10, 'employer_pending_per_page'), ['*'], 'employerPendingPage');
 
         return view('partials.user-management.employer-pending-table', compact('pendingEmployers'));
     }
@@ -401,7 +410,7 @@ class UserController extends Controller
         $approvedEmployers = Employer::with(['user', 'industry'])
             ->whereHas('user', fn ($q) => $q->where('user_active', true))
             ->orderBy('user_id')
-            ->paginate(10, ['*'], 'employerApprovedPage');
+            ->paginate($this->resolvePerPage(10, 'employer_approved_per_page'), ['*'], 'employerApprovedPage');
 
         return view('partials.user-management.employer-approved-table', compact('approvedEmployers'));
     }

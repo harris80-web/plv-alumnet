@@ -6,16 +6,17 @@
     partials/user-management/employer-pending-table.blade.php for why.
     Expects: $approvedEmployers (paginator of Employer, with user/industry loaded).
 --}}
-<table class="w-full text-left text-[10px]">
+<div class="overflow-x-auto">
+<table class="w-full text-left text-[10px] whitespace-nowrap">
     <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
         <tr>
             <th class="px-3 py-4 font-semibold border-r border-slate-700 w-10">
                 <input type="checkbox" id="selectAllEmployers" class="bulk-checkbox">
             </th>
-            <th class="px-4 py-4 font-semibold border-r border-slate-700">Company Name</th>
-            <th class="px-4 py-4 font-semibold border-r border-slate-700">Full Name</th>
-            <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
-            <th class="px-4 py-4 font-semibold border-r border-slate-700">Industry</th>
+            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Company Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Full Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Email <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Industry <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
             <th class="px-4 py-4 font-semibold border-r border-slate-700">Contact</th>
             <th class="px-4 py-4 font-semibold border-r border-slate-700">Official Website
                 URL</th>
@@ -114,5 +115,16 @@
         @endforelse
     </tbody>
 </table>
+</div>
 <p id="employerNoSearchResults" class="hidden text-center text-gray-400 py-10 text-xs">No matching employers.</p>
-{{ $approvedEmployers->onEachSide(1)->links('partials.pagination') }}
+<div class="px-4 py-3">
+    @include('partials.table-pagination-bar', [
+        'id' => 'employerApprovedTable',
+        'mode' => 'ajax',
+        'paginator' => $approvedEmployers,
+        'perPageParam' => 'employer_approved_per_page',
+        'fetchUrl' => route('users.employerApprovedFragment'),
+        'wrapId' => 'employerApprovedTableWrap',
+        'reinitFn' => 'reinitEmployerApprovedTable',
+    ])
+</div>

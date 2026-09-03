@@ -52,7 +52,7 @@
                 <button type="submit" class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 hover:text-[#C73D1A]">
                     <i class="fas fa-search"></i>
                 </button>
-                <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search"
+                <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search by name"
                     class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
             </div>
 
@@ -103,15 +103,15 @@
         <!-- TABLE -->
         <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
+                <table class="w-full text-left text-sm whitespace-nowrap">
                     <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center text-xs">
                         <tr>
-                            <th class="px-4 py-4 font-semibold border-r border-slate-700">Last Name</th>
-                            <th class="px-4 py-4 font-semibold border-r border-slate-700">First Name</th>
-                            <th class="px-4 py-4 font-semibold border-r border-slate-700">Middle Name</th>
+                            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Last Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">First Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Middle Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                             <th class="px-4 py-4 font-semibold border-r border-slate-700">Suffix</th>
-                            <th class="px-4 py-4 font-semibold border-r border-slate-700">Program</th>
-                            <th class="px-4 py-4 font-semibold border-r border-slate-700">Batch</th>
+                            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Program <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Batch <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                             <th class="px-4 py-4 font-semibold">Actions</th>
                         </tr>
                     </thead>
@@ -180,7 +180,8 @@
             </div>
         </div>
 
-        {{ $alumni->onEachSide(1)->links('partials.pagination') }}
+        @include('partials.table-pagination-bar', ['id' => 'alumniDirectory', 'mode' => 'reload', 'paginator' => $alumni])
+        @include('partials.table-sort')
 
     </main>
 

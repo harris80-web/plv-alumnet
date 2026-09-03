@@ -158,14 +158,14 @@ $title = request()->routeIs('notifications.all')
             </p>
 
             <div class="flex justify-center gap-3 mt-6">
-                <button id="confirm-logout"
-                    class="px-4 py-2 rounded-lg bg-[#0E0F3B] text-white text-sm hover:bg-[#1a1c5a] transition">
-                    CONFIRM
-                </button>
-
                 <button id="cancel-logout"
                     class="px-4 py-2 rounded-lg border text-[#0E0F3B] border-[#0E0F3B] text-sm hover:bg-[#0E0F3B] hover:text-white transition">
                     CANCEL
+                </button>
+
+                <button id="confirm-logout"
+                    class="px-4 py-2 rounded-lg bg-[#0E0F3B] text-white text-sm hover:bg-[#1a1c5a] transition">
+                    CONFIRM
                 </button>
             </div>
 
@@ -273,6 +273,7 @@ $title = request()->routeIs('notifications.all')
 
 @include('partials.ui-animations')
 @include('partials.bulk-checkbox')
+@include('partials.table-sort')
 <script src="https://unpkg.com/lucide@latest"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <script>

@@ -42,7 +42,7 @@
             font-weight: 600;
             letter-spacing: 0.04em;
             text-transform: uppercase;
-            white-space: normal;
+            white-space: nowrap;
         }
 
         .ids-table tbody td {
@@ -50,7 +50,7 @@
             text-align: center;
             vertical-align: middle;
             font-size: 11px;
-            word-break: break-word;
+            white-space: nowrap;
         }
 
         .status-choice {
@@ -145,7 +145,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-lg shadow-sm border border-slate-200 w-full">
+                    <div class="bg-white rounded-lg shadow-sm border border-slate-200 w-full overflow-hidden">
 
                         <!-- TOOLBAR: search + bulk actions -->
                         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-b border-slate-100">
@@ -187,11 +187,11 @@
                                         <th class="border-r border-slate-700 w-10">
                                             <input type="checkbox" id="selectAllCheckbox" class="bulk-checkbox" title="Select all">
                                         </th>
-                                        <th class="border-r border-slate-700">Reference No.</th>
-                                        <th class="border-r border-slate-700">Student Full Name</th>
-                                        <th class="border-r border-slate-700">Program</th>
-                                        <th class="border-r border-slate-700">Date Submitted</th>
-                                        <th class="border-r border-slate-700">ID Status</th>
+                                        <th data-sort class="border-r border-slate-700">Reference No. <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Student Full Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Program <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Date Submitted <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">ID Status <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -264,6 +264,14 @@
                             </table>
                             <p id="noSearchResults" class="hidden text-center text-gray-400 py-10 text-xs">No matching alumni IDs.</p>
                         </div>
+                        <div class="px-4 py-3">
+                            @include('partials.table-pagination-bar', [
+                                'id' => 'alumniIdTable',
+                                'mode' => 'client',
+                                'rowSelector' => '#alumniIdsTbody tr[data-search]',
+                                'totalItems' => $alumniIds->count(),
+                            ])
+                        </div>
                     </div>
                 </div>
 
@@ -297,7 +305,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-lg shadow-sm border border-slate-200 w-full">
+                    <div class="bg-white rounded-lg shadow-sm border border-slate-200 w-full overflow-hidden">
 
                         <!-- TOOLBAR: search + bulk edit -->
                         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-b border-slate-100">
@@ -330,13 +338,13 @@
                                         <th class="border-r border-slate-700 w-10">
                                             <input type="checkbox" id="yearbookSelectAllCheckbox" class="bulk-checkbox" title="Select all">
                                         </th>
-                                        <th class="border-r border-slate-700">Reference No.</th>
-                                        <th class="border-r border-slate-700">Full Name</th>
-                                        <th class="border-r border-slate-700">Batch</th>
-                                        <th class="border-r border-slate-700">Distribution Status</th>
-                                        <th class="border-r border-slate-700">Distribution Schedule</th>
-                                        <th class="border-r border-slate-700">Distribution Location</th>
-                                        <th class="border-r border-slate-700">Claiming Status</th>
+                                        <th data-sort class="border-r border-slate-700">Reference No. <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Full Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Batch <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Distribution Status <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Distribution Schedule <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Distribution Location <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Claiming Status <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -403,6 +411,14 @@
                                 </tbody>
                             </table>
                             <p id="yearbookNoSearchResults" class="hidden text-center text-gray-400 py-10 text-xs">No matching yearbook records.</p>
+                        </div>
+                        <div class="px-4 py-3">
+                            @include('partials.table-pagination-bar', [
+                                'id' => 'yearbookTable',
+                                'mode' => 'client',
+                                'rowSelector' => '#yearbooksTbody tr[data-search]',
+                                'totalItems' => $yearbooks->count(),
+                            ])
                         </div>
                     </div>
                 </div>
@@ -753,6 +769,7 @@
                 if (match) visibleCount++;
             });
             document.getElementById('noSearchResults').classList.toggle('hidden', visibleCount !== 0 || rows.length === 0);
+            document.dispatchEvent(new CustomEvent('pv:filtered'));
         }
 
         // ── ALUMNI ID: BULK SELECT ──
@@ -862,6 +879,7 @@
                 if (match) visibleCount++;
             });
             document.getElementById('yearbookNoSearchResults').classList.toggle('hidden', visibleCount !== 0 || rows.length === 0);
+            document.dispatchEvent(new CustomEvent('pv:filtered'));
         }
 
         // ── ALUMNI YEARBOOK: BULK SELECT ──

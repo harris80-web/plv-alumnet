@@ -165,11 +165,24 @@ $current_page = 'user_management';
                     <!-- ==================== END METRIC CARDS ==================== -->
 
 
-                    <div class="flex justify-between items-center mb-6">
+                    @if ($errors->any())
+                    <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+                        <i data-lucide="circle-alert" class="w-4 h-4 text-red-500 mt-0.5 shrink-0"></i>
+                        <ul class="space-y-1">
+                            @foreach ($errors->all() as $error)
+                            <li class="text-red-600 text-xs font-medium">{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
+                    <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-b border-slate-100">
                         <div class="relative w-64">
                             <i data-lucide="search"
                                 class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input type="text" placeholder="Search"
+                            <input type="text" id="adminSearchInput" value="{{ request('admin_search') }}"
+                                onkeydown="if(event.key==='Enter'){pvSearchNavigate('admin_search', this.value, 'adminPage')}"
+                                placeholder="Search by name"
                                 class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-transparent">
                         </div>
 
@@ -189,32 +202,22 @@ $current_page = 'user_management';
                                 ADD ADMIN
                             </button>
                         </div>
-                    </div>
-                    @if ($errors->any())
-                    <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
-                        <i data-lucide="circle-alert" class="w-4 h-4 text-red-500 mt-0.5 shrink-0"></i>
-                        <ul class="space-y-1">
-                            @foreach ($errors->all() as $error)
-                            <li class="text-red-600 text-xs font-medium">{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    @endif
-                    <div class="bg-white rounded-lg shadow-sm border border-slate-200">
-                        <table class="w-full text-left text-[11px]">
+                      </div>
+                      <div class="overflow-x-auto">
+                        <table class="w-full text-left text-[11px] whitespace-nowrap">
                             <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                                 <tr>
                                     <th class="px-4 py-4 font-semibold border-r border-slate-700">
                                         <input type="checkbox" id="selectAllAdmins" class="bulk-checkbox">
                                     </th>
-                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Last Name</th>
-                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">First Name</th>
-                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Middle Name</th>
+                                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Last Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">First Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Middle Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                     <th class="px-4 py-4 font-semibold border-r border-slate-700">Suffix</th>
-                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Address</th>
-                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Account Status</th>
-                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Date Created</th>
-                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Email</th>
+                                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Address <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Account Status <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Date Created <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Email <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                     <th class="px-4 py-4 font-semibold">Actions</th>
                                 </tr>
                             </thead>
@@ -298,7 +301,10 @@ $current_page = 'user_management';
                                 @endforelse
                             </tbody>
                         </table>
-                        {{ $admins->onEachSide(1)->links('partials.pagination') }}
+                      </div>
+                      <div class="px-4 pb-4">
+                        @include('partials.table-pagination-bar', ['id' => 'adminTable', 'mode' => 'reload', 'paginator' => $admins, 'perPageParam' => 'admin_per_page'])
+                      </div>
                     </div>
                 </div>
                 <!-- END ADMIN TAB -->
@@ -343,12 +349,24 @@ $current_page = 'user_management';
                     </div>
                     <!-- ==================== END METRIC CARDS ==================== -->
 
-                    <div class="flex justify-between items-center mb-6">
+                    @if ($errors->any())
+                    <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+                        <i data-lucide="circle-alert" class="w-4 h-4 text-red-500 mt-0.5 shrink-0"></i>
+                        <ul class="space-y-1">
+                            @foreach ($errors->all() as $error)
+                            <li class="text-red-600 text-xs font-medium">{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
+
+                    <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-b border-slate-100">
                         <div class="flex gap-2">
                             <div class="relative w-64">
                                 <i data-lucide="search"
                                     class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                <input type="text" id="alumniSearchInput" onkeyup="filterAlumniRows()" placeholder="Search"
+                                <input type="text" id="alumniSearchInput" onkeyup="filterAlumniRows()" placeholder="Search by name or email"
                                     class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A]">
                             </div>
                             <button onclick="toggleAlumniFilterSidebar()"
@@ -416,39 +434,29 @@ $current_page = 'user_management';
                                 EXPORT CSV
                             </a>
                         </div>
-                    </div>
-
-                    @if ($errors->any())
-                    <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
-                        <i data-lucide="circle-alert" class="w-4 h-4 text-red-500 mt-0.5 shrink-0"></i>
-                        <ul class="space-y-1">
-                            @foreach ($errors->all() as $error)
-                            <li class="text-red-600 text-xs font-medium">{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    @endif
-
-                    <div class="bg-white rounded-lg shadow-sm border border-slate-200">
-                        <table class="w-full text-left text-[10px]">
+                      </div>
+                      <div class="overflow-x-auto">
+                        <table class="w-full text-left text-[10px] whitespace-nowrap">
                             <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                                 <tr>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700 w-10">
                                         <input type="checkbox" id="selectAllAlumni" class="bulk-checkbox">
                                     </th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">ID</th>
-                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">Last Name <i
-                                            data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
-                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">First Name</th>
+                                    <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">Last Name <i
+                                            data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
+                                    <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">First Name <i
+                                            data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Middle Name</th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Suffix</th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Gender</th>
-                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">Program</th>
+                                    <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">Program <i
+                                            data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Section</th>
-                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">Batch <i
-                                            data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
-                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">Email <i
-                                            data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
+                                    <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">Batch <i
+                                            data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
+                                    <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">Email <i
+                                            data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Status</th>
                                     <th class="px-3 py-4 font-semibold text-center">Action</th>
                                 </tr>
@@ -574,7 +582,10 @@ $current_page = 'user_management';
                             </tbody>
                         </table>
                         <p id="alumniNoSearchResults" class="hidden text-center text-gray-400 py-10 text-xs">No matching alumni.</p>
-                        {{ $alumni->onEachSide(1)->links('partials.pagination') }}
+                      </div>
+                      <div class="px-4 pb-4">
+                        @include('partials.table-pagination-bar', ['id' => 'alumniTable', 'mode' => 'reload', 'paginator' => $alumni, 'perPageParam' => 'alumni_per_page'])
+                      </div>
                     </div>
                 </div>
                 <!-- END ALUMNI TAB -->
@@ -621,14 +632,17 @@ $current_page = 'user_management';
                     <!-- Awaiting Approval -->
                     <div class="mb-6">
                         <p class="text-sm font-semibold text-orange-600 mb-3">Employers Awaiting Approval:</p>
-                        <div id="employerPendingTableWrap" class="bg-white rounded-lg shadow-sm border border-slate-200">
-                            @include('partials.user-management.employer-pending-table')
+                        <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                            <div id="employerPendingTableWrap">
+                                @include('partials.user-management.employer-pending-table')
+                            </div>
                         </div>
                     </div>
 
                     <!-- Approved Employers -->
                     <div>
-                        <div class="flex justify-between items-center mb-3">
+                        <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-b border-slate-100">
                             <div class="flex gap-2">
                                 <div class="relative w-64">
                                     <i data-lucide="search"
@@ -654,10 +668,11 @@ $current_page = 'user_management';
                                     EXPORT CSV
                                 </button>
                             </div>
-                        </div>
+                          </div>
 
-                        <div id="employerApprovedTableWrap" class="bg-white rounded-lg shadow-sm border border-slate-200">
+                        <div id="employerApprovedTableWrap">
                             @include('partials.user-management.employer-approved-table')
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -1717,11 +1732,14 @@ $current_page = 'user_management';
             bind();
         }
 
-        initAjaxTablePagination('employerPendingTableWrap', 'employerPendingPage', "{{ route('users.employerPendingFragment') }}");
-        initAjaxTablePagination('employerApprovedTableWrap', 'employerApprovedPage', "{{ route('users.employerApprovedFragment') }}", function () {
+        // Pagination for these two tables is now handled by the
+        // table-pagination-bar partial embedded in each fragment (ajax
+        // mode) — it's event-delegated so it keeps working after a swap
+        // without needing the old bind()/rebind() dance this used to do.
+        window.reinitEmployerApprovedTable = function () {
             initEmployerBulkCheckboxes();
             initViewEmployerButtons();
-        });
+        };
 
         /* ── Admin bulk-select + bulk permission edit ─────────────── */
         const BULK_ADMIN_PERMISSIONS_URL = "{{ route('offices.bulkUpdatePermissions') }}";

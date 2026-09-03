@@ -121,8 +121,10 @@
                     </div>
                 </div>
 
+                <!-- Table -->
+                <div class="bg-white rounded-lg shadow-sm border border-slate-200">
                 <!-- Search / Filter Row -->
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex justify-between items-center p-4 border-b border-slate-100">
                     <!-- Left: Search + Filters -->
                     <div class="flex gap-2 items-center">
                         <!-- Search -->
@@ -277,21 +279,21 @@
 
                 </div><!-- end Search / Filter Row -->
 
-                <!-- Table -->
-                <div class="bg-white rounded-lg shadow-sm border border-slate-200">
-                    <table class="w-full text-left text-[10px]">
+                  <div class="overflow-hidden rounded-b-lg">
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left text-[10px] whitespace-nowrap">
                         <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                             <tr>
                                 <th class="px-4 py-4 font-semibold border-r border-slate-700">
                                     <input type="checkbox" id="select-all" class="bulk-checkbox">
                                 </th>
-                                <th class="px-4 py-4 font-semibold border-r border-slate-700">Name</th>
-                                <th class="px-4 py-4 font-semibold border-r border-slate-700">Program <i
-                                        data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
-                                <th class="px-4 py-4 font-semibold border-r border-slate-700">Batch <i
-                                        data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
+                                <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Program <i
+                                        data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
+                                <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Batch <i
+                                        data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
                                 <th class="px-4 py-4 font-semibold border-r border-slate-700">Message</th>
-                                <th class="px-4 py-4 font-semibold border-r border-slate-700">Status</th>
+                                <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Status <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                 <th class="px-4 py-4 font-semibold text-center">Action</th>
                             </tr>
                         </thead>
@@ -377,6 +379,16 @@
                     </table>
                     <div id="empty-state" class="hidden text-center py-12 text-slate-400 text-sm">No testimonials found.
                     </div>
+                  </div>
+                  <div class="px-4 py-3">
+                    @include('partials.table-pagination-bar', [
+                        'id' => 'testimonialsTable',
+                        'mode' => 'client',
+                        'rowSelector' => '#testimonials-tbody tr[data-id]',
+                        'totalItems' => $testimonials->count(),
+                    ])
+                  </div>
+                  </div>
                 </div><!-- end Table -->
 
             </div><!-- end flex-1 overflow-y-auto p-8 -->
@@ -496,6 +508,7 @@
                 if (show) visible++;
             });
             document.getElementById('empty-state').classList.toggle('hidden', visible > 0);
+            document.dispatchEvent(new CustomEvent('pv:filtered'));
         }
 
         document.addEventListener('click', closeAllFilterDropdowns);

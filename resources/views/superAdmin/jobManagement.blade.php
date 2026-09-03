@@ -45,8 +45,7 @@
             letter-spacing: 0.04em;
             text-transform: uppercase;
             line-height: 1.3;
-            white-space: normal;
-            word-break: normal;
+            white-space: nowrap;
         }
 
         /* Body cells */
@@ -55,8 +54,7 @@
             text-align: center;
             vertical-align: middle;
             font-size: 10px;
-            word-break: break-word;
-            white-space: normal;
+            white-space: nowrap;
             line-height: 1.3;
         }
 
@@ -149,12 +147,14 @@
 
                 <!-- ══ PENDING TABLE ══ -->
                 <p class="text-xs font-bold text-[#C73D1A] mb-3">Job Posts pending for approval:</p>
-                <div id="jobPendingTableWrap" class="bg-white rounded-lg shadow-sm border border-slate-200 mb-6 w-full">
+                <div id="jobPendingTableWrap" class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden mb-6 w-full">
                     @include('partials.job-management.pending-table')
                 </div>
 
-                <!-- Search / Filter / Export Row -->
-                <div class="flex items-center mb-4 gap-3">
+                <!-- ══ ALL JOBS TABLE ══ -->
+                <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden w-full">
+                  <!-- Search / Filter / Export Row -->
+                  <div class="flex flex-col md:flex-row md:items-center gap-3 p-4 border-b border-slate-100">
                     <div class="relative flex-1 max-w-md">
                         <i data-lucide="search"
                             class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
@@ -165,7 +165,7 @@
                         class="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:border-[#C73D1A] transition-all shrink-0">
                         <i data-lucide="filter" class="w-4 h-4"></i>
                     </button>
-                    <div class="ml-auto flex items-center gap-3">
+                    <div class="md:ml-auto flex items-center gap-3">
                         <button
                             onclick="openPostJobModal()"
                             class="flex items-center gap-2 bg-[#1D264F] hover:bg-blue-900 text-white px-4 py-2 rounded-lg font-bold text-xs tracking-widest shadow-lg transition-all">
@@ -177,11 +177,11 @@
                         class="shrink-0 flex items-center gap-2 px-5 py-2 bg-[#C73D1A] hover:bg-[#a83215] text-white text-xs font-bold rounded-lg transition-all uppercase">
                         <i data-lucide="download" class="w-4 h-4"></i> EXPORT CSV
                     </button>
-                </div>
+                  </div>
 
-                <!-- ══ ALL JOBS TABLE ══ -->
-                <div id="jobApprovedTableWrap" class="bg-white rounded-lg shadow-sm border border-slate-200 w-full">
+                  <div id="jobApprovedTableWrap">
                     @include('partials.job-management.approved-table')
+                  </div>
                 </div>
 
             </div><!-- end overflow-y-auto -->
@@ -819,39 +819,10 @@
            Swaps just one table's wrapper innerHTML on a page-link click
            instead of letting the link do a normal full-page navigation —
            the rest of the page (scroll position, the other table, filters)
-           never moves. Re-binds pagination links on the freshly-fetched
-           markup too, since those are new DOM nodes with no listeners of
-           their own. Same pattern as userManagement.blade.php's employer
-           tables. */
-        function initAjaxTablePagination(wrapId, pageParam, fetchUrl, reinit) {
-            const wrap = document.getElementById(wrapId);
-            if (!wrap) return;
-
-            function bind() {
-                wrap.querySelectorAll('nav[aria-label="Pagination"] a[href]').forEach(function (link) {
-                    link.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        const page = new URL(this.href).searchParams.get(pageParam) || 1;
-                        fetch(fetchUrl + '?' + pageParam + '=' + page, {
-                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                        })
-                            .then(function (r) { return r.text(); })
-                            .then(function (html) {
-                                wrap.innerHTML = html;
-                                if (window.lucide) lucide.createIcons();
-                                initMenuButtons();
-                                if (reinit) reinit();
-                                bind();
-                            });
-                    });
-                });
-            }
-
-            bind();
-        }
-
-        initAjaxTablePagination('jobPendingTableWrap', 'pendingPage', "{{ route('jobPosting.pendingFragment') }}");
-        initAjaxTablePagination('jobApprovedTableWrap', 'approvedPage', "{{ route('jobPosting.approvedFragment') }}", applyFilters);
+           never moves. Pagination itself is now handled by the
+           table-pagination-bar partial embedded in each fragment (ajax
+           mode) — it's event-delegated so it keeps working after a swap
+           without this needing to bind()/rebind() by hand. */
 
         function toggleSidebar(id) {
             const sidebar = document.getElementById(id);

@@ -42,6 +42,7 @@
             font-weight: 600;
             letter-spacing: 0.04em;
             text-transform: uppercase;
+            white-space: nowrap;
         }
 
         .notices-table tbody td {
@@ -49,7 +50,7 @@
             text-align: center;
             vertical-align: middle;
             font-size: 11px;
-            word-break: break-word;
+            white-space: nowrap;
         }
 
         #noticeModal>div,
@@ -110,7 +111,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-sm border border-slate-200 w-full">
+                <div class="bg-white rounded-lg shadow-sm border border-slate-200 w-full overflow-hidden">
 
                     <!-- TOOLBAR: search + add -->
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-b border-slate-100">
@@ -137,13 +138,13 @@
                         <table class="notices-table">
                             <thead class="bg-[#0E0F3B] text-white">
                                 <tr>
-                                    <th class="border-r border-slate-700">ID No.</th>
-                                    <th class="border-r border-slate-700">Category</th>
-                                    <th class="border-r border-slate-700">Title</th>
-                                    <th class="border-r border-slate-700">Date &amp; Time</th>
-                                    <th class="border-r border-slate-700">Location</th>
-                                    <th class="border-r border-slate-700">Attendance</th>
-                                    <th class="border-r border-slate-700">Recipient</th>
+                                    <th data-sort class="border-r border-slate-700">ID No. <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                    <th data-sort class="border-r border-slate-700">Category <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                    <th data-sort class="border-r border-slate-700">Title <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                    <th data-sort class="border-r border-slate-700">Date &amp; Time <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                    <th data-sort class="border-r border-slate-700">Location <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                    <th data-sort class="border-r border-slate-700">Attendance <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                    <th data-sort class="border-r border-slate-700">Recipient <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -220,6 +221,14 @@
                         </table>
                         <p id="noticeNoSearchResults" class="hidden text-center text-gray-400 py-10 text-xs">No matching notices.</p>
                     </div>
+                    <div class="px-4 py-3">
+                        @include('partials.table-pagination-bar', [
+                            'id' => 'noticesTable',
+                            'mode' => 'client',
+                            'rowSelector' => '#noticesTbody tr[data-search]',
+                            'totalItems' => $notices->count(),
+                        ])
+                    </div>
                 </div>
 
             </div>
@@ -289,8 +298,8 @@
     <!-- ══════════════════════ ADD NOTICE MODAL ══════════════════════ -->
     <div id="addNoticeModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/60 backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all mx-4">
-            <div class="relative bg-[#0E0F3B] flex items-center justify-between p-6">
-                <h2 class="text-xl font-bold text-white">Add Notice</h2>
+            <div id="an-modal-header" class="relative bg-[#0E0F3B] flex items-center justify-between p-6 transition-colors">
+                <h2 id="an-modal-title" class="text-xl font-bold text-white">Add Notice</h2>
                 <button type="button" onclick="closeAddNoticeModal()" class="text-white/80 hover:text-white transition-colors">
                     <i data-lucide="x-circle" class="w-6 h-6"></i>
                 </button>
@@ -459,8 +468,8 @@
                 @csrf
                 @method('PUT')
 
-                <div class="relative bg-[#0E0F3B] flex items-center justify-between p-6">
-                    <h2 class="text-xl font-bold text-white">Edit Notice</h2>
+                <div id="edit-{{ $notice->id }}-modal-header" class="relative bg-[#0E0F3B] flex items-center justify-between p-6 transition-colors">
+                    <h2 id="edit-{{ $notice->id }}-modal-title" class="text-xl font-bold text-white">Edit Notice</h2>
                     <button type="button" onclick="closeEditNoticeModal()" class="text-white/80 hover:text-white transition-colors">
                         <i data-lucide="x-circle" class="w-6 h-6"></i>
                     </button>
@@ -614,6 +623,7 @@
                 if (match) visibleCount++;
             });
             document.getElementById('noticeNoSearchResults').classList.toggle('hidden', visibleCount !== 0 || rows.length === 0);
+            document.dispatchEvent(new CustomEvent('pv:filtered'));
         }
 
         // ── 3-DOT ACTION DROPDOWN ──
@@ -640,6 +650,20 @@
             const category = document.getElementById(prefix + '-category').value;
             document.getElementById(prefix + '-location-field').classList.toggle('hidden', category === 'announcement');
             document.getElementById(prefix + '-speaker-field').classList.toggle('hidden', category !== 'seminar');
+
+            // Recolors the modal header to match the chosen category, and
+            // swaps its title between "Add/Edit Event/Seminar/Notice" —
+            // Announcement keeps the generic "Notice" wording since it IS
+            // just a plain notice, unlike the other two more specific types.
+            const headerColors = { event: '#C73D1A', seminar: '#1D46A4', announcement: '#ED7A07' };
+            const headerWords = { event: 'Event', seminar: 'Seminar', announcement: 'Notice' };
+            const header = document.getElementById(prefix + '-modal-header');
+            const title = document.getElementById(prefix + '-modal-title');
+            if (header) header.style.backgroundColor = headerColors[category] || '#0E0F3B';
+            if (title) {
+                const action = prefix === 'an' ? 'Add' : 'Edit';
+                title.textContent = action + ' ' + (headerWords[category] || 'Notice');
+            }
         }
 
         // ── IMAGE PREVIEW (shared by Add thumbnail + every per-row Edit thumbnail) ──
@@ -744,6 +768,7 @@
             document.querySelectorAll('[id^="editNoticeForm-"]').forEach(f => f.classList.add('hidden'));
             const form = document.getElementById('editNoticeForm-' + id);
             if (form) form.classList.remove('hidden');
+            toggleNoticeCategoryFields('edit-' + id);
 
             document.getElementById('editNoticeModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';

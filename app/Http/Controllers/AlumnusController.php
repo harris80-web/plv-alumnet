@@ -54,7 +54,7 @@ class AlumnusController extends Controller
             $query->whereYear('alumnus_batch', $batch);
         }
 
-        $alumni = $query->orderByDesc('alumnus_batch')->paginate(10)->withQueryString();
+        $alumni = $query->orderByDesc('alumnus_batch')->paginate($this->resolvePerPage(10))->withQueryString();
 
         $programs = Program::orderBy('program_name')->get();
         // Batch filter dropdown stays a year pick — DISTINCT YEAR(...) since

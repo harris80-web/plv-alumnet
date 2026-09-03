@@ -274,7 +274,7 @@
         </div>
 
         <!-- APPLICANTS TABLE -->
-        <div class="bg-white rounded-3xl shadow-md">
+        <div class="bg-white rounded-3xl shadow-md overflow-hidden">
 
             <div class="px-8 py-5 border-b">
                 <h2 class="text-2xl font-bold tracking-tight text-center">
@@ -323,8 +323,8 @@
                 </div>
             </div>
 
-            <div>
-                <table class="w-full text-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm whitespace-nowrap">
                     <thead>
                         <tr class="bg-[#1D264F] text-white text-xs uppercase tracking-wider">
                             <th class="px-4 py-3 text-center font-semibold w-10">
@@ -332,9 +332,9 @@
                                     class="w-4 h-4 cursor-pointer" title="Select all">
                             </th>
                             <th class="px-6 py-3 text-center font-semibold w-12">#</th>
-                            <th class="px-6 py-3 text-center font-semibold">Applicant Name</th>
-                            <th class="px-6 py-3 text-center font-semibold">Program</th>
-                            <th class="px-6 py-3 text-center font-semibold">Compatibility</th>
+                            <th data-sort class="px-6 py-3 text-center font-semibold">Applicant Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                            <th data-sort class="px-6 py-3 text-center font-semibold">Program <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                            <th data-sort class="px-6 py-3 text-center font-semibold">Compatibility <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                             <th class="px-6 py-3 text-center font-semibold">Resume</th>
                             <th class="px-6 py-3 text-center font-semibold">
                                 <div class="relative inline-block">
@@ -471,6 +471,15 @@
                     </tbody>
                 </table>
             </div>
+            <div class="px-8 py-4">
+                @include('partials.table-pagination-bar', [
+                    'id' => 'jobApplicantsTable',
+                    'mode' => 'client',
+                    'rowSelector' => 'tbody tr[data-status]',
+                    'totalItems' => $jobPost->applicants->count(),
+                ])
+            </div>
+            @include('partials.table-sort')
 
         </div>
     </main>
@@ -548,6 +557,8 @@
         document.getElementById('bulkShortlistBtn').disabled = count === 0;
 
         const allCheckboxes = document.querySelectorAll('.applicant-checkbox');
+        allCheckboxes.forEach(cb => cb.closest('tr')?.classList.toggle('bg-blue-50', cb.checked));
+
         const selectAll = document.getElementById('selectAllCheckbox');
         if (selectAll) {
             selectAll.checked = allCheckboxes.length > 0 && count === allCheckboxes.length;
@@ -663,6 +674,7 @@
                 emptyState.classList.add('hidden');
             }
         }
+        document.dispatchEvent(new CustomEvent('pv:filtered'));
     }
 </script>
 

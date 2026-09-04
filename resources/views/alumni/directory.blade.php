@@ -92,11 +92,6 @@
                 class="shrink-0 w-10 h-10 flex items-center justify-center border rounded-lg text-gray-400 hover:text-[#C73D1A] hover:border-[#C73D1A] transition-colors">
                 <i class="fas fa-filter-circle-xmark"></i>
             </a>
-            @else
-            <button type="submit" title="Filter"
-                class="shrink-0 w-10 h-10 flex items-center justify-center border rounded-lg text-gray-400 hover:text-[#C73D1A] hover:border-[#C73D1A] transition-colors">
-                <i class="fas fa-filter"></i>
-            </button>
             @endif
         </form>
 

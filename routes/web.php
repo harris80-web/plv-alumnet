@@ -341,4 +341,59 @@ Route::get('/resume/pdf', [ResumeBuilderController::class, 'downloadPdf'])->name
 Route::post('/resume/import', [ResumeBuilderController::class, 'import'])->name('resume.import');
 Route::get('/resume/view/{alumnusId}', [ResumeBuilderController::class, 'viewApplicantResume'])->name('resume.viewApplicant');
 
+// Local-only: renders every mails/*.blade.php exactly as it would be
+// emailed (same asset() URLs, same gradient/icon markup) without sending
+// anything through MAIL_MAILER — lets you check layout/background/font
+// changes in a browser instead of triggering a real SMTP send.
+if (app()->environment('local')) {
+    Route::get('/dev/mail-preview', function () {
+        $templates = [
+            'resetPassword', 'alumniCreated', 'activateAlumni', 'deactAlumni',
+            'deactEmployer', 'rejectEmployer', 'deleteAdmin', 'applyJob',
+            'approveJob', 'declineJob', 'deleteJob', 'hireApplicant',
+            'shortlistApplicant', 'declineApplication',
+        ];
+        $links = collect($templates)
+            ->map(fn ($t) => "<li><a href=\"/dev/mail-preview/{$t}\" target=\"_blank\">{$t}</a></li>")
+            ->implode('');
+        return "<h1 style=\"font-family:sans-serif\">Mail Previews</h1><ul style=\"font-family:sans-serif; line-height:2\">{$links}</ul>";
+    })->name('dev.mailPreviewIndex');
+
+    Route::get('/dev/mail-preview/{template}', function (string $template) {
+        $user = (object) [
+            'user_first_name' => 'Juan',
+            'user_last_name' => 'Dela Cruz',
+            'user_email' => 'juan.delacruz@example.com',
+            'email' => 'juan.delacruz@example.com',
+        ];
+        $employer = (object) ['user' => $user, 'employer_company_name' => 'Sample Company Inc.'];
+        $job = (object) [
+            'job_posting_id' => 1,
+            'job_posting_title' => 'Junior Software Developer',
+            'user' => $user,
+            'employer' => $employer,
+        ];
+        $alumni = (object) ['user' => $user];
+        $application = (object) ['alumnus' => $alumni, 'job' => $job];
+        $reason = 'This is a sample reason shown for preview purposes.';
+
+        $data = match ($template) {
+            'resetPassword' => ['user' => $user, 'token' => 'sample-preview-token'],
+            'alumniCreated' => ['user' => $user, 'password' => 'TempPass123'],
+            'activateAlumni' => ['user' => $user],
+            'deactAlumni', 'deactEmployer', 'rejectEmployer', 'deleteAdmin' => ['user' => $user, 'reason' => $reason],
+            'applyJob' => ['job' => $job, 'alumni' => $alumni],
+            'approveJob' => ['job' => $job],
+            'declineJob' => ['job' => $job, 'reason' => $reason],
+            'deleteJob' => ['job' => $job, 'reason' => $reason, 'user' => $user],
+            'hireApplicant', 'shortlistApplicant', 'declineApplication' => ['application' => $application],
+            default => null,
+        };
+
+        abort_if($data === null || !view()->exists("mails.{$template}"), 404, "Unknown mail template: {$template}");
+
+        return view("mails.{$template}", $data);
+    })->name('dev.mailPreview');
+}
+
 Route::get('/skills/search', [SkillSearchController::class, 'search'])->name('skills.search');

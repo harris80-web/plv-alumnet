@@ -15,10 +15,15 @@
         </xml>
     </noscript>
     <![endif]-->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 
-<body style="margin:0; padding:0; background-color:#0E0F3B; font-family:'Poppins', Arial, sans-serif;">
+<body style="margin:0; padding:0; background-color:#0E0F3B; font-family:'Montserrat', Arial, sans-serif;">
+    <!--[if gte mso 9]>
+    <v:background xmlns:v="urn:schemas-microsoft-com:vml" fill="t">
+        <v:fill type="tile" src="{{ str_replace(' ', '%20', asset('assets/alumnetBackground.jpg')) }}" color="#0E0F3B" />
+    </v:background>
+    <![endif]-->
     @hasSection('preheader')
         <div style="display:none; max-height:0; overflow:hidden; opacity:0; mso-hide:all;">
             @yield('preheader')
@@ -26,7 +31,7 @@
     @endif
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-        style="background-color:#0E0F3B; background-image:url('{{ str_replace(' ', '%20', asset('assets/alumnetBackground.svg')) }}'); background-repeat:no-repeat; background-size:cover; background-position:center top;">
+        style="background-color:#0E0F3B; background-image:url('{{ str_replace(' ', '%20', asset('assets/alumnetBackground.jpg')) }}'); background-repeat:no-repeat; background-size:cover; background-position:center top;">
         <tr>
             <td align="center" style="padding:56px 16px;">
 

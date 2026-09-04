@@ -7,11 +7,11 @@
 
     <!-- Heading -->
     <h1 style="margin:0 0 20px 0; font-family:'Montserrat', Arial, sans-serif; font-size:28px; line-height:1.3; font-weight:800; text-align:center;">
-        <span style="color:#0E0F3B;">Welcome to </span><span style="color:#C73D1A; background:linear-gradient(90deg,#C73D1A,#ED7A07); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">PLV-AlumNet!</span>
+        <span style="color:#0E0F3B; background:linear-gradient(90deg,#0E0F3B,#C73D1A,#ED7A07); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">Welcome to </span><span style="color:#C73D1A; background:linear-gradient(90deg,#0E0F3B,#C73D1A,#ED7A07); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">PLV-AlumNet!</span>
     </h1>
 
     <!-- Greeting -->
-    <p style="margin:0 0 6px 0; font-size:16px; color:#0E0F3B; text-align:center;">
+    <p style="margin:0 0 6px 0; font-family:'Inter', Arial, sans-serif; font-size:16px; color:#0E0F3B; text-align:center;">
         Hello, <strong>{{ $user->user_first_name }} {{ $user->user_last_name }}</strong>,
     </p>
 
@@ -53,7 +53,8 @@
         <tr>
             <td align="center" style="padding:14px 18px;">
                 <p style="margin:0; font-size:13px; line-height:1.5; font-weight:600; color:#C73D1A; text-align:center;">
-                    &#9888; Please change your password immediately after logging in for security.
+                    <span style="display:inline-block; width:16px; height:16px; line-height:16px; background-color:#C73D1A; color:#ffffff; border-radius:50%; font-family:Arial, sans-serif; font-size:11px; font-weight:800; text-align:center; vertical-align:middle;">!</span>
+                    <span style="vertical-align:middle;">Please change your password immediately after logging in for security.</span>
                 </p>
             </td>
         </tr>

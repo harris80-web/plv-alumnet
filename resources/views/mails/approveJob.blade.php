@@ -7,11 +7,11 @@
 
     <!-- Heading -->
     <h1 style="margin:0 0 20px 0; font-family:'Montserrat', Arial, sans-serif; font-size:28px; line-height:1.3; font-weight:800; text-align:center;">
-        <span style="color:#0E0F3B;">Job Post </span><span style="color:#15803D; background:linear-gradient(90deg,#15803D,#22C55E); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">Approved!</span>
+        <span style="color:#0E0F3B; background:linear-gradient(90deg,#0E0F3B,#C73D1A,#ED7A07); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">Job Post </span><span style="color:#C73D1A; background:linear-gradient(90deg,#0E0F3B,#C73D1A,#ED7A07); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">Approved!</span>
     </h1>
 
     <!-- Greeting -->
-    <p style="margin:0 0 6px 0; font-size:16px; color:#0E0F3B; text-align:center;">
+    <p style="margin:0 0 6px 0; font-family:'Inter', Arial, sans-serif; font-size:16px; color:#0E0F3B; text-align:center;">
         Hello, <strong>{{ $job->employer->user->user_first_name }} {{ $job->employer->user->user_last_name }}</strong>,
     </p>
 

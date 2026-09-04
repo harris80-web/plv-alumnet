@@ -849,7 +849,7 @@ class UserController extends Controller
         } else if ($user->user_role == 'registrar') {
             return view('registrar.edit-profile', compact('user'));
         } else if ($user->user_role == 'employer') {
-            return view('employer.edit-profile', compact('user'));
+            return view('employer.edit-profile', compact('user', 'industries'));
         } else if ($user->user_role == 'alumni') {
             $user->load(['alumnus.skills', 'alumnus.experiences.industry', 'alumnus.certifications']);
             $resumeData = $user->alumnus->toResumeFormArray();

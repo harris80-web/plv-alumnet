@@ -178,9 +178,12 @@ class JobPostingController extends Controller
     }
 
     /**
-     * search/program/job_type/date_posted filters — shared by every job
-     * listing query (board, bookmarks, my-applications) so filtering
-     * behaves identically no matter which tab you're on.
+     * search/industry/job_type/job_setup/location/date_posted filters —
+     * shared by every job listing query (board, bookmarks, my-applications)
+     * so filtering behaves identically no matter which tab you're on.
+     * industry/job_type/job_setup are multi-select (checkbox) filters on
+     * the board, so each arrives as an array — array_filter() drops blank
+     * entries and the empty-array/no-selection case reads as falsy.
      */
     private function applySearchFilters($query, Request $request)
     {
@@ -191,12 +194,20 @@ class JobPostingController extends Controller
             });
         }
 
-        if ($programId = $request->input('program')) {
-            $query->forProgram($programId);
+        if ($industryIds = array_filter((array) $request->input('industry'))) {
+            $query->whereIn('industry_id', $industryIds);
         }
 
-        if ($jobType = $request->input('job_type')) {
-            $query->where('job_posting_employment_type', $jobType);
+        if ($jobTypes = array_filter((array) $request->input('job_type'))) {
+            $query->whereIn('job_posting_employment_type', $jobTypes);
+        }
+
+        if ($jobSetups = array_filter((array) $request->input('job_setup'))) {
+            $query->whereIn('job_posting_setup', $jobSetups);
+        }
+
+        if ($location = trim((string) $request->input('location'))) {
+            $query->where('job_posting_address', 'like', "%{$location}%");
         }
 
         if ($datePosted = $request->input('date_posted')) {
@@ -232,10 +243,15 @@ class JobPostingController extends Controller
             $bookmarkedIds = $user->alumnus->bookmarkedJobs->pluck('job_posting_id')->toArray();
         }
 
-        $filters = $request->only(['search', 'program', 'job_type', 'date_posted']);
+        $filters = $request->only(['search', 'industry', 'job_type', 'job_setup', 'location', 'date_posted']);
         $recommendedThreshold = self::RECOMMENDED_SCORE_THRESHOLD;
+        // Panel starts expanded whenever an advanced filter (anything but
+        // the always-visible search box) is already applied, so a filtered
+        // link/bookmark never lands on a page that hides its own filters.
+        $advancedFilters = collect($filters)->except('search')->all();
+        $moreFiltersActive = (bool) array_filter($advancedFilters);
 
-        return compact('jobPostings', 'programs', 'industries', 'user', 'appliedJobs', 'bookmarkedIds', 'activeTab', 'filters', 'recommendedThreshold');
+        return compact('jobPostings', 'programs', 'industries', 'user', 'appliedJobs', 'bookmarkedIds', 'activeTab', 'filters', 'recommendedThreshold', 'moreFiltersActive');
     }
 
     public function addJobPost(Request $request, $id)
@@ -355,44 +371,29 @@ class JobPostingController extends Controller
         }
     }
 
+    /**
+     * Same filter shape as the Job Board (search/industry/job_type/job_setup/
+     * location/date_posted, via the shared applySearchFilters()) so "My Job
+     * Postings" behaves identically to the board instead of the old
+     * Program-only filter it used to have.
+     */
     public function showMyJobPosts(Request $request, $id)
     {
         $query = JobPosting::with(['skills', 'applicants', 'industry', 'programs'])->where('user_id', $id);
 
-        if ($search = trim((string) $request->input('search'))) {
-            $query->where(function ($q) use ($search) {
-                $q->where('job_posting_title', 'like', "%{$search}%")
-                    ->orWhere('job_posting_company', 'like', "%{$search}%");
-            });
-        }
+        $jobPostings = $this->applySearchFilters($query, $request)
+            ->latest()
+            ->paginate(6)
+            ->withQueryString();
 
-        if ($programId = $request->input('program')) {
-            $query->forProgram($programId);
-        }
-
-        if ($jobType = $request->input('job_type')) {
-            $query->where('job_posting_employment_type', $jobType);
-        }
-
-        if ($datePosted = $request->input('date_posted')) {
-            $since = match ($datePosted) {
-                '24h' => now()->subDay(),
-                '7d' => now()->subDays(7),
-                '30d' => now()->subDays(30),
-                default => null,
-            };
-            if ($since) {
-                $query->where('created_at', '>=', $since);
-            }
-        }
-
-        $jobPostings = $query->latest()->paginate(6)->withQueryString();
         $programs = Program::all();
         $industries = Industry::all();
         $users = Auth::user();
-        $filters = $request->only(['search', 'program', 'job_type', 'date_posted']);
+        $filters = $request->only(['search', 'industry', 'job_type', 'job_setup', 'location', 'date_posted']);
+        $advancedFilters = collect($filters)->except('search')->all();
+        $moreFiltersActive = (bool) array_filter($advancedFilters);
 
-        return view('general.jobPostings', compact('jobPostings', 'programs', 'industries', 'users', 'filters'));
+        return view('general.jobPostings', compact('jobPostings', 'programs', 'industries', 'users', 'filters', 'moreFiltersActive'));
     }
 
     public function editJobPost(Request $request, $id)

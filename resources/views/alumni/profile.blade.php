@@ -161,6 +161,50 @@
         </div>
     </main>
 
+    {{-- ===== DOCUMENTS: uploaded Resume/CV and Cover Letter, read-only.
+         Distinct from the Resume Builder below — these are the actual files
+         offered as "Use my AlumNet Profile" when applying to a job. Edited
+         from the Edit Profile page's "Documents" card. --}}
+    @if($user->alumnus->alumnus_resume_file_path || $user->alumnus->alumnus_resume_backup_file_path || $user->alumnus->alumnus_cover_letter_file_path)
+    <div class="max-w-5xl mx-auto mt-10 px-4">
+        <div class="bg-white rounded-3xl shadow-xl border border-gray-200 p-8">
+            <h3 class="text-sm font-bold text-[#0E0F3B] uppercase tracking-wide mb-4">Documents</h3>
+            <div class="flex flex-col md:flex-row gap-4">
+                @if($user->alumnus->alumnus_resume_file_path)
+                <a href="{{ asset('storage/' . $user->alumnus->alumnus_resume_file_path) }}" target="_blank"
+                    class="flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-3 flex-1 hover:border-[#C73D1A] transition-colors">
+                    <i class="fas fa-file-lines text-[#C73D1A] text-xl shrink-0"></i>
+                    <div class="min-w-0">
+                        <p class="text-xs font-bold text-[#0E0F3B] uppercase">Resume / CV</p>
+                        <p class="text-sm text-[#1D46A4] font-semibold truncate">{{ basename($user->alumnus->alumnus_resume_file_path) }}</p>
+                    </div>
+                </a>
+                @endif
+                @if($user->alumnus->alumnus_resume_backup_file_path)
+                <a href="{{ asset('storage/' . $user->alumnus->alumnus_resume_backup_file_path) }}" target="_blank"
+                    class="flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-3 flex-1 hover:border-[#C73D1A] transition-colors">
+                    <i class="fas fa-file-shield text-[#C73D1A] text-xl shrink-0"></i>
+                    <div class="min-w-0">
+                        <p class="text-xs font-bold text-[#0E0F3B] uppercase">Backup Resume / CV</p>
+                        <p class="text-sm text-[#1D46A4] font-semibold truncate">{{ basename($user->alumnus->alumnus_resume_backup_file_path) }}</p>
+                    </div>
+                </a>
+                @endif
+                @if($user->alumnus->alumnus_cover_letter_file_path)
+                <a href="{{ asset('storage/' . $user->alumnus->alumnus_cover_letter_file_path) }}" target="_blank"
+                    class="flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-3 flex-1 hover:border-[#C73D1A] transition-colors">
+                    <i class="fas fa-envelope-open-text text-[#C73D1A] text-xl shrink-0"></i>
+                    <div class="min-w-0">
+                        <p class="text-xs font-bold text-[#0E0F3B] uppercase">Cover Letter</p>
+                        <p class="text-sm text-[#1D46A4] font-semibold truncate">{{ basename($user->alumnus->alumnus_cover_letter_file_path) }}</p>
+                    </div>
+                </a>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- ===== RESUME: finished view, or a prompt to go build one =====
          Same max-w-5xl as the profile card above — this used to be max-w-3xl
          (empty state) or entirely unconstrained (completed resume-preview

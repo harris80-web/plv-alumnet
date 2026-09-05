@@ -27,6 +27,25 @@ $title = request()->routeIs('notifications.all')
 ?>
 
 <style>
+    /* Thin, visible scrollbar for the notification dropdown's list — same
+       treatment as .chat-scroll in alumni/messages.blade.php and
+       #notificationList in partials/user-sidebar.blade.php, since the
+       site-wide reset hides default scrollbars on html/body but this inner
+       list still needs a visible one so it's clear there's more to scroll. */
+    #notif-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #notif-list::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 3px;
+    }
+
+    #notif-list {
+        scrollbar-width: thin;
+        scrollbar-color: #e2e8f0 transparent;
+    }
+
     /* Bell & Settings button base */
     .icon-btn {
         position: relative;
@@ -64,6 +83,9 @@ $title = request()->routeIs('notifications.all')
     }
 </style>
 
+<!-- Error Toast Container -->
+<div id="toastContainer" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 w-[90%] max-w-sm pointer-events-none"></div>
+
 <header class="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center shrink-0 shadow-md z-10">
 
     <h1 class="text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
@@ -87,9 +109,23 @@ $title = request()->routeIs('notifications.all')
 
             <div class="flex items-center px-4 py-3 text-sm font-semibold border-b border-slate-200">
                 <span class="flex-1 text-[#0E0F3B]">Notifications</span>
+                <button type="button" onclick="markAllNotificationsRead()" class="text-[10px] font-semibold text-[#0E0F3B] hover:text-[#ED7A07] transition-colors mr-2">
+                    Mark all as read
+                </button>
                 <button onclick="closeAllMenus()"
                     class="p-1 rounded hover:bg-slate-100 transition">
                     <i data-lucide="x" class="w-4 h-4 text-slate-500"></i>
+                </button>
+            </div>
+
+            <div class="flex border-b border-slate-200 text-xs font-bold">
+                <button type="button" onclick="setNotifTab('all')" data-notif-tab-btn="all"
+                    class="flex-1 py-2 text-center border-b-2 transition-colors border-[#ED7A07] text-[#ED7A07]">
+                    All
+                </button>
+                <button type="button" onclick="setNotifTab('unread')" data-notif-tab-btn="unread"
+                    class="flex-1 py-2 text-center border-b-2 transition-colors border-transparent text-slate-400 hover:text-[#0E0F3B]">
+                    Unread
                 </button>
             </div>
 
@@ -173,18 +209,6 @@ $title = request()->routeIs('notifications.all')
     </div>
     
 </header>
-@if(session('password_changed'))
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const successModal = document.getElementById('successModal');
-        if (successModal) {
-            successModal.classList.remove('hidden');
-            successModal.classList.add('flex');
-            setTimeout(() => closeModal(), 5000);
-        }
-    });
-</script>
-@endif
 
 <!-- CHANGE PASSWORD MODAL -->
 <div id="password-modal" class="fixed inset-0 z-[9999] bg-black/40 hidden items-center justify-center">
@@ -210,7 +234,7 @@ $title = request()->routeIs('notifications.all')
                 <label class="block text-[#0E0F3B] text-xs font-bold mb-1 ml-1">Old Password:</label>
                 <div class="relative">
                     <input type="password" id="old_password" name="current_password" required
-                        class="w-full pl-3 pr-10 py-2 text-sm rounded-xl border border-[#ED7A07]/30 focus:border-[#ED7A07] outline-none shadow-sm bg-white">
+                        class="w-full pl-3 pr-10 py-2 text-sm rounded-xl border focus:border-[#ED7A07] outline-none shadow-sm bg-white {{ $errors->has('current_password') ? 'border-red-600' : 'border-[#ED7A07]/30' }}">
                     <button type="button" onclick="togglePassword('old_password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                         <i id="old_password_icon" data-lucide="eye" class="w-4 h-4"></i>
                     </button>
@@ -221,7 +245,7 @@ $title = request()->routeIs('notifications.all')
                 <label class="block text-[#0E0F3B] text-xs font-bold mb-1 ml-1">New Password:</label>
                 <div class="relative">
                     <input type="password" id="new_password" name="new_password" required
-                        class="w-full pl-3 pr-10 py-2 text-sm rounded-xl border border-[#ED7A07]/30 focus:border-[#ED7A07] outline-none shadow-sm bg-white">
+                        class="w-full pl-3 pr-10 py-2 text-sm rounded-xl border focus:border-[#ED7A07] outline-none shadow-sm bg-white {{ $errors->has('new_password') ? 'border-red-600' : 'border-[#ED7A07]/30' }}">
                     <button type="button" onclick="togglePassword('new_password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                         <i id="new_password_icon" data-lucide="eye" class="w-4 h-4"></i>
                     </button>
@@ -233,7 +257,7 @@ $title = request()->routeIs('notifications.all')
                 <label class="block text-[#0E0F3B] text-xs font-bold mb-1 ml-1">Confirm New Password:</label>
                 <div class="relative">
                     <input type="password" id="confirm_password" name="new_password_confirmation" required
-                        class="w-full pl-3 pr-10 py-2 text-sm rounded-xl border border-[#ED7A07]/30 focus:border-[#ED7A07] outline-none shadow-sm bg-white">
+                        class="w-full pl-3 pr-10 py-2 text-sm rounded-xl border focus:border-[#ED7A07] outline-none shadow-sm bg-white {{ $errors->has('new_password_confirmation') ? 'border-red-600' : 'border-[#ED7A07]/30' }}">
                     <button type="button" onclick="togglePassword('confirm_password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                         <i id="confirm_password_icon" data-lucide="eye" class="w-4 h-4"></i>
                     </button>
@@ -248,35 +272,60 @@ $title = request()->routeIs('notifications.all')
     </div>
 </div>
 
-<!-- SUCCESS MODAL -->
-<div id="successModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-2xl max-w-md w-full p-8 relative text-center">
-        <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-300 hover:text-gray-500 transition">
-            <i class="fa-solid fa-circle-xmark text-2xl"></i>
-        </button>
-        <div class="flex justify-center mb-6">
-            <div class="bg-[#0D0D2B] w-20 h-20 rounded-full flex items-center justify-center">
-                <i class="fa-solid fa-check text-white text-4xl"></i>
-            </div>
-        </div>
-        <h3 class="text-3xl font-bold mb-4">
-            <span class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Password Updated Successfully</span>
-        </h3>
-        <p class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-sm mb-8 leading-relaxed">
-            Your account security <span class="font-medium">has been updated</span>. Please use your new password the next time you log in.
-        </p>
-        <button onclick="closeModal()" class="w-full max-w-[150px] bg-[#0D0D2B] text-white py-3 rounded font-bold tracking-widest hover:bg-blue-900 transition duration-200 uppercase text-sm">
-            DONE
-        </button>
-    </div>
-</div>
-
 @include('partials.ui-animations')
 @include('partials.bulk-checkbox')
 @include('partials.table-sort')
 <script src="https://unpkg.com/lucide@latest"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <script>
+    // Error toasts (red), populated from server-side validation errors —
+    // e.g. wrong current password on the Change Password modal above,
+    // which back()'s to whatever admin page this header happened to be on.
+    function showToast(message) {
+        const container = document.getElementById('toastContainer');
+
+        const toast = document.createElement('div');
+        toast.className = 'pointer-events-auto flex items-start gap-2 bg-red-50 text-red-700 border border-red-500 text-[12px] font-medium px-4 py-3 rounded-md shadow-lg opacity-0 -translate-y-2 transition-all duration-300 ease-out';
+
+        const text = document.createElement('span');
+        text.className = 'flex-1';
+        text.textContent = message;
+
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'text-red-500 hover:text-red-700 leading-none text-lg';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.onclick = () => dismissToast(toast);
+
+        toast.appendChild(text);
+        toast.appendChild(closeBtn);
+        container.appendChild(toast);
+
+        toast.getBoundingClientRect();
+        requestAnimationFrame(() => {
+            toast.classList.remove('opacity-0', '-translate-y-2');
+        });
+
+        setTimeout(() => dismissToast(toast), 8000);
+    }
+
+    function dismissToast(toast) {
+        if (!toast.isConnected) return;
+        toast.classList.add('opacity-0', '-translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+    }
+
+    @if ($errors->any())
+        window.addEventListener('DOMContentLoaded', () => {
+            const messages = @json($errors->all());
+            messages.forEach(message => showToast(message));
+            // The error means the modal's submit failed — reopen it so the
+            // admin sees the message in context instead of just a toast.
+            document.getElementById('password-modal')?.classList.remove('hidden');
+            document.getElementById('password-modal')?.classList.add('flex');
+        });
+    @endif
+
     document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
         attachHeaderListeners();
@@ -322,7 +371,6 @@ $title = request()->routeIs('notifications.all')
         if (!isOpen) {
             openMenu('notification-menu');
             document.getElementById('notif-btn').classList.add('active');
-            markNotificationsRead();
         }
     }
 
@@ -338,14 +386,18 @@ $title = request()->routeIs('notifications.all')
         }
     }
 
-    /* ── Notification bell: fetch, render, and mark-as-read-on-open ──
+    /* ── Notification bell: fetch, render, tabs, click-through ──
        Same NotificationController endpoints/contract as the alumni/employer
        bell (see partials/user-sidebar.blade.php) — this header just renders
        the JSON differently to match its own markup (#notif-list/#notif-badge
        instead of #notificationList/#notifBadge). */
     const NOTIFICATIONS_URL = {!! json_encode(route('notifications.index')) !!};
     const NOTIFICATIONS_MARK_READ_URL = {!! json_encode(route('notifications.markAllRead')) !!};
+    const NOTIFICATION_OPEN_URL_TEMPLATE = {!! json_encode(route('notifications.open', ['notification' => '__ID__'])) !!};
     const NOTIF_CSRF_TOKEN = '{{ csrf_token() }}';
+
+    let currentNotifications = [];
+    let activeNotifTab = 'all';
 
     function escapeHtmlForNotif(str) {
         const div = document.createElement('div');
@@ -353,22 +405,44 @@ $title = request()->routeIs('notifications.all')
         return div.innerHTML;
     }
 
-    function renderNotifications(list) {
+    function setNotifTab(tab) {
+        activeNotifTab = tab;
+        document.querySelectorAll('[data-notif-tab-btn]').forEach(btn => {
+            const active = btn.dataset.notifTabBtn === tab;
+            btn.classList.toggle('border-[#ED7A07]', active);
+            btn.classList.toggle('text-[#ED7A07]', active);
+            btn.classList.toggle('border-transparent', !active);
+            btn.classList.toggle('text-slate-400', !active);
+        });
+        renderNotifications();
+    }
+
+    function renderNotifications() {
         const container = document.getElementById('notif-list');
         const empty = document.getElementById('notif-empty');
         if (!container || !empty) return;
+
+        const list = activeNotifTab === 'unread'
+            ? currentNotifications.filter(n => !n.read)
+            : currentNotifications;
 
         const hasItems = list.length > 0;
         container.classList.toggle('hidden', !hasItems);
         empty.classList.toggle('hidden', hasItems);
         empty.classList.toggle('flex', !hasItems);
+        if (!hasItems) {
+            empty.querySelector('span.text-sm').textContent = activeNotifTab === 'unread' ? "You're all caught up" : 'No notifications';
+        }
 
         container.innerHTML = list.map(n => `
-            <div class="px-4 py-3 hover:bg-slate-50 border-b border-slate-200 ${n.read ? '' : 'bg-orange-50/60'}">
-                <div class="font-medium text-slate-700">${escapeHtmlForNotif(n.title)}</div>
-                <div class="text-xs text-slate-500 mt-0.5">${escapeHtmlForNotif(n.body)}</div>
-                <div class="text-xs text-slate-400 mt-1">${escapeHtmlForNotif(n.timeLabel)}</div>
-            </div>
+            <a href="${NOTIFICATION_OPEN_URL_TEMPLATE.replace('__ID__', n.id)}" class="flex items-start gap-2 px-4 py-3 hover:bg-slate-50 border-b border-slate-200 ${n.read ? '' : 'bg-blue-50'}">
+                ${n.read ? '<span class="w-2 h-2 shrink-0 mt-1.5"></span>' : '<span class="w-2 h-2 rounded-full bg-blue-600 shrink-0 mt-1.5"></span>'}
+                <div class="min-w-0 flex-1">
+                    <div class="font-medium text-slate-700">${escapeHtmlForNotif(n.title)}</div>
+                    <div class="text-xs text-slate-500 mt-0.5">${escapeHtmlForNotif(n.body)}</div>
+                    <div class="text-xs text-slate-400 mt-1">${escapeHtmlForNotif(n.timeLabel)}</div>
+                </div>
+            </a>
         `).join('');
     }
 
@@ -384,12 +458,13 @@ $title = request()->routeIs('notifications.all')
             const res = await fetch(NOTIFICATIONS_URL);
             if (!res.ok) return;
             const data = await res.json();
-            renderNotifications(data.notifications);
+            currentNotifications = data.notifications;
+            renderNotifications();
             updateNotifBadge(data.unreadCount);
         } catch (e) { /* transient network hiccup — next poll retries */ }
     }
 
-    async function markNotificationsRead() {
+    async function markAllNotificationsRead() {
         updateNotifBadge(0); // optimistic — next poll confirms
         try {
             await fetch(NOTIFICATIONS_MARK_READ_URL, {
@@ -466,16 +541,6 @@ $title = request()->routeIs('notifications.all')
 
     document.getElementById('change-password-form')?.addEventListener('submit', function() {
         hidePwModal(); // hide the modal while submitting
-    });
-
-    function closeModal() {
-        const successModal = document.getElementById('successModal');
-        successModal.classList.add('hidden');
-        successModal.classList.remove('flex');
-    }
-
-    document.getElementById('successModal')?.addEventListener('click', function(e) {
-        if (e.target === this) closeModal();
     });
 
     function togglePassword(fieldId, btn) {

@@ -867,6 +867,14 @@ class UserController extends Controller
 
     public function redirectToDashboard()
     {
+        // This route is itself a redirect target (changePassword() and
+        // others send here, then this sends on to the real dashboard) — a
+        // two-hop chain. Flash data normally survives exactly one request
+        // after it's set; without reflashing here, that budget is spent on
+        // this hop and success/error messages never reach the page the
+        // user actually lands on.
+        session()->reflash();
+
         $user = Auth::user();
         if ($user->user_role == 'admin') {
             // admin.dashboard is an unfinished placeholder view. The real
@@ -911,7 +919,7 @@ class UserController extends Controller
             ]);
 
         return redirect()->route('users.dashboardRedirect')
-            ->with('password_changed', true);
+            ->with('success', 'Your password has been changed successfully.');
     }
 
     public function showDashboard()

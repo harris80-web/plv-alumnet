@@ -28,13 +28,12 @@ class AlumnusController extends Controller
      * Alumni Directory — search/filter over alumni who opted into a public
      * profile (Alumnus::scopePublicProfiles()). Alumni-only: this is the
      * "browse each other" page, not an admin listing (that's
-     * superAdmin.userManagement).
+     * superAdmin.userManagement). Shared by index() (full page) and
+     * directoryFragment() (live-search AJAX) so the two can never filter
+     * differently from each other.
      */
-    public function index(Request $request)
+    private function filteredAlumniQuery(Request $request)
     {
-        $user = Auth::user();
-        abort_unless($user && $user->user_role === 'alumni', 403);
-
         $query = Alumnus::with(['user', 'program', 'section', 'industry', 'skills'])
             ->publicProfiles();
 
@@ -54,7 +53,18 @@ class AlumnusController extends Controller
             $query->whereYear('alumnus_batch', $batch);
         }
 
-        $alumni = $query->orderByDesc('alumnus_batch')->paginate($this->resolvePerPage(10))->withQueryString();
+        return $query;
+    }
+
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+        abort_unless($user && $user->user_role === 'alumni', 403);
+
+        $alumni = $this->filteredAlumniQuery($request)
+            ->orderByDesc('alumnus_batch')
+            ->paginate($this->resolvePerPage(10))
+            ->withQueryString();
 
         $programs = Program::orderBy('program_name')->get();
         // Batch filter dropdown stays a year pick — DISTINCT YEAR(...) since
@@ -67,6 +77,25 @@ class AlumnusController extends Controller
         $filters = $request->only(['search', 'program', 'batch']);
 
         return view('alumni.directory', compact('alumni', 'programs', 'batches', 'filters'));
+    }
+
+    /**
+     * Live-search fragment — the search box on the directory fetches this
+     * as the user types (see partials/table-pagination-bar.blade.php's
+     * 'ajax' mode + pvSearchAjax()) instead of navigating the whole page.
+     * Same abort_unless() as index() since this exposes the same data.
+     */
+    public function directoryFragment(Request $request)
+    {
+        $user = Auth::user();
+        abort_unless($user && $user->user_role === 'alumni', 403);
+
+        $alumni = $this->filteredAlumniQuery($request)
+            ->orderByDesc('alumnus_batch')
+            ->paginate($this->resolvePerPage(10))
+            ->withQueryString();
+
+        return view('partials.alumni-directory-table', compact('alumni'));
     }
 
     /**
@@ -138,6 +167,9 @@ class AlumnusController extends Controller
         $user = User::where('user_id', $alumnus)->firstOrFail();
         $validated = $request->validate([
             'user_profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'alumnus_resume_file' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
+            'alumnus_resume_backup_file' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
+            'alumnus_cover_letter_file' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'alumnus_employment_status' => 'required|boolean|max:255',
             'industry_id' => 'required_if:alumnus_employment_status,1|nullable|exists:industries,industry_id',
             'alumnus_workplace' => 'nullable|string|max:255',
@@ -148,6 +180,9 @@ class AlumnusController extends Controller
             'alumnus_first_job_is_internship' => 'nullable|boolean',
             'user_email' => 'required|email|unique:users,user_email,' . $user->user_id . ',user_id',
             'user_number' => 'nullable|string|max:20',
+            'alumnus_show_skills' => 'nullable|boolean',
+            'alumnus_show_email' => 'nullable|boolean',
+            'alumnus_show_linkedin' => 'nullable|boolean',
         ]);
 
         $oldProfilePicture = $user->user_profile_picture ?? null;
@@ -159,8 +194,37 @@ class AlumnusController extends Controller
             $profilePicture = $request->file('user_profile_picture')->store('profilePictures', 'public');
         }
 
+        $alumniForUploads = Alumnus::where('user_id', $alumnus)->firstOrFail();
+
+        $oldResumeFile = $alumniForUploads->alumnus_resume_file_path;
+        $resumeFile = null;
+        if ($request->hasFile('alumnus_resume_file')) {
+            if ($oldResumeFile && Storage::disk('public')->exists($oldResumeFile)) {
+                Storage::disk('public')->delete($oldResumeFile);
+            }
+            $resumeFile = $request->file('alumnus_resume_file')->store('alumniDocuments/resumes', 'public');
+        }
+
+        $oldResumeBackupFile = $alumniForUploads->alumnus_resume_backup_file_path;
+        $resumeBackupFile = null;
+        if ($request->hasFile('alumnus_resume_backup_file')) {
+            if ($oldResumeBackupFile && Storage::disk('public')->exists($oldResumeBackupFile)) {
+                Storage::disk('public')->delete($oldResumeBackupFile);
+            }
+            $resumeBackupFile = $request->file('alumnus_resume_backup_file')->store('alumniDocuments/resumes', 'public');
+        }
+
+        $oldCoverLetterFile = $alumniForUploads->alumnus_cover_letter_file_path;
+        $coverLetterFile = null;
+        if ($request->hasFile('alumnus_cover_letter_file')) {
+            if ($oldCoverLetterFile && Storage::disk('public')->exists($oldCoverLetterFile)) {
+                Storage::disk('public')->delete($oldCoverLetterFile);
+            }
+            $coverLetterFile = $request->file('alumnus_cover_letter_file')->store('alumniDocuments/coverLetters', 'public');
+        }
+
         try {
-            DB::transaction(function () use ($validated, $alumnus, $profilePicture) {
+            DB::transaction(function () use ($validated, $alumnus, $profilePicture, $resumeFile, $resumeBackupFile, $coverLetterFile, $request) {
                 $alumni = Alumnus::where('user_id', $alumnus)->firstOrFail();
 
                 $employed = (bool) ($validated['alumnus_employment_status'] ?? $alumni->alumnus_employment_status);
@@ -205,6 +269,13 @@ class AlumnusController extends Controller
                     'alumnus_first_job_is_internship' => $alumni->alumnus_first_job_date
                         ? $alumni->alumnus_first_job_is_internship
                         : (empty($validated['alumnus_first_job_date']) ? null : !empty($validated['alumnus_first_job_is_internship'])),
+                    // Directory visibility toggles — plain checkboxes, so an
+                    // unchecked box sends nothing at all rather than "false".
+                    // $request->boolean() treats that absence as false
+                    // correctly instead of falling back to the old value.
+                    'alumnus_show_skills' => $request->boolean('alumnus_show_skills'),
+                    'alumnus_show_email' => $request->boolean('alumnus_show_email'),
+                    'alumnus_show_linkedin' => $request->boolean('alumnus_show_linkedin'),
                 ]);
 
                 $alumni->user->update([
@@ -218,10 +289,31 @@ class AlumnusController extends Controller
                         'user_profile_picture' => $profilePicture,
                     ]);
                 }
+
+                if ($resumeFile != null) {
+                    $alumni->update(['alumnus_resume_file_path' => $resumeFile]);
+                }
+
+                if ($resumeBackupFile != null) {
+                    $alumni->update(['alumnus_resume_backup_file_path' => $resumeBackupFile]);
+                }
+
+                if ($coverLetterFile != null) {
+                    $alumni->update(['alumnus_cover_letter_file_path' => $coverLetterFile]);
+                }
             });
         } catch (\Exception $e) {
             if ($profilePicture) {
                 Storage::disk('public')->delete($profilePicture);
+            }
+            if ($resumeFile) {
+                Storage::disk('public')->delete($resumeFile);
+            }
+            if ($resumeBackupFile) {
+                Storage::disk('public')->delete($resumeBackupFile);
+            }
+            if ($coverLetterFile) {
+                Storage::disk('public')->delete($coverLetterFile);
             }
 
             return redirect()->route('user.profile')->with('error', 'An error occurred while updating your profile: ' . $e->getMessage());

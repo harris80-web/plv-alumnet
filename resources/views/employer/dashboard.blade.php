@@ -26,7 +26,7 @@
         background-position: center;
     }
 
-    .AlumniServices {
+    .EmployerFeatures {
         background:
             url("{{ asset('assets/Landing Page/Alumni Services.png') }}");
         background-size: cover;
@@ -60,30 +60,85 @@
                 DASHBOARD FOR {{ strtoupper($employer->employer_company_name ?? 'YOUR COMPANY') }}
             </h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-white rounded-xl shadow-lg border-t-8 border-orange-600 p-8 text-center transition-transform hover:-translate-y-1">
-                    <div class="text-6xl font-bold text-orange-600 mb-2">{{ $stats['activePostings'] }}</div>
-                    <p class="text-orange-700 font-semibold leading-tight flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-briefcase text-orange-700"></i>
-                        <span>Active Job<br>Postings</span>
-                    </p>
+            @php
+                $dashboardTiles = [
+                    ['value' => $stats['activePostings'], 'label' => 'Active Job Postings', 'icon' => 'fa-briefcase'],
+                    ['value' => $stats['totalApplicants'], 'label' => 'Total Applicants', 'icon' => 'fa-users'],
+                    ['value' => $stats['unreadApplicants'], 'label' => 'New Unreviewed', 'icon' => 'fa-user-clock'],
+                    ['value' => $stats['pending'], 'label' => 'Pending Review', 'icon' => 'fa-hourglass-half'],
+                    ['value' => $stats['shortlisted'], 'label' => 'Shortlisted', 'icon' => 'fa-list-check'],
+                    ['value' => $stats['hired'], 'label' => 'Hired via AlumNet', 'icon' => 'fa-handshake'],
+                    ['value' => $stats['expiringSoon'], 'label' => 'Expiring Soon', 'icon' => 'fa-calendar-xmark'],
+                ];
+            @endphp
+
+            <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-6 md:p-8">
+                <h3 class="font-bold text-[#0E0F3B] mb-5 flex items-center gap-2 text-sm uppercase tracking-wide">
+                    <i class="fa-solid fa-chart-pie text-[#1D46A4]"></i> Overview
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    @foreach ($dashboardTiles as $tile)
+                    <div class="bg-slate-50 rounded-xl border border-gray-200 p-4 text-center transition-all hover:-translate-y-0.5 hover:shadow-md">
+                        <div class="text-2xl md:text-3xl font-bold text-orange-600 mb-1.5">{{ $tile['value'] }}</div>
+                        <p class="text-orange-700 font-semibold text-xs leading-tight flex flex-col items-center justify-center gap-1.5">
+                            <i class="fa-solid {{ $tile['icon'] }} text-orange-700 text-sm"></i>
+                            <span>{{ $tile['label'] }}</span>
+                        </p>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- ANALYTICS WIDGETS: applicant traffic per posting + recent applicants quick-links -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+
+                <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
+                    <h3 class="font-bold text-[#0E0F3B] mb-5 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-simple text-[#1D46A4]"></i> Applicant Traffic by Job Posting
+                    </h3>
+                    @forelse ($jobPostings->take(5) as $job)
+                    <a href="{{ route('jobApplication.showApplications', ['jobPostingId' => $job->job_posting_id]) }}" class="block mb-4 last:mb-0 group">
+                        <div class="flex justify-between gap-2 text-xs font-semibold text-gray-600 mb-1.5">
+                            <span class="truncate group-hover:text-[#C73D1A] transition-colors">{{ $job->job_posting_title }}</span>
+                            <span class="shrink-0">{{ $job->applications_count }} {{ \Illuminate\Support\Str::plural('applicant', $job->applications_count) }}</span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2">
+                            <div class="bg-[#1D46A4] h-2 rounded-full transition-all" style="width: {{ $job->applications_count / $maxApplicantsPerPosting * 100 }}%"></div>
+                        </div>
+                    </a>
+                    @empty
+                    <p class="text-sm text-gray-400">You haven't posted any jobs yet.</p>
+                    @endforelse
                 </div>
 
-                <div class="bg-white rounded-xl shadow-lg border-t-8 border-orange-600 p-8 text-center transition-transform hover:-translate-y-1">
-                    <div class="text-6xl font-bold text-orange-600 mb-2">{{ $stats['unreadApplicants'] }}</div>
-                    <p class="text-orange-700 font-semibold leading-tight flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-user-clock text-orange-700"></i>
-                        <span>New Unreviewed<br>Applicants</span>
-                    </p>
+                <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-[#0E0F3B] flex items-center gap-2">
+                            <i class="fa-solid fa-user-clock text-[#1D46A4]"></i> Recent Applicants
+                        </h3>
+                        @if ($stats['unreadApplicants'] > 0)
+                        <span class="text-[10px] font-bold uppercase bg-red-100 text-red-600 px-2.5 py-1 rounded-full">{{ $stats['unreadApplicants'] }} new</span>
+                        @endif
+                    </div>
+                    @forelse ($recentApplicants as $application)
+                    <a href="{{ route('jobApplication.showApplications', ['jobPostingId' => $application->job_id]) }}"
+                        class="flex items-center gap-3 py-2.5 -mx-2 px-2 rounded-lg border-b border-gray-50 last:border-0 hover:bg-slate-50 transition-colors">
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode($application->alumnus->user->user_first_name . ' ' . $application->alumnus->user->user_last_name) }}&background=random"
+                            class="w-9 h-9 rounded-full shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-[#0E0F3B] truncate">{{ $application->alumnus->user->user_first_name }} {{ $application->alumnus->user->user_last_name }}</p>
+                            <p class="text-xs text-gray-500 truncate">Applied to {{ $application->job->job_posting_title }}</p>
+                        </div>
+                        <span class="text-[10px] text-gray-400 shrink-0">{{ $application->application_date->diffForHumans() }}</span>
+                        @unless ($application->is_read)
+                        <span class="w-2 h-2 rounded-full bg-[#C73D1A] shrink-0"></span>
+                        @endunless
+                    </a>
+                    @empty
+                    <p class="text-sm text-gray-400">No applicants yet.</p>
+                    @endforelse
                 </div>
 
-                <div class="bg-white rounded-xl shadow-lg border-t-8 border-orange-600 p-8 text-center transition-transform hover:-translate-y-1">
-                    <div class="text-6xl font-bold text-orange-600 mb-2">{{ $stats['expiringSoon'] }}</div>
-                    <p class="text-orange-700 font-semibold leading-tight flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-hourglass-half text-orange-700"></i>
-                        <span>Job Posts<br>Expiring Soon</span>
-                    </p>
-                </div>
             </div>
         </div>
     </section>
@@ -98,15 +153,15 @@
                 </a>
             </div>
 
-            <div class="relative px-12">
+            <div class="relative px-8 md:px-12">
                 <button id="prevBtn" class="absolute left-0 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#C73D1A] transition-colors z-10">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 md:h-12 md:w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                     </svg>
                 </button>
 
                 <button id="nextBtn" class="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#C73D1A] transition-colors z-10">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 md:h-12 md:w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                 </button>
@@ -128,8 +183,8 @@
                                 @endunless
                             </div>
                             <div class="p-6 flex flex-col flex-grow">
-                                <div class="flex justify-between items-start mb-2">
-                                    <h3 class="font-bold text-[#0E0F3B] uppercase text-xl">{{ $job->job_posting_title }}</h3>
+                                <div class="flex justify-between items-start gap-2 mb-2">
+                                    <h3 class="font-bold text-[#0E0F3B] uppercase text-lg md:text-xl leading-tight line-clamp-2 min-h-[2.5rem] md:min-h-[3rem]">{{ $job->job_posting_title }}</h3>
                                     <span class="text-[9px] text-gray-400 flex items-center gap-1 mt-1 shrink-0">{{ $job->created_at->diffForHumans() }}</span>
                                 </div>
                                 <div class="flex items-center text-gray-400 text-xs font-semibold mb-4 uppercase">
@@ -214,11 +269,11 @@
         </div>
     </section>
 
-    <section class="AlumniServices orange-gradient py-16 px-6 text-white text-center">
+    <section class="EmployerFeatures orange-gradient py-16 px-6 text-white text-center">
         <div class="max-w-4xl mx-auto">
-            <h2 class="text-4xl font-bold mb-4 uppercase">Alumni Services</h2>
+            <h2 class="text-4xl font-bold mb-4 uppercase">Employer System Features</h2>
             <p class="items-center text-justify mb-12 text-sm w-3/5 mx-auto">
-                This section details the exclusive resources, support, and programs available to all graduates of <span class="font-bold">Pamantasan ng Lungsod ng Valenzuela (PLV)</span>. It typically includes services such as career assistance, networking events, information for claiming of alumni IDs and Yearbook, and access to campus facilities. The goal is to keep alumni connected to the university and to foster mutual support among the network's members.
+                Everything your company needs to make the most of <span class="font-bold">PLV-AlumNet</span> is right here. Post job openings, review and manage applicants, stay on top of campus announcements, and keep your company profile up to date, all from one place built to connect you with PLV's graduates.
             </p>
 
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -279,9 +334,8 @@
 
     <section class="py-4 px-6 max-w-6xl mx-auto relative pb-16">
         <div class="flex justify-between items-end mb-8 pl-4">
-            <span class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent
-            text-4xl font-bold text-blue-900 uppercase tracking-tighter"> | Announcements</span>
-            <a href="{{ route('notices.employerAnnouncements') }}" class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent font-bold uppercase text-sm hover:border-b-2 border-[#C73D1A]">Go to Announcements ></a>
+            <span class="text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent uppercase tracking-tighter">| Announcements</span>
+            <a href="{{ route('notices.employerAnnouncements') }}" class="font-bold uppercase text-xs bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent hover:border-b-2 border-[#C73D1A] transition-colors">Go to Announcements ></a>
         </div>
 
         @if ($recentAnnouncements->isEmpty())

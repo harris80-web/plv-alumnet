@@ -17,6 +17,10 @@ class JobApplication extends Model
         'hired_at',
         'application_score',
         'is_read',
+        'resume_source',
+        'resume_path',
+        'cover_letter_source',
+        'cover_letter_path',
     ];
 
     protected $casts = [

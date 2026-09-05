@@ -336,6 +336,7 @@
                             <th data-sort class="px-6 py-3 text-center font-semibold">Program <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                             <th data-sort class="px-6 py-3 text-center font-semibold">Compatibility <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                             <th class="px-6 py-3 text-center font-semibold">Resume</th>
+                            <th class="px-6 py-3 text-center font-semibold">Cover Letter</th>
                             <th class="px-6 py-3 text-center font-semibold">
                                 <div class="relative inline-block">
                                     <button onclick="toggleStatusFilter(this)" class="flex items-center gap-1 mx-auto hover:text-yellow-300 transition-colors">
@@ -409,14 +410,50 @@
                                 </div>
                             </td>
 
+                            @php
+                                // Which resume this specific application actually used — a
+                                // one-off upload for this job (resume_source=upload) takes
+                                // priority; otherwise "profile" resolves live to whatever's
+                                // currently on the alumnus's account (an uploaded resume
+                                // file if they have one, else the Resume Builder PDF), same
+                                // pattern ResumeBuilderController::viewApplicantResume()
+                                // already uses.
+                                $resumeUrl = null;
+                                if ($applicant->pivot->resume_source === 'upload' && $applicant->pivot->resume_path) {
+                                    $resumeUrl = asset('storage/' . $applicant->pivot->resume_path);
+                                } elseif ($applicant->alumnus_resume_file_path) {
+                                    $resumeUrl = asset('storage/' . $applicant->alumnus_resume_file_path);
+                                } elseif (($applicant->alumnus_resume_completeness ?? 0) > 0) {
+                                    $resumeUrl = route('resume.viewApplicant', $applicant->user_id);
+                                }
+
+                                $coverLetterUrl = null;
+                                if ($applicant->pivot->cover_letter_source === 'upload' && $applicant->pivot->cover_letter_path) {
+                                    $coverLetterUrl = asset('storage/' . $applicant->pivot->cover_letter_path);
+                                } elseif ($applicant->pivot->cover_letter_source === 'profile' && $applicant->alumnus_cover_letter_file_path) {
+                                    $coverLetterUrl = asset('storage/' . $applicant->alumnus_cover_letter_file_path);
+                                }
+                            @endphp
+
                             <td class="px-6 py-4 text-center">
-                                @if (($applicant->alumnus_resume_completeness ?? 0) > 0)
-                                <a href="{{ route('resume.viewApplicant', $applicant->user_id) }}" target="_blank"
+                                @if ($resumeUrl)
+                                <a href="{{ $resumeUrl }}" target="_blank"
                                     class="bg-[#1D264F] hover:bg-[#0E0F3B] text-white text-xs font-bold px-4 py-1.5 rounded-md transition-colors inline-block">
                                     View Resume
                                 </a>
                                 @else
                                 <span class="text-gray-400 text-xs">No resume</span>
+                                @endif
+                            </td>
+
+                            <td class="px-6 py-4 text-center">
+                                @if ($coverLetterUrl)
+                                <a href="{{ $coverLetterUrl }}" target="_blank"
+                                    class="bg-[#1D264F] hover:bg-[#0E0F3B] text-white text-xs font-bold px-4 py-1.5 rounded-md transition-colors inline-block">
+                                    View Cover Letter
+                                </a>
+                                @else
+                                <span class="text-gray-400 text-xs">N/A</span>
                                 @endif
                             </td>
 

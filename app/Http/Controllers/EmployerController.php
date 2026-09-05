@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\DeactEmployerMail;
 use App\Models\Employer;
+use App\Models\JobApplication;
 use App\Models\JobPosting;
 use App\Models\Notice;
 use App\Models\User;
@@ -30,6 +31,17 @@ class EmployerController extends Controller
         $employer = $user->employer;
         $employerId = $user->user_id;
 
+        // One grouped query for the whole applicant-status breakdown
+        // (pending/shortlisted/hired/declined) instead of four separate
+        // COUNT queries — the dashboard's stat tiles and the "total
+        // applicants" figure both read off this same result.
+        $applicationsByStatus = DB::table('job_applications')
+            ->join('job_postings', 'job_postings.job_posting_id', '=', 'job_applications.job_id')
+            ->where('job_postings.user_id', $employerId)
+            ->selectRaw('application_status, COUNT(*) as total')
+            ->groupBy('application_status')
+            ->pluck('total', 'application_status');
+
         $stats = [
             'activePostings' => JobPosting::where('user_id', $employerId)->approved()->open()->count(),
             // Mirrors the same $job->applicants->where('pivot.is_read', false)
@@ -42,6 +54,10 @@ class EmployerController extends Controller
             'expiringSoon' => JobPosting::where('user_id', $employerId)->approved()->open()
                 ->whereBetween('job_closing_date', [now()->toDateString(), now()->addDays(self::EXPIRING_SOON_DAYS)->toDateString()])
                 ->count(),
+            'totalApplicants' => $applicationsByStatus->sum(),
+            'pending' => $applicationsByStatus->get('pending', 0),
+            'shortlisted' => $applicationsByStatus->get('shortlisted', 0),
+            'hired' => $applicationsByStatus->get('hired', 0),
         ];
 
         // Active (approved + not yet closed) postings first, then ranked by
@@ -56,13 +72,30 @@ class EmployerController extends Controller
             ->orderByDesc('applications_count')
             ->get();
 
+        // Highest applicant count among their postings — the "traffic by
+        // posting" widget scales each bar against this so the busiest post
+        // reads as a full bar, not an arbitrary fixed max.
+        $maxApplicantsPerPosting = max(1, (int) $jobPostings->max('applications_count'));
+
+        // Newest applicants across every posting, for the "jump straight to
+        // whoever just applied" widget — same is_read flag the unreadApplicants
+        // stat and My Job Postings page already use.
+        $recentApplicants = JobApplication::with(['alumnus.user', 'job'])
+            ->whereHas('job', fn ($q) => $q->where('user_id', $employerId))
+            ->latest('application_date')
+            ->take(6)
+            ->get();
+
         $recentAnnouncements = Notice::category('announcement')
             ->visibleToEmployer()
             ->orderByDesc('event_datetime')
             ->take(3)
             ->get();
 
-        return view('employer.dashboard', compact('employer', 'stats', 'jobPostings', 'recentAnnouncements'));
+        return view('employer.dashboard', compact(
+            'employer', 'stats', 'jobPostings', 'maxApplicantsPerPosting',
+            'recentApplicants', 'recentAnnouncements'
+        ));
     }
 
     /**

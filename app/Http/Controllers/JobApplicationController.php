@@ -73,7 +73,15 @@ class JobApplicationController extends Controller
         //
     }
 
-    public function applyJob($jobPostingId)
+    /**
+     * Applying now goes through partials/job-apply-modal.blade.php's review
+     * step instead of a bare one-click form: the alumnus explicitly picks a
+     * resume (their AlumNet profile — whatever's on file, resolved live at
+     * view time same as ResumeBuilderController::viewApplicantResume() — or
+     * a one-off upload just for this job) and optionally a cover letter the
+     * same way.
+     */
+    public function applyJob(Request $request, $jobPostingId)
     {
         abort_unless(Auth::user()->user_role === 'alumni', 403);
 
@@ -81,11 +89,17 @@ class JobApplicationController extends Controller
         $alumniId = Auth::id();
         $alumni = Alumnus::with(['skills', 'experiences', 'certifications'])->findOrFail($alumniId);
 
-        // `alumnus_resume` was removed when the resume feature was rebuilt
-        // (see alumnus_resume_summary/alumnus_resume_completeness) — gate on
-        // having started a resume instead of requiring it to be finished,
-        // since applying shouldn't wait on a 100%-complete resume.
-        if (($alumni->alumnus_resume_completeness ?? 0) <= 0) {
+        $validated = $request->validate([
+            'resume_source' => ['required', 'in:profile,upload'],
+            'resume_file' => ['required_if:resume_source,upload', 'nullable', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
+            'cover_letter_source' => ['nullable', 'in:none,profile,upload'],
+            'cover_letter_file' => ['required_if:cover_letter_source,upload', 'nullable', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
+        ]);
+
+        // Belt-and-suspenders — the apply modal only ever offers "Use my
+        // AlumNet Profile" when hasProfileResume() is true, but the server
+        // can't trust that a request actually came from it.
+        if ($validated['resume_source'] === 'profile' && ! $alumni->hasProfileResume()) {
             return redirect()->back()->with('noResume', 'flex');
         }
 
@@ -105,6 +119,17 @@ class JobApplicationController extends Controller
             return redirect()->route('jobPosting.jobBoard')->with('success', 'You have already applied to this job.');
         }
 
+        $resumePath = null;
+        if ($validated['resume_source'] === 'upload' && $request->hasFile('resume_file')) {
+            $resumePath = $request->file('resume_file')->store('jobApplications/resumes', 'public');
+        }
+
+        $coverLetterSource = $validated['cover_letter_source'] ?? 'none';
+        $coverLetterPath = null;
+        if ($coverLetterSource === 'upload' && $request->hasFile('cover_letter_file')) {
+            $coverLetterPath = $request->file('cover_letter_file')->store('jobApplications/coverLetters', 'public');
+        }
+
         $match = app(JobMatchService::class)->scoreFor($job, $alumni);
 
         // Create a new job application
@@ -113,6 +138,10 @@ class JobApplicationController extends Controller
             'job_id' => $jobPostingId,
             'application_status' => 'pending',
             'application_score' => $match->score,
+            'resume_source' => $validated['resume_source'],
+            'resume_path' => $resumePath,
+            'cover_letter_source' => $coverLetterSource,
+            'cover_letter_path' => $coverLetterPath,
         ]);
         Mail::to($job->user->user_email)->queue(new ApplyJobMail($job, $alumni));
 

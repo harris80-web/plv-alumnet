@@ -117,7 +117,7 @@
                     <button type="button"
                         onclick="openAnimatedModal(document.getElementById('alumniIdStatusModal'), document.getElementById('alumniIdStatusModalPanel'))"
                         class="px-8 py-2 rounded-md border-2 border-[#0E0F3B] text-[#0E0F3B] font-bold hover:bg-[#0E0F3B] hover:text-white transition-colors duration-300 uppercase text-sm tracking-widest">
-                        View Status
+                        View Details
                     </button>
                 </div>
             </div>
@@ -166,7 +166,7 @@
                     <button type="button"
                         onclick="openAnimatedModal(document.getElementById('yearbookStatusModal'), document.getElementById('yearbookStatusModalPanel'))"
                         class="px-8 py-2 rounded-md border-2 border-[#0E0F3B] text-[#0E0F3B] font-bold hover:bg-[#0E0F3B] hover:text-white transition-colors duration-300 uppercase text-sm tracking-widest">
-                        View Status
+                        View Details
                     </button>
                 </div>
             </div>
@@ -472,7 +472,7 @@
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-id-card text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase mb-4 text-center">Membership Status</span>
+                    <span class="text-xs font-bold uppercase mb-4 text-center">Alumni ID &amp; Yearbook Claiming Status</span>
                     <a href="#status-section" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
                         View More
                     </a>
@@ -499,8 +499,8 @@
     <section class="py-16 px-6 max-w-6xl mx-auto relative">
         <div class="flex justify-between items-end mb-8 pl-4">
             <span class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent
-            text-4xl font-bold text-blue-900 uppercase tracking-tighter"> | Campus Events</span>
-            <a href="{{ route('notices.eventsSeminars') }}" class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent font-bold uppercase text-sm hover:border-b-2 border-[#C73D1A]">Go to Events ></a>
+            text-4xl font-bold  uppercase tracking-tighter"> | Campus Events</span>
+            <a href="{{ route('notices.eventsSeminars') }}" class="font-bold uppercase text-xs bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent hover:border-b-2 border-[#C73D1A] transition-colors">Go to Events ></a>
         </div>
 
         @if ($upcomingNotices->isEmpty())
@@ -543,8 +543,8 @@
     <section class="py-4 px-6 max-w-6xl mx-auto relative pb-16">
         <div class="flex justify-between items-end mb-8 pl-4">
             <span class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent
-            text-4xl font-bold text-blue-900 uppercase tracking-tighter"> | Announcements</span>
-            <a href="{{ route('notices.announcements') }}" class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent font-bold uppercase text-sm hover:border-b-2 border-[#C73D1A]">Go to Announcements ></a>
+            text-4xl font-bold uppercase tracking-tighter"> | Announcements</span>
+            <a href="{{ route('notices.announcements') }}" class="font-bold uppercase text-xs bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent hover:border-b-2 border-[#C73D1A] transition-colors">Go to Announcements ></a>
         </div>
 
         @if ($recentAnnouncements->isEmpty())
@@ -584,7 +584,7 @@
 
         <div class="relative w-full ">
 
-            <div class="relative z-10 bg-[#0E0F3B] p-8 rounded-2xl shadow-2xl w-full max-w-md mx-auto shadow-outer">
+            <div class="relative z-10 bg-[#0E0F3B] p-10 rounded-2xl shadow-2xl w-full max-w-xl mx-auto shadow-outer">
                 <form action="{{ route('testimonials.submit', Auth::user()) }}" method="POST" class="space-y-4">
                     @csrf
                     <!-- <div>
@@ -604,12 +604,17 @@
                     </div> -->
 
                     <div>
-                        <label for="testimonial_body" class="block text-white font-bold mb-1 text-sm">Message:</label>
-                        <textarea name="testimonial_body" rows="4" class="w-full p-2 rounded-lg bg-white border-b-2 border-[#ED7A07] focus:ring-2 focus:ring-[#C73D1A] outline-none resize-none"></textarea>
+                        <label for="testimonial_body" class="block text-white font-bold mb-2 text-base">Message:</label>
+                        <textarea name="testimonial_body" rows="7" class="w-full p-3 text-base rounded-lg bg-white border-b-2 border-[#ED7A07] focus:ring-2 focus:ring-[#C73D1A] outline-none resize-none"></textarea>
                     </div>
 
+                    <p class="flex items-start gap-2 text-[11px] text-gray-300 leading-relaxed">
+                        <i class="fa-solid fa-circle-info mt-0.5 shrink-0"></i>
+                        <span>By submitting, you agree that your testimonial, name, and course/program will be publicly displayed on PLV-AlumNet, in accordance with our data privacy policy.</span>
+                    </p>
+
                     <div class="flex justify-center pt-2">
-                        <button type="submit" class="bg-[#ED7A07] text-white font-bold px-10 py-2 rounded-md hover:bg-orange-600 transition uppercase tracking-wider text-sm shadow-lg">
+                        <button type="submit" class="bg-[#ED7A07] text-white font-bold px-10 py-2.5 rounded-md hover:bg-orange-600 transition uppercase tracking-wider text-base shadow-lg">
                             Submit
                         </button>
                     </div>
@@ -618,11 +623,11 @@
         </div>
 
         <div class="w-full md:w-1/2 space-y-3 text-center flex flex-col items-center">
-            <h2 class="text-3xl md:text-4xl font-bold text-[#0E0F3B] leading-tight">
+            <h2 class="text-4xl md:text-5xl font-bold text-[#0E0F3B] leading-tight">
                 Share your experience
             </h2>
 
-            <p class="text-[#0E0F3B] font-medium text-sm text-center leading-relaxed max-w-md mx-auto">
+            <p class="text-[#0E0F3B] font-medium text-base text-center leading-relaxed max-w-md mx-auto">
                 Tell us about the connections, opportunities, or mentorship you've gained through the AlumNet. Your testimonial helps highlight the value of our network for all PLV graduates.
             </p>
         </div>

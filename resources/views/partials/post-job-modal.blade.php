@@ -31,32 +31,33 @@
                 </h2>
             </div>
 
-            <div class="flex flex-col md:flex-row flex-1">
-
-                <!-- IMAGE UPLOAD -->
-                <div class="md:w-1/3 flex flex-col items-center justify-center p-8 bg-white">
-                    <div id="imageFrame" class="w-full aspect-square border-4 border-[#1D264F] rounded-[2rem] flex flex-col items-center justify-center p-2 shadow-sm relative overflow-hidden">
-
-                        <div id="uploadPlaceholder" class="flex flex-col items-center justify-center">
-                            <i class="fas fa-upload text-6xl text-[#1D264F] mb-4"></i>
-                            <button type="button" onclick="document.getElementById('jobImageInput').click()" class="bg-[#1D264F] text-white px-8 py-2 rounded-full font-bold text-xs tracking-widest hover:bg-[#0E0F3B] transition-colors">
-                                UPLOAD
-                            </button>
-                        </div>
-
-                        <img id="jobImagePreview" src="#" class="hidden w-full h-full object-cover rounded-[1.6rem]" />
-
-                        <input type="file" name="job_posting_image" id="jobImageInput" accept="image/*" class="hidden" onchange="previewJobImage(this)">
-
-                        <button id="changeImgBtn" type="button" onclick="document.getElementById('jobImageInput').click()" class="hidden absolute bottom-4 bg-white/80 backdrop-blur-sm text-[#1D264F] px-4 py-1 rounded-full font-bold text-[10px] hover:bg-white transition-all">
-                            CHANGE IMAGE
-                        </button>
-                    </div>
-                    <p class="text-[10px] font-bold text-[#1D264F] uppercase mt-3">Upload Image <span class="text-red-500">*</span></p>
-                </div>
+            <div class="flex flex-col flex-1">
 
                 <!-- FORM FIELDS -->
-                <div class="md:w-2/3 p-10 pt-6 space-y-4">
+                <div class="p-10 pt-6 space-y-4">
+
+                    <!-- THUMBNAIL -->
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-[#1D264F] uppercase block mb-1">Thumbnail <span class="text-red-500">*</span></label>
+                        <div id="imageFrame"
+                            class="relative w-full h-48 rounded-lg overflow-hidden border-2 border-dashed border-[#0E0F3B] bg-slate-100 flex items-center justify-center transition-colors"
+                            ondragover="handleDropzoneDragOver(event)" ondragleave="handleDropzoneDragLeave(event)" ondrop="handleDropzoneDrop(event, 'jobImageInput')">
+
+                            <div id="uploadPlaceholder" class="text-slate-400 text-xs flex flex-col items-center gap-1 pointer-events-none">
+                                <i class="fas fa-cloud-arrow-up text-2xl text-[#C73D1A]"></i>
+                                <span>Drag & drop a thumbnail, or click Upload</span>
+                            </div>
+
+                            <img id="jobImagePreview" src="#" class="hidden w-full h-full object-cover" />
+
+                            <input type="file" name="job_posting_image" id="jobImageInput" accept="image/*" class="hidden" onchange="previewJobImage(this)">
+
+                            <button type="button" onclick="document.getElementById('jobImageInput').click()"
+                                class="absolute bottom-2 right-2 bg-white/90 hover:bg-white text-[#0E0F3B] text-[10px] font-bold px-3 py-1.5 rounded-full shadow uppercase">
+                                Upload
+                            </button>
+                        </div>
+                    </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1">
@@ -266,6 +267,28 @@
     window.addEventListener('click', (e) => {
         if (e.target === document.getElementById('postJobModal')) closePostModal();
     });
+
+    // DRAG & DROP — shared by every dashed-border upload frame this partial
+    // renders (this modal's own Thumbnail box, and each per-job Edit Job
+    // Post form's, since jobPostings.blade.php includes this same partial).
+    function handleDropzoneDragOver(event) {
+        event.preventDefault();
+        event.currentTarget.classList.add('border-[#C73D1A]', 'bg-orange-50');
+    }
+
+    function handleDropzoneDragLeave(event) {
+        event.currentTarget.classList.remove('border-[#C73D1A]', 'bg-orange-50');
+    }
+
+    function handleDropzoneDrop(event, inputId) {
+        event.preventDefault();
+        event.currentTarget.classList.remove('border-[#C73D1A]', 'bg-orange-50');
+        const input = document.getElementById(inputId);
+        if (event.dataTransfer.files.length) {
+            input.files = event.dataTransfer.files;
+            input.dispatchEvent(new Event('change'));
+        }
+    }
 
     // JOB POST IMAGE UPLOAD PREVIEW — frameId/placeholderId/previewId/changeBtnId
     // default to this modal's own ids so a plain onchange="previewJobImage(this)"

@@ -24,7 +24,7 @@ class Notice extends Model
     ];
 
     public const CATEGORIES = ['event', 'seminar', 'announcement'];
-    public const RECIPIENTS = ['alumni', 'general', 'everyone'];
+    public const RECIPIENTS = ['alumni', 'employer', 'everyone'];
 
     public static function categoryLabels(): array
     {
@@ -48,7 +48,7 @@ class Notice extends Model
     {
         return [
             'alumni' => 'Alumni Only',
-            'general' => 'General Public',
+            'employer' => 'Employer Only',
             'everyone' => 'Everyone',
         ];
     }
@@ -101,10 +101,10 @@ class Notice extends Model
         return $query->whereIn('recipient', ['alumni', 'everyone']);
     }
 
-    /** Employer-facing pages only show notices meant for the general audience (not alumni-only). */
+    /** Employer-facing pages only show notices actually meant for employers (or everyone). */
     public function scopeVisibleToEmployer($query)
     {
-        return $query->whereIn('recipient', ['general', 'everyone']);
+        return $query->whereIn('recipient', ['employer', 'everyone']);
     }
 
     public function scopeUpcoming($query)

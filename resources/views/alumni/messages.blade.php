@@ -41,6 +41,8 @@
 
     @include('partials.success')
 
+    @include('partials.messaging-guidelines-modal')
+
     <main class="max-w-7xl mx-auto p-4">
         <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex" style="height: calc(100vh - 130px);">
 

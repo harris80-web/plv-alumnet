@@ -18,6 +18,7 @@ class UserNotification extends Model
         'type',
         'title',
         'body',
+        'reference_id',
         'read_at',
     ];
 
@@ -49,17 +50,22 @@ class UserNotification extends Model
     }
 
     /**
-     * Where clicking this notification should go — only for types with one
-     * unambiguous, role-correct destination page (no specific-record deep
-     * link, since none of these types store which job/application/etc. they
-     * were about). alumni_id_status and yearbook_status are deliberately
-     * left unmapped: there's no confirmed alumnus-facing page for either
-     * yet, and linking to the admin-only management page would 403 the
-     * alumnus who actually receives these.
+     * Where clicking this notification should go. Types backed by a stored
+     * reference_id (see the 2026_09_04_133641 migration) deep-link straight
+     * to the specific record — e.g. a "new event posted" notification opens
+     * that exact event's detail modal via the same ?notice= param the
+     * dashboard's own event cards use, not just the general events list.
+     * Types below without a reference_id fall back to their nearest list
+     * page. alumni_id_status/yearbook_status have no admin-safe page to
+     * deep-link an alumnus into, so they go to the dashboard section that
+     * shows their own status instead of nowhere.
      */
     public function targetUrl(): ?string
     {
         return match ($this->type) {
+            'new_event' => route('notices.eventsSeminars', array_filter(['tab' => 'events', 'notice' => $this->reference_id])),
+            'new_seminar' => route('notices.eventsSeminars', array_filter(['tab' => 'seminar', 'notice' => $this->reference_id])),
+            'new_announcement' => route('notices.announcements', array_filter(['notice' => $this->reference_id])),
             'job_posting_submitted' => route('jobPosting.jobManagement'),
             'employer_registration_pending' => route('superAdmin.userManagement'),
             'testimonial_submitted' => route('testimonials.manage'),
@@ -67,6 +73,7 @@ class UserNotification extends Model
             'job_posting_approved', 'job_posting_rejected' => route('jobPosting.myJobPosts', ['id' => $this->user_id]),
             'job_application_hired', 'job_application_declined', 'job_application_shortlisted' => route('jobPosting.myApplications'),
             'message_mute', 'message_warning' => route('messages.index'),
+            'alumni_id_status', 'yearbook_status' => route('alumnus.dashboard') . '#status-section',
             default => null,
         };
     }

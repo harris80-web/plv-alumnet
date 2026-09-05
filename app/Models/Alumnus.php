@@ -29,11 +29,16 @@ class Alumnus extends Model
         'alumnus_employed_via_platform',
         'alumnus_resume_summary',
         'alumnus_resume_file_path',
+        'alumnus_resume_backup_file_path',
+        'alumnus_cover_letter_file_path',
         'linkedin_url',
         'alumnus_resume_completeness',
         'alumnus_batch',
         'alumnus_is_public',
         'alumnus_change_password',
+        'alumnus_show_skills',
+        'alumnus_show_email',
+        'alumnus_show_linkedin',
     ];
 
     protected $casts = [
@@ -46,6 +51,9 @@ class Alumnus extends Model
         'alumnus_first_job_is_internship' => 'boolean',
         'alumnus_employment_date' => 'date',
         'alumnus_employed_via_platform' => 'boolean',
+        'alumnus_show_skills' => 'boolean',
+        'alumnus_show_email' => 'boolean',
+        'alumnus_show_linkedin' => 'boolean',
     ];
 
     public static function genderLabels(): array
@@ -258,6 +266,19 @@ class Alumnus extends Model
     }
 
     /**
+     * "Has something on file to apply with" — either an actual uploaded
+     * document (alumnus_resume_file_path) or a started Resume Builder
+     * profile (same >0 gate as ResumeBuilderController::buildResumePdf()).
+     * Used by the job application modal to decide whether "Use my AlumNet
+     * Profile" is offered, and by applyJob() to resolve what that choice
+     * actually points to.
+     */
+    public function hasProfileResume(): bool
+    {
+        return ! empty($this->alumnus_resume_file_path) || ($this->alumnus_resume_completeness ?? 0) > 0;
+    }
+
+    /**
      * Shape consumed by the resume builder wizard (resources/views/alumni/profile.blade.php)
      * to prefill itself on load. Single source of truth so the profile page and the
      * standalone resume.build route can't drift apart on field names again.
@@ -299,6 +320,22 @@ class Alumnus extends Model
             $this->user->user_last_name,
             $this->user->user_suffix,
         ])->filter()->implode(' ');
+    }
+
+    /**
+     * "Last, First Middle Suffix" — the formal listing format used by the
+     * Alumni Directory table, as opposed to resumeFullName()'s "First
+     * Middle Last Suffix" used on the resume itself.
+     */
+    public function formalName(): string
+    {
+        $rest = collect([
+            $this->user->user_first_name,
+            $this->user->user_middle_name,
+            $this->user->user_suffix,
+        ])->filter()->implode(' ');
+
+        return $rest !== '' ? "{$this->user->user_last_name}, {$rest}" : $this->user->user_last_name;
     }
 
     public static function formatExperienceDuration(?int $months): ?string

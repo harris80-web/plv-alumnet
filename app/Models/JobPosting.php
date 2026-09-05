@@ -101,7 +101,13 @@ class JobPosting extends Model
         // Ordered by compatibility score (best match first) now that it's
         // actually being populated — see JobApplicationController::applyJob().
         return $this->belongsToMany(Alumnus::class, 'job_applications', 'job_id', 'alumnus_id')
-            ->withPivot('application_id', 'application_status', 'application_date', 'application_score', 'is_read') // Allows you to access $job->pivot->status
+            ->withPivot(
+                'application_id', 'application_status', 'application_date', 'application_score', 'is_read',
+                // Which resume/cover letter this specific application used — see
+                // JobApplicationController::applyJob() and general/jobApplicants.blade.php's
+                // Resume/Cover Letter columns.
+                'resume_source', 'resume_path', 'cover_letter_source', 'cover_letter_path'
+            ) // Allows you to access $job->pivot->status
             ->withTimestamps()
             ->orderByDesc('job_applications.application_score');
     }

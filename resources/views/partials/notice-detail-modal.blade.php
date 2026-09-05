@@ -9,9 +9,9 @@
     (events/seminars) — its absence is how this modal knows to hide that
     section entirely (announcements).
 --}}
-<div id="noticeDetailModal" class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-200 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div id="noticeDetailModalPanel" class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden mx-4 max-h-[90vh] overflow-y-auto opacity-0 scale-95 transition-all duration-200">
-        <div class="relative h-48 w-full">
+<div id="noticeDetailModal" class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-200 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 md:p-4">
+    <div id="noticeDetailModalPanel" class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden mx-4 max-h-[95vh] md:max-h-[92vh] overflow-y-auto opacity-0 scale-95 transition-all duration-200">
+        <div class="relative h-64 md:h-80 w-full">
             <img id="ndm-thumbnail" src="" class="w-full h-full object-cover">
             <div class="absolute inset-0 bg-[#0E0F3B]/30"></div>
             <span id="ndm-category" class="absolute top-4 left-4 text-[10px] font-bold uppercase px-3 py-1 rounded-full"></span>
@@ -21,8 +21,8 @@
             </button>
         </div>
 
-        <div class="p-6 space-y-4 text-sm">
-            <h2 id="ndm-title" class="text-2xl font-bold text-[#0E0F3B] leading-snug"></h2>
+        <div class="p-6 md:p-10 space-y-4 text-sm">
+            <h2 id="ndm-title" class="text-2xl md:text-3xl font-bold text-[#0E0F3B] leading-snug"></h2>
 
             <p class="text-gray-500 flex items-center gap-2">
                 <i class="fa-regular fa-calendar"></i> <span id="ndm-datetime"></span>
@@ -53,17 +53,22 @@
 </div>
 
 {{-- ===== "Interested" confirmation — shown instantly after either the card-grid
-     or this modal's own Interested button is clicked, no page reload needed ===== --}}
-<div id="interestConfirmModal" class="fixed inset-0 z-[80] hidden opacity-0 transition-opacity duration-200 bg-black/60 flex items-center justify-center p-4">
-    <div id="interestConfirmModalPanel" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden opacity-0 scale-95 transition-all duration-200 text-center p-8">
-        <div id="interestConfirmIcon" class="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4">
-            <i id="interestConfirmIconGlyph" class="fa-solid text-2xl"></i>
+     or this modal's own Interested button is clicked, no page reload needed.
+     Styled after partials/job-apply-modal.blade.php's #jobApplySuccessModal
+     (navy icon circle, gradient title/body, single action button). ===== --}}
+<div id="interestConfirmModal" class="fixed inset-0 z-[80] hidden opacity-0 transition-opacity duration-200 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div id="interestConfirmModalPanel" class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full relative text-center opacity-0 scale-95 transition-all duration-200">
+        <div class="flex justify-center mb-6">
+            <div class="bg-[#0E0F3B] rounded-full p-4">
+                <i id="interestConfirmIconGlyph" class="fa-solid text-2xl text-white"></i>
+            </div>
         </div>
-        <p id="interestConfirmText" class="text-[#0E0F3B] font-semibold"></p>
+        <h2 id="interestConfirmTitle" class="text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent mb-2"></h2>
+        <p id="interestConfirmText" class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-sm mb-8 leading-relaxed"></p>
         <button type="button"
             onclick="closeAnimatedModal(document.getElementById('interestConfirmModal'), document.getElementById('interestConfirmModalPanel'))"
-            class="mt-6 text-xs font-bold uppercase tracking-widest text-white bg-[#0E0F3B] hover:bg-[#1D46A4] px-8 py-2.5 rounded-full transition-colors">
-            Close
+            class="w-full bg-[#0E0F3B] text-white py-3 rounded-md font-bold hover:bg-blue-900 transition-colors uppercase tracking-wider">
+            Done
         </button>
     </div>
 </div>
@@ -93,10 +98,10 @@
     }
 
     function showInterestConfirmation(isInterested, title) {
-        const icon = document.getElementById('interestConfirmIcon');
         const glyph = document.getElementById('interestConfirmIconGlyph');
-        icon.className = 'w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 ' + (isInterested ? 'bg-green-100' : 'bg-slate-100');
-        glyph.className = 'fa-solid text-2xl ' + (isInterested ? 'fa-circle-check text-green-600' : 'fa-circle-xmark text-slate-400');
+        glyph.className = 'fa-solid text-2xl text-white ' + (isInterested ? 'fa-circle-check' : 'fa-circle-xmark');
+
+        document.getElementById('interestConfirmTitle').textContent = isInterested ? "You're Interested!" : 'Interest Removed';
 
         // Built via textContent/DOM nodes rather than innerHTML — the notice
         // title is admin-entered content, so this avoids ever interpreting
@@ -106,9 +111,9 @@
         const strong = document.createElement('strong');
         strong.textContent = title;
         if (isInterested) {
-            textEl.append("You're interested in ", strong, '!');
+            textEl.append("You're now marked as interested in ", strong, '.');
         } else {
-            textEl.append('Marked ', strong, ' as not interested.');
+            textEl.append('You are no longer marked as interested in ', strong, '.');
         }
 
         const confirmOverlay = document.getElementById('interestConfirmModal');

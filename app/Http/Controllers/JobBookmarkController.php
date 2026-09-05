@@ -27,13 +27,15 @@ class JobBookmarkController extends Controller
 
         if ($existing) {
             $existing->delete();
+            $message = 'Bookmark removed.';
         } else {
             JobBookmark::create([
                 'alumnus_id' => $alumniId,
                 'job_id' => $job->job_posting_id,
             ]);
+            $message = 'Job bookmarked successfully!';
         }
 
-        return redirect()->back();
+        return redirect()->back()->with('success', $message);
     }
 }

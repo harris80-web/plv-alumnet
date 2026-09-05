@@ -170,6 +170,8 @@ Route::get('/notifications', [NotificationController::class, 'index'])->name('no
 Route::post('/notifications/markAllRead', [NotificationController::class, 'markAllRead'])->name('notifications.markAllRead')->middleware('auth');
 // The dedicated "see all" page both bell dropdowns' "View all notifications" link to.
 Route::get('/notifications/all', [NotificationController::class, 'all'])->name('notifications.all')->middleware('auth');
+// Single click-through: marks one notification read, then redirects to what it's about.
+Route::get('/notifications/{notification}/open', [NotificationController::class, 'open'])->name('notifications.open')->middleware('auth');
 
 // ── Floating chatbot widget (alumni + employer) ──
 Route::post('/chatbot/start', [ChatbotController::class, 'start'])->name('widget.start')->middleware('auth');
@@ -224,6 +226,10 @@ Route::get('/alumni/profile', fn () => redirect()->route('user.profile'));
 Route::put('/alumni/updateProfile/{alumnus}', [AlumnusController::class, 'updateAlumniProfile'])->name('alumni.updateProfile')->middleware('auth');
 Route::put('/alumni/deactivate/{id}', [AlumnusController::class, 'deactivateAlumnus'])->name('alumni.deactivateAlumnus')->middleware(['auth', 'feature:user_management']);
 Route::put('/alumni/activate/{id}', [AlumnusController::class, 'activateAlumnus'])->name('alumni.activateAlumnus')->middleware(['auth', 'feature:user_management']);
+// Must come before the resource route below — that one registers
+// GET /alumni/{alumnus} (show), which would otherwise greedily match this
+// literal path first and treat "directoryFragment" as the {alumnus} param.
+Route::get('/alumni/directoryFragment', [AlumnusController::class, 'directoryFragment'])->name('alumni.directoryFragment')->middleware('auth');
 Route::resource('alumni', AlumnusController::class)->middleware('auth');
 
 

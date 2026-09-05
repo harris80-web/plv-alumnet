@@ -278,6 +278,151 @@
                         {{ $user->alumnus->isResumeComplete() ? 'Edit Resume' : 'Create Resume' }}
                     </button>
                 </div>
+
+                {{-- Documents — own uploaded Resume/CV and an optional Cover
+                     Letter, distinct from the Resume Builder above (which
+                     generates a PDF from profile data). These are the actual
+                     files offered as "Use my AlumNet Profile" when applying
+                     to a job — see partials/job-apply-modal.blade.php. --}}
+                <div class="border border-gray-200 rounded-2xl p-6">
+                    <h3 class="text-sm font-bold text-[#0E0F3B] uppercase tracking-wide mb-1">Documents</h3>
+                    <p class="text-xs text-gray-400 mb-5">
+                        Upload your own Resume/CV and an optional Cover Letter. These can be submitted straight to employers when you apply for a job.
+                    </p>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs font-bold text-[#1D264F] uppercase block mb-2">Resume / CV</label>
+                            <div class="flex items-center justify-between gap-3 border border-gray-200 rounded-xl px-4 py-3">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <i class="fas fa-file-lines text-[#C73D1A] text-xl shrink-0"></i>
+                                    <div class="min-w-0">
+                                        @if ($user->alumnus->alumnus_resume_file_path)
+                                        <a href="{{ asset('storage/' . $user->alumnus->alumnus_resume_file_path) }}" target="_blank" class="text-sm font-semibold text-[#1D46A4] hover:underline truncate block">
+                                            {{ basename($user->alumnus->alumnus_resume_file_path) }}
+                                        </a>
+                                        @else
+                                        <p class="text-sm text-gray-400">No resume uploaded yet</p>
+                                        @endif
+                                        <p id="resumeFileSelected" class="text-[10px] text-gray-500 font-semibold"></p>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="document.getElementById('alumnusResumeFileInput').click()"
+                                    class="shrink-0 bg-[#1D264F] text-white text-[10px] font-bold px-4 py-2 rounded-full uppercase hover:bg-[#0E0F3B] transition-colors">
+                                    {{ $user->alumnus->alumnus_resume_file_path ? 'Replace' : 'Upload' }}
+                                </button>
+                            </div>
+                            <input type="file" name="alumnus_resume_file" id="alumnusResumeFileInput" accept=".pdf,.doc,.docx" class="hidden" onchange="previewDocumentName(this, 'resumeFileSelected')">
+                            <p class="text-[10px] text-gray-400 mt-1">PDF, DOC, or DOCX — up to 5MB.</p>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-[#1D264F] uppercase block mb-2">Backup Resume / CV <span class="normal-case text-gray-400 font-normal">(optional)</span></label>
+                            <div class="flex items-center justify-between gap-3 border border-gray-200 rounded-xl px-4 py-3">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <i class="fas fa-file-shield text-[#C73D1A] text-xl shrink-0"></i>
+                                    <div class="min-w-0">
+                                        @if ($user->alumnus->alumnus_resume_backup_file_path)
+                                        <a href="{{ asset('storage/' . $user->alumnus->alumnus_resume_backup_file_path) }}" target="_blank" class="text-sm font-semibold text-[#1D46A4] hover:underline truncate block">
+                                            {{ basename($user->alumnus->alumnus_resume_backup_file_path) }}
+                                        </a>
+                                        @else
+                                        <p class="text-sm text-gray-400">No backup resume uploaded yet</p>
+                                        @endif
+                                        <p id="resumeBackupFileSelected" class="text-[10px] text-gray-500 font-semibold"></p>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="document.getElementById('alumnusResumeBackupFileInput').click()"
+                                    class="shrink-0 bg-[#1D264F] text-white text-[10px] font-bold px-4 py-2 rounded-full uppercase hover:bg-[#0E0F3B] transition-colors">
+                                    {{ $user->alumnus->alumnus_resume_backup_file_path ? 'Replace' : 'Upload' }}
+                                </button>
+                            </div>
+                            <input type="file" name="alumnus_resume_backup_file" id="alumnusResumeBackupFileInput" accept=".pdf,.doc,.docx" class="hidden" onchange="previewDocumentName(this, 'resumeBackupFileSelected')">
+                            <p class="text-[10px] text-gray-400 mt-1">A spare copy in case your primary resume is unavailable — PDF, DOC, or DOCX, up to 5MB.</p>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-[#1D264F] uppercase block mb-2">Cover Letter <span class="normal-case text-gray-400 font-normal">(optional)</span></label>
+                            <div class="flex items-center justify-between gap-3 border border-gray-200 rounded-xl px-4 py-3">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <i class="fas fa-envelope-open-text text-[#C73D1A] text-xl shrink-0"></i>
+                                    <div class="min-w-0">
+                                        @if ($user->alumnus->alumnus_cover_letter_file_path)
+                                        <a href="{{ asset('storage/' . $user->alumnus->alumnus_cover_letter_file_path) }}" target="_blank" class="text-sm font-semibold text-[#1D46A4] hover:underline truncate block">
+                                            {{ basename($user->alumnus->alumnus_cover_letter_file_path) }}
+                                        </a>
+                                        @else
+                                        <p class="text-sm text-gray-400">No cover letter uploaded yet</p>
+                                        @endif
+                                        <p id="coverLetterFileSelected" class="text-[10px] text-gray-500 font-semibold"></p>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="document.getElementById('alumnusCoverLetterFileInput').click()"
+                                    class="shrink-0 bg-[#1D264F] text-white text-[10px] font-bold px-4 py-2 rounded-full uppercase hover:bg-[#0E0F3B] transition-colors">
+                                    {{ $user->alumnus->alumnus_cover_letter_file_path ? 'Replace' : 'Upload' }}
+                                </button>
+                            </div>
+                            <input type="file" name="alumnus_cover_letter_file" id="alumnusCoverLetterFileInput" accept=".pdf,.doc,.docx" class="hidden" onchange="previewDocumentName(this, 'coverLetterFileSelected')">
+                            <p class="text-[10px] text-gray-400 mt-1">PDF, DOC, or DOCX — up to 5MB.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Profile Settings — per-field directory visibility. Purely a
+                     display-layer toggle on the alumni.updateProfile form; it
+                     doesn't touch the underlying skills/email/linkedin data,
+                     just whether the Alumni Directory's "View Profile" modal
+                     shows them to other alumni. --}}
+                <div class="border border-gray-200 rounded-2xl p-6">
+                    <h3 class="text-sm font-bold text-[#0E0F3B] uppercase tracking-wide mb-1">Profile Settings</h3>
+                    <p class="text-xs text-gray-400 mb-5">
+                        Choose what other alumni can see on your profile in the Alumni Directory. Your information is never shown to employers, and staff can always see it.
+                    </p>
+
+                    <div class="divide-y divide-gray-100">
+                        <div class="flex items-center justify-between py-3">
+                            <div class="pr-4">
+                                <p class="text-sm font-semibold text-[#0E0F3B]">Show Skills</p>
+                                <p class="text-xs text-gray-400">Let other alumni see the skills listed on your resume.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                <input type="checkbox" name="alumnus_show_skills" value="1"
+                                    {{ old('alumnus_show_skills', $user->alumnus->alumnus_show_skills) ? 'checked' : '' }}
+                                    class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#0E0F3B] transition-colors
+                                    after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full relative"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between py-3">
+                            <div class="pr-4">
+                                <p class="text-sm font-semibold text-[#0E0F3B]">Show Email</p>
+                                <p class="text-xs text-gray-400">Let other alumni see your email address.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                <input type="checkbox" name="alumnus_show_email" value="1"
+                                    {{ old('alumnus_show_email', $user->alumnus->alumnus_show_email) ? 'checked' : '' }}
+                                    class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#0E0F3B] transition-colors
+                                    after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full relative"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between py-3">
+                            <div class="pr-4">
+                                <p class="text-sm font-semibold text-[#0E0F3B]">Show LinkedIn</p>
+                                <p class="text-xs text-gray-400">Let other alumni see your LinkedIn profile link.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                <input type="checkbox" name="alumnus_show_linkedin" value="1"
+                                    {{ old('alumnus_show_linkedin', $user->alumnus->alumnus_show_linkedin) ? 'checked' : '' }}
+                                    class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#0E0F3B] transition-colors
+                                    after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full relative"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="flex justify-end gap-4 mt-12">
@@ -345,6 +490,22 @@
             menu.classList.add('hidden');
         }
     });
+
+    // Documents (Resume/CV, Cover Letter) — shows the newly-picked filename
+    // right under the current one so it's clear a replacement is staged,
+    // without waiting for the form to actually submit.
+    function previewDocumentName(input, targetId) {
+        const target = document.getElementById(targetId);
+        target.textContent = input.files && input.files[0] ? 'Selected: ' + input.files[0].name : '';
+    }
+
+    // Landing here with ?openResume=1 (e.g. from the job apply modal's
+    // "Create one now" link, when an alumnus has no resume yet) opens the
+    // Resume Builder modal automatically instead of leaving them to find
+    // the button themselves.
+    if (new URLSearchParams(window.location.search).get('openResume') === '1') {
+        document.getElementById('openResumeEditorBtn')?.click();
+    }
 </script>
 
 </html>

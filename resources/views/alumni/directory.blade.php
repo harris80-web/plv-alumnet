@@ -52,8 +52,9 @@
                 <button type="submit" class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 hover:text-[#C73D1A]">
                     <i class="fas fa-search"></i>
                 </button>
-                <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search by name"
-                    class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                <input type="text" name="search" id="alumniSearchInput" value="{{ $filters['search'] ?? '' }}"
+                    placeholder="Search by Last Name, First Name, or Middle Name"
+                    class="w-full h-10 pl-11 pr-4 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
             </div>
 
             <div class="relative">
@@ -61,7 +62,7 @@
                     <i class="fas fa-graduation-cap"></i>
                 </span>
                 <select name="program" onchange="this.form.submit()"
-                    class="pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A] w-full md:w-56">
+                    class="h-10 pl-11 pr-10 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A] w-full md:w-56">
                     <option value="">Course</option>
                     @foreach ($programs as $program)
                     <option value="{{ $program->program_id }}" {{ (string) ($filters['program'] ?? '') === (string) $program->program_id ? 'selected' : '' }}>
@@ -76,7 +77,7 @@
 
             <div class="relative">
                 <select name="batch" onchange="this.form.submit()"
-                    class="pl-4 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A] w-full md:w-36">
+                    class="h-10 pl-4 pr-10 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A] w-full md:w-36">
                     <option value="">Batch</option>
                     @foreach ($batches as $batch)
                     <option value="{{ $batch }}" {{ (string) ($filters['batch'] ?? '') === (string) $batch ? 'selected' : '' }}>{{ $batch }}</option>
@@ -95,87 +96,9 @@
             @endif
         </form>
 
-        <!-- TABLE -->
-        <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm whitespace-nowrap">
-                    <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center text-xs">
-                        <tr>
-                            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Last Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">First Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Middle Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                            <th class="px-4 py-4 font-semibold border-r border-slate-700">Suffix</th>
-                            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Program <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Batch <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                            <th class="px-4 py-4 font-semibold">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse ($alumni as $alumnus)
-                        @php
-                            $skillNames = $alumnus->skills->pluck('skill_name')->implode(', ');
-                            $modalData = [
-                                'id' => $alumnus->user_id,
-                                'name' => trim($alumnus->user->user_first_name . ' ' . $alumnus->user->user_middle_name . ' ' . $alumnus->user->user_last_name . ' ' . $alumnus->user->user_suffix),
-                                'photo' => $alumnus->user->user_profile_picture ? asset('storage/' . $alumnus->user->user_profile_picture) : null,
-                                'program' => $alumnus->program->program_name ?? 'Not specified',
-                                'batch' => optional($alumnus->alumnus_batch)->format('Y'),
-                                'section' => $alumnus->section->section_name ?? 'N/A',
-                                'employment' => $alumnus->alumnus_employment_status ? 'Employed' : 'Unemployed',
-                                'industry' => $alumnus->industry->industry_name ?? null,
-                                'aligned' => $alumnus->hasCourseAlignedJob(),
-                                'skills' => $skillNames ?: 'None listed',
-                                'linkedin' => $alumnus->linkedin_url,
-                                'email' => $alumnus->user->user_email,
-                                'contact' => $alumnus->user->user_number,
-                            ];
-                        @endphp
-                        <tr class="hover:bg-slate-50/80 transition-colors text-center">
-                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $alumnus->user->user_last_name }}</td>
-                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $alumnus->user->user_first_name }}</td>
-                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $alumnus->user->user_middle_name }}</td>
-                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $alumnus->user->user_suffix }}</td>
-                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100 leading-tight">{{ $alumnus->program->program_name ?? 'N/A' }}</td>
-                            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ optional($alumnus->alumnus_batch)->format('Y') }}</td>
-                            <td class="px-4 py-3 text-center relative">
-                                @if ($alumnus->user_id !== auth()->id())
-                                <div class="relative inline-block text-left">
-                                    <button type="button" onclick="toggleDirectoryDropdown(this)"
-                                        class="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                        <i class="fas fa-ellipsis-vertical text-slate-500"></i>
-                                    </button>
-                                    <div class="action-dropdown absolute right-4 mt-2 w-44 origin-top-right rounded-md bg-white shadow-xl ring-1 ring-black ring-opacity-5 z-50 hidden">
-                                        <div class="py-1">
-                                            <button type="button" onclick='openProfileModal(@json($modalData))'
-                                                class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50 transition-colors">
-                                                <i class="fas fa-user w-4 mr-3 text-blue-500"></i> View Profile
-                                            </button>
-                                            <button type="button" onclick="messageAlumnus({{ $alumnus->user_id }})"
-                                                class="flex items-center w-full px-4 py-2.5 text-sm text-[#0E0F3B] hover:bg-green-50 transition-colors">
-                                                <i class="fas fa-comment w-4 mr-3 text-green-500"></i> Message
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                @else
-                                <span class="text-xs text-gray-400 italic">You</span>
-                                @endif
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="7" class="py-16 text-center text-gray-400">
-                                <i class="fas fa-users-slash text-4xl mb-3 block"></i>
-                                No alumni found.
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+        <div id="alumniDirectoryResults">
+            @include('partials.alumni-directory-table')
         </div>
-
-        @include('partials.table-pagination-bar', ['id' => 'alumniDirectory', 'mode' => 'reload', 'paginator' => $alumni])
         @include('partials.table-sort')
 
     </main>
@@ -217,11 +140,11 @@
                             </span>
                         </span>
                     </div>
-                    <div class="border-b border-gray-100 pb-2">
+                    <div id="pm-skills-row" class="border-b border-gray-100 pb-2">
                         <span class="font-bold text-[#C73D1A] block mb-1">Skills</span>
                         <span id="pm-skills" class="text-gray-700"></span>
                     </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-2">
+                    <div id="pm-email-row" class="flex justify-between border-b border-gray-100 pb-2">
                         <span class="font-bold text-[#C73D1A]">Email</span>
                         <a id="pm-email" href="#" class="text-blue-600 hover:underline"></a>
                     </div>
@@ -246,6 +169,26 @@
     @include('partials.footer-alumni')
 
     <script>
+        // ── Live search: fetches the results fragment as the user types
+        // (debounced) instead of requiring Enter/a page reload. Reuses the
+        // pvSearchAjax()/ajax-mode machinery already built into
+        // partials/table-pagination-bar.blade.php — same fetch, swap, and
+        // history.replaceState it already does for an ajax-mode search box. ──
+        (function () {
+            const searchInput = document.getElementById('alumniSearchInput');
+            if (!searchInput) return;
+
+            let debounceTimer;
+            searchInput.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                const value = this.value;
+                debounceTimer = setTimeout(function () {
+                    const root = document.querySelector('[data-pv-pagination][data-pv-id="alumniDirectory"]');
+                    if (root) window.pvSearchAjax('search', value, root);
+                }, 350);
+            });
+        })();
+
         function messageAlumnus(alumnusUserId) {
             document.querySelectorAll('.action-dropdown').forEach(d => d.classList.add('hidden'));
             const form = document.createElement('form');
@@ -279,10 +222,24 @@
             document.getElementById('pm-section').textContent = data.section;
             document.getElementById('pm-employment').textContent = data.employment + (data.industry ? ' — ' + data.industry : '');
             document.getElementById('pm-aligned').classList.toggle('hidden', !data.aligned);
-            document.getElementById('pm-skills').textContent = data.skills;
-            document.getElementById('pm-email').textContent = data.email;
-            document.getElementById('pm-email').href = 'mailto:' + data.email;
             document.getElementById('pm-message-btn').onclick = function () { messageAlumnus(data.id); };
+
+            const skillsRow = document.getElementById('pm-skills-row');
+            if (data.skills) {
+                skillsRow.classList.remove('hidden');
+                document.getElementById('pm-skills').textContent = data.skills;
+            } else {
+                skillsRow.classList.add('hidden');
+            }
+
+            const emailRow = document.getElementById('pm-email-row');
+            if (data.email) {
+                emailRow.classList.remove('hidden');
+                document.getElementById('pm-email').textContent = data.email;
+                document.getElementById('pm-email').href = 'mailto:' + data.email;
+            } else {
+                emailRow.classList.add('hidden');
+            }
 
             const photo = document.getElementById('pm-photo');
             const fallback = document.getElementById('pm-photo-fallback');

@@ -66,13 +66,52 @@
 
     <main class="max-w-6xl mx-auto p-6 pb-16">
 
-        <h2 class="text-2xl font-bold text-[#0E0F3B] uppercase tracking-tight mb-8">
-            {{ $activeTab === 'seminar' ? 'Upcoming Seminars' : 'Upcoming Events' }}
-        </h2>
+        <!-- SEARCH & FILTER -->
+        <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-5 mb-8">
+            <form method="GET" action="{{ route($eventsSeminarsRoute) }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input type="hidden" name="tab" value="{{ $activeTab }}">
+
+                <div class="relative">
+                    <button type="submit" class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 hover:text-[#C73D1A]">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search by title" class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                </div>
+
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </span>
+                    <input type="text" name="location" value="{{ $filters['location'] ?? '' }}" placeholder="Location" class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                </div>
+
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
+                        <i class="fas fa-calendar-alt"></i>
+                    </span>
+                    <select name="date_posted" onchange="this.form.submit()" class="w-full pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                        <option value="">Date Posted</option>
+                        <option value="24h" {{ ($filters['date_posted'] ?? '') === '24h' ? 'selected' : '' }}>Last 24 Hours</option>
+                        <option value="7d" {{ ($filters['date_posted'] ?? '') === '7d' ? 'selected' : '' }}>Last 7 Days</option>
+                        <option value="30d" {{ ($filters['date_posted'] ?? '') === '30d' ? 'selected' : '' }}>Last 30 Days</option>
+                    </select>
+                    <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </span>
+                </div>
+            </form>
+            @if (array_filter($filters))
+            <div class="mt-3 text-right">
+                <a href="{{ route($eventsSeminarsRoute, ['tab' => $activeTab]) }}" class="text-xs font-bold text-gray-400 hover:text-[#C73D1A]">
+                    <i class="fas fa-times mr-1"></i>CLEAR FILTERS
+                </a>
+            </div>
+            @endif
+        </div>
 
         @if ($notices->isEmpty())
         <div class="bg-white rounded-2xl shadow-md p-16 text-center text-gray-400">
-            <i class="fa-regular fa-calendar-xmark text-4xl mb-3 block"></i>
+            <i class="fa-regular fa-calendar-xmark text-4xl mb-3 block {{ $activeTab === 'seminar' ? 'text-[#1D46A4]' : 'text-[#C73D1A]' }}"></i>
             <p class="font-semibold">No {{ $activeTab === 'seminar' ? 'seminars' : 'events' }} to show right now.</p>
         </div>
         @else

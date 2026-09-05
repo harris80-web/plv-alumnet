@@ -452,7 +452,9 @@ $current_page = 'user_management';
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Gender</th>
                                     <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">Program <i
                                             data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
+                                    {{-- Section column — hidden per request, not important; keep markup for easy restore.
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Section</th>
+                                    --}}
                                     <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">Batch <i
                                             data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
                                     <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">Email <i
@@ -506,9 +508,11 @@ $current_page = 'user_management';
                                         class="px-3 py-3 font-medium text-black border-r border-slate-100 leading-tight">
                                         {{ $alumnus->program->program_name ?? 'N/A' }}
                                     </td>
+                                    {{-- Section column — hidden per request, not important; keep markup for easy restore.
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
                                         {{ $alumnus->section->section_name ?? 'N/A' }}
                                     </td>
+                                    --}}
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
                                         {{ optional($alumnus->alumnus_batch)->format('Y') }}
                                     </td>

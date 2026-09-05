@@ -73,10 +73,23 @@
                         </div>
                     </div>
 
+                    @php $employerAddresses = optional($jobPoster->employer)->addresses ?? collect(); @endphp
                     <div class="space-y-1">
                         <label class="text-[10px] font-bold text-[#1D264F] uppercase">Company Address <span class="text-red-500">*</span></label>
+                        @if ($employerAddresses->isNotEmpty())
+                        <select name="job_posting_address"
+                            class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white">
+                            <option value="">Select an address</option>
+                            @foreach ($employerAddresses as $savedAddress)
+                            <option value="{{ $savedAddress->address }}">{{ $savedAddress->address }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-[10px] text-gray-400">Manage saved addresses from <a href="{{ route('users.editProfile') }}" class="underline text-[#1D46A4]">Edit Profile</a>.</p>
+                        @else
                         <input type="text" name="job_posting_address" placeholder="Enter company address"
                             class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
+                        <p class="text-[10px] text-gray-400">Tip: save addresses in <a href="{{ route('users.editProfile') }}" class="underline text-[#1D46A4]">Edit Profile</a> to pick them here next time.</p>
+                        @endif
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">

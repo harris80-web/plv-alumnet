@@ -17,6 +17,11 @@
     $employer = $job->employer;
     $companyUpvotes = $employer?->upvoteCount() ?? 0;
     $companyDownvotes = $employer?->downvoteCount() ?? 0;
+    // The "Reviews (N)" link/page is rating-driven now (see
+    // company-review-modal.blade.php's castCompanyRating()) — a bare vote
+    // isn't a listed "review", so this counts actual star ratings, not votes.
+    $companyRatingCount = $employer?->ratingCount() ?? 0;
+    $companyAverageRating = $employer?->averageRating();
     $myCompanyVote = $isAlumni && $employer ? $employer->reviews->firstWhere('alumnus_id', $user->user_id) : null;
     $isEmployer = $user && $user->user_role === 'employer';
 
@@ -40,16 +45,21 @@
         'skills' => $job->skills->pluck('skill_name')->implode('||'),
         'recommended' => $isRecommended ? '1' : '0',
         'employer-id' => $employer->user_id ?? '',
+        'employer-contact' => $employer?->user?->user_number ?? '',
         'reviews-visible' => ($employer && !$isEmployer) ? '1' : '0',
         'upvotes' => $companyUpvotes,
         'downvotes' => $companyDownvotes,
+        'rating-count' => $companyRatingCount,
+        'average-rating' => $companyAverageRating ?? '',
         'my-vote' => $myCompanyVote->vote ?? '',
+        'my-rating' => $myCompanyVote->rating ?? '',
         'vote-visible' => ($employer && $isAlumni) ? '1' : '0',
         'is-alumni' => $isAlumni ? '1' : '0',
         'is-guest' => (!$user) ? '1' : '0',
         'is-bookmarked' => $isBookmarked ? '1' : '0',
         'has-applied' => $hasApplied ? '1' : '0',
-        'has-profile-resume' => $isAlumni && $user->alumnus->hasProfileResume() ? '1' : '0',
+        'has-uploaded-resume-file' => $isAlumni && $user->alumnus->hasUploadedResumeFile() ? '1' : '0',
+        'has-builder-resume' => $isAlumni && $user->alumnus->hasBuilderResume() ? '1' : '0',
         'has-profile-cover-letter' => $isAlumni && !empty($user->alumnus->alumnus_cover_letter_file_path) ? '1' : '0',
         'application-status' => $hasApplied ? $appliedJobs[$job->job_posting_id]->pivot->application_status : '',
         'posted-by' => $job->user->user_first_name . ' ' . $job->user->user_last_name,
@@ -98,9 +108,21 @@
                     {{ $job->job_posting_company }}
                 </p>
 
+                @if ($employer && !$isEmployer)
+                <a href="{{ route('employerReviews.index', ['employer' => $employer->user_id, 'back' => url()->full()]) }}" class="reviews-link text-xs font-bold text-[#1D46A4] hover:underline inline-flex items-center gap-1.5 mt-0.5" data-employer-id="{{ $employer->user_id }}">
+                    <i class="fas fa-comment-dots"></i> Reviews (<span class="reviews-count">{{ $companyRatingCount }}</span>)
+                </a>
+                @endif
+
                 <p class="text-gray-500 text-sm">
                     {{ $job->job_posting_address }}
                 </p>
+
+                @if ($employer?->user?->user_number)
+                <p class="text-gray-500 text-sm flex items-center gap-1.5">
+                    <i class="fas fa-phone text-xs"></i> {{ $employer->user->user_number }}
+                </p>
+                @endif
 
             </div>
 
@@ -157,7 +179,7 @@
                 @else
                 <button
                     type="button"
-                    onclick="openApplyModal({{ $job->job_posting_id }}, {{ $user->alumnus->hasProfileResume() ? 'true' : 'false' }}, {{ !empty($user->alumnus->alumnus_cover_letter_file_path) ? 'true' : 'false' }})"
+                    onclick="openApplyModal({{ $job->job_posting_id }}, {{ $user->alumnus->hasUploadedResumeFile() ? 'true' : 'false' }}, {{ $user->alumnus->hasBuilderResume() ? 'true' : 'false' }}, {{ !empty($user->alumnus->alumnus_cover_letter_file_path) ? 'true' : 'false' }})"
                     class="bg-[#1D46A4] hover:bg-[#0E0F3B] text-white px-8 py-2 rounded-md font-bold text-sm transition-colors">
                     APPLY
                 </button>
@@ -236,13 +258,23 @@
                         onclick="castCompanyVote(this)">
                         <i class="fas fa-thumbs-down"></i> <span class="vote-count">{{ $companyDownvotes }}</span>
                     </button>
-                </div>
-                @endif
 
-                @if ($employer && !$isEmployer)
-                <a href="{{ route('employerReviews.index', ['employer' => $employer->user_id, 'back' => url()->full()]) }}" class="reviews-link text-xs font-bold text-[#1D46A4] hover:underline inline-flex items-center gap-1.5" data-employer-id="{{ $employer->user_id }}">
-                    <i class="fas fa-comment-dots"></i> Reviews (<span class="reviews-count">{{ $companyUpvotes + $companyDownvotes }}</span>)
-                </a>
+                    {{-- 5-star rating — independent of the thumbs vote above
+                         (same row, separate column; see EmployerReview).
+                         Picking a star opens the review modal so the
+                         alumnus can optionally explain the rating. --}}
+                    <div class="star-rating flex items-center gap-0.5 border border-gray-300 rounded-full px-2 py-1.5" data-employer-id="{{ $employer->user_id }}" data-my-rating="{{ $myCompanyVote?->rating ?? 0 }}">
+                        @for ($i = 1; $i <= 5; $i++)
+                        <button type="button" class="star-btn text-xs {{ ($myCompanyVote?->rating ?? 0) >= $i ? 'text-[#ED7A07]' : 'text-gray-300' }} hover:text-[#ED7A07] transition-colors"
+                            data-star="{{ $i }}" onclick="castCompanyRating(this)">
+                            <i class="fas fa-star"></i>
+                        </button>
+                        @endfor
+                        @if ($employer->ratingCount() > 0)
+                        <span class="text-[10px] text-gray-400 ml-1">{{ $employer->averageRating() }}</span>
+                        @endif
+                    </div>
+                </div>
                 @endif
 
                 @if ($hasApplied)

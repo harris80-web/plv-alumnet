@@ -10,8 +10,22 @@ class Program extends Model
     protected $primaryKey = 'program_id';
 
     protected $fillable = [
-        'program_name'
+        'program_name',
+        'college',
     ];
+
+    /** Full display name per college code — mirrors the ALIGNED_INDUSTRIES pattern below. */
+    public const COLLEGES = [
+        'CABA' => 'College of Accountancy and Business Administration',
+        'CEIT' => 'College of Engineering and Information Technology',
+        'CAS' => 'College of Arts and Sciences',
+        'CPAG' => 'College of Public Administration and Governance',
+    ];
+
+    public function collegeName(): ?string
+    {
+        return self::COLLEGES[$this->college] ?? null;
+    }
 
     /**
      * Which of the (coarse, 6-category) seeded industries count as "aligned"

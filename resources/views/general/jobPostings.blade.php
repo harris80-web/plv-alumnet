@@ -164,6 +164,7 @@
                 <!-- IMAGE -->
                 <div class="md:w-1/4 h-48 md:h-auto relative overflow-hidden rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none group cursor-pointer"
                     role="button" tabindex="0" aria-label="View job details"
+                    data-job-id="{{ $job->job_posting_id }}"
                     data-image="{{ asset('storage/' . $job->job_posting_image) }}"
                     data-title="{{ $job->job_posting_title }}"
                     data-company="{{ $job->job_posting_company }}"
@@ -440,10 +441,25 @@
                             </div>
                         </div>
 
+                        @php $employerAddressesForEdit = optional($users->employer)->addresses ?? collect(); @endphp
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-[#1D264F] uppercase">Company Address <span class="text-red-500">*</span></label>
+                            @if ($employerAddressesForEdit->isNotEmpty())
+                            <select name="job_posting_address"
+                                class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white">
+                                <option value="">Select an address</option>
+                                @foreach ($employerAddressesForEdit as $savedAddress)
+                                <option value="{{ $savedAddress->address }}" @selected($savedAddress->address === $job->job_posting_address)>{{ $savedAddress->address }}</option>
+                                @endforeach
+                                {{-- The job's current address might not be one of the saved ones (e.g. it was typed before this feature existed) — keep it selectable so saving doesn't silently change it. --}}
+                                @if (!$employerAddressesForEdit->contains('address', $job->job_posting_address))
+                                <option value="{{ $job->job_posting_address }}" selected>{{ $job->job_posting_address }} (current)</option>
+                                @endif
+                            </select>
+                            @else
                             <input type="text" name="job_posting_address" value="{{ $job->job_posting_address }}"
                                 class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
+                            @endif
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
@@ -670,6 +686,17 @@
         modal.classList.toggle('hidden');
         document.body.style.overflow = modal.classList.contains('hidden') ? 'auto' : 'hidden';
     }
+
+    // Deep-link from a "job posting approved/rejected" notification
+    // (?job=123) — open that specific posting's view modal directly.
+    // Silently no-ops if it's on a page the pagination hasn't loaded.
+    document.addEventListener('DOMContentLoaded', () => {
+        const openJobId = new URLSearchParams(window.location.search).get('job');
+        if (openJobId) {
+            const el = document.querySelector('[data-job-id="' + openJobId + '"]');
+            if (el) el.click();
+        }
+    });
 
     // Clicking a job's image opens this same modal populated with that
     // job's real data (read off the element's own data-* attributes) —

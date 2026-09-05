@@ -63,6 +63,13 @@
         .section {
             page-break-inside: avoid;
         }
+
+        .chart-img {
+            width: 100%;
+            max-height: 260px;
+            object-fit: contain;
+            margin-bottom: 6px;
+        }
     </style>
 </head>
 
@@ -70,7 +77,7 @@
     <h1>PLV-AlumNet &mdash; Admin Dashboard Report</h1>
     <p class="meta">
         Generated {{ now()->format('M d, Y h:i A') }}<br>
-        Filters &mdash; Batch: {{ $batchLabel }} | Program: {{ $programLabel }} | Employment Status: {{ $statusLabel }}
+        Filters &mdash; Batch: {{ $batchLabel }} | Program: {{ $programLabel }} | Employment Status: {{ $statusLabel }} | College: {{ $collegeLabel }} | Year: {{ $yearLabel }}
     </p>
 
     <div class="section">
@@ -104,7 +111,23 @@
     </div>
 
     <div class="section">
+        <h2>Employment Status Breakdown</h2>
+        @if (!empty($charts['chartStatus']))
+            <img class="chart-img" src="{{ $charts['chartStatus'] }}">
+        @else
+            <table>
+                <tr><th>Status</th><th>Count</th></tr>
+                <tr><td>Employed</td><td>{{ $r['employedCount'] }}</td></tr>
+                <tr><td>Unemployed</td><td>{{ $r['totalAlumni'] - $r['employedCount'] }}</td></tr>
+            </table>
+        @endif
+    </div>
+
+    <div class="section">
         <h2>Employment Rate by Batch/Year</h2>
+        @if (!empty($charts['chartPlacement']))
+            <img class="chart-img" src="{{ $charts['chartPlacement'] }}">
+        @else
         <table>
             <tr>
                 <th>Batch</th>
@@ -121,11 +144,15 @@
                 </tr>
             @endforeach
         </table>
+        @endif
     </div>
 
     <div class="section">
-        <h2>Employment by Month (Jan&ndash;Dec, pooled across employment years)</h2>
+        <h2>Employment by Month (Jan&ndash;Dec{{ $yearLabel !== 'All' ? ', ' . $yearLabel : ', pooled across employment years' }})</h2>
         <p class="subheading">Batch: {{ $batchLabel }} | Program: {{ $programLabel }}</p>
+        @if (!empty($charts['chartEmploymentByMonth']))
+            <img class="chart-img" src="{{ $charts['chartEmploymentByMonth'] }}">
+        @else
         <table>
             <tr>
                 <th>Month</th>
@@ -138,6 +165,7 @@
                 </tr>
             @endforeach
         </table>
+        @endif
     </div>
 
     <div class="section">
@@ -158,6 +186,9 @@
 
     <div class="section">
         <h2>Employment Rate by Gender</h2>
+        @if (!empty($charts['chartGender']))
+            <img class="chart-img" src="{{ $charts['chartGender'] }}">
+        @else
         <table>
             <tr>
                 <th>Gender</th>
@@ -174,10 +205,14 @@
                 </tr>
             @endforeach
         </table>
+        @endif
     </div>
 
     <div class="section">
         <h2>Job-to-Degree Alignment by Program (Overall: {{ $r['alignmentRate'] }}%)</h2>
+        @if (!empty($charts['chartAlignment']))
+            <img class="chart-img" src="{{ $charts['chartAlignment'] }}">
+        @else
         <table>
             <tr>
                 <th>Program</th>
@@ -194,10 +229,14 @@
                 </tr>
             @endforeach
         </table>
+        @endif
     </div>
 
     <div class="section">
         <h2>Employment Interval (Graduation to First Job)</h2>
+        @if (!empty($charts['chartInterval']))
+            <img class="chart-img" src="{{ $charts['chartInterval'] }}">
+        @else
         <table>
             <tr>
                 <th>Interval</th>
@@ -210,11 +249,15 @@
                 </tr>
             @endforeach
         </table>
+        @endif
     </div>
 
     <div class="section">
         <h2>Job Before Graduation &amp; Internships</h2>
         <p class="subheading">Of alumni with a recorded first job</p>
+        @if (!empty($charts['chartJobBeforeGrad']))
+            <img class="chart-img" src="{{ $charts['chartJobBeforeGrad'] }}">
+        @else
         <table class="stat-table">
             <tr>
                 <td>Employed Before Graduation</td>
@@ -229,6 +272,7 @@
                 <td>{{ $r['beforeGraduationInternshipCount'] }}</td>
             </tr>
         </table>
+        @endif
     </div>
 
     <div class="section">
@@ -256,7 +300,10 @@
                 </tr>
             @endforeach
         </table>
-        <p class="subheading">Hires per Month (last {{ $hireMonths }} months)</p>
+        <p class="subheading">Hires per Month {{ $yearLabel !== 'All' ? '(' . $yearLabel . ')' : '(last ' . $hireMonths . ' months)' }}</p>
+        @if (!empty($charts['chartHires']))
+            <img class="chart-img" src="{{ $charts['chartHires'] }}">
+        @else
         <table>
             <tr>
                 <th>Month</th>
@@ -269,71 +316,13 @@
                 </tr>
             @endforeach
         </table>
+        @endif
     </div>
 
-    <div class="section">
-        <h2>Employed Alumni Report</h2>
-        <table>
-            <tr>
-                <th>Name</th>
-                <th>Batch</th>
-                <th>Program</th>
-                <th>Workplace</th>
-                <th>Position</th>
-                <th>Industry</th>
-                <th>Employment Date</th>
-                <th>Aligned</th>
-            </tr>
-            @foreach ($r['employedAlumniTable'] as $a)
-                <tr>
-                    <td>{{ trim(($a->user->user_first_name ?? '') . ' ' . ($a->user->user_last_name ?? '')) }}</td>
-                    <td>{{ optional($a->alumnus_batch)->format('Y-m-d') }}</td>
-                    <td>{{ $a->program->program_name ?? 'N/A' }}</td>
-                    <td>{{ $a->alumnus_workplace_undisclosed ? 'Undisclosed' : ($a->alumnus_workplace ?? 'N/A') }}</td>
-                    <td>{{ $a->alumnus_job_position ?? 'N/A' }}</td>
-                    <td>{{ $a->industry->industry_name ?? 'N/A' }}</td>
-                    <td>{{ optional($a->alumnus_employment_date)->format('M d, Y') ?? 'N/A' }}</td>
-                    <td>{{ $a->alumnus_employment_status ? ($a->hasCourseAlignedJob() ? 'Aligned' : 'Not Aligned') : '' }}</td>
-                </tr>
-            @endforeach
-        </table>
-    </div>
-
-    <div class="section">
-        <h2>Registered Companies ({{ $r['registeredCompanies']->count() }})</h2>
-        <table>
-            <tr>
-                <th>Company</th>
-                <th>Industry</th>
-                <th>Contact</th>
-            </tr>
-            @foreach ($r['registeredCompanies'] as $employer)
-                <tr>
-                    <td>{{ $employer->employer_company_name }}</td>
-                    <td>{{ $employer->industry->industry_name ?? 'N/A' }}</td>
-                    <td>{{ $employer->user->user_email ?? 'N/A' }}</td>
-                </tr>
-            @endforeach
-        </table>
-    </div>
-
-    <div class="section">
-        <h2>Pending / Unregistered Companies ({{ $r['pendingCompanies']->count() }})</h2>
-        <table>
-            <tr>
-                <th>Company</th>
-                <th>Industry</th>
-                <th>Contact</th>
-            </tr>
-            @foreach ($r['pendingCompanies'] as $employer)
-                <tr>
-                    <td>{{ $employer->employer_company_name }}</td>
-                    <td>{{ $employer->industry->industry_name ?? 'N/A' }}</td>
-                    <td>{{ $employer->user->user_email ?? 'N/A' }}</td>
-                </tr>
-            @endforeach
-        </table>
-    </div>
+    {{-- Employed Alumni Report / Registered & Pending Companies are no
+         longer shown on the main dashboard (see reports.companies for their
+         own dedicated, filterable, exportable page) — this export mirrors
+         exactly what's on screen, so it drops them too. --}}
 </body>
 
 </html>

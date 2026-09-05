@@ -105,8 +105,9 @@ class JobPosting extends Model
                 'application_id', 'application_status', 'application_date', 'application_score', 'is_read',
                 // Which resume/cover letter this specific application used — see
                 // JobApplicationController::applyJob() and general/jobApplicants.blade.php's
-                // Resume/Cover Letter columns.
-                'resume_source', 'resume_path', 'cover_letter_source', 'cover_letter_path'
+                // Resume/Cover Letter columns. builder_resume_snapshot is the captured
+                // scratch copy when resume_source='builder' — see the View Application modal.
+                'resume_source', 'resume_path', 'cover_letter_source', 'cover_letter_path', 'builder_resume_snapshot'
             ) // Allows you to access $job->pivot->status
             ->withTimestamps()
             ->orderByDesc('job_applications.application_score');

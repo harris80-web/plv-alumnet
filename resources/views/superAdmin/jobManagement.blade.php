@@ -689,6 +689,17 @@
             lucide.createIcons();
             initMenuButtons();
             document.getElementById('search-input').addEventListener('input', applyFilters);
+
+            // Deep-link from a notification (?job=123) — open that job's
+            // View modal automatically if it's on the currently-rendered
+            // page of either table. Silently no-ops if it's on a page the
+            // pagination hasn't loaded (same tradeoff as the Notices deep
+            // link on eventsSeminars.blade.php).
+            const openJobId = new URLSearchParams(window.location.search).get('job');
+            if (openJobId) {
+                const btn = document.querySelector('[data-job-id="' + openJobId + '"]');
+                if (btn) btn.click();
+            }
         });
 
         //POST A NEW JOB MODAL

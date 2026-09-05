@@ -177,7 +177,7 @@
                         <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none text-xs">
                             <i class="fas fa-calendar-alt"></i>
                         </span>
-                        <select name="date_posted" onchange="this.form.submit()" class="w-full pl-11 pr-10 py-1.5 border rounded-full bg-white text-xs appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                        <select name="date_posted" class="w-full pl-11 pr-10 py-1.5 border rounded-full bg-white text-xs appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
                             <option value="">Date Posted</option>
                             <option value="24h" {{ ($filters['date_posted'] ?? '') === '24h' ? 'selected' : '' }}>Last 24 Hours</option>
                             <option value="7d" {{ ($filters['date_posted'] ?? '') === '7d' ? 'selected' : '' }}>Last 7 Days</option>
@@ -189,14 +189,20 @@
                     </div>
 
                 </div>
+
+                <div class="mt-4 pt-4 border-t border-gray-100 flex items-center justify-end gap-4">
+                    @if (array_filter($filters))
+                    <a href="{{ $activeTabRoute }}" class="text-xs font-bold text-gray-400 hover:text-[#C73D1A]">
+                        <i class="fas fa-times mr-1"></i>CLEAR FILTERS
+                    </a>
+                    @endif
+                    <button type="submit"
+                        class="flex items-center justify-center gap-2 px-6 py-2 rounded-full bg-[#C73D1A] hover:bg-[#a83215] text-white font-bold text-xs uppercase tracking-wide shrink-0 transition-colors">
+                        <i class="fas fa-filter"></i>
+                        <span>Apply Filters</span>
+                    </button>
+                </div>
             </form>
-            @if (array_filter($filters))
-            <div class="mt-3 text-right">
-                <a href="{{ $activeTabRoute }}" class="text-xs font-bold text-gray-400 hover:text-[#C73D1A]">
-                    <i class="fas fa-times mr-1"></i>CLEAR FILTERS
-                </a>
-            </div>
-            @endif
         </div>
 
         @if($user && $user->user_role === 'employer')
@@ -259,6 +265,19 @@
 </body>
 
 <script>
+    // Deep-link from a job/application-related notification (?job=123) —
+    // open that specific job's detail modal directly (works on the Job
+    // Board, My Applications, and Bookmarks tabs alike, since they all
+    // render partials/job-post-card.blade.php with the same data-job-id).
+    // Silently no-ops if that job isn't on the currently-rendered page.
+    document.addEventListener('DOMContentLoaded', () => {
+        const openJobId = new URLSearchParams(window.location.search).get('job');
+        if (openJobId) {
+            const el = document.querySelector('[data-job-id="' + openJobId + '"]');
+            if (el) el.click();
+        }
+    });
+
     // Share Button Copy Logic
     function copyJobLink(button) {
         const dummyUrl = "https://alumnihub.example/jobs/12345";
@@ -285,49 +304,8 @@
         document.getElementById('moreFiltersPanel').classList.toggle('hidden');
         document.querySelector('.more-filters-chevron').classList.toggle('rotate-180');
     }
-
-    // MULTI-SELECT CHECKBOX FILTER DROPDOWNS (Industry / Job Type / Job Setup)
-    function toggleMultiselect(btn) {
-        const panel = btn.parentElement.querySelector('.multiselect-panel');
-        document.querySelectorAll('.multiselect-panel').forEach(function (p) {
-            if (p !== panel) p.classList.add('hidden');
-        });
-        panel.classList.toggle('hidden');
-    }
-
-    document.addEventListener('click', function (e) {
-        if (!e.target.closest('.multiselect-filter')) {
-            document.querySelectorAll('.multiselect-panel').forEach(function (p) {
-                p.classList.add('hidden');
-            });
-        }
-    });
-
-    function toggleMultiselectAll(selectAllCheckbox) {
-        const panel = selectAllCheckbox.closest('.multiselect-panel');
-        panel.querySelectorAll('.option-checkbox').forEach(function (o) {
-            o.checked = selectAllCheckbox.checked;
-        });
-        selectAllCheckbox.closest('form').submit();
-    }
-
-    function onMultiselectOptionChange(checkbox) {
-        updateSelectAllState(checkbox.closest('.multiselect-panel'));
-        checkbox.closest('form').submit();
-    }
-
-    function updateSelectAllState(panel) {
-        const options = Array.from(panel.querySelectorAll('.option-checkbox'));
-        const selectAll = panel.querySelector('.select-all-checkbox');
-        const selectAllCheck = panel.querySelector('.select-all-check');
-        const checkedCount = options.filter(function (o) { return o.checked; }).length;
-
-        selectAll.checked = options.length > 0 && checkedCount === options.length;
-        selectAll.indeterminate = checkedCount > 0 && checkedCount < options.length;
-        selectAllCheck.classList.toggle('hidden', !selectAll.checked);
-    }
-
-    document.querySelectorAll('.multiselect-panel').forEach(updateSelectAllState);
 </script>
+
+@include('partials.staged-multiselect')
 
 </html>

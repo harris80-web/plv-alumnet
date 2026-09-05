@@ -275,7 +275,19 @@ class Alumnus extends Model
      */
     public function hasProfileResume(): bool
     {
-        return ! empty($this->alumnus_resume_file_path) || ($this->alumnus_resume_completeness ?? 0) > 0;
+        return $this->hasUploadedResumeFile() || $this->hasBuilderResume();
+    }
+
+    /** Has an uploaded resume/CV document on file (alumnus_resume_file_path) — distinct from a Resume Builder profile. */
+    public function hasUploadedResumeFile(): bool
+    {
+        return ! empty($this->alumnus_resume_file_path);
+    }
+
+    /** Has a started/complete Resume Builder profile — distinct from an uploaded file. */
+    public function hasBuilderResume(): bool
+    {
+        return ($this->alumnus_resume_completeness ?? 0) > 0;
     }
 
     /**
@@ -291,6 +303,7 @@ class Alumnus extends Model
             'resume_completeness' => $this->alumnus_resume_completeness ?? 0,
             'skills' => $this->skills->map(fn ($skill) => [
                 'name' => $skill->skill_name,
+                'category' => $skill->skill_category,
             ])->values(),
             'experiences' => $this->experiences->map(fn ($exp) => [
                 'type' => $exp->experience_type,
@@ -298,6 +311,9 @@ class Alumnus extends Model
                 'job_description' => $exp->experience_job_description,
                 'duration_months' => $exp->experience_duration_months,
                 'industry_id' => $exp->industry_id,
+                'start_date' => optional($exp->experience_start_date)->format('Y-m-d'),
+                'end_date' => optional($exp->experience_end_date)->format('Y-m-d'),
+                'is_ongoing' => $exp->isOngoing(),
             ])->values(),
             'certifications' => $this->certifications->map(fn ($cert) => [
                 'certification_type' => $cert->certification_type,

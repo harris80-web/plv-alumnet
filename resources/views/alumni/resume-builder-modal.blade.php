@@ -115,6 +115,7 @@
                             class="skill-chip flex items-center gap-1 pl-3 pr-1 py-1 rounded-full border border-gray-300 bg-gray-50 text-sm">
                             <span class="skill-name-display">{{ $skill['name'] }}</span>
                             <input type="hidden" name="skills[{{ $i }}][name]" value="{{ $skill['name'] }}">
+                            <input type="hidden" name="skills[{{ $i }}][category]" value="{{ $skill['category'] ?? 'domain' }}">
                             <button type="button" class="remove-row text-[#C73D1A] px-1">&times;</button>
                         </div>
                     @endforeach
@@ -143,18 +144,34 @@
                                 placeholder="Job title / Project title"
                                 class="w-full rounded border border-[#0E0F3B] px-3 py-2 text-sm mb-2 focus:outline-none focus:border-[#ED7A07]">
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
-                                <input type="number" name="experiences[{{ $i }}][duration_months]"
-                                    value="{{ $exp['duration_months'] }}" min="0" max="600" placeholder="Duration (months)"
-                                    class="rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07]">
-                                <select name="experiences[{{ $i }}][industry_id]"
-                                    class="rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07]">
-                                    <option value="">Industry (optional)</option>
-                                    @foreach($industries as $industry)
-                                        <option value="{{ $industry->industry_id }}" @selected(($exp['industry_id'] ?? null) == $industry->industry_id)>{{ $industry->industry_name }}</option>
-                                    @endforeach
-                                </select>
+                            {{-- Item 21 — date range replaces a single "duration in months" input --}}
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-1">
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">Start date</label>
+                                    <input type="date" name="experiences[{{ $i }}][start_date]" value="{{ $exp['start_date'] ?? '' }}"
+                                        class="w-full rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07]">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">End date</label>
+                                    <input type="date" name="experiences[{{ $i }}][end_date]" value="{{ $exp['end_date'] ?? '' }}"
+                                        {{ ($exp['is_ongoing'] ?? false) ? 'disabled' : '' }}
+                                        class="exp-end-date w-full rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07] disabled:bg-gray-100">
+                                </div>
                             </div>
+                            <label class="flex items-center gap-1.5 text-xs text-gray-600 mb-2">
+                                <input type="checkbox" class="exp-ongoing-checkbox accent-[#ED7A07]" name="experiences[{{ $i }}][is_ongoing]" value="1" @checked($exp['is_ongoing'] ?? false)>
+                                I'm currently doing this
+                            </label>
+                            {{-- Carries a legacy/imported duration when no date range has been entered yet — see ResumeBuilderController::save(). --}}
+                            <input type="hidden" name="experiences[{{ $i }}][duration_months]" value="{{ $exp['duration_months'] }}">
+
+                            <select name="experiences[{{ $i }}][industry_id]"
+                                class="w-full rounded border border-[#0E0F3B] px-3 py-2 text-sm mb-2 focus:outline-none focus:border-[#ED7A07]">
+                                <option value="">Industry (optional)</option>
+                                @foreach($industries as $industry)
+                                    <option value="{{ $industry->industry_id }}" @selected(($exp['industry_id'] ?? null) == $industry->industry_id)>{{ $industry->industry_name }}</option>
+                                @endforeach
+                            </select>
 
                             <textarea name="experiences[{{ $i }}][job_description]" rows="3"
                                 placeholder="What did you do? Be specific."
@@ -269,18 +286,30 @@
         </div>
         <input type="text" name="experiences[__INDEX__][job_title]" placeholder="Job title / Project title"
             class="w-full rounded border border-[#0E0F3B] px-3 py-2 text-sm mb-2 focus:outline-none focus:border-[#ED7A07]">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
-            <input type="number" name="experiences[__INDEX__][duration_months]" min="0" max="600"
-                placeholder="Duration (months)"
-                class="rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07]">
-            <select name="experiences[__INDEX__][industry_id]"
-                class="rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07]">
-                <option value="">Industry (optional)</option>
-                @foreach($industries as $industry)
-                    <option value="{{ $industry->industry_id }}">{{ $industry->industry_name }}</option>
-                @endforeach
-            </select>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-1">
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Start date</label>
+                <input type="date" name="experiences[__INDEX__][start_date]"
+                    class="w-full rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07]">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">End date</label>
+                <input type="date" name="experiences[__INDEX__][end_date]"
+                    class="exp-end-date w-full rounded border border-[#0E0F3B] px-3 py-2 text-sm focus:outline-none focus:border-[#ED7A07] disabled:bg-gray-100">
+            </div>
         </div>
+        <label class="flex items-center gap-1.5 text-xs text-gray-600 mb-2">
+            <input type="checkbox" class="exp-ongoing-checkbox accent-[#ED7A07]" name="experiences[__INDEX__][is_ongoing]" value="1">
+            I'm currently doing this
+        </label>
+        <input type="hidden" name="experiences[__INDEX__][duration_months]" value="">
+        <select name="experiences[__INDEX__][industry_id]"
+            class="w-full rounded border border-[#0E0F3B] px-3 py-2 text-sm mb-2 focus:outline-none focus:border-[#ED7A07]">
+            <option value="">Industry (optional)</option>
+            @foreach($industries as $industry)
+                <option value="{{ $industry->industry_id }}">{{ $industry->industry_name }}</option>
+            @endforeach
+        </select>
         <textarea name="experiences[__INDEX__][job_description]" rows="3" placeholder="What did you do?"
             class="w-full rounded border border-[#0E0F3B] px-3 py-2 text-sm mb-2 focus:outline-none focus:border-[#ED7A07]"></textarea>
         <button type="button" class="remove-row text-sm border border-[#C73D1A] text-[#C73D1A] rounded px-3 py-1.5 transition-colors hover:bg-[#C73D1A] hover:text-white">REMOVE</button>
@@ -428,6 +457,17 @@
         }
     });
 
+    // Item 21 — "I'm currently doing this" disables & clears the End date
+    // field for that row rather than just leaving it editable-but-ignored,
+    // so it's visually obvious which field actually applies.
+    form.addEventListener('change', function (e) {
+        if (e.target.classList.contains('exp-ongoing-checkbox')) {
+            var endDateInput = e.target.closest('.experience-row').querySelector('.exp-end-date');
+            endDateInput.disabled = e.target.checked;
+            if (e.target.checked) endDateInput.value = '';
+        }
+    });
+
     // Character counter only — purely informational, doesn't touch the
     // completeness bar. Keeping this live is fine since it's not a score.
     document.getElementById('resume_summary').addEventListener('input', function () {
@@ -462,6 +502,11 @@
             .map(function (el) { return el.textContent.trim().toLowerCase(); });
     }
 
+    // Item 22 — a skill picked from the master list already has a real
+    // category; a brand-new one needs the alumnus to pick one before it's
+    // added, since nothing in the system knows what it is yet.
+    var SKILL_CATEGORIES = @json(\App\Models\Skill::CATEGORIES);
+
     function renderSkillResults(skills, query) {
         skillResults.innerHTML = '';
         var added = alreadyAddedSkillNames();
@@ -475,21 +520,42 @@
             item.className = 'px-3 py-2 text-sm hover:bg-orange-50 cursor-pointer';
             item.textContent = skill.skill_name;
             item.addEventListener('click', function () {
-                addSkillChip(skill.skill_name);
+                addSkillChip(skill.skill_name, skill.skill_category);
                 closeSkillResults();
             });
             skillResults.appendChild(item);
         });
 
         if (!hasExactMatch && added.indexOf(query.toLowerCase()) === -1) {
-            var addNew = document.createElement('div');
-            addNew.className = 'px-3 py-2 text-sm text-[#C73D1A] font-medium hover:bg-orange-50 cursor-pointer border-t border-gray-100';
-            addNew.textContent = '+ Add "' + query + '" as a new skill';
-            addNew.addEventListener('click', function () {
-                addSkillChip(query);
+            var addNewWrap = document.createElement('div');
+            addNewWrap.className = 'px-3 py-2 border-t border-gray-100 flex items-center gap-2 flex-wrap';
+
+            var label = document.createElement('span');
+            label.className = 'text-sm text-[#C73D1A] font-medium';
+            label.textContent = 'Add "' + query + '" as:';
+            addNewWrap.appendChild(label);
+
+            var categorySelect = document.createElement('select');
+            categorySelect.className = 'text-xs border border-gray-300 rounded px-2 py-1';
+            Object.keys(SKILL_CATEGORIES).forEach(function (key) {
+                var opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = SKILL_CATEGORIES[key];
+                categorySelect.appendChild(opt);
+            });
+            addNewWrap.appendChild(categorySelect);
+
+            var addBtn = document.createElement('button');
+            addBtn.type = 'button';
+            addBtn.className = 'text-xs font-bold bg-[#C73D1A] text-white rounded px-3 py-1 hover:bg-[#a83215]';
+            addBtn.textContent = 'Add';
+            addBtn.addEventListener('click', function () {
+                addSkillChip(query, categorySelect.value);
                 closeSkillResults();
             });
-            skillResults.appendChild(addNew);
+            addNewWrap.appendChild(addBtn);
+
+            skillResults.appendChild(addNewWrap);
         }
 
         skillResults.classList.toggle('hidden', skillResults.children.length === 0);
@@ -501,7 +567,7 @@
         skillSearchInput.value = '';
     }
 
-    function addSkillChip(name) {
+    function addSkillChip(name, category) {
         var idx = counters.skills++;
 
         var chip = document.createElement('div');
@@ -516,6 +582,11 @@
         hidden.name = 'skills[' + idx + '][name]';
         hidden.value = name;
 
+        var hiddenCategory = document.createElement('input');
+        hiddenCategory.type = 'hidden';
+        hiddenCategory.name = 'skills[' + idx + '][category]';
+        hiddenCategory.value = category || 'domain';
+
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'remove-row text-[#C73D1A] px-1';
@@ -523,6 +594,7 @@
 
         chip.appendChild(span);
         chip.appendChild(hidden);
+        chip.appendChild(hiddenCategory);
         chip.appendChild(btn);
         document.getElementById('skills-list').appendChild(chip);
     }
@@ -614,8 +686,19 @@
         row.querySelector('input[value="' + exp.type + '"]').checked = true;
         row.querySelector('[name$="[job_title]"]').value = exp.job_title || '';
         row.querySelector('[name$="[job_description]"]').value = exp.job_description || '';
-        row.querySelector('[name$="[duration_months]"]').value = exp.duration_months || '';
         if (exp.industry_id) row.querySelector('[name$="[industry_id]"]').value = exp.industry_id;
+
+        // Item 21 — the PDF parser only ever extracts a duration in months,
+        // never exact dates, so that's carried through via the hidden
+        // fallback field until the alumnus fills in real dates themselves.
+        row.querySelector('[name$="[duration_months]"]').value = exp.duration_months || '';
+        if (exp.start_date) row.querySelector('[name$="[start_date]"]').value = exp.start_date;
+        if (exp.end_date) row.querySelector('[name$="[end_date]"]').value = exp.end_date;
+        if (exp.is_ongoing) {
+            var ongoingBox = row.querySelector('.exp-ongoing-checkbox');
+            ongoingBox.checked = true;
+            ongoingBox.dispatchEvent(new Event('change', { bubbles: true }));
+        }
     }
 
     function addCertRowWithData(cert) {

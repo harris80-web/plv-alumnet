@@ -55,17 +55,29 @@
                 <p class="text-xs text-gray-500">Batch {{ $alumnus->alumnus_batch->format('Y') }}</p>
             @endif
         </div>
+        @if($alumnus->program?->collegeName())
+            <p class="text-xs text-gray-500">{{ $alumnus->program->collegeName() }}</p>
+        @endif
         <p class="text-xs text-gray-500 italic">Pamantasan ng Lungsod ng Valenzuela (PLV)</p>
     </div>
 
-    {{-- ===== Skills ===== --}}
+    {{-- ===== Skills (item 22 — grouped by category) ===== --}}
     @if($alumnus->skills->isNotEmpty())
+        @php $skillsByCategory = $alumnus->skills->groupBy('skill_category'); @endphp
         <div class="mb-6">
             <h2 class="text-sm font-bold text-[#0E0F3B] uppercase tracking-widest border-b border-gray-200 pb-1 mb-2">
                 Skills</h2>
-            <div class="flex flex-wrap gap-2">
-                @foreach($alumnus->skills as $skill)
-                    <span class="text-xs font-medium bg-gray-100 text-gray-700 rounded-full px-3 py-1">{{ $skill->skill_name }}</span>
+            <div class="space-y-2">
+                @foreach(\App\Models\Skill::CATEGORIES as $categoryKey => $categoryLabel)
+                    @continue($skillsByCategory->get($categoryKey, collect())->isEmpty())
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-semibold text-gray-500 w-32 shrink-0">{{ $categoryLabel }}</span>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($skillsByCategory[$categoryKey] as $skill)
+                                <span class="text-xs font-medium bg-gray-100 text-gray-700 rounded-full px-3 py-1">{{ $skill->skill_name }}</span>
+                            @endforeach
+                        </div>
+                    </div>
                 @endforeach
             </div>
         </div>
@@ -81,7 +93,14 @@
                     <div>
                         <div class="flex justify-between items-baseline flex-wrap gap-x-2">
                             <p class="font-semibold text-gray-900">{{ $exp->experience_job_title }}</p>
-                            @if(\App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months))
+                            {{-- Item 21 — date range is the primary display; the computed duration is a secondary annotation --}}
+                            @if($exp->dateRangeLabel())
+                                <p class="text-xs text-gray-500">{{ $exp->dateRangeLabel() }}
+                                    @if(\App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months))
+                                        <span class="text-gray-400">({{ \App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months) }})</span>
+                                    @endif
+                                </p>
+                            @elseif(\App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months))
                                 <p class="text-xs text-gray-500">{{ \App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months) }}</p>
                             @endif
                         </div>
@@ -107,7 +126,13 @@
                     <div>
                         <div class="flex justify-between items-baseline flex-wrap gap-x-2">
                             <p class="font-semibold text-gray-900">{{ $exp->experience_job_title }}</p>
-                            @if(\App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months))
+                            @if($exp->dateRangeLabel())
+                                <p class="text-xs text-gray-500">{{ $exp->dateRangeLabel() }}
+                                    @if(\App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months))
+                                        <span class="text-gray-400">({{ \App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months) }})</span>
+                                    @endif
+                                </p>
+                            @elseif(\App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months))
                                 <p class="text-xs text-gray-500">{{ \App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months) }}</p>
                             @endif
                         </div>

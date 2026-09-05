@@ -28,6 +28,7 @@ class Office extends Model
         'messaging' => 'Chatbot & Messaging Management',
         'testimonials' => 'Testimonial Management',
         'faqs' => 'Manage FAQs',
+        'reports' => 'Alumni & Company Reports',
     ];
 
     protected $fillable = [

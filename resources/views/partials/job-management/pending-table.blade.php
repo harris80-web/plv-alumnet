@@ -93,6 +93,7 @@
                      is just a direct view trigger — no dropdown needed for a
                      single action. --}}
                 <button onclick='openViewModal({{ $j->job_posting_id }}, @json($viewModalData))'
+                    data-job-id="{{ $j->job_posting_id }}"
                     title="View"
                     class="p-1.5 hover:bg-blue-50 rounded-full transition-colors">
                     <i data-lucide="eye" class="w-4 h-4 text-blue-500"></i>

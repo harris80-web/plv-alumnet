@@ -485,6 +485,32 @@ $title = request()->routeIs('notifications.all')
         }
     });
 
+    /* ── Presence heartbeat ───────────────────────────────────────
+       Bumps User::last_active_at every 30s while this admin has any
+       admin-area page open (every superAdmin page includes this header),
+       same pause-while-hidden pattern as the notification poll above.
+       This is what ChatbotController::autoAssignIfEnabled() checks to know
+       who's genuinely logged in right now — see User::isOnline(). */
+    const HEARTBEAT_URL = {!! json_encode(route('admin.heartbeat')) !!};
+
+    function sendHeartbeat() {
+        fetch(HEARTBEAT_URL, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': NOTIF_CSRF_TOKEN, 'Accept': 'application/json' },
+        }).catch(() => { /* transient network hiccup — next beat retries */ });
+    }
+
+    sendHeartbeat();
+    let heartbeatTimer = setInterval(sendHeartbeat, 30000);
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+            clearInterval(heartbeatTimer);
+        } else {
+            sendHeartbeat();
+            heartbeatTimer = setInterval(sendHeartbeat, 30000);
+        }
+    });
+
     //log out confirmation modal js
     // Replace the entire logout modal JS block with this:
     const logoutModal = document.getElementById('logout-modal');

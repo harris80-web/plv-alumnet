@@ -12,6 +12,7 @@
                 <tr>
                     <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Full Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                     <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Program <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">College <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                     <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Batch <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                     <th class="px-4 py-4 font-semibold">Actions</th>
                 </tr>
@@ -25,6 +26,7 @@
                         'name' => trim($alumnus->user->user_first_name . ' ' . $alumnus->user->user_middle_name . ' ' . $alumnus->user->user_last_name . ' ' . $alumnus->user->user_suffix),
                         'photo' => $alumnus->user->user_profile_picture ? asset('storage/' . $alumnus->user->user_profile_picture) : null,
                         'program' => $alumnus->program->program_name ?? 'Not specified',
+                        'college' => $alumnus->program?->collegeName() ?? 'Not specified',
                         'batch' => optional($alumnus->alumnus_batch)->format('Y'),
                         'section' => $alumnus->section->section_name ?? 'N/A',
                         'employment' => $alumnus->alumnus_employment_status ? 'Employed' : 'Unemployed',
@@ -42,6 +44,7 @@
                 <tr class="hover:bg-slate-50/80 transition-colors text-center">
                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $alumnus->formalName() }}</td>
                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100 leading-tight">{{ $alumnus->program->program_name ?? 'N/A' }}</td>
+                    <td class="px-4 py-3 font-medium text-black border-r border-slate-100 leading-tight">{{ $alumnus->program?->collegeName() ?? 'N/A' }}</td>
                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ optional($alumnus->alumnus_batch)->format('Y') }}</td>
                     <td class="px-4 py-3 text-center relative">
                         @if ($alumnus->user_id !== auth()->id())
@@ -70,7 +73,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="4" class="py-16 text-center text-gray-400">
+                    <td colspan="5" class="py-16 text-center text-gray-400">
                         <i class="fas fa-users-slash text-4xl mb-3 block"></i>
                         No alumni found.
                     </td>

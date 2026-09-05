@@ -24,7 +24,7 @@
     </thead>
     <tbody class="divide-y divide-slate-100">
         @forelse ($pendingEmployers as $employer)
-        <tr class="hover:bg-slate-50/80 transition-colors text-center">
+        <tr class="hover:bg-slate-50/80 transition-colors text-center" data-employer-id="{{ $employer->user_id }}">
             <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
                 {{ $loop->iteration }}
             </td>

@@ -125,6 +125,19 @@
                                 data-vote-type="downvote" onclick="castCompanyVote(this)">
                                 <i class="fas fa-thumbs-down"></i> <span class="vote-count">0</span>
                             </button>
+
+                            {{-- 5-star rating — independent of the thumbs vote above, same as
+                                 partials/job-post-card.blade.php's copy of this widget. Picking a
+                                 star opens the review modal so the alumnus can optionally explain it. --}}
+                            <div id="modal-star-rating" class="star-rating flex items-center gap-0.5 border border-gray-300 rounded-full px-2 py-1.5">
+                                @for ($i = 1; $i <= 5; $i++)
+                                <button type="button" class="star-btn text-xs text-gray-300 hover:text-[#ED7A07] transition-colors"
+                                    data-star="{{ $i }}" onclick="castCompanyRating(this)">
+                                    <i class="fas fa-star"></i>
+                                </button>
+                                @endfor
+                                <span id="modal-star-avg-label" class="star-avg-label text-[10px] text-gray-400 ml-1"></span>
+                            </div>
                         </div>
 
                         <a id="modal-reviews-link" href="#" class="reviews-link hidden inline-flex text-xs font-bold text-[#1D46A4] hover:underline items-center gap-1.5">
@@ -201,12 +214,12 @@
         document.getElementById('modal-posted-by').textContent = d.postedBy || '';
         document.getElementById('modal-posted-avatar').src = d.postedByAvatar || '';
 
-        // Reviews link
+        // Reviews link — count is ratings, not votes (see castCompanyRating(); the reviews page/count are rating-driven now)
         const reviewsLink = document.getElementById('modal-reviews-link');
         if (d.reviewsVisible === '1' && d.employerId) {
             reviewsLink.href = JOB_MODAL_REVIEWS_URL_TMPL.replace('999999999', d.employerId);
             reviewsLink.dataset.employerId = d.employerId;
-            reviewsLink.querySelector('.reviews-count').textContent = (Number(d.upvotes || 0) + Number(d.downvotes || 0));
+            reviewsLink.querySelector('.reviews-count').textContent = Number(d.ratingCount || 0);
             reviewsLink.classList.remove('hidden');
         } else {
             reviewsLink.classList.add('hidden');
@@ -233,6 +246,21 @@
             voteSection.classList.remove('hidden');
         } else {
             voteSection.classList.add('hidden');
+        }
+
+        // 5-star rating widget — item 4: alumni can rate the company right from the details modal, not just the compact card.
+        const starRating = document.getElementById('modal-star-rating');
+        if (d.voteVisible === '1' && d.employerId) {
+            const myRating = Number(d.myRating || 0);
+            starRating.dataset.employerId = d.employerId;
+            starRating.dataset.myRating = myRating;
+            starRating.querySelectorAll('.star-btn').forEach(function (starBtn) {
+                const filled = Number(starBtn.dataset.star) <= myRating;
+                starBtn.classList.toggle('text-[#ED7A07]', filled);
+                starBtn.classList.toggle('text-gray-300', !filled);
+            });
+            const avgLabel = document.getElementById('modal-star-avg-label');
+            avgLabel.textContent = Number(d.ratingCount || 0) > 0 ? d.averageRating : '';
         }
 
         // Bookmark button
@@ -266,10 +294,13 @@
                 appliedBtn.classList.remove('hidden');
                 appliedBtn.classList.add('flex');
             } else {
-                const jobId = d.jobId, hasProfileResume = d.hasProfileResume === '1', hasProfileCoverLetter = d.hasProfileCoverLetter === '1';
+                const jobId = d.jobId,
+                    hasUploadedResumeFile = d.hasUploadedResumeFile === '1',
+                    hasBuilderResume = d.hasBuilderResume === '1',
+                    hasProfileCoverLetter = d.hasProfileCoverLetter === '1';
                 applyBtn.onclick = function () {
                     toggleModal();
-                    openApplyModal(jobId, hasProfileResume, hasProfileCoverLetter);
+                    openApplyModal(jobId, hasUploadedResumeFile, hasBuilderResume, hasProfileCoverLetter);
                 };
                 applyBtn.classList.remove('hidden');
             }

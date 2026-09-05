@@ -23,6 +23,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\PasswordResetTokenController;
 use App\Http\Controllers\ProgramController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SalaryMaxController;
 use App\Http\Controllers\SalaryMinController;
 use App\Http\Controllers\SectionController;
@@ -110,6 +111,7 @@ Route::get('/employer/faqs', [FaqController::class, 'employerFaqs'])->name('empl
 //in session routes
 Route::get('/profile', [UserController::class, 'showProfile'])->name('user.profile');
 Route::post('/user/logout', [UserController::class, 'logout'])->name('user.logout');
+Route::post('/admin/heartbeat', [UserController::class, 'heartbeat'])->name('admin.heartbeat')->middleware('auth');
 
 Route::get('/profile/edit', [UserController::class, 'editProfile'])->name('users.editProfile');
 
@@ -120,7 +122,16 @@ Route::get('/alumni/change-password', function () {
 Route::get('/superAdmin/dashboard', [UserController::class, 'showDashboard'])->name('superAdmin.dashboard')->middleware('auth');
 Route::get('/superAdmin/dashboard/export-csv', [UserController::class, 'exportDashboardReport'])->name('superAdmin.dashboard.exportCsv')->middleware('auth');
 Route::get('/superAdmin/dashboard/export-pdf', [UserController::class, 'exportDashboardReportPdf'])->name('superAdmin.dashboard.exportPdf')->middleware('auth');
+Route::post('/superAdmin/dashboard/export-pdf', [UserController::class, 'exportDashboardReportPdf'])->name('superAdmin.dashboard.exportPdf.post')->middleware('auth');
 Route::get('/superAdmin/profile', [UserController::class, 'showSuperAdminProfile'])->name('superAdmin.profile')->middleware('auth');
+
+// Item 19 (+17) — grouped report-detail pages, gated behind Office::PERMISSIONS['reports'].
+Route::get('/superAdmin/reports/employment', [ReportController::class, 'employment'])->name('reports.employment')->middleware(['auth', 'feature:reports']);
+Route::get('/superAdmin/reports/placement', [ReportController::class, 'placement'])->name('reports.placement')->middleware(['auth', 'feature:reports']);
+Route::get('/superAdmin/reports/companies', [ReportController::class, 'companies'])->name('reports.companies')->middleware(['auth', 'feature:reports']);
+Route::get('/superAdmin/reports/{group}/export-csv', [ReportController::class, 'exportCsv'])->whereIn('group', ['employment', 'placement', 'companies'])->name('reports.exportCsv')->middleware(['auth', 'feature:reports']);
+Route::get('/superAdmin/reports/{group}/export-pdf', [ReportController::class, 'exportPdf'])->whereIn('group', ['employment', 'placement', 'companies'])->name('reports.exportPdf')->middleware(['auth', 'feature:reports']);
+Route::post('/superAdmin/reports/{group}/export-pdf', [ReportController::class, 'exportPdf'])->whereIn('group', ['employment', 'placement', 'companies'])->name('reports.exportPdf.post')->middleware(['auth', 'feature:reports']);
 
 
 Route::get('/admin/dashboard', function () {
@@ -340,7 +351,6 @@ Route::get('/showChangePassword', [UserController::class, 'showChangePassword'])
 Route::put('/changePassword', [UserController::class, 'changePassword'])->name('users.changePassword');
 Route::resource('users', UserController::class);
 
-Route::get('/alumnus/resume', [ResumeBuilderController::class, 'view'])->name('resume.view');
 Route::get('/resume/build', [ResumeBuilderController::class, 'edit'])->name('resume.build');
 Route::post('/resume/save', [ResumeBuilderController::class, 'save'])->name('resume.save');
 Route::get('/resume/pdf', [ResumeBuilderController::class, 'downloadPdf'])->name('resume.pdf');

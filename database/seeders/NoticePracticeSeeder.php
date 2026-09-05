@@ -82,7 +82,7 @@ class NoticePracticeSeeder extends Seeder
                 'event_datetime' => $eventDatetime,
                 'location' => $category !== 'announcement' ? self::LOCATIONS[array_rand(self::LOCATIONS)] : null,
                 'description' => fake()->paragraph(3),
-                'recipient' => fake()->randomElement(['alumni', 'alumni', 'general', 'everyone']),
+                'recipient' => fake()->randomElement(['alumni', 'alumni', 'employer', 'everyone']),
                 'speaker_name' => $category === 'seminar' ? $speaker['name'] : null,
                 'speaker_topic' => $category === 'seminar' ? $speaker['topic'] : null,
                 'created_by' => $creators->random(),

@@ -49,7 +49,7 @@ class ChatTicketController extends Controller
             $waitingTickets->avg(fn (ChatTicket $t) => $t->escalated_at?->diffInMinutes(now()) ?? 0) ?? 0
         );
 
-        $agentsOnline = User::whereIn('user_role', ['admin', 'super_admin'])->where('user_active', true)->count();
+        $agentsOnline = User::whereIn('user_role', ['admin', 'super_admin'])->online()->count();
 
         $pendingFlags = MessageFlag::pending()->with(['message.sender', 'message.receiver'])->latest()->get();
         $allFlags = MessageFlag::with(['message.sender', 'message.receiver', 'reviewer'])->latest()->get();
@@ -111,10 +111,23 @@ class ChatTicketController extends Controller
 
         $faqs = Faq::orderByDesc('created_at')->get();
 
+        // Item 11 — Chatbot History tab: every alumnus who has EVER started a
+        // chatbot conversation, any status (not just currently-open ones),
+        // for staff to browse read-only. No reply capability at all — see
+        // the tab's own thread modal in the view, which renders no input/send/
+        // resolve controls (unlike the Live Agent Queue's thread modal).
+        $chatHistoryAlumni = User::where('user_role', 'alumni')
+            ->whereHas('chatTickets')
+            ->withCount('chatTickets')
+            ->with(['chatTickets' => fn ($q) => $q->latest('ticket_id')])
+            ->orderBy('user_last_name')
+            ->orderBy('user_first_name')
+            ->get();
+
         return view('superAdmin.chatbotMessaging', compact(
             'settings', 'activeAiSessions', 'waitingTickets', 'withAgentTickets',
             'overview', 'aiChatbot', 'liveQueue', 'alumniMessaging', 'reports',
-            'pendingFlags', 'allFlags', 'faqs'
+            'pendingFlags', 'allFlags', 'faqs', 'chatHistoryAlumni'
         ));
     }
 
@@ -125,6 +138,14 @@ class ChatTicketController extends Controller
      * clicking "Assign to me" within the same instant can't both succeed —
      * the status check alone (no lock) would leave a race window where both
      * requests read "waiting_agent" before either had committed its update.
+     *
+     * Also doubles as "take over" — an already with_agent ticket assigned to
+     * a DIFFERENT admin can still be claimed here, reassigning it to
+     * whoever calls this. That's the only way to get a ticket back into a
+     * state where you (the new claimant) can reply to or resolve it — see
+     * reply()/resolve()'s ownership checks below, which is the actual rule
+     * being enforced: you can't act on someone else's assigned ticket
+     * without taking it over first.
      */
     public function claim(ChatTicket $ticket)
     {
@@ -133,9 +154,19 @@ class ChatTicketController extends Controller
         $claimed = DB::transaction(function () use ($ticket) {
             $locked = ChatTicket::where('ticket_id', $ticket->ticket_id)->lockForUpdate()->first();
 
-            if (!$locked || $locked->status !== 'waiting_agent') {
+            if (!$locked || !in_array($locked->status, ['waiting_agent', 'with_agent'], true)) {
                 return null;
             }
+
+            // Already yours — nothing to do, but not an error either.
+            if ($locked->status === 'with_agent' && $locked->office?->user_id === Auth::id()) {
+                return $locked;
+            }
+
+            $isTakeover = $locked->status === 'with_agent';
+            $previousAgentName = $isTakeover
+                ? trim(($locked->office?->user?->user_first_name ?? '') . ' ' . ($locked->office?->user?->user_last_name ?? ''))
+                : null;
 
             $office = Office::firstOrCreate(['user_id' => Auth::id()], ['office_address' => '']);
             $locked->claimBy($office);
@@ -144,14 +175,16 @@ class ChatTicketController extends Controller
                 'ticket_id' => $locked->ticket_id,
                 'sender_type' => 'agent',
                 'sender_id' => Auth::id(),
-                'message' => trim(Auth::user()->user_first_name . ' from the PLV-AlumNet team has joined the chat.'),
+                'message' => $isTakeover
+                    ? trim(Auth::user()->user_first_name . ' from the PLV-AlumNet team has taken over this conversation' . ($previousAgentName ? " from {$previousAgentName}" : '') . '.')
+                    : trim(Auth::user()->user_first_name . ' from the PLV-AlumNet team has joined the chat.'),
             ]);
 
             return $locked;
         });
 
         if (!$claimed) {
-            return response()->json(['error' => 'This ticket was just claimed by someone else.'], 409);
+            return response()->json(['error' => 'This ticket is no longer available to claim.'], 409);
         }
 
         return response()->json(['success' => true, 'ticketId' => $claimed->ticket_id]);
@@ -161,6 +194,7 @@ class ChatTicketController extends Controller
     {
         $this->authorizeStaff();
         abort_unless($ticket->status === 'with_agent', 409, 'This ticket is not currently assigned to an agent.');
+        abort_unless($ticket->office?->user_id === Auth::id(), 403, 'This ticket is assigned to another agent — take it over first if you want to reply.');
 
         $validated = $request->validate(['message' => ['required', 'string', 'max:2000']]);
 
@@ -174,9 +208,24 @@ class ChatTicketController extends Controller
         return back()->with('success', 'Reply sent.');
     }
 
+    /**
+     * A ticket can only be resolved by whoever it's currently assigned to —
+     * not by an admin who never claimed it, and not by a different admin
+     * than the one it's with_agent for. Take the ticket over (see claim()
+     * above) first if you want to be the one who resolves it.
+     */
     public function resolve(ChatTicket $ticket)
     {
         $this->authorizeStaff();
+
+        if ($ticket->status !== 'with_agent' || $ticket->office?->user_id !== Auth::id()) {
+            return response()->json([
+                'error' => $ticket->status === 'with_agent'
+                    ? 'This ticket is assigned to another agent — take it over first if you want to resolve it.'
+                    : 'Claim this ticket before you can mark it resolved.',
+            ], 403);
+        }
+
         $ticket->resolve();
 
         return response()->json(['success' => true]);
@@ -262,6 +311,11 @@ class ChatTicketController extends Controller
                 UserNotification::create([
                     'user_id' => $sender->user_id,
                     'type' => $validated['action'] === 'muted' ? 'message_mute' : 'message_warning',
+                    // The specific conversation the flagged message lives
+                    // in — muting blocks sending, not reading, so the
+                    // sender can still open the thread to see the message
+                    // in context via this deep link.
+                    'reference_id' => $messageFlag->message->conversation_id,
                     'title' => $validated['action'] === 'muted'
                         ? 'Your messaging access has been restricted'
                         : 'You received a warning about a message you sent',
@@ -282,27 +336,20 @@ class ChatTicketController extends Controller
         $validated = $request->validate([
             'ai_chatbot_enabled' => ['sometimes', 'boolean'],
             'live_agent_escalation_enabled' => ['sometimes', 'boolean'],
-            'job_board_queries_enabled' => ['sometimes', 'boolean'],
-            'events_queries_enabled' => ['sometimes', 'boolean'],
-            'general_faq_queries_enabled' => ['sometimes', 'boolean'],
-            'career_advice_queries_enabled' => ['sometimes', 'boolean'],
             'escalate_after_failed_attempts' => ['required', 'integer', 'min:1', 'max:10'],
             'auto_assign_available_agent' => ['sometimes', 'boolean'],
-            'allow_queue_estimation' => ['sometimes', 'boolean'],
             'live_agent_notification' => ['sometimes', 'boolean'],
             'chat_auditing_enabled' => ['sometimes', 'boolean'],
             'money_transfer_detection' => ['sometimes', 'boolean'],
             'personal_info_detection' => ['sometimes', 'boolean'],
             'external_link_detection' => ['sometimes', 'boolean'],
-            'auto_notify_admin_on_flag' => ['sometimes', 'boolean'],
         ]);
 
         $booleanKeys = [
-            'ai_chatbot_enabled', 'live_agent_escalation_enabled', 'job_board_queries_enabled',
-            'events_queries_enabled', 'general_faq_queries_enabled', 'career_advice_queries_enabled',
-            'auto_assign_available_agent', 'allow_queue_estimation', 'live_agent_notification',
+            'ai_chatbot_enabled', 'live_agent_escalation_enabled',
+            'auto_assign_available_agent', 'live_agent_notification',
             'chat_auditing_enabled', 'money_transfer_detection', 'personal_info_detection',
-            'external_link_detection', 'auto_notify_admin_on_flag',
+            'external_link_detection',
         ];
         foreach ($booleanKeys as $key) {
             $validated[$key] = $request->boolean($key);

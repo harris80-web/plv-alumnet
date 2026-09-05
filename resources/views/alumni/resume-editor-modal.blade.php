@@ -14,6 +14,27 @@
             </button>
         </div>
 
+        {{-- ===== Item 23 — Resume import, same drag & drop UI/JS as the wizard's, ported here so re-importing doesn't require switching modals ===== --}}
+        <div class="px-8 md:px-12 pt-4">
+            <div id="editorResumeDropzone" onclick="document.getElementById('editorImportResumeFile').click()"
+                class="p-6 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 hover:bg-gray-100 transition cursor-pointer text-center">
+                <i class="fa-solid fa-cloud-arrow-up text-3xl text-[#C73D1A] mb-2"></i>
+                <p id="editorResumeDropzoneText" class="text-sm font-medium text-gray-500">Drag &amp; drop or upload files
+                    here</p>
+                <input type="file" id="editorImportResumeFile" accept="application/pdf" class="hidden">
+            </div>
+            <p class="text-center text-xs text-gray-500 uppercase tracking-wide mt-3">or</p>
+            <div class="flex flex-wrap items-center justify-center gap-3 mt-3 mb-2">
+                <button type="button" id="editorImportResumeBtn"
+                    class="text-sm font-medium bg-[#0E0F3B] text-white rounded px-4 py-1.5 hover:bg-[#1D46A4] disabled:opacity-50">
+                    Import from PDF
+                </button>
+                <span id="editorImportResumeStatus" class="text-xs text-gray-500"></span>
+            </div>
+        </div>
+
+        <div class="border-t border-gray-200 mx-8 md:mx-12"></div>
+
         <form id="resumeEditorForm" class="p-8 md:p-12 pt-4">
             @csrf
 
@@ -61,6 +82,9 @@
                         <p class="text-xs text-gray-500">Batch {{ $user->alumnus->alumnus_batch->format('Y') }}</p>
                     @endif
                 </div>
+                @if($user->alumnus->program?->collegeName())
+                    <p class="text-xs text-gray-500">{{ $user->alumnus->program->collegeName() }}</p>
+                @endif
                 <p class="text-xs text-gray-500 italic">Pamantasan ng Lungsod ng Valenzuela (PLV)</p>
             </div>
 
@@ -82,6 +106,7 @@
                         <span class="skill-chip flex items-center gap-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full pl-3 pr-1 py-1">
                             <span class="skill-name-display">{{ $skill['name'] }}</span>
                             <input type="hidden" name="skills[{{ $i }}][name]" value="{{ $skill['name'] }}">
+                            <input type="hidden" name="skills[{{ $i }}][category]" value="{{ $skill['category'] ?? 'domain' }}">
                             <button type="button" class="remove-row text-red-700 px-1">&times;</button>
                         </span>
                     @endforeach
@@ -97,12 +122,21 @@
                         @if($exp['type'] === 'work')
                             <div class="experience-row" data-index="{{ $i }}">
                                 <input type="hidden" name="experiences[{{ $i }}][type]" value="work">
-                                <div class="flex justify-between items-baseline gap-2 mb-1">
-                                    <input type="text" name="experiences[{{ $i }}][job_title]" value="{{ $exp['job_title'] }}"
-                                        placeholder="Job title" class="font-semibold text-gray-900 border border-gray-300 rounded px-2 py-1 text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">
-                                    <input type="number" name="experiences[{{ $i }}][duration_months]" value="{{ $exp['duration_months'] }}" min="0" max="600"
-                                        placeholder="Months" class="text-xs text-gray-500 border border-gray-300 rounded px-2 py-1 w-24 text-right focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">
+                                <input type="text" name="experiences[{{ $i }}][job_title]" value="{{ $exp['job_title'] }}"
+                                    placeholder="Job title" class="font-semibold text-gray-900 border border-gray-300 rounded px-2 py-1 text-sm w-full mb-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">
+                                {{-- Item 21 — date range replaces a single "duration in months" input --}}
+                                <div class="flex items-center gap-2 mb-1 text-xs text-gray-500">
+                                    <label>From <input type="date" name="experiences[{{ $i }}][start_date]" value="{{ $exp['start_date'] ?? '' }}"
+                                        class="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]"></label>
+                                    <label>To <input type="date" name="experiences[{{ $i }}][end_date]" value="{{ $exp['end_date'] ?? '' }}"
+                                        {{ ($exp['is_ongoing'] ?? false) ? 'disabled' : '' }}
+                                        class="exp-end-date border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4] disabled:bg-gray-100"></label>
+                                    <label class="flex items-center gap-1">
+                                        <input type="checkbox" class="exp-ongoing-checkbox" name="experiences[{{ $i }}][is_ongoing]" value="1" @checked($exp['is_ongoing'] ?? false)>
+                                        Ongoing
+                                    </label>
                                 </div>
+                                <input type="hidden" name="experiences[{{ $i }}][duration_months]" value="{{ $exp['duration_months'] }}">
                                 <select name="experiences[{{ $i }}][industry_id]"
                                     class="text-xs text-gray-500 italic border border-gray-300 rounded px-2 py-1 mb-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">
                                     <option value="">Industry (optional)</option>
@@ -131,12 +165,21 @@
                         @if($exp['type'] === 'project')
                             <div class="experience-row" data-index="{{ $i }}">
                                 <input type="hidden" name="experiences[{{ $i }}][type]" value="project">
-                                <div class="flex justify-between items-baseline gap-2 mb-1">
-                                    <input type="text" name="experiences[{{ $i }}][job_title]" value="{{ $exp['job_title'] }}"
-                                        placeholder="Project title" class="font-semibold text-gray-900 border border-gray-300 rounded px-2 py-1 text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">
-                                    <input type="number" name="experiences[{{ $i }}][duration_months]" value="{{ $exp['duration_months'] }}" min="0" max="600"
-                                        placeholder="Months" class="text-xs text-gray-500 border border-gray-300 rounded px-2 py-1 w-24 text-right focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">
+                                <input type="text" name="experiences[{{ $i }}][job_title]" value="{{ $exp['job_title'] }}"
+                                    placeholder="Project title" class="font-semibold text-gray-900 border border-gray-300 rounded px-2 py-1 text-sm w-full mb-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">
+                                {{-- Item 21 — date range replaces a single "duration in months" input --}}
+                                <div class="flex items-center gap-2 mb-1 text-xs text-gray-500">
+                                    <label>From <input type="date" name="experiences[{{ $i }}][start_date]" value="{{ $exp['start_date'] ?? '' }}"
+                                        class="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]"></label>
+                                    <label>To <input type="date" name="experiences[{{ $i }}][end_date]" value="{{ $exp['end_date'] ?? '' }}"
+                                        {{ ($exp['is_ongoing'] ?? false) ? 'disabled' : '' }}
+                                        class="exp-end-date border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4] disabled:bg-gray-100"></label>
+                                    <label class="flex items-center gap-1">
+                                        <input type="checkbox" class="exp-ongoing-checkbox" name="experiences[{{ $i }}][is_ongoing]" value="1" @checked($exp['is_ongoing'] ?? false)>
+                                        Ongoing
+                                    </label>
                                 </div>
+                                <input type="hidden" name="experiences[{{ $i }}][duration_months]" value="{{ $exp['duration_months'] }}">
                                 <input type="hidden" name="experiences[{{ $i }}][industry_id]" value="">
                                 <textarea name="experiences[{{ $i }}][job_description]" rows="2" placeholder="What was this project?"
                                     class="w-full text-sm text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">{{ $exp['job_description'] }}</textarea>
@@ -196,10 +239,16 @@
 <template id="editorWorkRowTemplate">
     <div class="experience-row" data-index="__INDEX__">
         <input type="hidden" name="experiences[__INDEX__][type]" value="work">
-        <div class="flex justify-between items-baseline gap-2 mb-1">
-            <input type="text" name="experiences[__INDEX__][job_title]" placeholder="Job title" class="font-semibold text-gray-900 border border-gray-300 rounded px-2 py-1 text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">
-            <input type="number" name="experiences[__INDEX__][duration_months]" min="0" max="600" placeholder="Months" class="text-xs text-gray-500 border border-gray-300 rounded px-2 py-1 w-24 text-right focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">
+        <input type="text" name="experiences[__INDEX__][job_title]" placeholder="Job title" class="font-semibold text-gray-900 border border-gray-300 rounded px-2 py-1 text-sm w-full mb-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">
+        <div class="flex items-center gap-2 mb-1 text-xs text-gray-500">
+            <label>From <input type="date" name="experiences[__INDEX__][start_date]" class="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]"></label>
+            <label>To <input type="date" name="experiences[__INDEX__][end_date]" class="exp-end-date border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4] disabled:bg-gray-100"></label>
+            <label class="flex items-center gap-1">
+                <input type="checkbox" class="exp-ongoing-checkbox" name="experiences[__INDEX__][is_ongoing]" value="1">
+                Ongoing
+            </label>
         </div>
+        <input type="hidden" name="experiences[__INDEX__][duration_months]" value="">
         <select name="experiences[__INDEX__][industry_id]" class="text-xs text-gray-500 italic border border-gray-300 rounded px-2 py-1 mb-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">
             <option value="">Industry (optional)</option>
             @foreach($industries as $industry)
@@ -214,10 +263,16 @@
 <template id="editorProjectRowTemplate">
     <div class="experience-row" data-index="__INDEX__">
         <input type="hidden" name="experiences[__INDEX__][type]" value="project">
-        <div class="flex justify-between items-baseline gap-2 mb-1">
-            <input type="text" name="experiences[__INDEX__][job_title]" placeholder="Project title" class="font-semibold text-gray-900 border border-gray-300 rounded px-2 py-1 text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">
-            <input type="number" name="experiences[__INDEX__][duration_months]" min="0" max="600" placeholder="Months" class="text-xs text-gray-500 border border-gray-300 rounded px-2 py-1 w-24 text-right focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">
+        <input type="text" name="experiences[__INDEX__][job_title]" placeholder="Project title" class="font-semibold text-gray-900 border border-gray-300 rounded px-2 py-1 text-sm w-full mb-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">
+        <div class="flex items-center gap-2 mb-1 text-xs text-gray-500">
+            <label>From <input type="date" name="experiences[__INDEX__][start_date]" class="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]"></label>
+            <label>To <input type="date" name="experiences[__INDEX__][end_date]" class="exp-end-date border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4] disabled:bg-gray-100"></label>
+            <label class="flex items-center gap-1">
+                <input type="checkbox" class="exp-ongoing-checkbox" name="experiences[__INDEX__][is_ongoing]" value="1">
+                Ongoing
+            </label>
         </div>
+        <input type="hidden" name="experiences[__INDEX__][duration_months]" value="">
         <input type="hidden" name="experiences[__INDEX__][industry_id]" value="">
         <textarea name="experiences[__INDEX__][job_description]" rows="2" placeholder="What was this project?" class="w-full text-sm text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]"></textarea>
         <button type="button" class="remove-row text-xs text-red-700 mt-1">Remove</button>
@@ -290,6 +345,15 @@
         }
     });
 
+    // Item 21 — "Ongoing" disables & clears the End date field for that row.
+    form.addEventListener('change', function (e) {
+        if (e.target.classList.contains('exp-ongoing-checkbox')) {
+            var endDateInput = e.target.closest('.experience-row').querySelector('.exp-end-date');
+            endDateInput.disabled = e.target.checked;
+            if (e.target.checked) endDateInput.value = '';
+        }
+    });
+
     /* ---- skill search (same pattern as the resume builder wizard) ---- */
     var skillSearchInput = document.getElementById('editorSkillSearchInput');
     var skillResults = document.getElementById('editorSkillSearchResults');
@@ -318,6 +382,11 @@
             .map(function (el) { return el.textContent.trim().toLowerCase(); });
     }
 
+    // Item 22 — a skill picked from the master list already has a real
+    // category; a brand-new one needs the alumnus to pick one before it's
+    // added, since nothing in the system knows what it is yet.
+    var SKILL_CATEGORIES = @json(\App\Models\Skill::CATEGORIES);
+
     function renderSkillResults(skills, query) {
         skillResults.innerHTML = '';
         var added = alreadyAddedSkillNames();
@@ -331,21 +400,42 @@
             item.className = 'px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer';
             item.textContent = skill.skill_name;
             item.addEventListener('click', function () {
-                addSkillChip(skill.skill_name);
+                addSkillChip(skill.skill_name, skill.skill_category);
                 closeSkillResults();
             });
             skillResults.appendChild(item);
         });
 
         if (!hasExactMatch && added.indexOf(query.toLowerCase()) === -1) {
-            var addNew = document.createElement('div');
-            addNew.className = 'px-3 py-2 text-sm text-[#1D46A4] font-medium hover:bg-blue-50 cursor-pointer border-t border-gray-100';
-            addNew.textContent = '+ Add "' + query + '" as a new skill';
-            addNew.addEventListener('click', function () {
-                addSkillChip(query);
+            var addNewWrap = document.createElement('div');
+            addNewWrap.className = 'px-3 py-2 border-t border-gray-100 flex items-center gap-2 flex-wrap';
+
+            var label = document.createElement('span');
+            label.className = 'text-sm text-[#1D46A4] font-medium';
+            label.textContent = 'Add "' + query + '" as:';
+            addNewWrap.appendChild(label);
+
+            var categorySelect = document.createElement('select');
+            categorySelect.className = 'text-xs border border-gray-300 rounded px-2 py-1';
+            Object.keys(SKILL_CATEGORIES).forEach(function (key) {
+                var opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = SKILL_CATEGORIES[key];
+                categorySelect.appendChild(opt);
+            });
+            addNewWrap.appendChild(categorySelect);
+
+            var addBtn = document.createElement('button');
+            addBtn.type = 'button';
+            addBtn.className = 'text-xs font-bold bg-[#1D46A4] text-white rounded px-3 py-1 hover:bg-[#163a82]';
+            addBtn.textContent = 'Add';
+            addBtn.addEventListener('click', function () {
+                addSkillChip(query, categorySelect.value);
                 closeSkillResults();
             });
-            skillResults.appendChild(addNew);
+            addNewWrap.appendChild(addBtn);
+
+            skillResults.appendChild(addNewWrap);
         }
 
         skillResults.classList.toggle('hidden', skillResults.children.length === 0);
@@ -357,7 +447,7 @@
         skillSearchInput.value = '';
     }
 
-    function addSkillChip(name) {
+    function addSkillChip(name, category) {
         var idx = counters.skills++;
 
         var chip = document.createElement('span');
@@ -372,6 +462,11 @@
         hidden.name = 'skills[' + idx + '][name]';
         hidden.value = name;
 
+        var hiddenCategory = document.createElement('input');
+        hiddenCategory.type = 'hidden';
+        hiddenCategory.name = 'skills[' + idx + '][category]';
+        hiddenCategory.value = category || 'domain';
+
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'remove-row text-red-700 px-1';
@@ -379,6 +474,7 @@
 
         chip.appendChild(span);
         chip.appendChild(hidden);
+        chip.appendChild(hiddenCategory);
         chip.appendChild(btn);
         document.getElementById('editorSkillsList').appendChild(chip);
     }
@@ -431,6 +527,131 @@
             console.error(err);
             statusEl.textContent = '';
             alert('Could not save your resume. Please check your connection and try again.');
+        });
+    });
+
+    /* ---- import: prefill from an uploaded PDF, nothing saved yet (item 23) ---- */
+    function addExperienceRowWithData(exp) {
+        var isWork = exp.type === 'work';
+        addRow(isWork ? 'editorWorkRowTemplate' : 'editorProjectRowTemplate', isWork ? 'editorWorkList' : 'editorProjectList', 'experiences');
+        var list = document.getElementById(isWork ? 'editorWorkList' : 'editorProjectList');
+        var row = list.lastElementChild;
+        row.querySelector('[name$="[job_title]"]').value = exp.job_title || '';
+        row.querySelector('[name$="[job_description]"]').value = exp.job_description || '';
+        if (isWork && exp.industry_id) row.querySelector('[name$="[industry_id]"]').value = exp.industry_id;
+
+        // Item 21 — the PDF parser only ever extracts a duration in months,
+        // never exact dates, so that's carried through via the hidden
+        // fallback field until the alumnus fills in real dates themselves.
+        row.querySelector('[name$="[duration_months]"]').value = exp.duration_months || '';
+        if (exp.start_date) row.querySelector('[name$="[start_date]"]').value = exp.start_date;
+        if (exp.end_date) row.querySelector('[name$="[end_date]"]').value = exp.end_date;
+        if (exp.is_ongoing) {
+            var ongoingBox = row.querySelector('.exp-ongoing-checkbox');
+            ongoingBox.checked = true;
+            ongoingBox.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    function addCertRowWithData(cert) {
+        addRow('editorCertRowTemplate', 'editorCertList', 'certifications');
+        var row = document.getElementById('editorCertList').lastElementChild;
+        row.querySelector('input[value="' + cert.certification_type + '"]').checked = true;
+        row.querySelector('[name$="[certification_name]"]').value = cert.certification_name || '';
+        row.querySelector('[name$="[certification_from]"]').value = cert.certification_from || '';
+        row.querySelector('[name$="[certification_date]"]').value = cert.certification_date || '';
+    }
+
+    var editorImportBtn = document.getElementById('editorImportResumeBtn');
+    var editorImportFile = document.getElementById('editorImportResumeFile');
+    var editorImportStatus = document.getElementById('editorImportResumeStatus');
+    var editorResumeDropzone = document.getElementById('editorResumeDropzone');
+    var editorResumeDropzoneText = document.getElementById('editorResumeDropzoneText');
+
+    function updateEditorResumeDropzoneText() {
+        var has = editorImportFile.files.length > 0;
+        editorResumeDropzoneText.textContent = has ? editorImportFile.files[0].name : 'Drag & drop or upload files here';
+        editorResumeDropzoneText.classList.toggle('text-gray-500', !has);
+        editorResumeDropzoneText.classList.toggle('text-[#0E0F3B]', has);
+        editorResumeDropzoneText.classList.toggle('font-semibold', has);
+    }
+    editorImportFile.addEventListener('change', updateEditorResumeDropzoneText);
+
+    ['dragenter', 'dragover'].forEach(function (ev) {
+        editorResumeDropzone.addEventListener(ev, function (e) {
+            e.preventDefault(); e.stopPropagation();
+            editorResumeDropzone.classList.add('bg-gray-100');
+        });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+        editorResumeDropzone.addEventListener(ev, function (e) {
+            e.preventDefault(); e.stopPropagation();
+            editorResumeDropzone.classList.remove('bg-gray-100');
+        });
+    });
+    editorResumeDropzone.addEventListener('drop', function (e) {
+        if (e.dataTransfer.files.length > 0) {
+            editorImportFile.files = e.dataTransfer.files;
+            updateEditorResumeDropzoneText();
+        }
+    });
+
+    editorImportBtn.addEventListener('click', function () {
+        if (!editorImportFile.files.length) {
+            editorImportStatus.textContent = 'Choose a PDF file first.';
+            return;
+        }
+
+        editorImportBtn.disabled = true;
+        editorImportStatus.textContent = 'Reading your PDF...';
+
+        var formData = new FormData();
+        formData.append('resume_file', editorImportFile.files[0]);
+        formData.append('_token', form.querySelector('input[name="_token"]').value);
+
+        fetch('{{ route('resume.import') }}', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData,
+        })
+        .then(function (res) {
+            return res.json().then(function (data) {
+                if (!res.ok) throw new Error(data.message || 'Import failed');
+                return data;
+            });
+        })
+        .then(function (data) {
+            var summaryEl = form.querySelector('[name="resume_summary"]');
+            if (data.resume_summary) summaryEl.value = data.resume_summary;
+
+            var linkedinInput = form.querySelector('[name="linkedin_url"]');
+            if (data.linkedin_url) linkedinInput.value = data.linkedin_url;
+
+            document.getElementById('editorSkillsList').innerHTML = '';
+            counters.skills = 0;
+            (data.skills || []).forEach(function (s) { addSkillChip(s.name); });
+
+            document.getElementById('editorWorkList').innerHTML = '';
+            document.getElementById('editorProjectList').innerHTML = '';
+            counters.experiences = 0;
+            (data.experiences || []).forEach(addExperienceRowWithData);
+
+            document.getElementById('editorCertList').innerHTML = '';
+            counters.certifications = 0;
+            (data.certifications || []).forEach(addCertRowWithData);
+
+            var found = (data.skills || []).length + (data.experiences || []).length + (data.certifications || []).length;
+            var method = data.parsed_with === 'ai' ? ' (AI-assisted)' : '';
+            editorImportStatus.textContent = found > 0
+                ? 'Imported' + method + ' — review the fields below, then save.'
+                : 'Imported, but couldn\'t find much structured data — please fill in manually.';
+        })
+        .catch(function (err) {
+            console.error(err);
+            editorImportStatus.textContent = err.message || 'Could not read that PDF.';
+        })
+        .finally(function () {
+            editorImportBtn.disabled = false;
         });
     });
 })();

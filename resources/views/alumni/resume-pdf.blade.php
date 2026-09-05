@@ -58,6 +58,16 @@
             margin: 0 4px 4px 0;
             font-size: 10px;
         }
+
+        .skill-category-row { margin-bottom: 4px; }
+        .skill-category-label {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: bold;
+            color: #666666;
+            width: 110px;
+            vertical-align: top;
+        }
     </style>
 </head>
 <body>
@@ -95,17 +105,25 @@
                 <span class="item-date">Batch {{ $alumnus->alumnus_batch->format('Y') }}</span>
             @endif
         </div>
+        @if($alumnus->program?->collegeName())
+            <p class="item-sub">{{ $alumnus->program->collegeName() }}</p>
+        @endif
         <p class="item-sub">Pamantasan ng Lungsod ng Valenzuela (PLV)</p>
     </div>
 
     @if($alumnus->skills->isNotEmpty())
+        @php $skillsByCategory = $alumnus->skills->groupBy('skill_category'); @endphp
         <div class="section">
             <h2>Skills</h2>
-            <div>
-                @foreach($alumnus->skills as $skill)
-                    <span class="skill">{{ $skill->skill_name }}</span>
-                @endforeach
-            </div>
+            @foreach(\App\Models\Skill::CATEGORIES as $categoryKey => $categoryLabel)
+                @continue($skillsByCategory->get($categoryKey, collect())->isEmpty())
+                <div class="skill-category-row">
+                    <span class="skill-category-label">{{ $categoryLabel }}</span>
+                    @foreach($skillsByCategory[$categoryKey] as $skill)
+                        <span class="skill">{{ $skill->skill_name }}</span>
+                    @endforeach
+                </div>
+            @endforeach
         </div>
     @endif
 
@@ -116,7 +134,9 @@
                 <div class="item">
                     <div class="row">
                         <span class="item-title">{{ $exp->experience_job_title }}</span>
-                        @if(\App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months))
+                        @if($exp->dateRangeLabel())
+                            <span class="item-date">{{ $exp->dateRangeLabel() }}@if(\App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months)) ({{ \App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months) }})@endif</span>
+                        @elseif(\App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months))
                             <span class="item-date">{{ \App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months) }}</span>
                         @endif
                     </div>
@@ -138,7 +158,9 @@
                 <div class="item">
                     <div class="row">
                         <span class="item-title">{{ $exp->experience_job_title }}</span>
-                        @if(\App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months))
+                        @if($exp->dateRangeLabel())
+                            <span class="item-date">{{ $exp->dateRangeLabel() }}@if(\App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months)) ({{ \App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months) }})@endif</span>
+                        @elseif(\App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months))
                             <span class="item-date">{{ \App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months) }}</span>
                         @endif
                     </div>

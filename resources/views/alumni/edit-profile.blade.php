@@ -127,12 +127,20 @@
                         </div>
                     </div>
 
-                    {{-- Row 3: Program alone, full width --}}
-                    <div class="min-w-0">
-                        <p class="text-xs font-bold text-orange-600 uppercase">Program</p>
-                        <h3 class="text-sm font-semibold text-[#0E0F3B] uppercase truncate"
-                            title="{{ $user->alumnus->program->program_name ?? 'Not specified' }}">
-                            {{ $user->alumnus->program->program_name ?? 'Not specified' }}</h3>
+                    {{-- Row 3: Program and College --}}
+                    <div class="grid grid-cols-2 gap-y-4 gap-x-4">
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-orange-600 uppercase">Program</p>
+                            <h3 class="text-sm font-semibold text-[#0E0F3B] uppercase truncate"
+                                title="{{ $user->alumnus->program->program_name ?? 'Not specified' }}">
+                                {{ $user->alumnus->program->program_name ?? 'Not specified' }}</h3>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-orange-600 uppercase">College</p>
+                            <h3 class="text-sm font-semibold text-[#0E0F3B] uppercase truncate"
+                                title="{{ $user->alumnus->program?->collegeName() ?? 'Not specified' }}">
+                                {{ $user->alumnus->program?->collegeName() ?? 'Not specified' }}</h3>
+                        </div>
                     </div>
                 </div>
             </div>

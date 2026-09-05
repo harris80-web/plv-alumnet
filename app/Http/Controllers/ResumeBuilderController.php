@@ -156,11 +156,19 @@ class ResumeBuilderController extends Controller
 
             'skills' => ['array'],
             'skills.*.name' => ['required_with:skills', 'string', 'max:100'],
+            'skills.*.category' => ['nullable', 'in:' . implode(',', array_keys(Skill::CATEGORIES))],
 
             'experiences' => ['array'],
             'experiences.*.type' => ['required_with:experiences', 'in:work,project'],
             'experiences.*.job_title' => ['required_with:experiences', 'string', 'max:150'],
             'experiences.*.job_description' => ['nullable', 'string', 'max:2000'],
+            // Item 21 — start/end date range is now the primary input; a
+            // bare duration_months (no dates) still validates on its own so
+            // PDF-imported experiences (the parser only extracts a duration,
+            // not exact dates) keep working — see computeExperienceDuration().
+            'experiences.*.start_date' => ['nullable', 'date'],
+            'experiences.*.end_date' => ['nullable', 'date', 'after_or_equal:experiences.*.start_date'],
+            'experiences.*.is_ongoing' => ['nullable', 'boolean'],
             'experiences.*.duration_months' => ['nullable', 'integer', 'min:0', 'max:600'],
             'experiences.*.industry_id' => ['nullable', 'exists:industries,industry_id'],
 
@@ -180,29 +188,39 @@ class ResumeBuilderController extends Controller
             $alumnus->save();
 
             // ---- Skills: find-or-create by name, then sync the pivot ----
-            $skillIds = collect($validated['skills'] ?? [])
-                ->pluck('name')
-                ->filter()
-                ->map(fn ($name) => trim($name))
-                ->unique()
-                ->map(function ($name) {
-                    $skill = Skill::firstOrCreate(
-                        ['skill_name' => $name],
-                        ['skill_category' => 'domain'] // safe default; admin can recategorize later
-                    );
-                    return $skill->skill_id;
-                });
+            // Item 22: a category submitted alongside a NEW skill name is
+            // used as that skill's category at creation time; firstOrCreate's
+            // second array is ignored when the row already exists, so an
+            // already-categorized skill picked from search keeps its real
+            // category regardless of what the client happened to send.
+            $skillsByName = collect($validated['skills'] ?? [])
+                ->filter(fn ($s) => filled($s['name'] ?? null))
+                ->unique(fn ($s) => mb_strtolower(trim($s['name'])));
+
+            $skillIds = $skillsByName->map(function ($s) {
+                $skill = Skill::firstOrCreate(
+                    ['skill_name' => trim($s['name'])],
+                    ['skill_category' => $s['category'] ?? 'domain']
+                );
+                return $skill->skill_id;
+            });
 
             $alumnus->skills()->sync($skillIds);
 
             // ---- Experience & projects: replace wholesale ----
             $alumnus->experiences()->delete();
             foreach ($validated['experiences'] ?? [] as $exp) {
+                $startDate = $exp['start_date'] ?? null ?: null;
+                $isOngoing = filter_var($exp['is_ongoing'] ?? false, FILTER_VALIDATE_BOOLEAN);
+                $endDate = ($startDate && !$isOngoing) ? ($exp['end_date'] ?? null ?: null) : null;
+
                 Experience::create([
                     'alumnus_id' => $alumnus->user_id,
                     'experience_type' => $exp['type'],
                     'experience_job_title' => $exp['job_title'],
                     'experience_job_description' => $exp['job_description'] ?? null,
+                    'experience_start_date' => $startDate,
+                    'experience_end_date' => $endDate,
                     // Use ?: (not ??) here: these fields are always present
                     // in the submitted array, just possibly empty strings
                     // when left blank in the form. ?? only catches a missing
@@ -211,8 +229,16 @@ class ResumeBuilderController extends Controller
                     // still violates the column — fall back to 0 instead.
                     // `industry_id` is a nullable FK, so null is the correct
                     // "not specified" value there.
-                    'experience_duration_months' => $exp['duration_months'] ?: 0,
-                    'industry_id' => $exp['industry_id'] ?: null,
+                    //
+                    // Item 21 — auto-derived from the date range whenever a
+                    // start date is given (the normal path now); falls back
+                    // to a bare submitted duration_months for rows that only
+                    // ever had one (e.g. still-unedited PDF-imported
+                    // experiences, since the parser doesn't extract dates).
+                    'experience_duration_months' => $startDate
+                        ? $this->computeExperienceDurationMonths($startDate, $endDate)
+                        : (($exp['duration_months'] ?? null) ?: 0),
+                    'industry_id' => ($exp['industry_id'] ?? null) ?: null,
                 ]);
             }
 
@@ -223,8 +249,8 @@ class ResumeBuilderController extends Controller
                     'alumnus_id' => $alumnus->user_id,
                     'certification_type' => $cert['certification_type'],
                     'certification_name' => $cert['certification_name'],
-                    'certification_from' => $cert['certification_from'] ?: null,
-                    'certification_date' => $cert['certification_date'] ?: null,
+                    'certification_from' => ($cert['certification_from'] ?? null) ?: null,
+                    'certification_date' => ($cert['certification_date'] ?? null) ?: null,
                 ]);
             }
 
@@ -246,5 +272,14 @@ class ResumeBuilderController extends Controller
             'resume_completeness' => $alumnus->alumnus_resume_completeness,
             'breakdown' => $alumnus->completenessBreakdown(),
         ]);
+    }
+
+    /** Item 21 — whole months between a start date and an end date (or today, if still ongoing). */
+    private function computeExperienceDurationMonths(string $startDate, ?string $endDate): int
+    {
+        $start = \Carbon\Carbon::parse($startDate);
+        $end = $endDate ? \Carbon\Carbon::parse($endDate) : now();
+
+        return max(0, (int) $start->diffInMonths($end));
     }
 }

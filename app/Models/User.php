@@ -36,12 +36,29 @@ class User extends Authenticatable
         'user_role',
         'user_muted',
         'must_change_password',
+        'last_active_at',
     ];
 
     protected $casts = [
         'user_muted' => 'boolean',
         'must_change_password' => 'boolean',
+        'last_active_at' => 'datetime',
     ];
+
+    /** How stale last_active_at can be before this user no longer counts as "online". */
+    public const ONLINE_WITHIN_MINUTES = 2;
+
+    /** Genuine presence, driven by the admin-area heartbeat ping — not the static user_active flag. */
+    public function isOnline(): bool
+    {
+        return $this->last_active_at !== null
+            && $this->last_active_at->gt(now()->subMinutes(self::ONLINE_WITHIN_MINUTES));
+    }
+
+    public function scopeOnline($query)
+    {
+        return $query->where('last_active_at', '>=', now()->subMinutes(self::ONLINE_WITHIN_MINUTES));
+    }
 
     public function alumnus()
     {

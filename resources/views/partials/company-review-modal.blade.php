@@ -1,12 +1,15 @@
 {{--
-    Shared "leave a review" modal used by the company up/down vote buttons on
-    job cards (see partials/job-post-card.blade.php). A bare vote click
-    (upvote/downvote button) posts to employerReviews.vote with no
-    review_body — if that click set/switched an active vote (as opposed to
-    toggling it off), this modal opens so the alumnus can optionally attach
-    a written review to the vote they just cast. One instance serves every
-    card on the page; which employer/vote it's currently acting on is
-    tracked in crmEmployerId/crmVoteType.
+    Shared "leave a review" modal — used by two independent triggers on a
+    job card (see partials/job-post-card.blade.php): the up/down vote
+    buttons and the 5-star rating picker. A bare vote click no longer opens
+    this modal (see castCompanyVote() — voting stays a one-click action);
+    picking a star always does, since a rating is the deliberate "I want to
+    say something about this company" action now. Vote and rating are two
+    independent fields on the same EmployerReview row — see that model's
+    class doc — so this one modal/one endpoint (employerReviews.vote)
+    happily carries either, both, or just a review-text update. Which
+    employer/kind/value it's currently acting on is tracked in
+    crmEmployerId/crmKind/crmValue.
 --}}
 <div id="companyReviewModal" class="fixed inset-0 z-[120] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 relative">
@@ -36,7 +39,8 @@
     const COMPANY_VOTE_BASE_URL = @js(url('/companies'));
 
     let crmEmployerId = null;
-    let crmVoteType = null;
+    let crmKind = null;   // 'vote' | 'rating' — which field this modal instance is currently updating
+    let crmValue = null;  // the vote string or the 1-5 rating number
 
     function companyVoteCsrfToken() {
         return document.querySelector('#crm-form input[name="_token"]').value;
@@ -58,12 +62,37 @@
         })
             .then(function (res) { return res.json(); })
             .then(function (data) {
+                // Lightweight — a bare thumbs up/down click just updates the
+                // counts in place. It no longer pops the review-message
+                // modal; that's only reachable via the star-rating picker
+                // now, so voting itself stays a one-click, no-prompt action.
                 updateCompanyVoteUI(employerId, data);
-                if (data.myVote === voteType) {
-                    openCompanyReviewModal(employerId, voteType, data.reviewBody);
-                }
             })
             .finally(function () { btn.disabled = false; });
+    }
+
+    function castCompanyRating(btn) {
+        const wrap = btn.closest('.star-rating');
+        const employerId = wrap.dataset.employerId;
+        const rating = parseInt(btn.dataset.star, 10);
+
+        fetch(COMPANY_VOTE_BASE_URL + '/' + employerId + '/vote', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': companyVoteCsrfToken(),
+            },
+            body: 'rating=' + encodeURIComponent(rating),
+        })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                updateCompanyVoteUI(employerId, data);
+                // Picking a star is the deliberate "I want to say
+                // something" action — always offer the review box,
+                // unlike a bare vote click.
+                openCompanyReviewModal(employerId, 'rating', rating, data.reviewBody);
+            });
     }
 
     function updateCompanyVoteUI(employerId, data) {
@@ -91,17 +120,40 @@
             }
         });
 
+        document.querySelectorAll('.star-rating[data-employer-id="' + employerId + '"]').forEach(function (wrap) {
+            const myRating = data.myRating || 0;
+            wrap.dataset.myRating = myRating;
+            wrap.querySelectorAll('.star-btn').forEach(function (starBtn) {
+                const filled = parseInt(starBtn.dataset.star, 10) <= myRating;
+                starBtn.classList.toggle('text-[#ED7A07]', filled);
+                starBtn.classList.toggle('text-gray-300', !filled);
+            });
+
+            let avgLabel = wrap.querySelector('.star-avg-label');
+            if (data.ratingCount > 0) {
+                if (!avgLabel) {
+                    avgLabel = document.createElement('span');
+                    avgLabel.className = 'star-avg-label text-[10px] text-gray-400 ml-1';
+                    wrap.appendChild(avgLabel);
+                }
+                avgLabel.textContent = data.averageRating;
+            } else if (avgLabel) {
+                avgLabel.remove();
+            }
+        });
+
         document.querySelectorAll('.reviews-link[data-employer-id="' + employerId + '"] .reviews-count').forEach(function (el) {
-            el.textContent = data.upvotes + data.downvotes;
+            el.textContent = data.ratingCount;
         });
     }
 
-    function openCompanyReviewModal(employerId, voteType, existingBody) {
+    function openCompanyReviewModal(employerId, kind, value, existingBody) {
         crmEmployerId = employerId;
-        crmVoteType = voteType;
-        document.getElementById('crm-title').textContent = voteType === 'upvote'
-            ? 'Thanks for the upvote! Want to add a review?'
-            : 'Thanks for the feedback — want to explain why?';
+        crmKind = kind;
+        crmValue = value;
+        document.getElementById('crm-title').textContent = kind === 'rating'
+            ? `Thanks for the ${value}-star rating! Want to add a review?`
+            : (value === 'upvote' ? 'Thanks for the upvote! Want to add a review?' : 'Thanks for the feedback — want to explain why?');
         document.getElementById('crm-review-body').value = existingBody || '';
         document.getElementById('companyReviewModal').classList.remove('hidden');
         document.body.style.overflow = 'hidden';
@@ -118,6 +170,7 @@
         const submitBtn = e.target.querySelector('button[type="submit"]');
         submitBtn.disabled = true;
 
+        const field = crmKind === 'rating' ? 'rating' : 'vote';
         fetch(COMPANY_VOTE_BASE_URL + '/' + crmEmployerId + '/vote', {
             method: 'POST',
             headers: {
@@ -125,7 +178,7 @@
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': companyVoteCsrfToken(),
             },
-            body: 'vote=' + encodeURIComponent(crmVoteType) + '&review_body=' + encodeURIComponent(body),
+            body: field + '=' + encodeURIComponent(crmValue) + '&review_body=' + encodeURIComponent(body),
         })
             .then(function (res) { return res.json(); })
             .then(function (data) {

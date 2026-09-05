@@ -113,8 +113,8 @@ class TestimonialController extends Controller
 
         // Create a new testimonial record in the database
         try {
-            DB::transaction(function () use ($validatedData, $id) {
-                Testimonial::create([
+            $testimonial = DB::transaction(function () use ($validatedData, $id) {
+                return Testimonial::create([
                     'testimonial_body' => $validatedData['testimonial_body'],
                     'user_id' => $id,
                     'testimonial_post' => false,
@@ -125,13 +125,13 @@ class TestimonialController extends Controller
         }
         $testimonials = Testimonial::all();
 
-        $this->notifyStaffOfNewTestimonial($id);
+        $this->notifyStaffOfNewTestimonial($id, $testimonial->testimonial_id);
 
         // Redirect back with a success message
         return redirect()->route('users.dashboardRedirect', compact('testimonials'))->with('success', 'Your testimonial has been submitted successfully!');
     }
 
-    private function notifyStaffOfNewTestimonial($submitterId): void
+    private function notifyStaffOfNewTestimonial($submitterId, $testimonialId): void
     {
         $submitter = User::find($submitterId);
         $recipientIds = User::whereIn('user_role', ['admin', 'super_admin'])->pluck('user_id');
@@ -144,6 +144,7 @@ class TestimonialController extends Controller
         $rows = $recipientIds->map(fn ($userId) => [
             'user_id' => $userId,
             'type' => 'testimonial_submitted',
+            'reference_id' => $testimonialId,
             'title' => 'New testimonial submitted',
             'body' => "{$submitterName} submitted a testimonial awaiting review.",
             'created_at' => $now,

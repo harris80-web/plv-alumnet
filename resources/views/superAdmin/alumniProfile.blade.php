@@ -59,6 +59,7 @@
                             {{ trim($user->user_first_name . ' ' . $user->user_middle_name . ' ' . $user->user_last_name . ' ' . $user->user_suffix) }}
                         </h2>
                         <p class="text-sm text-slate-500">{{ $alumnus->program->program_name ?? 'Program not set' }}</p>
+                        <p class="text-xs text-slate-400">{{ $alumnus->program?->collegeName() ?? 'College not set' }}</p>
                         {{-- Section — hidden per request, not important; keep markup for easy restore.
                         <p class="text-xs text-slate-400 mt-1">Batch {{ optional($alumnus->alumnus_batch)->format('Y') }} &middot; {{ $alumnus->section->section_name ?? 'N/A' }}</p>
                         --}}

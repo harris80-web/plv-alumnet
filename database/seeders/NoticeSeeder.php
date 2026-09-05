@@ -68,7 +68,7 @@ class NoticeSeeder extends Seeder
                 'event_datetime' => Carbon::now()->addDays(21)->setTime(14, 0),
                 'location' => 'Room 204, Main Building',
                 'description' => 'Practical budgeting, saving, and investing basics for young professionals just starting their careers.',
-                'recipient' => 'general',
+                'recipient' => 'employer',
                 'speaker_name' => 'Mr. Carlos Bautista',
                 'speaker_topic' => 'Budgeting and Saving for Young Professionals',
                 'interest' => 6,

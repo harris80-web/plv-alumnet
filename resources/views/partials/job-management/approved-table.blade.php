@@ -101,6 +101,7 @@
                                 ];
                             @endphp
                             <button onclick='openViewModal({{ $j->job_posting_id }}, @json($viewModalData))'
+                                data-job-id="{{ $j->job_posting_id }}"
                                 class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50">
                                 <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View
                             </button>

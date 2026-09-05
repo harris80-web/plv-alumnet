@@ -173,6 +173,8 @@ class EmployerController extends Controller
             'employer_company_size' => 'nullable|string',
             'employer_website_url' => 'nullable|url',
             'industry_id' => 'nullable|exists:industries,industry_id',
+            'addresses' => ['nullable', 'array'],
+            'addresses.*' => ['nullable', 'string', 'max:255'],
         ]);
 
         // Update the user's profile information
@@ -227,6 +229,23 @@ class EmployerController extends Controller
                     $employer->update([
                         'employer_company_logo' => $companyLogo,
                     ]);
+                }
+
+                // Company addresses — replaced wholesale, same pattern as the
+                // resume builder's experience/certification rows. Safe here
+                // since job postings store the address as a plain string at
+                // posting time (not a foreign key), so deleting/recreating
+                // these rows never orphans anything.
+                if (array_key_exists('addresses', $validated)) {
+                    $employer->addresses()->delete();
+                    $addresses = collect($validated['addresses'])
+                        ->map(fn ($a) => trim((string) $a))
+                        ->filter()
+                        ->unique()
+                        ->values();
+                    foreach ($addresses as $address) {
+                        $employer->addresses()->create(['address' => $address]);
+                    }
                 }
             });
         } catch (\Exception $e) {

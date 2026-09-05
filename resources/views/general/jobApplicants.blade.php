@@ -148,6 +148,18 @@
 
     tbody tr { transition: background 0.12s; }
     tbody tr:hover { background: #f0f4ff; }
+
+    /* Flashed on a row right after its status just changed (see the
+       updatedApplicationIds flash + the DOMContentLoaded handler below),
+       so the employer can immediately spot who changed and to what without
+       hunting through a long, possibly-scrolled applicant list. */
+    tbody tr.status-just-updated {
+        animation: statusJustUpdatedFade 2.5s ease-out forwards;
+    }
+    @keyframes statusJustUpdatedFade {
+        0% { background: #bbf7d0; }
+        100% { background: transparent; }
+    }
     ::-webkit-scrollbar { display: none; }
 </style>
 
@@ -333,10 +345,9 @@
                             </th>
                             <th class="px-6 py-3 text-center font-semibold w-12">#</th>
                             <th data-sort class="px-6 py-3 text-center font-semibold">Applicant Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                            <th data-sort class="px-6 py-3 text-center font-semibold">Program <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                            <th data-sort class="px-6 py-3 text-center font-semibold">Compatibility <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                            <th class="px-6 py-3 text-center font-semibold">Resume</th>
-                            <th class="px-6 py-3 text-center font-semibold">Cover Letter</th>
+                            {{-- Status + Application are pinned right after the name — the two
+                                 things an employer checks most — so they're visible without
+                                 having to scroll this wide table horizontally. --}}
                             <th class="px-6 py-3 text-center font-semibold">
                                 <div class="relative inline-block">
                                     <button onclick="toggleStatusFilter(this)" class="flex items-center gap-1 mx-auto hover:text-yellow-300 transition-colors">
@@ -351,6 +362,11 @@
                                     </div>
                                 </div>
                             </th>
+                            <th class="px-6 py-3 text-center font-semibold">Application</th>
+                            <th data-sort class="px-6 py-3 text-center font-semibold">Program <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                            <th data-sort class="px-6 py-3 text-center font-semibold">College <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                            <th data-sort class="px-6 py-3 text-center font-semibold">Compatibility <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                            <th class="px-6 py-3 text-center font-semibold">Cover Letter</th>
                             <th class="px-6 py-3 text-center font-semibold">Actions</th>
                         </tr>
                     </thead>
@@ -366,7 +382,7 @@
                                 default       => 'badge-pending',
                             };
                         @endphp
-                        <tr data-id="{{ $index + 1 }}" data-status="{{ $status }}">
+                        <tr data-id="{{ $index + 1 }}" data-status="{{ $status }}" data-application-id="{{ $applicant->pivot->application_id }}">
                             <td class="px-4 py-4 text-center">
                                 @if(in_array(strtolower($status), ['pending', 'shortlisted']))
                                 <input type="checkbox" class="applicant-checkbox w-4 h-4 accent-[#1D264F] cursor-pointer"
@@ -386,8 +402,86 @@
                                 </div>
                             </td>
 
+                            @php
+                                // Which resume this specific application actually used — a
+                                // one-off upload for this job (resume_source=upload) takes
+                                // priority; otherwise "profile" resolves live to whatever's
+                                // currently on the alumnus's account (an uploaded resume
+                                // file if they have one, else the Resume Builder PDF), same
+                                // pattern ResumeBuilderController::viewApplicantResume()
+                                // already uses.
+                                // 'builder' has no single downloadable URL — it's the
+                                // JSON snapshot captured at apply time (see
+                                // JobApplicationController::applyJob()), rendered
+                                // inline inside the View Application modal instead
+                                // of linked out to, since it's not a file.
+                                $resumeUrl = null;
+                                $isBuilderResume = $applicant->pivot->resume_source === 'builder';
+                                if ($applicant->pivot->resume_source === 'upload' && $applicant->pivot->resume_path) {
+                                    $resumeUrl = asset('storage/' . $applicant->pivot->resume_path);
+                                } elseif ($isBuilderResume) {
+                                    // handled below via the View Application modal
+                                } elseif ($applicant->alumnus_resume_file_path) {
+                                    $resumeUrl = asset('storage/' . $applicant->alumnus_resume_file_path);
+                                } elseif (($applicant->alumnus_resume_completeness ?? 0) > 0) {
+                                    $resumeUrl = route('resume.viewApplicant', $applicant->user_id);
+                                }
+
+                                $coverLetterUrl = null;
+                                if ($applicant->pivot->cover_letter_source === 'upload' && $applicant->pivot->cover_letter_path) {
+                                    $coverLetterUrl = asset('storage/' . $applicant->pivot->cover_letter_path);
+                                } elseif ($applicant->pivot->cover_letter_source === 'profile' && $applicant->alumnus_cover_letter_file_path) {
+                                    $coverLetterUrl = asset('storage/' . $applicant->alumnus_cover_letter_file_path);
+                                }
+
+                                $resumeSourceLabels = ['profile' => 'Uploaded profile resume', 'upload' => 'Uploaded just for this job', 'builder' => 'Resume Builder profile'];
+                                $coverLetterSourceLabels = ['none' => "Didn't include one", 'profile' => 'Saved cover letter', 'upload' => 'Uploaded just for this job'];
+
+                                $applicationData = [
+                                    'applicantName' => trim($applicant->user->user_first_name . ' ' . $applicant->user->user_last_name),
+                                    'applicantEmail' => $applicant->user->user_email,
+                                    'applicantContact' => $applicant->user->user_number,
+                                    'applicantPhoto' => $applicant->user->user_profile_picture ? asset('storage/' . $applicant->user->user_profile_picture) : null,
+                                    'appliedAt' => optional($applicant->pivot->application_date ?? $applicant->pivot->created_at)->format('M d, Y h:i A'),
+                                    'status' => ucfirst($status),
+                                    'score' => $applicant->pivot->application_score !== null ? $applicant->pivot->application_score . '%' : null,
+                                    'resumeSourceLabel' => $resumeSourceLabels[$applicant->pivot->resume_source] ?? $applicant->pivot->resume_source,
+                                    'resumeUrl' => $resumeUrl,
+                                    'isBuilderResume' => $isBuilderResume,
+                                    // Cast on the pivot didn't stick (belongsToMany's
+                                    // withCasts() didn't take here) — decode explicitly
+                                    // rather than passing the raw JSON string through.
+                                    'builderSnapshot' => $isBuilderResume
+                                        ? (is_array($applicant->pivot->builder_resume_snapshot)
+                                            ? $applicant->pivot->builder_resume_snapshot
+                                            : json_decode($applicant->pivot->builder_resume_snapshot ?? '', true))
+                                        : null,
+                                    'coverLetterSourceLabel' => $coverLetterSourceLabels[$applicant->pivot->cover_letter_source ?? 'none'] ?? $applicant->pivot->cover_letter_source,
+                                    'coverLetterUrl' => $coverLetterUrl,
+                                ];
+                            @endphp
+
+                            <td class="px-6 py-4 text-center">
+                                <span class="badge {{ $badgeClass }} status-badge">{{ ucfirst($status) }}</span>
+                            </td>
+
+                            <td class="px-6 py-4 text-center" data-application-id="{{ $applicant->pivot->application_id }}">
+                                {{-- Item: resumes are no longer a separate column — the resume
+                                     (file link or Resume Builder snapshot), cover letter, status,
+                                     and score are ALL shown in this one modal, since that's
+                                     everything the alumnus actually submitted when applying. --}}
+                                <button type="button" onclick='openApplicationViewModal(@json($applicationData))'
+                                    class="border-2 border-[#1D264F] text-[#1D264F] hover:bg-[#1D264F] hover:text-white text-xs font-bold px-4 py-1.5 rounded-md transition-colors">
+                                    <i class="fas fa-eye mr-1"></i> View Application
+                                </button>
+                            </td>
+
                             <td class="px-6 py-4 text-center text-gray-500 text-xs">
                                 {{ $applicant->program->program_name }}
+                            </td>
+
+                            <td class="px-6 py-4 text-center text-gray-500 text-xs">
+                                {{ $applicant->program?->collegeName() ?? 'N/A' }}
                             </td>
 
                             <td class="px-6 py-4 text-center">
@@ -410,42 +504,6 @@
                                 </div>
                             </td>
 
-                            @php
-                                // Which resume this specific application actually used — a
-                                // one-off upload for this job (resume_source=upload) takes
-                                // priority; otherwise "profile" resolves live to whatever's
-                                // currently on the alumnus's account (an uploaded resume
-                                // file if they have one, else the Resume Builder PDF), same
-                                // pattern ResumeBuilderController::viewApplicantResume()
-                                // already uses.
-                                $resumeUrl = null;
-                                if ($applicant->pivot->resume_source === 'upload' && $applicant->pivot->resume_path) {
-                                    $resumeUrl = asset('storage/' . $applicant->pivot->resume_path);
-                                } elseif ($applicant->alumnus_resume_file_path) {
-                                    $resumeUrl = asset('storage/' . $applicant->alumnus_resume_file_path);
-                                } elseif (($applicant->alumnus_resume_completeness ?? 0) > 0) {
-                                    $resumeUrl = route('resume.viewApplicant', $applicant->user_id);
-                                }
-
-                                $coverLetterUrl = null;
-                                if ($applicant->pivot->cover_letter_source === 'upload' && $applicant->pivot->cover_letter_path) {
-                                    $coverLetterUrl = asset('storage/' . $applicant->pivot->cover_letter_path);
-                                } elseif ($applicant->pivot->cover_letter_source === 'profile' && $applicant->alumnus_cover_letter_file_path) {
-                                    $coverLetterUrl = asset('storage/' . $applicant->alumnus_cover_letter_file_path);
-                                }
-                            @endphp
-
-                            <td class="px-6 py-4 text-center">
-                                @if ($resumeUrl)
-                                <a href="{{ $resumeUrl }}" target="_blank"
-                                    class="bg-[#1D264F] hover:bg-[#0E0F3B] text-white text-xs font-bold px-4 py-1.5 rounded-md transition-colors inline-block">
-                                    View Resume
-                                </a>
-                                @else
-                                <span class="text-gray-400 text-xs">No resume</span>
-                                @endif
-                            </td>
-
                             <td class="px-6 py-4 text-center">
                                 @if ($coverLetterUrl)
                                 <a href="{{ $coverLetterUrl }}" target="_blank"
@@ -455,10 +513,6 @@
                                 @else
                                 <span class="text-gray-400 text-xs">N/A</span>
                                 @endif
-                            </td>
-
-                            <td class="px-6 py-4 text-center">
-                                <span class="badge {{ $badgeClass }} status-badge">{{ ucfirst($status) }}</span>
                             </td>
 
                             <td class="px-6 py-4 text-center">
@@ -498,7 +552,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="py-16 text-center text-gray-400">
+                            <td colspan="10" class="py-16 text-center text-gray-400">
                                 <i class="fas fa-inbox text-5xl mb-3 block"></i>
                                 <p class="font-semibold">No applicants yet.</p>
                             </td>
@@ -573,6 +627,60 @@
         </div>
     </div>
 
+    {{-- "View Application" modal — everything the alumnus submitted when
+         applying (see $applicationData built above per row). Files (an
+         uploaded resume/cover letter, or the alumnus's saved profile file)
+         just show as a link; a Resume Builder-sourced application instead
+         renders its captured snapshot inline, since that's JSON, not a file. --}}
+    <div id="applicationViewModal" class="fixed inset-0 z-[110] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl relative max-h-[90vh] overflow-y-auto my-8 p-8">
+            <button onclick="closeApplicationViewModal()" class="absolute top-6 right-6 text-gray-300 hover:text-gray-500 transition-colors">
+                <i class="fas fa-times-circle text-2xl"></i>
+            </button>
+
+            <h2 class="text-2xl font-bold text-[#1D264F] mb-4">Application Details</h2>
+
+            {{-- Applicant identity — photo, name, email, contact number, all in one place --}}
+            <div class="flex items-center gap-4 bg-gray-50 rounded-2xl p-4 mb-6">
+                <img id="avm-photo" src="" class="hidden w-16 h-16 rounded-full object-cover border-2 border-white shadow">
+                <div id="avm-photo-fallback" class="w-16 h-16 rounded-full bg-[#1D264F] text-white flex items-center justify-center text-lg font-bold shrink-0"></div>
+                <div class="min-w-0">
+                    <p id="avm-name" class="font-bold text-[#0E0F3B] text-lg truncate"></p>
+                    <p class="text-xs text-gray-500 flex items-center gap-1 mt-0.5"><i class="fas fa-envelope text-[#1D46A4]"></i> <span id="avm-email"></span></p>
+                    <p class="text-xs text-gray-500 flex items-center gap-1 mt-0.5"><i class="fas fa-phone text-[#1D46A4]"></i> <span id="avm-contact"></span></p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <div class="bg-gray-50 rounded-xl p-3 text-center">
+                    <p class="text-[10px] text-gray-400 uppercase font-bold">Status</p>
+                    <p id="avm-status" class="text-sm font-bold text-[#0E0F3B] mt-1"></p>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-3 text-center">
+                    <p class="text-[10px] text-gray-400 uppercase font-bold">Compatibility</p>
+                    <p id="avm-score" class="text-sm font-bold text-[#0E0F3B] mt-1"></p>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-3 text-center">
+                    <p class="text-[10px] text-gray-400 uppercase font-bold">Applied</p>
+                    <p id="avm-applied-at" class="text-sm font-bold text-[#0E0F3B] mt-1"></p>
+                </div>
+            </div>
+
+            {{-- Resume: rendered inline when it's a Resume Builder profile, otherwise just a link to the uploaded file --}}
+            <div class="mb-6">
+                <h3 class="text-xs font-bold text-[#1D264F] uppercase mb-2">Resume / CV</h3>
+                <p id="avm-resume-source" class="text-xs text-gray-400 mb-2"></p>
+                <div id="avm-resume-content"></div>
+            </div>
+
+            {{-- Cover letter: just a link, if they added one --}}
+            <div>
+                <h3 class="text-xs font-bold text-[#1D264F] uppercase mb-2">Cover Letter</h3>
+                <div id="avm-cover-letter-content"></div>
+            </div>
+        </div>
+    </div>
+
     @include('partials.footer-employer')
 
 </body>
@@ -581,6 +689,128 @@
     const HIRING_REMAINING_SLOTS = {{ $remainingSlots }};
     const BULK_ACTION_FORMS = { hire: 'bulkHireForm', decline: 'bulkDeclineForm', shortlist: 'bulkShortlistForm' };
     const BULK_ACTION_VERBS = { hire: 'hire', decline: 'decline', shortlist: 'shortlist' };
+
+    function openApplicationViewModal(data) {
+        document.getElementById('avm-name').textContent = data.applicantName;
+        document.getElementById('avm-email').textContent = data.applicantEmail || '—';
+        document.getElementById('avm-contact').textContent = data.applicantContact || '—';
+
+        const photo = document.getElementById('avm-photo');
+        const photoFallback = document.getElementById('avm-photo-fallback');
+        if (data.applicantPhoto) {
+            photo.src = data.applicantPhoto;
+            photo.classList.remove('hidden');
+            photoFallback.classList.add('hidden');
+        } else {
+            photo.classList.add('hidden');
+            photoFallback.classList.remove('hidden');
+            photoFallback.textContent = (data.applicantName || '?').trim().charAt(0).toUpperCase();
+        }
+
+        document.getElementById('avm-applied-at').textContent = data.appliedAt || 'Unknown date';
+        document.getElementById('avm-status').textContent = data.status;
+        document.getElementById('avm-score').textContent = data.score || '—';
+        document.getElementById('avm-resume-source').textContent = data.resumeSourceLabel;
+
+        // Resume Builder profile → rendered inline (editable-looking, but this is just a
+        // read-only view of the snapshot the alumnus submitted). Uploaded/profile file →
+        // just a link, per the same convention as the cover letter below.
+        const resumeBox = document.getElementById('avm-resume-content');
+        resumeBox.innerHTML = '';
+        if (data.isBuilderResume && data.builderSnapshot) {
+            resumeBox.appendChild(buildSnapshotView(data.builderSnapshot));
+        } else if (data.resumeUrl) {
+            resumeBox.appendChild(buildFileLinkView(data.resumeUrl, 'View resume file'));
+        } else {
+            resumeBox.innerHTML = '<p class="text-xs text-gray-400">No resume submitted.</p>';
+        }
+
+        const coverBox = document.getElementById('avm-cover-letter-content');
+        coverBox.innerHTML = '';
+        if (data.coverLetterUrl) {
+            coverBox.appendChild(buildFileLinkView(data.coverLetterUrl, 'View cover letter file'));
+        } else {
+            coverBox.innerHTML = '<p class="text-xs text-gray-400">No cover letter submitted.</p>';
+        }
+
+        document.getElementById('applicationViewModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeApplicationViewModal() {
+        document.getElementById('applicationViewModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    function buildFileLinkView(url, label) {
+        const div = document.createElement('div');
+        div.className = 'border border-gray-200 rounded-xl p-4 flex items-center gap-3';
+        div.innerHTML = '<i class="fas fa-file-lines text-[#C73D1A] text-lg"></i>' +
+            '<a href="' + url + '" target="_blank" class="text-sm font-semibold text-[#1D46A4] hover:underline">' + label + '</a>';
+        return div;
+    }
+
+    // Read-only render of the JSON snapshot captured at apply time — this
+    // is the alumnus's Resume Builder content exactly as it was when they
+    // applied, not necessarily what's on their profile right now.
+    function buildSnapshotView(snap) {
+        const wrap = document.createElement('div');
+        wrap.className = 'border border-gray-200 rounded-xl p-4 space-y-4 text-sm';
+
+        if (snap.summary) {
+            const p = document.createElement('p');
+            p.className = 'text-gray-600 text-xs leading-relaxed';
+            p.textContent = snap.summary;
+            wrap.appendChild(p);
+        }
+
+        if (snap.skills && snap.skills.length) {
+            const skillsWrap = document.createElement('div');
+            skillsWrap.className = 'flex flex-wrap gap-1.5';
+            snap.skills.forEach(s => {
+                const chip = document.createElement('span');
+                chip.className = 'bg-blue-50 text-[#1D46A4] text-[10px] font-semibold px-2.5 py-1 rounded-full';
+                chip.textContent = s.name;
+                skillsWrap.appendChild(chip);
+            });
+            wrap.appendChild(skillsWrap);
+        }
+
+        if (snap.experiences && snap.experiences.length) {
+            const expTitle = document.createElement('p');
+            expTitle.className = 'text-[10px] font-bold text-gray-400 uppercase mt-2';
+            expTitle.textContent = 'Experience';
+            wrap.appendChild(expTitle);
+            snap.experiences.forEach(e => {
+                const row = document.createElement('div');
+                row.className = 'text-xs border-l-2 border-gray-200 pl-3';
+                row.innerHTML = '<span class="font-bold text-[#0E0F3B]"></span> <span class="text-gray-400"></span><p class="text-gray-500 mt-0.5"></p>';
+                row.querySelector('.font-bold').textContent = e.job_title || '';
+                row.querySelector('.text-gray-400').textContent = e.duration_months ? '(' + e.duration_months + ' mos)' : '';
+                row.querySelector('p').textContent = e.job_description || '';
+                wrap.appendChild(row);
+            });
+        }
+
+        if (snap.certifications && snap.certifications.length) {
+            const certTitle = document.createElement('p');
+            certTitle.className = 'text-[10px] font-bold text-gray-400 uppercase mt-2';
+            certTitle.textContent = 'Certifications';
+            wrap.appendChild(certTitle);
+            snap.certifications.forEach(c => {
+                const row = document.createElement('p');
+                row.className = 'text-xs text-gray-600';
+                row.textContent = c.certification_name + (c.certification_from ? ' — ' + c.certification_from : '');
+                wrap.appendChild(row);
+            });
+        }
+
+        if (!wrap.children.length) {
+            wrap.innerHTML = '<p class="text-xs text-gray-400">Empty resume.</p>';
+        }
+
+        return wrap;
+    }
 
     function getCheckedApplicationIds() {
         return [...document.querySelectorAll('.applicant-checkbox:checked')].map(cb => cb.value);
@@ -713,6 +943,30 @@
         }
         document.dispatchEvent(new CustomEvent('pv:filtered'));
     }
+
+    // After a status change (single-row or bulk), highlight and scroll to
+    // whichever row(s) just changed — the badge itself already reflects the
+    // new status on this fresh page load, but a plain badge among many rows
+    // is easy to miss, especially after a bulk action or on a long list.
+    const UPDATED_APPLICATION_IDS = @json(session('updatedApplicationIds', []));
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!UPDATED_APPLICATION_IDS.length) return;
+
+        let firstRow = null;
+        UPDATED_APPLICATION_IDS.forEach(function (id) {
+            const row = document.querySelector('tr[data-application-id="' + id + '"]');
+            if (!row) return;
+            if (!firstRow) firstRow = row;
+            row.classList.add('status-just-updated');
+            row.addEventListener('animationend', function () {
+                row.classList.remove('status-just-updated');
+            }, { once: true });
+        });
+
+        if (firstRow) {
+            firstRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
 </script>
 
 </html>

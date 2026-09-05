@@ -452,6 +452,8 @@ $current_page = 'user_management';
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Gender</th>
                                     <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">Program <i
                                             data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
+                                    <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">College <i
+                                            data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
                                     {{-- Section column — hidden per request, not important; keep markup for easy restore.
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Section</th>
                                     --}}
@@ -480,6 +482,7 @@ $current_page = 'user_management';
                                     data-firstname="{{ mb_strtolower($alumnus->user?->user_first_name ?? '') }}"
                                     data-middlename="{{ mb_strtolower($alumnus->user?->user_middle_name ?? '') }}"
                                     data-program="{{ $alumnus->program->program_name ?? '' }}"
+                                    data-college="{{ $alumnus->program?->collegeName() ?? '' }}"
                                     data-batch="{{ optional($alumnus->alumnus_batch)->format('Y') }}"
                                     data-status="{{ $status }}">
                                     <td class="px-3 py-3 border-r border-slate-100">
@@ -507,6 +510,10 @@ $current_page = 'user_management';
                                     <td
                                         class="px-3 py-3 font-medium text-black border-r border-slate-100 leading-tight">
                                         {{ $alumnus->program->program_name ?? 'N/A' }}
+                                    </td>
+                                    <td
+                                        class="px-3 py-3 font-medium text-black border-r border-slate-100 leading-tight">
+                                        {{ $alumnus->program?->collegeName() ?? 'N/A' }}
                                     </td>
                                     {{-- Section column — hidden per request, not important; keep markup for easy restore.
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
@@ -579,7 +586,7 @@ $current_page = 'user_management';
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="12" class="px-4 py-8 text-center text-slate-400 text-sm">No alumni
+                                    <td colspan="13" class="px-4 py-8 text-center text-slate-400 text-sm">No alumni
                                         found.</td>
                                 </tr>
                                 @endforelse
@@ -886,12 +893,22 @@ $current_page = 'user_management';
                         </select>
                     </div>
                     <div class="flex items-center gap-4">
+                        <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">College:</label>
+                        <select id="addAlumniCollegeSelect" onchange="filterAddAlumniPrograms()"
+                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white transition-all">
+                            <option value="">All Colleges</option>
+                            @foreach (\App\Models\Program::COLLEGES as $code => $name)
+                            <option value="{{ $code }}">{{ $name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-4">
                         <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Program:</label>
-                        <select name="program_id" required
+                        <select name="program_id" id="addAlumniProgramSelect" required
                             class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white transition-all truncate w-full">
                             <option value="" disabled selected>Select Undergraduate Program</option>
                             @foreach ($programs as $program)
-                            <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
+                            <option value="{{ $program->program_id }}" data-college="{{ $program->college }}">{{ $program->program_name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -1584,6 +1601,20 @@ $current_page = 'user_management';
             const defaultTab = activeBtn ? activeBtn.id.replace('tab-', '') : 'alumni';
             const tab = (tabParam && document.getElementById('tab-' + tabParam)) ? tabParam : defaultTab;
             switchTab(tab);
+
+            // Deep-link from a notification (?pendingEmployer=123) —
+            // scroll to and briefly highlight that specific row in the
+            // Awaiting Approval table. Silently no-ops if it's on a page
+            // the pagination hasn't loaded.
+            const pendingEmployerId = new URLSearchParams(window.location.search).get('pendingEmployer');
+            if (pendingEmployerId) {
+                const row = document.querySelector('[data-employer-id="' + pendingEmployerId + '"]');
+                if (row) {
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    row.classList.add('ring-2', 'ring-[#C73D1A]', 'ring-inset');
+                    setTimeout(() => row.classList.remove('ring-2', 'ring-[#C73D1A]', 'ring-inset'), 3000);
+                }
+            }
         });
 
         /* ── Dropdown menus ─────────────────────────────────────── */
@@ -1619,6 +1650,27 @@ $current_page = 'user_management';
         function openAddModal() {
             document.getElementById('addAlumniModal').classList.add('open');
             toggleDropdown(); // Close menu after selection
+        }
+
+        // College narrows the Program list to that college's courses; picking
+        // "All Colleges" restores every option. If the currently-selected
+        // program falls outside the newly-chosen college, the selection is
+        // cleared rather than left silently submitting a hidden option.
+        function filterAddAlumniPrograms() {
+            const college = document.getElementById('addAlumniCollegeSelect').value;
+            const select = document.getElementById('addAlumniProgramSelect');
+            let selectionStillVisible = false;
+
+            Array.from(select.options).forEach(opt => {
+                if (!opt.value) return; // placeholder option always stays
+                const visible = !college || opt.dataset.college === college;
+                opt.hidden = !visible;
+                if (opt.selected && visible) selectionStillVisible = true;
+            });
+
+            if (!selectionStillVisible) {
+                select.value = '';
+            }
         }
 
         function triggerCSVImport() {

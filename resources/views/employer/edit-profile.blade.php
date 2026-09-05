@@ -207,6 +207,34 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Company Addresses — as many as the employer wants (head office,
+                             branches, etc.); picked from a dropdown when posting a job
+                             instead of retyping the address every time. --}}
+                        <div class="mt-8 pt-6 border-t border-gray-100">
+                            <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mb-3">Company Addresses</p>
+                            {{-- Always present (even when every real row is removed) so a
+                                 "delete all addresses" save actually persists as empty,
+                                 instead of the field being missing from the request entirely. --}}
+                            <input type="hidden" name="addresses[]" value="">
+                            <div id="companyAddressList" class="space-y-2">
+                                @forelse (old('addresses', optional($user->employer)->addresses?->pluck('address')->all() ?? []) as $address)
+                                <div class="flex items-center gap-2 company-address-row">
+                                    <input type="text" name="addresses[]" value="{{ $address }}" placeholder="e.g. 123 Rizal St., Valenzuela City"
+                                        class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-gray-800 text-md font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400">
+                                    <button type="button" onclick="this.closest('.company-address-row').remove()"
+                                        class="shrink-0 text-red-500 hover:text-red-700 transition p-2">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                                @empty
+                                @endforelse
+                            </div>
+                            <button type="button" onclick="addCompanyAddressRow()"
+                                class="mt-3 text-xs font-bold text-[#1D264F] border border-[#1D264F] rounded-lg px-4 py-2 hover:bg-[#1D264F] hover:text-white transition">
+                                <i class="fa-solid fa-plus mr-1"></i> Add Address
+                            </button>
+                        </div>
                     </div>
                 </section>
 
@@ -235,6 +263,21 @@
 </body>
 
 <script>
+    function addCompanyAddressRow() {
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2 company-address-row';
+        row.innerHTML = `
+            <input type="text" name="addresses[]" placeholder="e.g. 123 Rizal St., Valenzuela City"
+                class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-gray-800 text-md font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400">
+            <button type="button" onclick="this.closest('.company-address-row').remove()"
+                class="shrink-0 text-red-500 hover:text-red-700 transition p-2">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        `;
+        document.getElementById('companyAddressList').appendChild(row);
+        row.querySelector('input').focus();
+    }
+
     function togglePhotoOptions(event) {
         event.stopPropagation(); // Prevents the window click listener from immediately closing it
         const options = document.getElementById('photoOptions');

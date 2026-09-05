@@ -55,8 +55,19 @@ class UserNotification extends Model
      * to the specific record — e.g. a "new event posted" notification opens
      * that exact event's detail modal via the same ?notice= param the
      * dashboard's own event cards use, not just the general events list.
-     * Types below without a reference_id fall back to their nearest list
-     * page. alumni_id_status/yearbook_status have no admin-safe page to
+     * Each destination page reads its own query param on load and either
+     * auto-opens the matching record's existing detail modal (jobs,
+     * testimonials, chat tickets) or scrolls to + highlights it (the
+     * pending-employer table row) — same "silently no-op if it's not on
+     * the currently-rendered page" tradeoff the notice deep-link already
+     * accepted, since none of these pages fetch across pagination pages
+     * just to satisfy a stale notification link.
+     *
+     * job_posting_rejected has no reference_id on purpose — that job
+     * posting is deleted the moment the notification is created (see
+     * JobPostingController::declineJobPost()), so there's nothing left to
+     * deep-link to; it falls back to the general list like before.
+     * alumni_id_status/yearbook_status have no admin-safe page to
      * deep-link an alumnus into, so they go to the dashboard section that
      * shows their own status instead of nowhere.
      */
@@ -66,13 +77,14 @@ class UserNotification extends Model
             'new_event' => route('notices.eventsSeminars', array_filter(['tab' => 'events', 'notice' => $this->reference_id])),
             'new_seminar' => route('notices.eventsSeminars', array_filter(['tab' => 'seminar', 'notice' => $this->reference_id])),
             'new_announcement' => route('notices.announcements', array_filter(['notice' => $this->reference_id])),
-            'job_posting_submitted' => route('jobPosting.jobManagement'),
-            'employer_registration_pending' => route('superAdmin.userManagement'),
-            'testimonial_submitted' => route('testimonials.manage'),
-            'live_agent_escalation' => route('chatbot.management'),
-            'job_posting_approved', 'job_posting_rejected' => route('jobPosting.myJobPosts', ['id' => $this->user_id]),
-            'job_application_hired', 'job_application_declined', 'job_application_shortlisted' => route('jobPosting.myApplications'),
-            'message_mute', 'message_warning' => route('messages.index'),
+            'job_posting_submitted' => route('jobPosting.jobManagement', array_filter(['job' => $this->reference_id])),
+            'employer_registration_pending' => route('superAdmin.userManagement', array_filter(['tab' => 'employer', 'pendingEmployer' => $this->reference_id])),
+            'testimonial_submitted' => route('testimonials.manage', array_filter(['testimonial' => $this->reference_id])),
+            'live_agent_escalation' => route('chatbot.management', array_filter(['ticket' => $this->reference_id])),
+            'job_posting_approved' => route('jobPosting.myJobPosts', array_filter(['id' => $this->user_id, 'job' => $this->reference_id])),
+            'job_posting_rejected' => route('jobPosting.myJobPosts', ['id' => $this->user_id]),
+            'job_application_hired', 'job_application_declined', 'job_application_shortlisted' => route('jobPosting.myApplications', array_filter(['job' => $this->reference_id])),
+            'message_mute', 'message_warning' => $this->reference_id ? route('messages.show', $this->reference_id) : route('messages.index'),
             'alumni_id_status', 'yearbook_status' => route('alumnus.dashboard') . '#status-section',
             default => null,
         };

@@ -154,6 +154,9 @@
             </div>
             <h4 class="font-bold text-lg text-[#0E0F3B]">{{ $activeContact->user_first_name }} {{ $activeContact->user_last_name }}</h4>
             <p class="text-xs text-gray-500">{{ $activeContact->alumnus->program->program_name ?? 'Program not specified' }}</p>
+            @if ($activeContact->alumnus?->program?->collegeName())
+            <p class="text-xs text-gray-400">{{ $activeContact->alumnus->program->collegeName() }}</p>
+            @endif
         </div>
 
         <div class="p-6 space-y-4 text-sm border-b border-gray-100">

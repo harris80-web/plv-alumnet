@@ -290,6 +290,8 @@
                                 <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                 <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Program <i
                                         data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
+                                <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">College <i
+                                        data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
                                 <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Batch <i
                                         data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
                                 <th class="px-4 py-4 font-semibold border-r border-slate-700">Message</th>
@@ -311,6 +313,7 @@
                                 <tr class="hover:bg-slate-50/80 transition-colors text-center"
                                     data-id="{{ $t->testimonial_id }}" data-name="{{ $t->alumnus->user->user_first_name }}"
                                     data-program="{{ $t->alumnus->program->program_name ?? '' }}"
+                                    data-college="{{ $t->alumnus->program?->collegeName() ?? '' }}"
                                     data-batch="{{ optional($t->alumnus->alumnus_batch)->format('Y') }}" data-status="{{ $statusLabel }}"
                                     data-message="{{ $t->testimonial_body }}">
                                     <td class="px-4 py-3 border-r border-slate-100">
@@ -321,6 +324,8 @@
                                         {{ $t->alumnus->user->user_first_name }}</td>
                                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
                                         {{ $t->alumnus->program->program_name ?? '—' }}</td>
+                                    <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                        {{ $t->alumnus->program?->collegeName() ?? '—' }}</td>
                                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
                                         {{ optional($t->alumnus->alumnus_batch)->format('Y') ?: '—' }}</td>
                                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100 text-left">
@@ -371,7 +376,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="py-12 text-center text-slate-400 text-sm">No testimonials found.
+                                    <td colspan="8" class="py-12 text-center text-slate-400 text-sm">No testimonials found.
                                     </td>
                                 </tr>
                             @endforelse
@@ -428,6 +433,10 @@
                     <span id="view-program" class="text-slate-800 font-medium"></span>
                 </div>
                 <div class="flex items-center gap-2">
+                    <span class="font-bold text-[#C73D1A] w-24 shrink-0">College:</span>
+                    <span id="view-college" class="text-slate-800 font-medium"></span>
+                </div>
+                <div class="flex items-center gap-2">
                     <span class="font-bold text-[#C73D1A] w-24 shrink-0">Batch:</span>
                     <span id="view-batch" class="text-slate-800 font-medium"></span>
                 </div>
@@ -459,6 +468,7 @@
     'id' => $t->testimonial_id,
     'name' => $t->alumnus->user->user_first_name,
     'program' => $t->alumnus->program->program_name ?? '—',
+    'college' => $t->alumnus->program?->collegeName() ?? '—',
     'batch' => optional($t->alumnus->alumnus_batch)->format('Y') ?: '—',
     'message' => $t->testimonial_body,
     'status' => $t->testimonial_post ? 'Published' : 'Hidden',
@@ -537,6 +547,15 @@
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             initDropdowns();
+
+            // Deep-link from a notification (?testimonial=123) — open that
+            // testimonial's view modal directly. This page loads every
+            // testimonial unpaginated, so (unlike the AJAX-paginated admin
+            // pages) there's no "not on this page" case to worry about.
+            const openTestimonialId = new URLSearchParams(window.location.search).get('testimonial');
+            if (openTestimonialId && testimonialData.find(t => t.id == openTestimonialId)) {
+                openView(openTestimonialId);
+            }
         });
 
         /* ── Checkbox ─────────────────────────────────────── */
@@ -556,6 +575,7 @@
             const t = testimonialData.find(x => x.id == id);
             document.getElementById('view-name').textContent = t.name;
             document.getElementById('view-program').textContent = t.program;
+            document.getElementById('view-college').textContent = t.college;
             document.getElementById('view-batch').textContent = t.batch;
             document.getElementById('view-message').textContent = '"' + t.message + '"';
 

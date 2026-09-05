@@ -136,7 +136,7 @@ class JobPostingController extends Controller
         $user = Auth::user();
         abort_unless($user && $user->user_role === 'alumni', 403);
 
-        $query = JobPosting::with(['skills', 'programs', 'industry', 'user', 'employer.reviews'])
+        $query = JobPosting::with(['skills', 'programs', 'industry', 'user', 'employer.reviews', 'employer.user'])
             ->whereHas('applications', fn ($q) => $q->where('alumnus_id', $user->user_id))
             ->addSelect(['applied_at' => JobApplication::selectRaw('application_date')
                 ->whereColumn('job_applications.job_id', 'job_postings.job_posting_id')
@@ -164,7 +164,7 @@ class JobPostingController extends Controller
      */
     private function filteredJobPostingsQuery(Request $request, ?\App\Models\User $user = null)
     {
-        $query = JobPosting::active()->approved()->with(['skills', 'programs', 'industry', 'user', 'employer.reviews']);
+        $query = JobPosting::active()->approved()->with(['skills', 'programs', 'industry', 'user', 'employer.reviews', 'employer.user']);
 
         if ($user && $user->user_role === 'alumni' && $user->alumnus) {
             $query->addSelect(['match_score' => \App\Models\JobMatch::selectRaw('COALESCE(score * 0.7 + ai_score * 0.3, score)')
@@ -344,6 +344,7 @@ class JobPostingController extends Controller
         $rows = $recipientIds->map(fn ($userId) => [
             'user_id' => $userId,
             'type' => 'job_posting_submitted',
+            'reference_id' => $jobPost->job_posting_id,
             'title' => 'New job posting awaiting approval',
             'body' => "\"{$jobPost->job_posting_title}\" at {$jobPost->job_posting_company} was submitted for review.",
             'created_at' => $now,
@@ -583,6 +584,7 @@ class JobPostingController extends Controller
         UserNotification::create([
             'user_id' => $job->user_id,
             'type' => 'job_posting_approved',
+            'reference_id' => $job->job_posting_id,
             'title' => 'Job posting approved',
             'body' => "Your job posting \"{$job->job_posting_title}\" was approved and is now live on the job board.",
         ]);

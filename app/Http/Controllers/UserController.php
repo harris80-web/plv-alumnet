@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\DashboardReportService;
 
 class UserController extends Controller
 {
@@ -208,6 +209,7 @@ class UserController extends Controller
         $rows = $recipientIds->map(fn ($userId) => [
             'user_id' => $userId,
             'type' => 'employer_registration_pending',
+            'reference_id' => $employerUser->user_id,
             'title' => 'New employer awaiting verification',
             'body' => "{$companyName} ({$employerUser->user_first_name} {$employerUser->user_last_name}) registered and needs verification.",
             'created_at' => $now,
@@ -279,6 +281,21 @@ class UserController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/login');
+    }
+
+    /**
+     * Presence heartbeat — pinged periodically by any authenticated
+     * admin-area page (see partials/super-admin-header.blade.php's JS).
+     * Bumps last_active_at so User::isOnline() reflects genuine "logged in
+     * right now" for the chatbot's auto-assign feature
+     * (ChatbotController::autoAssignIfEnabled()), instead of the static
+     * user_active flag which just means "not deactivated."
+     */
+    public function heartbeat()
+    {
+        Auth::user()->update(['last_active_at' => now()]);
+
+        return response()->json(['ok' => true]);
     }
 
     public function showUsers(User $user)
@@ -535,8 +552,8 @@ class UserController extends Controller
     public function downloadAlumniCsvTemplate()
     {
         $this->authorizeStaff();
-        $columns = ['first_name', 'middle_name', 'last_name', 'suffix', 'email', 'gender', 'program', 'section', 'batch'];
-        $example = ['Juan', 'Santos', 'Dela Cruz', '', 'juan.delacruz@example.com', 'male', 'BSIT', 'Section A', now()->subYears(2)->format('Y-m-d')];
+        $columns = ['first_name', 'middle_name', 'last_name', 'suffix', 'email', 'gender', 'college', 'program', 'section', 'batch'];
+        $example = ['Juan', 'Santos', 'Dela Cruz', '', 'juan.delacruz@example.com', 'male', 'CEIT', 'Bachelor of Science in Information Technology', 'Section A', now()->subYears(2)->format('Y-m-d')];
 
         $callback = function () use ($columns, $example) {
             $handle = fopen('php://output', 'w');
@@ -575,7 +592,7 @@ class UserController extends Controller
         // Normalize so column order/casing/stray whitespace in the uploaded
         // file doesn't have to match the template byte-for-byte.
         $header = array_map(fn ($h) => strtolower(trim((string) $h)), $header);
-        $required = ['first_name', 'middle_name', 'last_name', 'email', 'gender', 'program', 'section', 'batch'];
+        $required = ['first_name', 'middle_name', 'last_name', 'email', 'gender', 'college', 'program', 'section', 'batch'];
         $missing = array_diff($required, $header);
 
         if (!empty($missing)) {
@@ -609,6 +626,7 @@ class UserController extends Controller
             $suffix = trim((string) ($data['suffix'] ?? ''));
             $email = trim((string) ($data['email'] ?? ''));
             $genderRaw = strtolower(trim((string) ($data['gender'] ?? '')));
+            $collegeRaw = trim((string) ($data['college'] ?? ''));
             $programName = trim((string) ($data['program'] ?? ''));
             $sectionName = trim((string) ($data['section'] ?? ''));
             $batch = trim((string) ($data['batch'] ?? ''));
@@ -634,9 +652,26 @@ class UserController extends Controller
                 continue;
             }
 
+            $collegeCode = null;
+            foreach (Program::COLLEGES as $code => $name) {
+                if (strcasecmp($collegeRaw, $code) === 0 || strcasecmp($collegeRaw, $name) === 0) {
+                    $collegeCode = $code;
+                    break;
+                }
+            }
+            if (!$collegeCode) {
+                $errors[] = "Row {$rowNum}: college \"{$collegeRaw}\" is not recognized. Expected one of: " . implode(', ', array_keys(Program::COLLEGES)) . '.';
+                continue;
+            }
+
             $program = Program::where('program_name', $programName)->first();
             if (!$program) {
                 $errors[] = "Row {$rowNum}: program \"{$programName}\" was not found.";
+                continue;
+            }
+
+            if ($program->college !== $collegeCode) {
+                $errors[] = "Row {$rowNum}: program \"{$programName}\" belongs to " . ($program->collegeName() ?? 'a different college') . ", not \"{$collegeRaw}\".";
                 continue;
             }
 
@@ -922,128 +957,48 @@ class UserController extends Controller
             ->with('success', 'Your password has been changed successfully.');
     }
 
-    public function showDashboard()
+    public function showDashboard(DashboardReportService $reportService)
     {
         $this->authorizeStaff();
-        // Batch/Course/Employment Status filter — see buildOverviewStats()
-        // and buildEmploymentReports() for exactly how each report uses it.
-        $batch = request()->query('batch');
-        $programId = request()->query('program_id');
-        $employmentStatus = $this->resolveEmploymentStatus(request()->query('employment_status'));
-        $hireMonths = $this->resolveHireMonths(request()->query('hire_months'));
-        $topCompaniesLimit = $this->resolveTopCompaniesLimit(request()->query('top_companies'));
+        // Batch/Course/Employment Status/College/Year filters — all
+        // multi-select now (item 15) — see DashboardReportService for
+        // exactly how each report uses each one.
+        $batches = $reportService->resolveIntArray(request()->query('batch'));
+        $programIds = $reportService->resolveIntArray(request()->query('program_id'));
+        $employmentStatuses = $reportService->resolveEmploymentStatuses(request()->query('employment_status'));
+        $colleges = $reportService->resolveColleges(request()->query('college'));
+        $years = $reportService->resolveYears(request()->query('year'));
+        $hireMonths = $reportService->resolveHireMonths(request()->query('hire_months'));
+        $topCompaniesLimit = $reportService->resolveTopCompaniesLimit(request()->query('top_companies'));
 
-        $stats = $this->buildOverviewStats($batch, $programId, $employmentStatus);
+        $stats = $reportService->buildOverviewStats($batches, $programIds, $employmentStatuses, $colleges, $years);
 
-        // The Batch filter stays a single "graduation year" pick even
-        // though alumnus_batch is now a full date — DISTINCT YEAR(...)
-        // extracts the years actually present instead of every individual
-        // date (which would make the dropdown useless).
-        $batches = Alumnus::whereNotNull('alumnus_batch')
+        // The Batch filter stays a "graduation year" pick even though
+        // alumnus_batch is now a full date — DISTINCT YEAR(...) extracts
+        // the years actually present instead of every individual date
+        // (which would make the dropdown useless).
+        $batchYearOptions = Alumnus::whereNotNull('alumnus_batch')
             ->selectRaw('DISTINCT YEAR(alumnus_batch) as year')
             ->orderByDesc('year')
             ->pluck('year');
         $programs = Program::orderBy('program_name')->get();
+        $yearOptions = $reportService->yearOptions();
         // hire_months/top_companies live outside $dashboardFilters on
         // purpose — they always have a value (defaults 6/5), and
         // $dashboardFilters drives both the sticky select values AND the
         // "Clear" link's visibility check, which should only fire for an
-        // actually-applied batch/program/status filter, not these defaults.
-        $dashboardFilters = ['batch' => $batch, 'program_id' => $programId, 'employment_status' => $employmentStatus];
+        // actually-applied filter, not these defaults.
+        $dashboardFilters = [
+            'batch' => $batches, 'program_id' => $programIds, 'employment_status' => $employmentStatuses,
+            'college' => $colleges, 'year' => $years,
+        ];
 
-        $reports = $this->buildEmploymentReports($batch, $programId, $employmentStatus, $hireMonths, $topCompaniesLimit);
+        $reports = $reportService->buildEmploymentReports($batches, $programIds, $employmentStatuses, $colleges, $years, $hireMonths, $topCompaniesLimit);
 
         return view('superAdmin.dashboard', array_merge(
-            compact('stats', 'batches', 'programs', 'dashboardFilters', 'hireMonths', 'topCompaniesLimit'),
+            compact('stats', 'batchYearOptions', 'programs', 'yearOptions', 'dashboardFilters', 'hireMonths', 'topCompaniesLimit'),
             $reports
         ));
-    }
-
-    /**
-     * The 4 overview stat cards — split out of showDashboard() so the CSV
-     * export (exportDashboardReport()) can compute the exact same numbers
-     * shown on screen instead of re-deriving them differently.
-     */
-    /**
-     * "Hires per Month" range selector — validates the raw query param
-     * into one of a small fixed set of lengths rather than trusting an
-     * arbitrary integer straight into a date-range loop.
-     */
-    private function resolveHireMonths(?string $raw): int
-    {
-        $allowed = [3, 6, 12, 24];
-        $value = (int) $raw;
-
-        return in_array($value, $allowed, true) ? $value : 6;
-    }
-
-    /** How many rows the "Top Hiring Companies" list shows — was hardcoded to 5. */
-    private function resolveTopCompaniesLimit(?string $raw): int
-    {
-        $allowed = [5, 10, 15, 20];
-        $value = (int) $raw;
-
-        return in_array($value, $allowed, true) ? $value : 5;
-    }
-
-    /**
-     * Normalizes the Employment Status filter to exactly 'employed',
-     * 'unemployed', or null (no filter) — every call site used to read the
-     * raw query string directly, and an unrecognized value (a typo, a
-     * tampered URL) landed differently depending on which one you hit:
-     * buildOverviewStats() treated anything non-empty-and-not-"employed" as
-     * unemployed, while buildEmploymentReports()'s Employed Alumni table
-     * treated anything not exactly "unemployed" as employed — so a bogus
-     * value could show an "unemployed" stat card next to an "employed"
-     * alumni list on the same page. Resolving it once, here, means all
-     * three entry points (page view, CSV export, PDF export) agree.
-     */
-    private function resolveEmploymentStatus(?string $raw): ?string
-    {
-        return in_array($raw, ['employed', 'unemployed'], true) ? $raw : null;
-    }
-
-    private function buildOverviewStats(?string $batch, ?string $programId, ?string $employmentStatus): array
-    {
-        $applyAlumniFilters = function ($query, string $alumniTable = 'alumni') use ($batch, $programId, $employmentStatus) {
-            if ($batch) {
-                $query->whereYear("$alumniTable.alumnus_batch", $batch);
-            }
-            if ($programId) {
-                $query->where("$alumniTable.program_id", $programId);
-            }
-            if ($employmentStatus !== null && $employmentStatus !== '') {
-                $query->where("$alumniTable.alumnus_employment_status", $employmentStatus === 'employed' ? 1 : 0);
-            }
-            return $query;
-        };
-
-        $jobApplicationsQuery = $applyAlumniFilters(
-            DB::table('job_applications')->join('alumni', 'alumni.user_id', '=', 'job_applications.alumnus_id')
-        );
-        $jobPlacementCount = (clone $jobApplicationsQuery)->where('application_status', 'hired')->count();
-        $jobApplicationCount = $jobApplicationsQuery->count();
-        $jobPlacementRate = $jobApplicationCount > 0
-            ? ($jobPlacementCount / $jobApplicationCount) * 100
-            : 0;
-
-        return [
-            'jobPlacementRate' => round($jobPlacementRate, 2),
-            'activeJobs' => DB::table('job_postings')
-                ->where('job_approved', true)
-                ->where('job_closing_date', '>', now())
-                ->count(),
-            'industryPartners' => DB::table('users')
-                ->where('user_active', true)
-                ->where('user_role', 'employer')
-                ->count(),
-            'alumniUsers' => $applyAlumniFilters(
-                DB::table('users')
-                    ->join('alumni', 'alumni.user_id', '=', 'users.user_id')
-                    ->where('users.user_active', true)
-                    ->where('users.user_role', 'alumni')
-            )->count(),
-        ];
     }
 
     /**
@@ -1054,28 +1009,32 @@ class UserController extends Controller
      * applied on screen so the export always matches what the admin is
      * looking at.
      */
-    public function exportDashboardReport()
+    public function exportDashboardReport(DashboardReportService $reportService)
     {
         $this->authorizeStaff();
-        $batch = request()->query('batch');
-        $programId = request()->query('program_id');
-        $employmentStatus = $this->resolveEmploymentStatus(request()->query('employment_status'));
-        $hireMonths = $this->resolveHireMonths(request()->query('hire_months'));
-        $topCompaniesLimit = $this->resolveTopCompaniesLimit(request()->query('top_companies'));
+        $batches = $reportService->resolveIntArray(request()->query('batch'));
+        $programIds = $reportService->resolveIntArray(request()->query('program_id'));
+        $employmentStatuses = $reportService->resolveEmploymentStatuses(request()->query('employment_status'));
+        $colleges = $reportService->resolveColleges(request()->query('college'));
+        $years = $reportService->resolveYears(request()->query('year'));
+        $hireMonths = $reportService->resolveHireMonths(request()->query('hire_months'));
+        $topCompaniesLimit = $reportService->resolveTopCompaniesLimit(request()->query('top_companies'));
 
-        $stats = $this->buildOverviewStats($batch, $programId, $employmentStatus);
-        $r = $this->buildEmploymentReports($batch, $programId, $employmentStatus, $hireMonths, $topCompaniesLimit);
+        $stats = $reportService->buildOverviewStats($batches, $programIds, $employmentStatuses, $colleges, $years);
+        $r = $reportService->buildEmploymentReports($batches, $programIds, $employmentStatuses, $colleges, $years, $hireMonths, $topCompaniesLimit);
 
-        $batchLabel = $batch ?: 'All';
-        $programLabel = $programId ? (Program::find($programId)->program_name ?? $programId) : 'All';
-        $statusLabel = $employmentStatus ? ucfirst($employmentStatus) : 'All';
+        $batchLabel = $this->filterLabelForYears($batches);
+        $programLabel = $this->filterLabelForPrograms($programIds);
+        $statusLabel = $this->filterLabelForList($employmentStatuses, fn ($v) => ucfirst($v));
+        $collegeLabel = $this->filterLabelForList($colleges, fn ($v) => Program::COLLEGES[$v] ?? $v);
+        $yearLabel = $this->filterLabelForYears($years);
 
-        $callback = function () use ($stats, $r, $batchLabel, $programLabel, $statusLabel, $hireMonths, $topCompaniesLimit) {
+        $callback = function () use ($stats, $r, $batchLabel, $programLabel, $statusLabel, $collegeLabel, $yearLabel, $hireMonths, $topCompaniesLimit) {
             $out = fopen('php://output', 'w');
 
             fputcsv($out, ['PLV-AlumNet — Admin Dashboard Report Export']);
             fputcsv($out, ['Generated', now()->format('M d, Y h:i A')]);
-            fputcsv($out, ['Filters', "Batch: $batchLabel | Program: $programLabel | Employment Status: $statusLabel"]);
+            fputcsv($out, ['Filters', "Batch: $batchLabel | Program: $programLabel | Employment Status: $statusLabel | College: $collegeLabel | Year: $yearLabel"]);
             fputcsv($out, []);
 
             fputcsv($out, ['OVERVIEW']);
@@ -1151,36 +1110,11 @@ class UserController extends Controller
             foreach ($r['hiresPerMonth'] as $month => $count) {
                 fputcsv($out, [$month, $count]);
             }
-            fputcsv($out, []);
 
-            fputcsv($out, ['EMPLOYED ALUMNI REPORT']);
-            fputcsv($out, ['Name', 'Batch', 'Program', 'Workplace', 'Position', 'Industry', 'Employment Date', 'Aligned']);
-            foreach ($r['employedAlumniTable'] as $a) {
-                fputcsv($out, [
-                    trim(($a->user->user_first_name ?? '') . ' ' . ($a->user->user_last_name ?? '')),
-                    optional($a->alumnus_batch)->toDateString(),
-                    $a->program->program_name ?? 'N/A',
-                    $a->alumnus_workplace_undisclosed ? 'Undisclosed' : ($a->alumnus_workplace ?? 'N/A'),
-                    $a->alumnus_job_position ?? 'N/A',
-                    $a->industry->industry_name ?? 'N/A',
-                    optional($a->alumnus_employment_date)->format('M d, Y') ?? 'N/A',
-                    $a->alumnus_employment_status ? ($a->hasCourseAlignedJob() ? 'Aligned' : 'Not Aligned') : '',
-                ]);
-            }
-            fputcsv($out, []);
-
-            fputcsv($out, ['REGISTERED COMPANIES (' . $r['registeredCompanies']->count() . ')']);
-            fputcsv($out, ['Company', 'Industry', 'Contact']);
-            foreach ($r['registeredCompanies'] as $employer) {
-                fputcsv($out, [$employer->employer_company_name, $employer->industry->industry_name ?? 'N/A', $employer->user->user_email ?? 'N/A']);
-            }
-            fputcsv($out, []);
-
-            fputcsv($out, ['PENDING / UNREGISTERED COMPANIES (' . $r['pendingCompanies']->count() . ')']);
-            fputcsv($out, ['Company', 'Industry', 'Contact']);
-            foreach ($r['pendingCompanies'] as $employer) {
-                fputcsv($out, [$employer->employer_company_name, $employer->industry->industry_name ?? 'N/A', $employer->user->user_email ?? 'N/A']);
-            }
+            // Employed Alumni Report / Registered & Pending Companies are no
+            // longer shown on the main dashboard (see reports.companies for
+            // their own dedicated, filterable, exportable page) — this
+            // export mirrors exactly what's on screen, so it drops them too.
 
             fclose($out);
         };
@@ -1195,230 +1129,75 @@ class UserController extends Controller
      * Same report as exportDashboardReport() (CSV), same filters, rendered
      * as a formatted PDF instead — shares the same data-building methods so
      * the two exports can never drift apart on what counts as "the report".
+     *
+     * Item 18 — routed as both GET (bookmarkable, tables-only fallback) and
+     * POST: the dashboard's Export PDF button captures every real Chart.js
+     * canvas as a PNG data URL client-side and POSTs them here alongside the
+     * usual filters (see exportPdfWithCharts() in dashboard.blade.php), so
+     * request()->input() is used throughout instead of query() to read
+     * either transport the same way.
      */
-    public function exportDashboardReportPdf()
+    public function exportDashboardReportPdf(DashboardReportService $reportService)
     {
         $this->authorizeStaff();
-        $batch = request()->query('batch');
-        $programId = request()->query('program_id');
-        $employmentStatus = $this->resolveEmploymentStatus(request()->query('employment_status'));
-        $hireMonths = $this->resolveHireMonths(request()->query('hire_months'));
-        $topCompaniesLimit = $this->resolveTopCompaniesLimit(request()->query('top_companies'));
+        $batches = $reportService->resolveIntArray(request()->input('batch'));
+        $programIds = $reportService->resolveIntArray(request()->input('program_id'));
+        $employmentStatuses = $reportService->resolveEmploymentStatuses(request()->input('employment_status'));
+        $colleges = $reportService->resolveColleges(request()->input('college'));
+        $years = $reportService->resolveYears(request()->input('year'));
+        $hireMonths = $reportService->resolveHireMonths(request()->input('hire_months'));
+        $topCompaniesLimit = $reportService->resolveTopCompaniesLimit(request()->input('top_companies'));
 
-        $stats = $this->buildOverviewStats($batch, $programId, $employmentStatus);
-        $r = $this->buildEmploymentReports($batch, $programId, $employmentStatus, $hireMonths, $topCompaniesLimit);
+        $stats = $reportService->buildOverviewStats($batches, $programIds, $employmentStatuses, $colleges, $years);
+        $r = $reportService->buildEmploymentReports($batches, $programIds, $employmentStatuses, $colleges, $years, $hireMonths, $topCompaniesLimit);
 
-        $batchLabel = $batch ?: 'All';
-        $programLabel = $programId ? (Program::find($programId)->program_name ?? $programId) : 'All';
-        $statusLabel = $employmentStatus ? ucfirst($employmentStatus) : 'All';
+        $batchLabel = $this->filterLabelForYears($batches);
+        $programLabel = $this->filterLabelForPrograms($programIds);
+        $statusLabel = $this->filterLabelForList($employmentStatuses, fn ($v) => ucfirst($v));
+        $collegeLabel = $this->filterLabelForList($colleges, fn ($v) => Program::COLLEGES[$v] ?? $v);
+        $yearLabel = $this->filterLabelForYears($years);
 
-        $pdf = Pdf::loadView('superAdmin.dashboard-report-pdf', compact('stats', 'r', 'batchLabel', 'programLabel', 'statusLabel', 'hireMonths', 'topCompaniesLimit'))
-            ->setPaper('a4', 'portrait');
+        // Decoded client-captured chart PNGs, keyed by canvas id (e.g.
+        // "chartStatus" => "data:image/png;base64,..."). Empty when hit via
+        // plain GET (no JS ran) — the PDF view falls back to its old table
+        // rendering per-chart in that case, so the export never breaks.
+        $charts = json_decode((string) request()->input('charts', '{}'), true) ?: [];
+
+        $pdf = Pdf::loadView('superAdmin.dashboard-report-pdf', compact(
+            'stats', 'r', 'batchLabel', 'programLabel', 'statusLabel', 'collegeLabel', 'yearLabel', 'hireMonths', 'topCompaniesLimit', 'charts'
+        ))->setPaper('a4', 'portrait');
 
         return $pdf->download('dashboard_report_' . now()->format('Y-m-d') . '.pdf');
     }
 
-    /**
-     * Everything under the dashboard's "Reports & Analytics" section.
-     * Split out of showDashboard() purely to keep that method readable —
-     * this is still page-specific, not a reusable service.
-     *
-     * Design note: $batch/$programId scope every report here (a cohort
-     * lens on the whole section), but $employmentStatus is deliberately
-     * NOT applied to the rate/breakdown reports (employment-by-batch,
-     * industry distribution, gender breakdown, alignment) — filtering
-     * "Employed" alumni down to a chart of employment status would make
-     * the chart trivially 100/0%. It's applied only to the Employed
-     * Alumni table below, where picking "Unemployed" meaningfully swaps
-     * which list of names is shown.
-     */
-    private function buildEmploymentReports(?string $batch, ?string $programId, ?string $employmentStatus, int $hireMonths = 6, int $topCompaniesLimit = 5): array
+    /** Human label for a set of selected ids resolved against Program::program_name, for export filter summaries. */
+    private function filterLabelForPrograms(array $programIds): string
     {
-        $alumniQuery = Alumnus::with(['user', 'program', 'industry']);
-        if ($batch) {
-            $alumniQuery->whereYear('alumnus_batch', $batch);
+        if (empty($programIds)) {
+            return 'All';
         }
-        if ($programId) {
-            $alumniQuery->where('program_id', $programId);
-        }
-        $allAlumni = $alumniQuery->get();
-        $employedAlumni = $allAlumni->where('alumnus_employment_status', true);
-
-        $totalAlumni = $allAlumni->count();
-        $employedCount = $employedAlumni->count();
-        $employmentRate = $totalAlumni > 0 ? round($employedCount / $totalAlumni * 100, 2) : 0;
-        $unemploymentRate = $totalAlumni > 0 ? round(100 - $employmentRate, 2) : 0;
-
-        // 1. Employment rate by batch/year
-        $employmentByBatch = $allAlumni->groupBy(fn ($a) => $a->alumnus_batch?->year)
-            ->filter(fn ($group, $key) => $key !== null && $key !== '')
-            ->sortKeys()
-            ->map(function ($group) {
-                $total = $group->count();
-                $employed = $group->where('alumnus_employment_status', true)->count();
-                return ['total' => $total, 'employed' => $employed, 'rate' => $total > 0 ? round($employed / $total * 100, 2) : 0];
-            });
-
-        // "Which month do alumni get employed" — a Jan–Dec seasonality
-        // count from alumnus_employment_date, pooled across every year in
-        // the (batch/program-filtered) cohort. alumnus_employment_date is
-        // set automatically when an application is marked hired in-system,
-        // and is editable on the alumnus's own profile for employment found
-        // outside the platform — so this reflects both, unlike "Hires per
-        // Month" below (system applications only).
-        $monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        $employedWithDate = $employedAlumni->filter(fn ($a) => $a->alumnus_employment_date);
-        $employmentByMonth = collect($monthLabels)->mapWithKeys(function ($label, $i) use ($employedWithDate) {
-            $count = $employedWithDate->filter(fn ($a) => $a->alumnus_employment_date->month === $i + 1)->count();
-            return [$label => $count];
-        });
-
-        // Industry/sector distribution of employed alumni — lists every
-        // industry in the system (0 shown for one with no employed alumni
-        // yet), not just the ones that happen to have a match right now.
-        $industryCounts = $employedAlumni->groupBy(fn ($a) => $a->industry->industry_name ?? 'Unspecified')->map->count();
-        $industryDistribution = Industry::orderBy('industry_name')->pluck('industry_name')
-            ->mapWithKeys(fn ($name) => [$name => $industryCounts->get($name, 0)]);
-        if ($industryCounts->has('Unspecified')) {
-            $industryDistribution->put('Unspecified', $industryCounts->get('Unspecified'));
-        }
-        $industryDistribution = $industryDistribution->sortDesc();
-
-        // Employment rate by gender
-        $genderLabels = Alumnus::genderLabels();
-        $genderEmployment = $allAlumni->groupBy(fn ($a) => $a->alumnus_gender ?: '')
-            ->map(function ($group, $key) use ($genderLabels) {
-                $total = $group->count();
-                $employed = $group->where('alumnus_employment_status', true)->count();
-                return [
-                    'label' => $genderLabels[$key] ?? 'Unspecified',
-                    'total' => $total,
-                    'employed' => $employed,
-                    'rate' => $total > 0 ? round($employed / $total * 100, 2) : 0,
-                ];
-            })->values();
-
-        // Job-to-degree alignment, overall and per program (employed alumni only)
-        $overallAligned = $employedAlumni->filter->hasCourseAlignedJob()->count();
-        $alignmentRate = $employedCount > 0 ? round($overallAligned / $employedCount * 100, 2) : 0;
-        $programAlignmentCounts = $employedAlumni->groupBy(fn ($a) => $a->program->program_name ?? 'Unspecified')
-            ->map(function ($group) {
-                $total = $group->count();
-                $aligned = $group->filter->hasCourseAlignedJob()->count();
-                return ['total' => $total, 'aligned' => $aligned, 'rate' => $total > 0 ? round($aligned / $total * 100, 2) : 0];
-            });
-        // Lists every program in the system, not just the ones with an
-        // employed match right now — unless a specific program is already
-        // selected via the Course filter, where only that one applies.
-        if ($programId) {
-            $programAlignment = $programAlignmentCounts->sortByDesc('total');
-        } else {
-            $emptyProgramRow = ['total' => 0, 'aligned' => 0, 'rate' => 0];
-            $programAlignment = Program::orderBy('program_name')->pluck('program_name')
-                ->mapWithKeys(fn ($name) => [$name => $programAlignmentCounts->get($name, $emptyProgramRow)]);
-            if ($programAlignmentCounts->has('Unspecified')) {
-                $programAlignment->put('Unspecified', $programAlignmentCounts->get('Unspecified'));
-            }
-            $programAlignment = $programAlignment->sortByDesc('total');
-        }
-
-        // Employment interval — months from batch graduation date to first job date.
-        // "Before Graduation" is its own bucket (checked first, via
-        // Alumnus::wasEmployedBeforeGraduation()) rather than being clamped
-        // into "Within 6 months" by the old max(0, ...) — see
-        // $beforeGraduationCount/$internshipCount below for the dedicated
-        // report on exactly this group.
-        $employmentInterval = ['Before Graduation' => 0, 'Within 6 months' => 0, '6–12 months' => 0, '1–2 years' => 0, 'Over 2 years' => 0];
-        foreach ($allAlumni as $a) {
-            if (!$a->alumnus_first_job_date || !$a->alumnus_batch) {
-                continue;
-            }
-            if ($a->wasEmployedBeforeGraduation()) {
-                $employmentInterval['Before Graduation']++;
-                continue;
-            }
-            $graduation = Carbon::parse($a->alumnus_batch);
-            $months = max(0, $graduation->diffInMonths($a->alumnus_first_job_date, false));
-            $bucket = match (true) {
-                $months <= 6 => 'Within 6 months',
-                $months <= 12 => '6–12 months',
-                $months <= 24 => '1–2 years',
-                default => 'Over 2 years',
-            };
-            $employmentInterval[$bucket]++;
-        }
-
-        // "Job Before Graduation" & "From an Internship" — both answered
-        // only once an alumnus has a recorded first-job date (self-reported
-        // via edit-profile, or auto-set on an in-system hire — see
-        // AlumnusController::updateAlumniProfile()/JobApplicationController::
-        // hireApplicant()), so the denominator here is alumni with that date
-        // set, not the whole cohort — matching $employmentInterval above.
-        $firstJobKnownAlumni = $allAlumni->filter(fn ($a) => $a->alumnus_first_job_date);
-        $beforeGraduationAlumni = $firstJobKnownAlumni->filter->wasEmployedBeforeGraduation();
-        $beforeGraduationCount = $beforeGraduationAlumni->count();
-        $beforeGraduationRate = $firstJobKnownAlumni->count() > 0
-            ? round($beforeGraduationCount / $firstJobKnownAlumni->count() * 100, 2)
-            : 0;
-
-        $internshipAlumni = $firstJobKnownAlumni->filter(fn ($a) => $a->alumnus_first_job_is_internship);
-        $internshipCount = $internshipAlumni->count();
-        $internshipRate = $firstJobKnownAlumni->count() > 0
-            ? round($internshipCount / $firstJobKnownAlumni->count() * 100, 2)
-            : 0;
-        $beforeGraduationInternshipCount = $beforeGraduationAlumni->filter(fn ($a) => $a->alumnus_first_job_is_internship)->count();
-
-        // Employed Alumni report — the one table where $employmentStatus
-        // actually changes which list is shown (see class doc note above).
-        $employedAlumniTable = $employmentStatus === 'unemployed'
-            ? $allAlumni->where('alumnus_employment_status', false)->sortByDesc('updated_at')->values()
-            : $employedAlumni->sortByDesc('alumnus_employment_date')->values();
-
-        // Job placement & hiring — same alumni cohort filters as jobPlacementRate.
-        $hiringBase = fn () => DB::table('job_applications')
-            ->join('alumni', 'alumni.user_id', '=', 'job_applications.alumnus_id')
-            ->join('job_postings', 'job_postings.job_posting_id', '=', 'job_applications.job_id')
-            ->when($batch, fn ($q) => $q->whereYear('alumni.alumnus_batch', $batch))
-            ->when($programId, fn ($q) => $q->where('alumni.program_id', $programId));
-
-        $totalApplications = $hiringBase()->count();
-        $totalHired = $hiringBase()->where('job_applications.application_status', 'hired')->count();
-
-        // hired_at is set the moment an application is actually marked
-        // hired (JobApplicationController::hireApplication()) — using it
-        // instead of updated_at means a later, unrelated edit to the same
-        // row (e.g. a score correction) no longer shifts it to a different
-        // month here.
-        $hiresPerMonth = collect(range($hireMonths - 1, 0))->mapWithKeys(function ($i) use ($hiringBase) {
-            $month = now()->subMonths($i);
-            $count = $hiringBase()
-                ->where('job_applications.application_status', 'hired')
-                ->whereYear('job_applications.hired_at', $month->year)
-                ->whereMonth('job_applications.hired_at', $month->month)
-                ->count();
-            return [$month->format('M Y') => $count];
-        });
-
-        $topHiringCompanies = $hiringBase()
-            ->where('job_applications.application_status', 'hired')
-            ->select('job_postings.job_posting_company', DB::raw('count(*) as hires'))
-            ->groupBy('job_postings.job_posting_company')
-            ->orderByDesc('hires')
-            ->limit($topCompaniesLimit)
-            ->get();
-
-        // Registered vs pending/unregistered companies
-        $registeredCompanies = Employer::with(['user', 'industry'])->where('employer_approved', true)->latest('created_at')->get();
-        $pendingCompanies = Employer::with(['user', 'industry'])->where('employer_approved', false)->latest('created_at')->get();
-
-        return compact(
-            'totalAlumni', 'employedCount', 'employmentRate', 'unemploymentRate', 'employmentByBatch', 'employmentByMonth', 'industryDistribution',
-            'genderEmployment', 'programAlignment', 'alignmentRate', 'employmentInterval',
-            'beforeGraduationCount', 'beforeGraduationRate', 'internshipCount', 'internshipRate', 'beforeGraduationInternshipCount',
-            'employedAlumniTable', 'totalApplications', 'totalHired', 'hiresPerMonth', 'topHiringCompanies',
-            'registeredCompanies', 'pendingCompanies'
-        );
+        return Program::whereIn('program_id', $programIds)->pluck('program_name')->implode(', ');
     }
+
+    /** Human label for a set of selected years (Batch or Year filter), for export filter summaries. */
+    private function filterLabelForYears(array $years): string
+    {
+        if (empty($years)) {
+            return 'All';
+        }
+        $sorted = collect($years)->sort()->values();
+        return $sorted->implode(', ');
+    }
+
+    /** Human label for any other small multi-select filter (Employment Status, College), for export filter summaries. */
+    private function filterLabelForList(array $values, \Closure $labelFor): string
+    {
+        if (empty($values)) {
+            return 'All';
+        }
+        return collect($values)->map($labelFor)->implode(', ');
+    }
+
 
     public function showSuperAdminProfile()
     {

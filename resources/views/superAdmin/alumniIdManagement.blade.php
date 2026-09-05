@@ -190,6 +190,7 @@
                                         <th data-sort class="border-r border-slate-700">Reference No. <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                         <th data-sort class="border-r border-slate-700">Student Full Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                         <th data-sort class="border-r border-slate-700">Program <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">College <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                         <th data-sort class="border-r border-slate-700">Date Submitted <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                         <th data-sort class="border-r border-slate-700">ID Status <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                         <th>Action</th>
@@ -208,6 +209,7 @@
                                             'reference' => $referenceNo,
                                             'name' => $fullName,
                                             'program' => $alumniIdRecord->alumnus->program->program_name ?? 'N/A',
+                                            'college' => $alumniIdRecord->alumnus->program?->collegeName() ?? 'N/A',
                                             'submitted' => $alumniIdRecord->created_at->format('M d, Y h:i A'),
                                             'lastUpdate' => optional($alumniIdRecord->status_updated_at)->format('M d, Y h:i A') ?? 'Never',
                                             'updatedBy' => $updatedByName,
@@ -224,6 +226,7 @@
                                         <td class="border-r border-slate-100 font-semibold text-[#0E0F3B]">{{ $referenceNo }}</td>
                                         <td class="border-r border-slate-100">{{ $fullName }}</td>
                                         <td class="border-r border-slate-100">{{ $alumniIdRecord->alumnus->program->program_name ?? 'N/A' }}</td>
+                                        <td class="border-r border-slate-100">{{ $alumniIdRecord->alumnus->program?->collegeName() ?? 'N/A' }}</td>
                                         <td class="border-r border-slate-100">{{ $alumniIdRecord->created_at->format('M d, Y h:i A') }}</td>
                                         <td class="border-r border-slate-100">
                                             <span class="px-2 py-1 rounded-full text-[9px] font-bold uppercase {{ $alumniIdRecord->badgeClass() }}">
@@ -254,7 +257,7 @@
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="7" class="py-16 text-center text-gray-400">
+                                        <td colspan="8" class="py-16 text-center text-gray-400">
                                             <i class="fas fa-id-card text-4xl mb-3 block"></i>
                                             No alumni ID records yet.
                                         </td>
@@ -562,6 +565,10 @@
                         <p id="aim-program" class="font-semibold"></p>
                     </div>
                     <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">College</p>
+                        <p id="aim-college" class="font-semibold"></p>
+                    </div>
+                    <div>
                         <p class="text-[10px] font-bold text-slate-400 uppercase">Date Submitted</p>
                         <p id="aim-submitted" class="font-semibold"></p>
                     </div>
@@ -818,6 +825,7 @@
             document.getElementById('aim-reference').textContent = data.reference;
             document.getElementById('aim-name').textContent = data.name;
             document.getElementById('aim-program').textContent = data.program;
+            document.getElementById('aim-college').textContent = data.college;
             document.getElementById('aim-submitted').textContent = data.submitted;
             document.getElementById('aim-lastUpdate').textContent = data.lastUpdate;
             document.getElementById('aim-updatedBy').textContent = data.updatedBy;

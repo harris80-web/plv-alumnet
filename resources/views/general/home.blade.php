@@ -145,7 +145,7 @@
         <div class="flex justify-between items-end mb-8 pl-4">
             <span class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent 
             text-4xl font-bold text-blue-900 uppercase tracking-tighter"> | Campus Events</span>
-            <a href="#" class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent font-bold uppercase text-sm hover:border-b-2 border-[#C73D1A]">Go to Events ></a>
+            <a href="#" class="font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent uppercase text-xs hover:border-b-2 border-[#C73D1A]">Go to Events ></a>
         </div>
 
         <div class="flex items-center">

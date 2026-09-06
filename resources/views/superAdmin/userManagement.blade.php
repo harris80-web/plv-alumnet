@@ -165,16 +165,7 @@ $current_page = 'user_management';
                     <!-- ==================== END METRIC CARDS ==================== -->
 
 
-                    @if ($errors->any())
-                    <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
-                        <i data-lucide="circle-alert" class="w-4 h-4 text-red-500 mt-0.5 shrink-0"></i>
-                        <ul class="space-y-1">
-                            @foreach ($errors->all() as $error)
-                            <li class="text-red-600 text-xs font-medium">{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    @endif
+                    @include('partials.error-toast')
                     <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-b border-slate-100">
                         <div class="relative w-64">
@@ -210,14 +201,11 @@ $current_page = 'user_management';
                                     <th class="px-4 py-4 font-semibold border-r border-slate-700">
                                         <input type="checkbox" id="selectAllAdmins" class="bulk-checkbox">
                                     </th>
-                                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Last Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">First Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Middle Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                                    <th class="px-4 py-4 font-semibold border-r border-slate-700">Suffix</th>
-                                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Address <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Full Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700 text-right">Address <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                     <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Account Status <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                     <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Date Created <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Email <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700 text-right">Email <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                     <th class="px-4 py-4 font-semibold">Actions</th>
                                 </tr>
                             </thead>
@@ -228,18 +216,9 @@ $current_page = 'user_management';
                                         <input type="checkbox" class="admin-row-checkbox bulk-checkbox" value="{{ $admin->user_id }}">
                                     </td>
                                     <td class="px-4 py-4 text-black border-r border-slate-100">
-                                        {{ $admin->user->user_last_name }}
+                                        {{ $admin->user->formalNameWithSuffix() }}
                                     </td>
-                                    <td class="px-4 py-4 text-black border-r border-slate-100">
-                                        {{ $admin->user->user_first_name }}
-                                    </td>
-                                    <td class="px-4 py-4 text-black border-r border-slate-100">
-                                        {{ $admin->user->user_middle_name }}
-                                    </td>
-                                    <td class="px-4 py-4 text-black border-r border-slate-100">
-                                        {{ $admin->user->user_suffix }}
-                                    </td>
-                                    <td class="px-4 py-4 text-black border-r border-slate-100">
+                                    <td class="px-4 py-4 text-black border-r border-slate-100 text-right">
                                         {{ $admin->office_address }}
                                     </td>
                                     <td class="px-4 py-4 text-center border-r border-slate-100">
@@ -251,7 +230,7 @@ $current_page = 'user_management';
                                     <td class="px-4 py-4 text-black border-r border-slate-100">
                                         {{ $admin->user->created_at->format('m/d/y') }}
                                     </td>
-                                    <td class="px-4 py-4 text-black border-r border-slate-100">
+                                    <td class="px-4 py-4 text-black border-r border-slate-100 text-right">
                                         {{ $admin->user->user_email }}
                                     </td>
                                     <td class="px-4 py-4 text-center relative">
@@ -295,7 +274,7 @@ $current_page = 'user_management';
 
                                 @empty
                                 <tr>
-                                    <td colspan="10" class="px-4 py-8 text-center text-slate-400 text-sm">No admins
+                                    <td colspan="7" class="px-4 py-8 text-center text-slate-400 text-sm">No admins
                                         found.</td>
                                 </tr>
                                 @endforelse
@@ -349,16 +328,7 @@ $current_page = 'user_management';
                     </div>
                     <!-- ==================== END METRIC CARDS ==================== -->
 
-                    @if ($errors->any())
-                    <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
-                        <i data-lucide="circle-alert" class="w-4 h-4 text-red-500 mt-0.5 shrink-0"></i>
-                        <ul class="space-y-1">
-                            @foreach ($errors->all() as $error)
-                            <li class="text-red-600 text-xs font-medium">{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    @endif
+                    @include('partials.error-toast')
 
                     <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-b border-slate-100">
@@ -382,38 +352,45 @@ $current_page = 'user_management';
                                 DEACTIVATE SELECTED (<span id="bulkDeactivateAlumniCount">0</span>)
                             </button>
 
-                            <!-- Dropdown Container -->
-                            <div class="relative inline-block text-left" id="alumniDropdown">
-                                <button onclick="toggleDropdown()"
-                                    class="bg-[#0E0F3B] hover:bg-[#1a1b5e] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
-                                    <i data-lucide="plus" class="w-4 h-4"></i>
-                                    ADD ALUMNI
+                            <!-- Add Alumni (standalone — manual-add is its only function now) -->
+                            <button onclick="openAddModal()"
+                                class="bg-[#0E0F3B] hover:bg-[#1a1b5e] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
+                                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                                ADD ALUMNI
+                            </button>
+
+                            <!-- CSV Dropdown Container -->
+                            <div class="relative inline-block text-left" id="alumniCsvDropdown">
+                                <button onclick="toggleCsvDropdown()"
+                                    class="bg-[#C73D1A] hover:bg-[#a83215] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
+                                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                                    CSV
                                     <i data-lucide="chevron-down" class="w-3 h-3"></i>
                                 </button>
 
-                                <!-- Dropdown Menu -->
-                                <div id="dropdownMenu"
-                                    class="hidden absolute left-0 mt-2 w-52 origin-top-left rounded-md bg-white shadow-lg focus:outline-none z-50 ">
+                                <!-- CSV Dropdown Menu -->
+                                <div id="csvDropdownMenu"
+                                    class="hidden absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg focus:outline-none z-50">
                                     <div class="py-1">
-                                        <!-- Option 1: Manual Add -->
-                                        <button onclick="openAddModal()"
-                                            class="flex items-center gap-2 px-4 py-2 text-sm text-[#0E0F3B] hover:bg-gray-100 w-full text-left">
-                                            <i data-lucide="user-plus" class="w-4 h-4"></i>
-                                            Add Alumni
-                                        </button>
-
-                                        <!-- Option 2: Import CSV -->
-                                        <button onclick="triggerCSVImport()"
-                                            class="flex items-center gap-2 px-4 py-2 text-sm text-[#0E0F3B] hover:bg-gray-100 w-full text-left">
-                                            <i data-lucide="file-up" class="w-4 h-4"></i>
-                                            Import CSV File
-                                        </button>
-
-                                        <!-- Option 3: Download Template -->
+                                        <!-- Option 1: Download Template -->
                                         <a href="{{ route('users.downloadAlumniCsvTemplate') }}"
                                             class="flex items-center gap-2 px-4 py-2 text-sm text-[#0E0F3B] hover:bg-gray-100 w-full text-left">
                                             <i data-lucide="file-down" class="w-4 h-4"></i>
                                             Download CSV Template
+                                        </a>
+
+                                        <!-- Option 2: Import -->
+                                        <button onclick="triggerCSVImport()"
+                                            class="flex items-center gap-2 px-4 py-2 text-sm text-[#0E0F3B] hover:bg-gray-100 w-full text-left">
+                                            <i data-lucide="file-up" class="w-4 h-4"></i>
+                                            Import CSV
+                                        </button>
+
+                                        <!-- Option 3: Export -->
+                                        <a href="{{ route('users.exportAlumniCsv') }}" id="exportBtn"
+                                            class="flex items-center gap-2 px-4 py-2 text-sm text-[#0E0F3B] hover:bg-gray-100 w-full text-left">
+                                            <i data-lucide="download" class="w-4 h-4"></i>
+                                            Export CSV
                                         </a>
                                     </div>
                                 </div>
@@ -426,13 +403,6 @@ $current_page = 'user_management';
                                 <input type="file" name="csv_file" id="csvFileInput" accept=".csv"
                                     onchange="this.form.submit()">
                             </form>
-
-                            <!-- Export Button -->
-                            <a href="{{ route('users.exportAlumniCsv') }}" id="exportBtn"
-                                class="bg-[#C73D1A] hover:bg-[#a83215] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
-                                <i data-lucide="download" class="w-4 h-4"></i>
-                                EXPORT CSV
-                            </a>
                         </div>
                       </div>
                       <div class="overflow-x-auto">
@@ -443,12 +413,8 @@ $current_page = 'user_management';
                                         <input type="checkbox" id="selectAllAlumni" class="bulk-checkbox">
                                     </th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">ID</th>
-                                    <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">Last Name <i
+                                    <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">Full Name <i
                                             data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
-                                    <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">First Name <i
-                                            data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
-                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">Middle Name</th>
-                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">Suffix</th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Gender</th>
                                     <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">Program <i
                                             data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
@@ -459,7 +425,7 @@ $current_page = 'user_management';
                                     --}}
                                     <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">Batch <i
                                             data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
-                                    <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">Email <i
+                                    <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700 text-right">Email <i
                                             data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
                                     <th class="px-3 py-4 font-semibold border-r border-slate-700">Status</th>
                                     <th class="px-3 py-4 font-semibold text-center">Action</th>
@@ -493,16 +459,7 @@ $current_page = 'user_management';
                                         {{ $loop->iteration }}
                                     </td>
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $alumnus->user?->user_last_name }}
-                                    </td>
-                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $alumnus->user?->user_first_name }}
-                                    </td>
-                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $alumnus->user?->user_middle_name }}
-                                    </td>
-                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $alumnus->user?->user_suffix ?? '' }}
+                                        {{ $alumnus->user?->formalNameWithSuffix() ?? 'N/A' }}
                                     </td>
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
                                         {{ \App\Models\Alumnus::genderLabels()[$alumnus->alumnus_gender] ?? 'N/A' }}
@@ -523,7 +480,7 @@ $current_page = 'user_management';
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
                                         {{ optional($alumnus->alumnus_batch)->format('Y') }}
                                     </td>
-                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
+                                    <td class="px-3 py-3 font-medium text-black border-r border-slate-100 text-right">
                                         {{ $alumnus->user?->user_email }}
                                     </td>
                                     <td class="px-3 py-3 border-r border-slate-100">
@@ -586,7 +543,7 @@ $current_page = 'user_management';
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="13" class="px-4 py-8 text-center text-slate-400 text-sm">No alumni
+                                    <td colspan="10" class="px-4 py-8 text-center text-slate-400 text-sm">No alumni
                                         found.</td>
                                 </tr>
                                 @endforelse
@@ -640,50 +597,63 @@ $current_page = 'user_management';
                     </div>
                     <!-- ==================== END METRIC CARDS ==================== -->
 
-                    <!-- Awaiting Approval -->
-                    <div class="mb-6">
-                        <p class="text-sm font-semibold text-orange-600 mb-3">Employers Awaiting Approval:</p>
-                        <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-                            <div id="employerPendingTableWrap">
-                                @include('partials.user-management.employer-pending-table')
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Pending (left) / Approved (right) side-by-side -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
-                    <!-- Approved Employers -->
-                    <div>
-                        <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-                          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-b border-slate-100">
-                            <div class="flex gap-2">
-                                <div class="relative w-64">
-                                    <i data-lucide="search"
-                                        class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                    <input type="text" id="employerSearchInput" onkeyup="filterEmployerRows()" placeholder="Search by Company Name"
-                                        class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A]">
+                        <!-- Awaiting Approval (compact: # + Company Name + Actions only) -->
+                        <div>
+                            <p class="text-sm font-semibold text-orange-600 mb-3">Employers Awaiting Approval:</p>
+                            <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                                <div class="flex items-center gap-2 p-4 border-b border-slate-100">
+                                    <div class="relative w-64">
+                                        <i data-lucide="search"
+                                            class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                        <input type="text" id="employerPendingSearchInput" onkeyup="filterEmployerPendingRows()" placeholder="Search by Company Name"
+                                            class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A]">
+                                    </div>
                                 </div>
-                                <button onclick="toggleEmployerFilter()"
-                                    class="p-2 border border-slate-200 bg-white rounded-lg hover:bg-slate-50 text-slate-500 transition-colors">
-                                    <i data-lucide="filter" class="w-4 h-4"></i>
-                                </button>
+                                <div id="employerPendingTableWrap">
+                                    @include('partials.user-management.employer-pending-table')
+                                </div>
                             </div>
-                            <div class="flex gap-2">
-                                <!-- Bulk Deactivate -->
-                                <button type="button" id="bulkDeactivateEmployerBtn" onclick="openBulkDeactivateEmployerModal()"
-                                    class="hidden bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg text-sm font-semibold items-center gap-2 shadow-sm transition-all">
-                                    <i data-lucide="user-minus" class="w-4 h-4"></i>
-                                    DEACTIVATE SELECTED (<span id="bulkDeactivateEmployerCount">0</span>)
-                                </button>
-                                <button onclick="exportEmployersToCSV()"
-                                    class="bg-[#C73D1A] hover:bg-[#a83215] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
-                                    <i data-lucide="download" class="w-4 h-4"></i>
-                                    EXPORT CSV
-                                </button>
-                            </div>
-                          </div>
-
-                        <div id="employerApprovedTableWrap">
-                            @include('partials.user-management.employer-approved-table')
                         </div>
+
+                        <!-- Approved Employers (full columns, horizontally scrollable) -->
+                        <div>
+                            <p class="text-sm font-semibold text-[#0E0F3B] mb-3">Approved &amp; Active Employers:</p>
+                            <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                              <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-b border-slate-100">
+                                <div class="flex gap-2">
+                                    <div class="relative w-64">
+                                        <i data-lucide="search"
+                                            class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                        <input type="text" id="employerSearchInput" onkeyup="filterEmployerRows()" placeholder="Search by Company Name"
+                                            class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A]">
+                                    </div>
+                                    <button onclick="toggleEmployerFilter()"
+                                        class="p-2 border border-slate-200 bg-white rounded-lg hover:bg-slate-50 text-slate-500 transition-colors">
+                                        <i data-lucide="filter" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                                <div class="flex gap-2">
+                                    <!-- Bulk Deactivate -->
+                                    <button type="button" id="bulkDeactivateEmployerBtn" onclick="openBulkDeactivateEmployerModal()"
+                                        class="hidden bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg text-sm font-semibold items-center gap-2 shadow-sm transition-all">
+                                        <i data-lucide="user-minus" class="w-4 h-4"></i>
+                                        DEACTIVATE SELECTED (<span id="bulkDeactivateEmployerCount">0</span>)
+                                    </button>
+                                    <button onclick="exportEmployersToCSV()"
+                                        class="bg-[#C73D1A] hover:bg-[#a83215] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
+                                        <i data-lucide="download" class="w-4 h-4"></i>
+                                        EXPORT CSV
+                                    </button>
+                                </div>
+                              </div>
+
+                            <div id="employerApprovedTableWrap">
+                                @include('partials.user-management.employer-approved-table')
+                            </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -695,10 +665,10 @@ $current_page = 'user_management';
 
     <!-- ==================== ADD ADMIN MODAL ==================== -->
     <div id="addAdminModal" class="modal-overlay" onclick="if(event.target===this) closeModal('addAdminModal')">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-            <form action="{{ route('users.addAdmin') }}" method="POST">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-4 overflow-hidden max-h-[90vh] flex flex-col">
+            <form action="{{ route('users.addAdmin') }}" method="POST" class="flex flex-col overflow-hidden">
                 @csrf
-                <div class="bg-[#0E0F3B] px-8 py-5 flex justify-between items-center">
+                <div class="bg-[#0E0F3B] px-8 py-5 flex justify-between items-center shrink-0">
                     <h2 class="text-white text-lg font-bold">Admin Management</h2>
                     <button type="button" onclick="closeModal('addAdminModal')"
                         class="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
@@ -706,90 +676,87 @@ $current_page = 'user_management';
                     </button>
                 </div>
 
-                <div class="px-8 py-6 space-y-3">
-                    <div class="pb-1 border-b border-slate-100">
-                        <p class="text-[10px] font-bold text-[#C73D1A] uppercase">Personal Information</p>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <label for="user_first_name" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">First
-                            Name:</label>
-                        <input type="text" name="user_first_name" placeholder="Enter First Name here" required
-                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <label for="user_middle_name" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Middle
-                            Name:</label>
-                        <input type="text" name="user_middle_name" placeholder="Enter Middle Name here"
-                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <label for="user_last_name" class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Last
-                            Name:</label>
-                        <input type="text" name="user_last_name" placeholder="Enter Last Name here" required
-                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <label for="user_suffix"
-                            class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Suffix:</label>
-                        <input type="text" name="user_suffix" placeholder="e.g. Jr., III"
-                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <label for="office_address"
-                            class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Address:</label>
-                        <input type="text" name="office_address" placeholder="Enter Address here" required
-                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
-                    </div>
-
-                    <div class="pt-2 pb-1 border-b border-slate-100">
-                        <p class="text-[10px] font-bold text-[#C73D1A] uppercase">Account Details</p>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <label for="user_email"
-                            class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Email:</label>
-                        <input type="email" name="user_email" placeholder="Enter Email here" required
-                            class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <label for="user_password"
-                            class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Password:</label>
-                        <div class="flex-1 relative group">
-                            <input type="password" name="user_password" id="adminPass" placeholder="••••••••" required
-                                class="w-full px-3 py-1.5 border border-[#0E0F3B] group-hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
-                            <button type="button" onclick="togglePassword('adminPass', this)"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#C73D1A]">
-                                <i data-lucide="eye" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <label for="user_password_confirmation"
-                            class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Confirm Password:</label>
-                        <div class="flex-1 relative group">
-                            <input type="password" name="user_password_confirmation" id="adminConfirmPass"
-                                placeholder="••••••••" required
-                                class="w-full px-3 py-1.5 border border-[#0E0F3B] group-hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
-                            <button type="button" onclick="togglePassword('adminConfirmPass', this)"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#C73D1A]">
-                                <i data-lucide="eye" class="w-4 h-4"></i>
-                            </button>
+                <div class="px-8 py-6 space-y-6 overflow-y-auto">
+                    <div>
+                        <p class="text-[10px] font-bold text-[#C73D1A] uppercase pb-2 mb-3 border-b border-slate-100">Personal Information</p>
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-4">
+                            <div class="space-y-1">
+                                <label for="user_first_name" class="text-xs font-bold text-[#0E0F3B] uppercase">First Name</label>
+                                <input type="text" name="user_first_name" id="user_first_name" placeholder="Enter First Name here" required
+                                    class="w-full px-3 py-2 border border-[#0E0F3B] hover:border-[#C73D1A] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
+                            </div>
+                            <div class="space-y-1">
+                                <label for="user_middle_name" class="text-xs font-bold text-[#0E0F3B] uppercase">Middle Name</label>
+                                <input type="text" name="user_middle_name" id="user_middle_name" placeholder="Enter Middle Name here"
+                                    class="w-full px-3 py-2 border border-[#0E0F3B] hover:border-[#C73D1A] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
+                            </div>
+                            <div class="space-y-1">
+                                <label for="user_last_name" class="text-xs font-bold text-[#0E0F3B] uppercase">Last Name</label>
+                                <input type="text" name="user_last_name" id="user_last_name" placeholder="Enter Last Name here" required
+                                    class="w-full px-3 py-2 border border-[#0E0F3B] hover:border-[#C73D1A] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
+                            </div>
+                            <div class="space-y-1">
+                                <label for="user_suffix" class="text-xs font-bold text-[#0E0F3B] uppercase">Suffix</label>
+                                <input type="text" name="user_suffix" id="user_suffix" placeholder="e.g. Jr., III"
+                                    class="w-full px-3 py-2 border border-[#0E0F3B] hover:border-[#C73D1A] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
+                            </div>
+                            <div class="space-y-1 col-span-2">
+                                <label for="office_address" class="text-xs font-bold text-[#0E0F3B] uppercase">Address</label>
+                                <input type="text" name="office_address" id="office_address" placeholder="Enter Address here" required
+                                    class="w-full px-3 py-2 border border-[#0E0F3B] hover:border-[#C73D1A] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
+                            </div>
                         </div>
                     </div>
 
-                    <div class="pt-2 pb-1 border-b border-slate-100">
-                        <p class="text-[10px] font-bold text-[#C73D1A] uppercase">Feature Access</p>
+                    <div>
+                        <p class="text-[10px] font-bold text-[#C73D1A] uppercase pb-2 mb-3 border-b border-slate-100">Account Details</p>
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-4">
+                            <div class="space-y-1 col-span-2">
+                                <label for="user_email" class="text-xs font-bold text-[#0E0F3B] uppercase">Email</label>
+                                <input type="email" name="user_email" id="user_email" placeholder="Enter Email here" required
+                                    class="w-full px-3 py-2 border border-[#0E0F3B] hover:border-[#C73D1A] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
+                            </div>
+                            <div class="space-y-1">
+                                <label for="user_password" class="text-xs font-bold text-[#0E0F3B] uppercase">Password</label>
+                                <div class="relative group">
+                                    <input type="password" name="user_password" id="adminPass" placeholder="••••••••" required
+                                        class="w-full px-3 py-2 border border-[#0E0F3B] group-hover:border-[#C73D1A] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
+                                    <button type="button" onclick="togglePassword('adminPass', this)"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#C73D1A]">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="space-y-1">
+                                <label for="user_password_confirmation" class="text-xs font-bold text-[#0E0F3B] uppercase">Confirm Password</label>
+                                <div class="relative group">
+                                    <input type="password" name="user_password_confirmation" id="adminConfirmPass"
+                                        placeholder="••••••••" required
+                                        class="w-full px-3 py-2 border border-[#0E0F3B] group-hover:border-[#C73D1A] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 transition-colors">
+                                    <button type="button" onclick="togglePassword('adminConfirmPass', this)"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#C73D1A]">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 py-1">
-                        @foreach (\App\Models\Office::PERMISSIONS as $key => $label)
-                        <label class="flex items-center gap-2 text-sm text-[#0E0F3B]">
-                            <input type="checkbox" name="permissions[]" value="{{ $key }}" checked>
-                            {{ $label }}
-                        </label>
-                        @endforeach
+
+                    <div>
+                        <p class="text-[10px] font-bold text-[#C73D1A] uppercase pb-2 mb-3 border-b border-slate-100">Feature Access</p>
+                        <div class="grid grid-cols-3 gap-x-4 gap-y-3 bg-slate-50 rounded-lg p-4">
+                            @foreach (\App\Models\Office::PERMISSIONS as $key => $label)
+                            <label class="flex items-center gap-2 text-sm text-[#0E0F3B]">
+                                <input type="checkbox" name="permissions[]" value="{{ $key }}" checked>
+                                <i data-lucide="{{ \App\Models\Office::permissionIcons()[$key] ?? 'circle' }}" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                                {{ $label }}
+                            </label>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
 
-                <div class="px-8 pb-7 flex justify-end gap-4">
+                <div class="px-8 py-5 border-t border-slate-100 flex justify-end gap-4 shrink-0">
                     <button type="button" onclick="closeModal('addAdminModal')"
                         class="px-8 py-2 border-2 border-[#0E0F3B] text-[#0E0F3B] rounded-lg text-sm font-bold hover:bg-[#0E0F3B] hover:text-white transition-all uppercase">
                         Cancel
@@ -1361,6 +1328,7 @@ $current_page = 'user_management';
                         @foreach (\App\Models\Office::PERMISSIONS as $key => $label)
                         <label class="flex items-center gap-2 text-sm text-[#0E0F3B]">
                             <input type="checkbox" class="admin-modal-permission-checkbox" value="{{ $key }}">
+                            <i data-lucide="{{ \App\Models\Office::permissionIcons()[$key] ?? 'circle' }}" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
                             {{ $label }}
                         </label>
                         @endforeach
@@ -1408,6 +1376,7 @@ $current_page = 'user_management';
                     @foreach (\App\Models\Office::PERMISSIONS as $key => $label)
                     <label class="flex items-center gap-2 text-sm text-[#0E0F3B]">
                         <input type="checkbox" class="bulk-admin-permission-checkbox" value="{{ $key }}">
+                        <i data-lucide="{{ \App\Models\Office::permissionIcons()[$key] ?? 'circle' }}" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
                         {{ $label }}
                     </label>
                     @endforeach
@@ -1517,6 +1486,57 @@ $current_page = 'user_management';
                     class="px-8 py-2 bg-[#0E0F3B] text-white rounded font-bold uppercase text-sm">Done</button>
             </div>
 
+        </div>
+    </div>
+
+    <!-- ===== VIEW PENDING EMPLOYER MODAL (full details + Approve/Decline) ===== -->
+    <div id="viewPendingEmployerModal"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/60 backdrop-blur-sm px-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden">
+            <div class="bg-[#0E0F3B] px-7 py-4 flex justify-between items-center">
+                <h2 class="text-white text-lg font-bold">Employer Awaiting Approval</h2>
+                <button onclick="closeViewPendingEmployerModal()" class="text-gray-300 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="px-7 py-5 space-y-5">
+                <div class="grid grid-cols-2 gap-x-4 gap-y-4">
+                    <div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">Company Name</p>
+                        <p id="pendingModalCompany" class="text-[#0E0F3B] font-medium text-sm">--</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">Industry/Sector</p>
+                        <p id="pendingModalIndustry" class="text-[#0E0F3B] font-medium text-sm">--</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">Full Name</p>
+                        <p id="pendingModalFullName" class="text-[#0E0F3B] font-medium text-sm">--</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">Email</p>
+                        <p id="pendingModalEmail" class="text-[#0E0F3B] font-medium text-sm break-all">--</p>
+                    </div>
+                    <div class="col-span-2">
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">Official Website URL</p>
+                        <p id="pendingModalWebsite" class="text-blue-600 font-medium text-sm">--</p>
+                    </div>
+                    <div class="col-span-2">
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">Document</p>
+                        <p id="pendingModalDocument" class="text-sm">--</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-7 py-3.5 bg-gray-50 border-t border-slate-100 flex justify-end gap-2">
+                <button onclick="closeViewPendingEmployerModal()"
+                    class="px-6 py-2 border border-slate-300 text-slate-600 hover:bg-slate-100 rounded font-bold uppercase text-xs transition-colors">Cancel</button>
+                <button id="pendingModalDeclineBtn"
+                    class="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded font-bold uppercase text-xs transition-colors">Decline</button>
+                <button id="pendingModalApproveBtn"
+                    class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold uppercase text-xs transition-colors">Approve</button>
+            </div>
         </div>
     </div>
 
@@ -1642,14 +1662,13 @@ $current_page = 'user_management';
             initDropdowns();
         });
 
-        function toggleDropdown() {
-            const menu = document.getElementById('dropdownMenu');
+        function toggleCsvDropdown() {
+            const menu = document.getElementById('csvDropdownMenu');
             menu.classList.toggle('hidden');
         }
 
         function openAddModal() {
             document.getElementById('addAlumniModal').classList.add('open');
-            toggleDropdown(); // Close menu after selection
         }
 
         // College narrows the Program list to that college's courses; picking
@@ -1675,7 +1694,7 @@ $current_page = 'user_management';
 
         function triggerCSVImport() {
             document.getElementById('csvFileInput').click();
-            toggleDropdown(); // Close menu after selection
+            toggleCsvDropdown(); // Close menu after selection
         }
 
         /* ── Alumni bulk-select + bulk deactivate ─────────────────── */
@@ -1797,6 +1816,11 @@ $current_page = 'user_management';
             initViewEmployerButtons();
         };
 
+        window.reinitEmployerPendingTable = function () {
+            initViewPendingEmployerButtons();
+        };
+        initViewPendingEmployerButtons();
+
         /* ── Admin bulk-select + bulk permission edit ─────────────── */
         const BULK_ADMIN_PERMISSIONS_URL = "{{ route('offices.bulkUpdatePermissions') }}";
 
@@ -1907,8 +1931,8 @@ $current_page = 'user_management';
 
         // Optional: Close dropdown if user clicks outside of it
         window.onclick = function(event) {
-            if (!event.target.closest('#alumniDropdown')) {
-                const menu = document.getElementById('dropdownMenu');
+            if (!event.target.closest('#alumniCsvDropdown')) {
+                const menu = document.getElementById('csvDropdownMenu');
                 if (!menu.classList.contains('hidden')) {
                     menu.classList.add('hidden');
                 }
@@ -2103,6 +2127,22 @@ $current_page = 'user_management';
                 if (match) visibleCount++;
             });
             const noResults = document.getElementById('employerNoSearchResults');
+            if (noResults) noResults.classList.toggle('hidden', visibleCount !== 0 || rows.length === 0);
+        }
+
+        // Compact counterpart for the Awaiting Approval table — company name
+        // only (that table doesn't have the other columns/sidebar filter the
+        // Approved table's filterEmployerRows() checks).
+        function filterEmployerPendingRows() {
+            const query = document.getElementById('employerPendingSearchInput').value.trim().toLowerCase();
+            const rows = document.querySelectorAll('#employerPendingTbody tr[data-search]');
+            let visibleCount = 0;
+            rows.forEach(row => {
+                const match = row.dataset.search.includes(query);
+                row.style.display = match ? '' : 'none';
+                if (match) visibleCount++;
+            });
+            const noResults = document.getElementById('employerPendingNoSearchResults');
             if (noResults) noResults.classList.toggle('hidden', visibleCount !== 0 || rows.length === 0);
         }
 
@@ -2362,6 +2402,61 @@ $current_page = 'user_management';
             });
         }
         document.addEventListener('DOMContentLoaded', initViewEmployerButtons);
+
+        /* ── View Pending Employer Modal (full details + Approve/Decline) ──
+           Cancel just closes this modal; Approve/Decline close it too, then
+           hand off to the existing openEmployerConfirm() flow (same
+           confirm-modal + hidden approve/reject forms the old inline
+           dropdown menu used) rather than duplicating that logic. */
+        function initViewPendingEmployerButtons() {
+            const modal = document.getElementById('viewPendingEmployerModal');
+            const viewButtons = document.querySelectorAll('.view-pending-modal-btn');
+
+            viewButtons.forEach(button => {
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                newButton.addEventListener('click', function() {
+                    const fields = {
+                        'pendingModalCompany': 'data-company',
+                        'pendingModalIndustry': 'data-industry',
+                        'pendingModalFullName': 'data-full-name',
+                        'pendingModalEmail': 'data-email',
+                        'pendingModalWebsite': 'data-website',
+                    };
+                    for (const [id, attribute] of Object.entries(fields)) {
+                        const element = document.getElementById(id);
+                        if (element) element.textContent = this.getAttribute(attribute) || '--';
+                    }
+
+                    const documentUrl = this.getAttribute('data-document');
+                    const documentEl = document.getElementById('pendingModalDocument');
+                    documentEl.innerHTML = documentUrl
+                        ? '<a href="' + documentUrl + '" target="_blank" class="text-blue-600 hover:underline">View Document</a>'
+                        : 'Not Uploaded';
+
+                    const userId = this.getAttribute('data-user-id');
+                    const companyName = this.getAttribute('data-company');
+
+                    document.getElementById('pendingModalApproveBtn').onclick = function () {
+                        closeViewPendingEmployerModal();
+                        openEmployerConfirm('approve', companyName, userId);
+                    };
+                    document.getElementById('pendingModalDeclineBtn').onclick = function () {
+                        closeViewPendingEmployerModal();
+                        openEmployerConfirm('reject', companyName, userId);
+                    };
+
+                    modal.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                    if (window.lucide) lucide.createIcons();
+                });
+            });
+        }
+
+        function closeViewPendingEmployerModal() {
+            document.getElementById('viewPendingEmployerModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
 
         /* ── Employer Deactivate Modal ──────────────────────────── */
         function openEmployerDeactivateModal(firstName, lastName, userId) {

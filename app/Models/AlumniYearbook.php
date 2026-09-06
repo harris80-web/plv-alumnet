@@ -22,17 +22,24 @@ class AlumniYearbook extends Model
         'status_updated_at' => 'datetime',
     ];
 
-    public const CLAIMING_STATUSES = ['pending', 'on_hand', 'ready_to_claim', 'claimed', 'not_yet_claimed'];
+    /**
+     * "On Hand" and "Not Yet Claimed" were removed as claiming statuses
+     * entirely (see migration
+     * 2026_09_06_000000_remove_intermediate_statuses_from_alumni_id_and_yearbook)
+     * — same 3-stage lifecycle as AlumniId::STATUSES now. distribution_status
+     * below is unrelated (whether the school has received the printed
+     * yearbooks at all, not whether an individual alumnus has claimed
+     * theirs) and keeps its own separate 'on_hand' value.
+     */
+    public const CLAIMING_STATUSES = ['pending', 'ready_to_claim', 'claimed'];
     public const DISTRIBUTION_STATUSES = ['pending', 'on_hand'];
 
     public static function claimingStatusLabels(): array
     {
         return [
             'pending' => 'Pending',
-            'on_hand' => 'On Hand',
             'ready_to_claim' => 'Ready to Claim',
             'claimed' => 'Claimed',
-            'not_yet_claimed' => 'Not Yet Claimed',
         ];
     }
 
@@ -40,10 +47,8 @@ class AlumniYearbook extends Model
     {
         return [
             'pending' => 'bg-amber-100 text-amber-700',
-            'on_hand' => 'bg-cyan-100 text-cyan-700',
             'ready_to_claim' => 'bg-purple-100 text-purple-700',
             'claimed' => 'bg-green-100 text-green-700',
-            'not_yet_claimed' => 'bg-slate-100 text-slate-500',
         ];
     }
 

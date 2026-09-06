@@ -576,6 +576,13 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             if (window.lucide) lucide.createIcons();
+
+            // Deep-link from the dashboard's "Latest Event Posted" widget
+            // (?notice=123) — open that notice's edit modal directly.
+            const openNoticeId = new URLSearchParams(window.location.search).get('notice');
+            if (openNoticeId && document.getElementById('editNoticeForm-' + openNoticeId)) {
+                openEditNoticeModal(openNoticeId);
+            }
         });
 
         const categoryLabels = <?= json_encode(\App\Models\Notice::categoryLabels()) ?>;

@@ -18,8 +18,10 @@
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .page-tab-btn { border-bottom: 3px solid transparent; color: #64748b; }
-        .page-tab-btn.active { border-color: #C73D1A; color: #0E0F3B; }
+        /* Same tab style as superAdmin/userManagement.blade.php's .tab-btn */
+        .page-tab-btn { border-bottom: 2px solid transparent; color: #64748b; }
+        .page-tab-btn.active { border-bottom: 2px solid #ea580c; color: #ea580c; font-weight: 600; }
+        .page-tab-btn:hover:not(.active) { color: #ea580c; }
 
         .bar-track { background: #e2e8f0; border-radius: 999px; overflow: hidden; height: 8px; }
         .bar-fill { height: 100%; border-radius: 999px; }
@@ -34,6 +36,25 @@
         #queueThreadModal>div, #flagDetailPanel { scrollbar-width: none; -ms-overflow-style: none; }
         #queueThreadModal>div::-webkit-scrollbar { display: none; }
 
+        /* Message threads need their own visible scrollbar — the page-wide
+           `* { scrollbar-width: none }` / `::-webkit-scrollbar { display: none }`
+           reset above hides every scrollbar by default, including these,
+           which is unusable once a thread has more than a screenful of
+           messages. Same thin-scrollbar look as .chat-scroll in
+           alumni/messages.blade.php. */
+        #qt-messages, #ht-messages {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+        #qt-messages::-webkit-scrollbar, #ht-messages::-webkit-scrollbar {
+            display: block;
+            width: 6px;
+        }
+        #qt-messages::-webkit-scrollbar-thumb, #ht-messages::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
         .msg-bubble-user { background: #f1f5f9; color: #0E0F3B; }
         .msg-bubble-ai { background: #eef2ff; color: #3730a3; }
         .msg-bubble-agent { background: #1D264F; color: white; }
@@ -45,6 +66,32 @@
         @include('partials.super-admin-side-bar')
         <main class="flex-1 flex flex-col overflow-hidden min-w-0">
             @include('partials.super-admin-header')
+
+            <!-- PAGE TABS -->
+            <div class="bg-white px-8 flex gap-8 border-b border-slate-200 shrink-0 shadow-md overflow-x-auto">
+                <button type="button" onclick="switchPageTab('overview')" id="pageTabBtn-overview" class="page-tab-btn active py-3 px-2 flex items-center gap-2 text-sm transition-colors whitespace-nowrap">
+                    <i data-lucide="gauge" class="w-4 h-4"></i> Overview
+                </button>
+                <button type="button" onclick="switchPageTab('aichatbot')" id="pageTabBtn-aichatbot" class="page-tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors whitespace-nowrap">
+                    <i data-lucide="bot" class="w-4 h-4"></i> AI Chatbot
+                </button>
+                <button type="button" onclick="switchPageTab('queue')" id="pageTabBtn-queue" class="page-tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors whitespace-nowrap">
+                    <i data-lucide="headset" class="w-4 h-4"></i> Live Agent Queue
+                </button>
+                <button type="button" onclick="switchPageTab('alumnimsg')" id="pageTabBtn-alumnimsg" class="page-tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors whitespace-nowrap">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i> Alumni Messaging
+                </button>
+                <button type="button" onclick="switchPageTab('history')" id="pageTabBtn-history" class="page-tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors whitespace-nowrap">
+                    <i data-lucide="history" class="w-4 h-4"></i> Chatbot History
+                </button>
+                <button type="button" onclick="switchPageTab('reports')" id="pageTabBtn-reports" class="page-tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors whitespace-nowrap">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Reports
+                </button>
+                <button type="button" onclick="switchPageTab('settings')" id="pageTabBtn-settings" class="page-tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors whitespace-nowrap">
+                    <i data-lucide="settings" class="w-4 h-4"></i> Settings
+                </button>
+            </div>
+
             <div class="flex-1 overflow-y-auto p-6">
 
                 @include('partials.success')
@@ -55,19 +102,6 @@
                     @endforeach
                 </div>
                 @endif
-
-                <!-- <h1 class="text-2xl font-bold text-[#0E0F3B] mb-4">Chatbot &amp; Messaging</h1> -->
-
-                <!-- PAGE TABS -->
-                <div class="flex gap-6 border-b border-slate-200 mb-6 overflow-x-auto">
-                    <button type="button" onclick="switchPageTab('overview')" id="pageTabBtn-overview" class="page-tab-btn active px-1 pb-3 text-sm font-bold uppercase tracking-wide transition-colors whitespace-nowrap">Overview</button>
-                    <button type="button" onclick="switchPageTab('aichatbot')" id="pageTabBtn-aichatbot" class="page-tab-btn px-1 pb-3 text-sm font-bold uppercase tracking-wide transition-colors whitespace-nowrap">AI Chatbot</button>
-                    <button type="button" onclick="switchPageTab('queue')" id="pageTabBtn-queue" class="page-tab-btn px-1 pb-3 text-sm font-bold uppercase tracking-wide transition-colors whitespace-nowrap">Live Agent Queue</button>
-                    <button type="button" onclick="switchPageTab('alumnimsg')" id="pageTabBtn-alumnimsg" class="page-tab-btn px-1 pb-3 text-sm font-bold uppercase tracking-wide transition-colors whitespace-nowrap">Alumni Messaging</button>
-                    <button type="button" onclick="switchPageTab('history')" id="pageTabBtn-history" class="page-tab-btn px-1 pb-3 text-sm font-bold uppercase tracking-wide transition-colors whitespace-nowrap">Chatbot History</button>
-                    <button type="button" onclick="switchPageTab('reports')" id="pageTabBtn-reports" class="page-tab-btn px-1 pb-3 text-sm font-bold uppercase tracking-wide transition-colors whitespace-nowrap">Reports</button>
-                    <button type="button" onclick="switchPageTab('settings')" id="pageTabBtn-settings" class="page-tab-btn px-1 pb-3 text-sm font-bold uppercase tracking-wide transition-colors whitespace-nowrap">Settings</button>
-                </div>
 
                 <!-- ══════════════════════ OVERVIEW ══════════════════════ -->
                 <div id="pageTab-overview">

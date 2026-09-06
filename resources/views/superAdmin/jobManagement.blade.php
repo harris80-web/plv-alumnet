@@ -141,46 +141,51 @@
                         <p class="text-xs font-medium text-slate-500 mt-1">Approved Job Posts</p>
                     </div>
                     <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <p class="text-2xl font-bold text-red-500">{{ $declinedCount }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Declined Job Posts</p>
                     </div>
                 </div>
 
-                <!-- ══ PENDING TABLE ══ -->
-                <p class="text-xs font-bold text-[#C73D1A] mb-3">Job Posts pending for approval:</p>
-                <div id="jobPendingTableWrap" class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden mb-6 w-full">
-                    @include('partials.job-management.pending-table')
-                </div>
-
-                <!-- ══ ALL JOBS TABLE ══ -->
+                <!-- ══ JOB POSTS TABLE (Pending + Approved combined, filterable by status) ══ -->
                 <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden w-full">
-                  <!-- Search / Filter / Export Row -->
-                  <div class="flex flex-col md:flex-row md:items-center gap-3 p-4 border-b border-slate-100">
+                  <!-- Search / Status Filter / Filter Sidebar / Export Row -->
+                  <form method="GET" action="{{ route('jobPosting.jobManagement') }}" class="flex flex-col md:flex-row md:items-center gap-3 p-4 border-b border-slate-100">
                     <div class="relative flex-1 max-w-md">
                         <i data-lucide="search"
                             class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
                         <input id="search-input" type="text" placeholder="Search by Job Title or Company Name"
+                            onkeydown="if(event.key==='Enter'){event.preventDefault();}"
                             class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A] transition-all">
                     </div>
-                    <button onclick="toggleSidebar('filter-sidebar')"
+                    <div class="relative shrink-0 w-44">
+                        <select name="status" onchange="this.form.submit()"
+                            class="w-full pl-4 pr-8 py-2 bg-white border border-slate-200 rounded-full text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A] transition-all">
+                            <option value="">All Statuses</option>
+                            <option value="pending" {{ ($filters['status'] ?? '') === 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="approved" {{ ($filters['status'] ?? '') === 'approved' ? 'selected' : '' }}>Approved</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                    </div>
+                    <button type="button" onclick="toggleSidebar('filter-sidebar')"
                         class="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:border-[#C73D1A] transition-all shrink-0">
                         <i data-lucide="filter" class="w-4 h-4"></i>
                     </button>
                     <div class="md:ml-auto flex items-center gap-3">
-                        <button
+                        <button type="button"
                             onclick="openPostJobModal()"
                             class="flex items-center gap-2 bg-[#1D264F] hover:bg-blue-900 text-white px-4 py-2 rounded-lg font-bold text-xs tracking-widest shadow-lg transition-all">
                             <i class="fas fa-plus text-xs"></i>
                             <span>POST A NEW JOB</span>
                         </button>
                     </div>
-                    <button onclick="exportCSV()"
+                    <button type="button" onclick="exportCSV()"
                         class="shrink-0 flex items-center gap-2 px-5 py-2 bg-[#C73D1A] hover:bg-[#a83215] text-white text-xs font-bold rounded-lg transition-all uppercase">
                         <i data-lucide="download" class="w-4 h-4"></i> EXPORT CSV
                     </button>
-                  </div>
+                  </form>
 
-                  <div id="jobApprovedTableWrap">
-                    @include('partials.job-management.approved-table')
+                  <div id="jobManagementTableWrap">
+                    @include('partials.job-management.jobs-table')
                   </div>
                 </div>
 

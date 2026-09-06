@@ -7,13 +7,16 @@ $currentPage = basename(request()->path()) . '.blade.php';
 $roleLabel = (auth()->user()?->user_role === 'super_admin') ? 'Super Admin' : 'Admin';
 
 $pageTitles = [
-    'dashboard.blade.php'       => 'Dashboard',
-    'profile.blade.php'         => $roleLabel . ' Profile',
-    'userManagement.blade.php' => 'User Management',
-    'jobManagement.blade.php'   => 'Job Placement Management',
+    'dashboard.blade.php'              => $roleLabel . ' Dashboard',
+    'companies.blade.php'              => 'Alumni & Company Registration Reports',
+    'employment.blade.php'             => 'Employment & Alignment Report',
+    'placement.blade.php'              => 'Job Placement & Hiring Report',
+    'profile.blade.php'                => $roleLabel . ' Profile',
+    'userManagement.blade.php'         => 'User Management',
+    'jobManagement.blade.php'          => 'Job Placement Management',
     'alumniIdManagement.blade.php'     => 'Alumni ID & Yearbook Management',
-    'notices.blade.php'  => 'Notices & Events',
-    'chatbotMessaging.blade.php' => 'Chatbot & Messaging',
+    'notices.blade.php'                 => 'Notices & Events',
+    'chatbotMessaging.blade.php'         => 'Chatbot & Messaging',
     'testimonialManagement.blade.php'    => 'Testimonial Management',
     'faqManagement.blade.php'            => 'Manage FAQs'
 ];
@@ -582,3 +585,5 @@ $title = request()->routeIs('notifications.all')
         lucide.createIcons();
     }
 </script>
+
+@include('partials.back-to-top')

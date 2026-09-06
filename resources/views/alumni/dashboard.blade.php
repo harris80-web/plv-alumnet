@@ -84,7 +84,6 @@
                 $alumniIdRecord = Auth::user()->alumnus->alumniId ?? null;
                 $alumniIdCardConfig = [
                     'pending' => ['icon' => 'fa-clock', 'title' => 'Pending Submission', 'desc' => 'Your Alumni ID request has been submitted and is waiting to be processed.'],
-                    'under_review' => ['icon' => 'fa-magnifying-glass', 'title' => 'Under Review', 'desc' => 'Your Alumni ID is currently under review by the Alumni Office.'],
                     'ready_to_claim' => ['icon' => 'fa-bell', 'title' => 'Ready to Claim', 'desc' => 'Your Alumni ID is ready! Visit the Alumni Office to claim it.'],
                     'claimed' => ['icon' => 'fa-check', 'title' => 'Alumni ID Claimed', 'desc' => 'Your Alumni ID has been claimed.'],
                 ];
@@ -126,20 +125,14 @@
                 $yearbookRecord = Auth::user()->alumnus->yearbook ?? null;
                 $yearbookCardConfig = [
                     'pending' => ['title' => 'Pending', 'desc' => 'Your yearbook request is being processed.'],
-                    'on_hand' => ['title' => 'On Hand', 'desc' => 'Your yearbook has arrived at the Alumni Office and is being prepared for release.'],
                     'ready_to_claim' => ['title' => 'Ready to Claim', 'desc' => 'Your yearbook is ready! See the distribution details below.'],
                     'claimed' => ['title' => 'Yearbook Claimed', 'desc' => 'You have claimed your yearbook.'],
-                    'not_yet_claimed' => ['title' => 'Not Yet Claimed', 'desc' => 'Your yearbook has not been claimed yet.'],
                 ];
                 $yearbookCard = $yearbookCardConfig[$yearbookRecord->claiming_status ?? null] ?? ['title' => 'No Record Found', 'desc' => 'No yearbook record found yet. Please contact the Alumni Office.'];
 
-                // 'not_yet_claimed' is a separate terminal state, not a stage
-                // further along than 'claimed' — kept out of the linear
-                // stepper and called out as its own message instead.
-                $yearbookSteps = ['pending', 'on_hand', 'ready_to_claim', 'claimed'];
+                $yearbookSteps = \App\Models\AlumniYearbook::CLAIMING_STATUSES;
                 $yearbookStepLabels = \App\Models\AlumniYearbook::claimingStatusLabels();
-                $yearbookIsNotYetClaimed = ($yearbookRecord->claiming_status ?? null) === 'not_yet_claimed';
-                $yearbookCurrentIndex = $yearbookRecord && !$yearbookIsNotYetClaimed
+                $yearbookCurrentIndex = $yearbookRecord
                     ? array_search($yearbookRecord->claiming_status, $yearbookSteps, true)
                     : -1;
             @endphp
@@ -206,7 +199,7 @@
                             @endif
                         @endforeach
                     </div>
-                    <div class="grid grid-cols-4 text-[10px] font-medium text-center mb-6">
+                    <div class="grid grid-cols-3 text-[10px] font-medium text-center mb-6">
                         @foreach($alumniIdSteps as $i => $stepKey)
                             <span class="{{ $i <= $alumniIdCurrentIndex ? 'text-[#C73D1A]' : 'text-gray-400' }}">{{ $alumniIdStepLabels[$stepKey] }}</span>
                         @endforeach
@@ -242,31 +235,25 @@
                     <p class="text-xs font-bold text-[#C73D1A] uppercase tracking-wide mb-1">Reference No.</p>
                     <p class="text-lg font-bold text-[#0E0F3B] mb-6">ALYB-{{ str_pad($yearbookRecord->id, 6, '0', STR_PAD_LEFT) }}</p>
 
-                    @if($yearbookIsNotYetClaimed)
-                        <div class="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 mb-6 text-sm text-slate-600">
-                            <i class="fa-solid fa-circle-exclamation mr-1"></i> {{ $yearbookCard['desc'] }}
-                        </div>
-                    @else
-                        <div class="flex items-center mb-2">
-                            @foreach($yearbookSteps as $i => $stepKey)
-                                <div class="w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold {{ $i <= $yearbookCurrentIndex ? 'bg-[#C73D1A] text-white' : 'bg-gray-200 text-gray-400' }}">
-                                    @if($i < $yearbookCurrentIndex)
-                                        <i class="fa-solid fa-check"></i>
-                                    @else
-                                        {{ $i + 1 }}
-                                    @endif
-                                </div>
-                                @if(!$loop->last)
-                                    <div class="flex-1 h-0.5 {{ $i < $yearbookCurrentIndex ? 'bg-[#C73D1A]' : 'bg-gray-200' }}"></div>
+                    <div class="flex items-center mb-2">
+                        @foreach($yearbookSteps as $i => $stepKey)
+                            <div class="w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold {{ $i <= $yearbookCurrentIndex ? 'bg-[#C73D1A] text-white' : 'bg-gray-200 text-gray-400' }}">
+                                @if($i < $yearbookCurrentIndex)
+                                    <i class="fa-solid fa-check"></i>
+                                @else
+                                    {{ $i + 1 }}
                                 @endif
-                            @endforeach
-                        </div>
-                        <div class="grid grid-cols-4 text-[10px] font-medium text-center mb-6">
-                            @foreach($yearbookSteps as $i => $stepKey)
-                                <span class="{{ $i <= $yearbookCurrentIndex ? 'text-[#C73D1A]' : 'text-gray-400' }}">{{ $yearbookStepLabels[$stepKey] }}</span>
-                            @endforeach
-                        </div>
-                    @endif
+                            </div>
+                            @if(!$loop->last)
+                                <div class="flex-1 h-0.5 {{ $i < $yearbookCurrentIndex ? 'bg-[#C73D1A]' : 'bg-gray-200' }}"></div>
+                            @endif
+                        @endforeach
+                    </div>
+                    <div class="grid grid-cols-3 text-[10px] font-medium text-center mb-6">
+                        @foreach($yearbookSteps as $i => $stepKey)
+                            <span class="{{ $i <= $yearbookCurrentIndex ? 'text-[#C73D1A]' : 'text-gray-400' }}">{{ $yearbookStepLabels[$stepKey] }}</span>
+                        @endforeach
+                    </div>
 
                     <p class="text-sm text-gray-600 mb-4">{{ $yearbookCard['desc'] }}</p>
 

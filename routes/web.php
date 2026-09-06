@@ -288,8 +288,7 @@ Route::post('/job-postings/upload-image', [JobPostingController::class, 'uploadD
 Route::get('/myJobPosts/{id}', [JobPostingController::class, 'showMyJobPosts'])->name('jobPosting.myJobPosts');
 Route::post('/editJobPost/{id}', [JobPostingController::class, 'editJobPost'])->name('jobPosting.editJobPost');
 Route::get('/jobManagement', [JobPostingController::class, 'showJobManagement'])->name('jobPosting.jobManagement')->middleware(['auth', 'feature:job_management']);
-Route::get('/jobManagement/pending-page', [JobPostingController::class, 'jobManagementPendingFragment'])->name('jobPosting.pendingFragment')->middleware(['auth', 'feature:job_management']);
-Route::get('/jobManagement/approved-page', [JobPostingController::class, 'jobManagementApprovedFragment'])->name('jobPosting.approvedFragment')->middleware(['auth', 'feature:job_management']);
+Route::get('/jobManagement/page', [JobPostingController::class, 'jobManagementFragment'])->name('jobPosting.jobManagementFragment')->middleware(['auth', 'feature:job_management']);
 Route::post('/approveJobPost/{id}', [JobPostingController::class, 'approveJobPost'])->name('jobPosting.approve')->middleware(['auth', 'feature:job_management']);
 Route::post('/declineJobPost/{id}', [JobPostingController::class, 'declineJobPost'])->name('jobPosting.decline')->middleware(['auth', 'feature:job_management']);
 Route::delete('/deleteJobPost/{id}', [JobPostingController::class, 'deleteJobPost'])->name('jobPosting.delete')->middleware(['auth', 'feature:job_management']);

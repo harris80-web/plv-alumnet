@@ -48,6 +48,21 @@ class User extends Authenticatable
     /** How stale last_active_at can be before this user no longer counts as "online". */
     public const ONLINE_WITHIN_MINUTES = 2;
 
+    /**
+     * "Last Name, First Name Middle Name, Suffix" — used by the admin/
+     * super_admin management tables that merge separate Last/First/Middle/
+     * Suffix columns into one Full Name column. Deliberately distinct from
+     * Alumnus::formalName() (no comma before the suffix there) since this
+     * one was specified with a comma before the suffix.
+     */
+    public function formalNameWithSuffix(): string
+    {
+        $rest = trim($this->user_first_name . ' ' . $this->user_middle_name);
+        $name = trim($this->user_last_name . ', ' . $rest, ', ');
+
+        return $this->user_suffix ? $name . ', ' . $this->user_suffix : $name;
+    }
+
     /** Genuine presence, driven by the admin-area heartbeat ping — not the static user_active flag. */
     public function isOnline(): bool
     {

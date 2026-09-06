@@ -31,9 +31,9 @@
             @include('partials.super-admin-header')
 
             <div class="dash-scroll">
-                <div class="mb-4 flex items-center gap-3">
+                <!-- <div class="mb-4 flex items-center gap-3">
                     <span class="section-heading bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Alumni &amp; Company Registration Reports</span>
-                </div>
+                </div> -->
 
                 @include('partials.report-filters-form', [
                     'formAction' => route('reports.companies'),

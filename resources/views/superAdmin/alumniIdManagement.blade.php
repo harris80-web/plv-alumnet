@@ -65,14 +65,20 @@
             color: white;
         }
 
+        /* Same tab style as superAdmin/userManagement.blade.php's .tab-btn */
         .page-tab-btn {
-            border-bottom: 3px solid transparent;
+            border-bottom: 2px solid transparent;
             color: #64748b;
         }
 
         .page-tab-btn.active {
-            border-color: #C73D1A;
-            color: #0E0F3B;
+            border-bottom: 2px solid #ea580c;
+            color: #ea580c;
+            font-weight: 600;
+        }
+
+        .page-tab-btn:hover:not(.active) {
+            color: #ea580c;
         }
 
         .modal-tab-btn {
@@ -105,24 +111,25 @@
         @include('partials.super-admin-side-bar')
         <main class="flex-1 flex flex-col overflow-hidden min-w-0">
             @include('partials.super-admin-header')
+
+            <!-- PAGE TABS -->
+            <div class="bg-white px-8 flex gap-8 border-b border-slate-200 shrink-0 shadow-md">
+                <button type="button" onclick="switchPageTab('id')" id="pageTabBtn-id" class="page-tab-btn active py-3 px-2 flex items-center gap-2 text-sm transition-colors">
+                    <i data-lucide="id-card" class="w-4 h-4"></i> Alumni ID
+                </button>
+                <button type="button" onclick="switchPageTab('yearbook')" id="pageTabBtn-yearbook" class="page-tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors">
+                    <i data-lucide="book-open" class="w-4 h-4"></i> Alumni Yearbook
+                </button>
+            </div>
+
             <div class="flex-1 overflow-y-auto p-6">
 
                 @include('partials.success')
 
-                <!-- PAGE TABS -->
-                <div class="flex gap-6 border-b border-slate-200 mb-6">
-                    <button type="button" onclick="switchPageTab('id')" id="pageTabBtn-id" class="page-tab-btn active px-1 pb-3 text-sm font-bold uppercase tracking-wide transition-colors">
-                        Alumni ID
-                    </button>
-                    <button type="button" onclick="switchPageTab('yearbook')" id="pageTabBtn-yearbook" class="page-tab-btn px-1 pb-3 text-sm font-bold uppercase tracking-wide transition-colors">
-                        Alumni Yearbook
-                    </button>
-                </div>
-
                 <!-- ══════════════════════ ALUMNI ID TAB ══════════════════════ -->
                 <div id="pageTab-id">
 
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-slate-800">{{ $statusCounts['total'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total Alumni IDs</p>
@@ -130,10 +137,6 @@
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-amber-500">{{ $statusCounts['pending'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Pending</p>
-                        </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-blue-500">{{ $statusCounts['under_review'] }}</p>
-                            <p class="text-xs font-medium text-slate-500 mt-1">Under Review</p>
                         </div>
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-purple-500">{{ $statusCounts['ready_to_claim'] }}</p>
@@ -281,7 +284,7 @@
                 <!-- ══════════════════════ ALUMNI YEARBOOK TAB ══════════════════════ -->
                 <div id="pageTab-yearbook" class="hidden">
 
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-slate-800">{{ $yearbookCounts['total'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total Yearbooks</p>
@@ -291,20 +294,12 @@
                             <p class="text-xs font-medium text-slate-500 mt-1">Pending</p>
                         </div>
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-cyan-500">{{ $yearbookCounts['on_hand'] }}</p>
-                            <p class="text-xs font-medium text-slate-500 mt-1">On Hand</p>
-                        </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-purple-500">{{ $yearbookCounts['ready_to_claim'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Ready to Claim</p>
                         </div>
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-green-500">{{ $yearbookCounts['claimed'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Claimed</p>
-                        </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-400">{{ $yearbookCounts['not_yet_claimed'] }}</p>
-                            <p class="text-xs font-medium text-slate-500 mt-1">Not Yet Claimed</p>
                         </div>
                     </div>
 
@@ -832,13 +827,11 @@
 
             const statusClasses = {
                 'pending': 'bg-amber-100 text-amber-700',
-                'under_review': 'bg-blue-100 text-blue-700',
                 'ready_to_claim': 'bg-purple-100 text-purple-700',
                 'claimed': 'bg-green-100 text-green-700',
             };
             const statusLabels = {
                 'pending': 'Pending',
-                'under_review': 'Under Review',
                 'ready_to_claim': 'Ready to Claim',
                 'claimed': 'Claimed',
             };
@@ -929,13 +922,11 @@
         }
 
         const claimingStatusLabels = {
-            'pending': 'Pending', 'on_hand': 'On Hand', 'ready_to_claim': 'Ready to Claim',
-            'claimed': 'Claimed', 'not_yet_claimed': 'Not Yet Claimed',
+            'pending': 'Pending', 'ready_to_claim': 'Ready to Claim', 'claimed': 'Claimed',
         };
         const claimingStatusClasses = {
-            'pending': 'bg-amber-100 text-amber-700', 'on_hand': 'bg-cyan-100 text-cyan-700',
+            'pending': 'bg-amber-100 text-amber-700',
             'ready_to_claim': 'bg-purple-100 text-purple-700', 'claimed': 'bg-green-100 text-green-700',
-            'not_yet_claimed': 'bg-slate-100 text-slate-500',
         };
 
         function openYearbookModal(id, data) {

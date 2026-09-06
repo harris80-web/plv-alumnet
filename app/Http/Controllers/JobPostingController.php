@@ -507,65 +507,73 @@ class JobPostingController extends Controller
         return $query;
     }
 
-    public function showJobManagement()
+    /**
+     * Pending and Approved used to be two separately-paginated tables —
+     * combined into one filterable-by-status table per request. $status
+     * ('', 'pending', or 'approved') narrows the query; '' shows both.
+     */
+    private function applyJobStatusFilter($query, ?string $status)
+    {
+        if ($status === 'pending') {
+            $query->where('job_approved', 0);
+        } elseif ($status === 'approved') {
+            $query->where('job_approved', 1);
+        }
+
+        return $query;
+    }
+
+    public function showJobManagement(Request $request)
     {
         $this->authorizeStaff();
         $programs = Program::all();
         $industries = Industry::all();
         $users = Auth::user();
 
-        // Two independently-paginated queries (own pageName each) instead of
-        // one ->get() split into $pending_jobs/$approved_jobs after the
-        // fact in the view — that approach can't paginate since the whole
-        // collection has to be fetched up front. Metric-card counts are
-        // computed separately (not read off the paginators) so they always
-        // reflect the WHOLE dataset, not just the current page.
-        $pendingJobs = $this->jobManagementBaseQuery()
-            ->where('job_approved', 0)
+        $status = $request->input('status');
+        $jobs = $this->applyJobStatusFilter($this->jobManagementBaseQuery(), $status)
             ->orderByDesc('created_at')
-            ->paginate($this->resolvePerPage(10, 'job_pending_per_page'), ['*'], 'pendingPage');
+            ->paginate($this->resolvePerPage(10, 'job_management_per_page'))
+            ->withQueryString();
 
-        $approvedJobs = $this->jobManagementBaseQuery()
-            ->where('job_approved', 1)
-            ->orderByDesc('created_at')
-            ->paginate($this->resolvePerPage(10, 'job_approved_per_page'), ['*'], 'approvedPage');
-
+        // Counts computed separately (not read off the paginator) so they
+        // always reflect the whole dataset, not just the current filter/page.
         $totalJobs = $this->jobManagementBaseQuery()->count();
-        $pendingCount = $pendingJobs->total();
-        $approvedCount = $approvedJobs->total();
+        $pendingCount = $this->jobManagementBaseQuery()->where('job_approved', 0)->count();
+        $approvedCount = $this->jobManagementBaseQuery()->where('job_approved', 1)->count();
+        // Declined jobs are hard-deleted (see declineJobPost() below), so
+        // there's no persisted "declined" row left to count from job_postings
+        // itself — the one durable record of a decline ever happening is the
+        // notification it sends, so that's the source here. Not scoped by
+        // admin/super_admin cross-review the way the other counts are (the
+        // deleted job's submitter role isn't recoverable), so this is a
+        // system-wide total rather than a per-role one.
+        $declinedCount = UserNotification::where('type', 'job_posting_rejected')->count();
+
+        $filters = ['status' => $status];
 
         return view('superAdmin.jobManagement', compact(
-            'pendingJobs', 'approvedJobs', 'totalJobs', 'pendingCount', 'approvedCount',
-            'programs', 'industries', 'users'
+            'jobs', 'totalJobs', 'pendingCount', 'approvedCount', 'declinedCount',
+            'programs', 'industries', 'users', 'filters'
         ));
     }
 
     /**
-     * AJAX pagination endpoints for the Pending/Approved job tables —
-     * mirrors UserController::employerPendingFragment()/employerApprovedFragment():
-     * each returns just its own table partial (rows + pagination nav) so a
-     * page-link click can swap it in via fetch() without a full reload.
+     * AJAX pagination endpoint for the combined job-management table —
+     * mirrors UserController::employerApprovedFragment(): returns just the
+     * table partial (rows + pagination nav) so a page-link or status-filter
+     * change can swap it in via fetch() without a full reload.
      */
-    public function jobManagementPendingFragment()
+    public function jobManagementFragment(Request $request)
     {
         $this->authorizeStaff();
-        $pendingJobs = $this->jobManagementBaseQuery()
-            ->where('job_approved', 0)
+        $status = $request->input('status');
+        $jobs = $this->applyJobStatusFilter($this->jobManagementBaseQuery(), $status)
             ->orderByDesc('created_at')
-            ->paginate($this->resolvePerPage(10, 'job_pending_per_page'), ['*'], 'pendingPage');
+            ->paginate($this->resolvePerPage(10, 'job_management_per_page'))
+            ->withQueryString();
 
-        return view('partials.job-management.pending-table', compact('pendingJobs'));
-    }
-
-    public function jobManagementApprovedFragment()
-    {
-        $this->authorizeStaff();
-        $approvedJobs = $this->jobManagementBaseQuery()
-            ->where('job_approved', 1)
-            ->orderByDesc('created_at')
-            ->paginate($this->resolvePerPage(10, 'job_approved_per_page'), ['*'], 'approvedPage');
-
-        return view('partials.job-management.approved-table', compact('approvedJobs'));
+        return view('partials.job-management.jobs-table', compact('jobs'));
     }
 
     public function approveJobPost($id)

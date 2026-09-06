@@ -1,11 +1,21 @@
 {{--
-    Pending job-posts table's rows + pagination. Extracted out of
-    jobManagement.blade.php so the exact same markup can be reused for both
-    the initial full-page render and the AJAX pagination fragment response
-    (JobPostingController::jobManagementPendingFragment) — swapping just
-    this table's #jobPendingTableWrap innerHTML on a page-link click means
-    the rest of the page (scroll position, the approved table, filters)
-    never moves. Expects: $pendingJobs (paginator of JobPosting, with user loaded).
+    Combined Pending + Approved job-posts table's rows + pagination —
+    replaces the old two separately-paginated tables (partials/job-management/
+    pending-table.blade.php and approved-table.blade.php) now that
+    JobPostingController::showJobManagement() filters by status instead of
+    querying each separately. Extracted out of jobManagement.blade.php so the
+    exact same markup can be reused for both the initial full-page render and
+    the AJAX pagination fragment response (JobPostingController::jobManagementFragment)
+    — swapping just this table's #jobManagementTableWrap innerHTML on a
+    page-link or status-filter change means the rest of the page (scroll
+    position, the toolbar) never moves.
+
+    Each row's status/actions are conditional on $j->job_approved: a pending
+    row gets the amber badge and a single eye button (Approve/Decline live
+    inside the View modal itself); an approved row gets the green badge and
+    a View/Delete dropdown — same as the two source tables did.
+
+    Expects: $jobs (paginator of JobPosting, with user loaded).
 --}}
 <div class="overflow-x-auto">
 <table class="jobs-table">
@@ -35,10 +45,15 @@
             <th>Actions</th>
         </tr>
     </thead>
-    <tbody class="divide-y divide-slate-100">
-        @forelse ($pendingJobs as $j)
-
-        <tr class="hover:bg-slate-50/80 transition-colors">
+    <tbody class="divide-y divide-slate-100" id="jobs-tbody">
+        @forelse ($jobs as $j)
+        <tr class="hover:bg-slate-50/80 transition-colors"
+            data-title="{{ strtolower($j->job_posting_title) }}"
+            data-company="{{ strtolower($j->job_posting_company) }}"
+            data-type="{{ $j->job_posting_employment_type }}"
+            data-setup="{{ $j->job_posting_setup }}"
+            data-program="{{ $j->programs->pluck('program_name')->join(', ') }}"
+            data-datetime="{{ $j->created_at }}" data-closing="{{ $j->job_closing_date }}">
             <td class="font-medium text-black border-r border-slate-100">{{ $loop->iteration }}</td>
             <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_title }}
             </td>
@@ -62,12 +77,17 @@
                 @endforeach
             </td>
             <td class="border-r border-slate-100">
-                <span
-                    class="px-2 py-1 rounded-full border text-[7px] font-bold bg-amber-100 text-amber-600 border-amber-200 inline-block whitespace-nowrap ">
+                @if ($j->job_approved)
+                <span class="px-2 py-1 rounded-full border text-[6px] font-semibold bg-green-100 text-green-600 border-green-200 inline-block whitespace-nowrap">
+                    APPROVED
+                </span>
+                @else
+                <span class="px-2 py-1 rounded-full border text-[7px] font-bold bg-amber-100 text-amber-600 border-amber-200 inline-block whitespace-nowrap">
                     PENDING
                 </span>
+                @endif
             </td>
-            <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_date }} </td>
+            <td class="font-medium text-black border-r border-slate-100">{{ $j->job_posting_date }}</td>
             <td class="font-medium text-black border-r border-slate-100">{{ $j->job_closing_date }}
             </td>
             <td class="text-center relative">
@@ -84,10 +104,33 @@
                         'industry' => $j->industry->industry_name ?? 'N/A',
                         'closing' => $j->job_closing_date,
                         'description' => $j->job_posting_description,
-                        'status' => 'Pending',
+                        'status' => $j->job_approved ? 'Approved' : 'Pending',
                         'approveUrl' => route('jobPosting.approve', $j->job_posting_id),
+                        'deleteUrl' => route('jobPosting.delete', $j->job_posting_id),
                     ];
                 @endphp
+                @if ($j->job_approved)
+                <div class="inline-block text-left relative">
+                    <button
+                        class="menu-button p-1.5 hover:bg-slate-100 rounded-full transition-colors">
+                        <i data-lucide="more-vertical" class="w-4 h-4 text-slate-500"></i>
+                    </button>
+                    <div class="action-dropdown bg-white border border-slate-200 rounded-md shadow-xl">
+                        <div class="py-1">
+                            <button onclick='openViewModal({{ $j->job_posting_id }}, @json($viewModalData))'
+                                data-job-id="{{ $j->job_posting_id }}"
+                                class="flex items-center w-full px-4 py-2 text-sm text-[#0E0F3B] hover:bg-blue-50">
+                                <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i> View
+                            </button>
+                            <button type="button"
+                                onclick="openDeleteModal({{ $j->job_posting_id }}, '{{ addslashes($j->job_posting_title) }}', '{{ route('jobPosting.delete', $j->job_posting_id) }}')"
+                                class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                @else
                 {{-- Approve/Decline now live inside the View modal itself
                      (see openViewModal()'s #approveBtn/#declineBtn), so this
                      is just a direct view trigger — no dropdown needed for a
@@ -98,24 +141,28 @@
                     class="p-1.5 hover:bg-blue-50 rounded-full transition-colors">
                     <i data-lucide="eye" class="w-4 h-4 text-blue-500"></i>
                 </button>
+                @endif
             </td>
         </tr>
         @empty
         <tr>
-            <td colspan="12" class="text-center py-8 text-slate-400 text-sm">No pending job posts.
+            <td colspan="12" class="text-center py-8 text-slate-400 text-sm">No job posts found.
             </td>
         </tr>
         @endforelse
     </tbody>
 </table>
 </div>
+<div id="empty-state" class="hidden text-center py-12 text-slate-400 text-sm">No job posts found.
+</div>
 <div class="px-4 py-3">
     @include('partials.table-pagination-bar', [
-        'id' => 'jobPendingTable',
+        'id' => 'jobManagementTable',
         'mode' => 'ajax',
-        'paginator' => $pendingJobs,
-        'perPageParam' => 'job_pending_per_page',
-        'fetchUrl' => route('jobPosting.pendingFragment'),
-        'wrapId' => 'jobPendingTableWrap',
+        'paginator' => $jobs,
+        'perPageParam' => 'job_management_per_page',
+        'fetchUrl' => route('jobPosting.jobManagementFragment'),
+        'wrapId' => 'jobManagementTableWrap',
+        'reinitFn' => 'applyFilters',
     ])
 </div>

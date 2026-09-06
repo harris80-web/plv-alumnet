@@ -1,64 +1,3 @@
-<!--<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-
-<body class="flex gap-[20px]">
-    <div class="flex flex-col">
-        <h1>Superadmin Dashboard</h1>
-        <a href="{{ route('superAdmin.dashboard') }}">Dashboard</a>
-        <br><br>
-        <a href="{{ route('superAdmin.userManagement') }}">User Management</a>
-        <br><br>
-        <a href="{{ route('jobPosting.jobManagement') }}">Job Management</a>
-        <br><br>
-        <a href="">Alumni ID and yearbook management</a>
-        <br><br>
-        <a href="">Notice and events management</a>
-        <br><br>
-        <a href="">Chatbot and messaging management</a>
-        <br><br>
-        <a href="{{ route('testimonials.manage') }}">Testimonial management</a>
-        <br><br>
-        <a href="">Manage faqs</a>
-        <br><br>
-        <a href="{{ route('user.profile') }}">View Profile</a>
-        <br><br><br>
-        <form method="POST" action="{{ route('user.logout') }}">
-            @csrf
-            <button type="submit">Logout</button>
-        </form>
-    </div>
-    <div>
-        <h2>SYSTEM OVERVIEW</h2>
-        <div class="flex gap-[20px]">
-            <div>
-                <h3>Job Placement Rate</h3>
-                <p>{{ $stats['jobPlacementRate'] }}</p>
-            </div>
-            <div>
-                <h3>Active job postings</h3>
-                <p>{{ $stats['activeJobs'] }}</p>
-            </div>
-            <div>
-                <h3>Industry Partners</h3>
-                <p>{{ $stats['industryPartners'] }}</p>
-            </div>
-            <div>
-                <h3>Alumni Users</h3>
-                <p>{{ $stats['alumniUsers'] }}</p>
-            </div>
-        </div>
-    </div>
-
-</body>
-
-</html>-->
-
 @php
     $current_page = 'dashboard';
 @endphp
@@ -366,9 +305,8 @@
                 <!-- System Overview Heading -->
                 <div class="mb-2 ml-1 flex items-center justify-between">
                     <span
-                        class="section-heading bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">System
-                        Overview</span>
-                    <a href="{{ route('reports.employment') }}" class="text-xs font-bold text-slate-400 hover:text-[#C73D1A] flex items-center gap-1">
+                        class="section-heading bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Overview</span>
+                    <a href="{{ route('reports.employment') }}" class="text-xs font-normal text-[#C73D1A] border border-[#C73D1A] rounded-lg px-3 py-1 flex items-center gap-1 transition-colors duration-200 hover:bg-[#C73D1A] hover:text-white">
                         View Detailed Report <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
                     </a>
                 </div>
@@ -589,7 +527,7 @@
                     <span
                         class="section-heading bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Job
                         Placement &amp; Hiring</span>
-                    <a href="{{ route('reports.placement') }}" class="text-xs font-bold text-slate-400 hover:text-[#C73D1A] flex items-center gap-1">
+                    <a href="{{ route('reports.placement') }}" class="text-xs font-normal text-[#C73D1A] border border-[#C73D1A] rounded-lg px-3 py-1 flex items-center gap-1 transition-colors duration-200 hover:bg-[#C73D1A] hover:text-white">
                         View Detailed Report <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
                     </a>
                 </div>
@@ -675,8 +613,9 @@
                                     Status</div>
                                 <div style="height:130px;"><canvas id="chartAlumniID"></canvas></div>
                                 <div style="font-size:9.5px;color:#6b7280;margin-top:8px;line-height:1.7;">
-                                    Registered for ID: <strong>6,842 (80%)</strong><br>
-                                    IDs Distributed: <strong>5,973 (69%)</strong>
+                                    @php $alumniIdRegistered = $alumniIdCounts->sum(); @endphp
+                                    Registered for ID: <strong>{{ number_format($alumniIdRegistered) }} ({{ $alumniIdTotal > 0 ? round($alumniIdRegistered / $alumniIdTotal * 100) : 0 }}%)</strong><br>
+                                    IDs Claimed: <strong>{{ number_format($alumniIdCounts['claimed']) }} ({{ $alumniIdTotal > 0 ? round($alumniIdCounts['claimed'] / $alumniIdTotal * 100) : 0 }}%)</strong>
                                 </div>
                             </div>
                             <div>
@@ -684,8 +623,9 @@
                                     Distribution</div>
                                 <div style="height:130px;"><canvas id="chartYearbook"></canvas></div>
                                 <div style="font-size:9.5px;color:#6b7280;margin-top:8px;line-height:1.7;">
-                                    Distributed: 53.4% &nbsp;<strong>1,247 (54.8%)</strong><br>
-                                    Pending: 14.6% &nbsp;&nbsp;&nbsp;<strong>7,295 (15.4%)</strong>
+                                    @php $yearbookPending = $yearbookCounts['pending'] + $yearbookCounts['ready_to_claim']; @endphp
+                                    Claimed: <strong>{{ number_format($yearbookCounts['claimed']) }} ({{ $alumniIdTotal > 0 ? round($yearbookCounts['claimed'] / $alumniIdTotal * 100) : 0 }}%)</strong><br>
+                                    Pending: <strong>{{ number_format($yearbookPending) }} ({{ $alumniIdTotal > 0 ? round($yearbookPending / $alumniIdTotal * 100) : 0 }}%)</strong>
                                 </div>
                             </div>
                         </div>
@@ -695,24 +635,30 @@
                     <div class="chart-card">
                         <div class="card-title">Recent Activity & Updates</div>
                         <div class="activity-section-label">Latest Event Posted:</div>
+                        @if ($latestEvent)
                         <div class="activity-row">
-                            <span>PLV 23rd Founding Anniversary 2025</span>
+                            <span>{{ $latestEvent->title }}</span>
                             <div class="flex items-center gap-3">
-                                <span style="font-size:11px;color:#6b7280;">12-02-2025</span>
-                                <button class="btn-edit">Edit</button>
+                                <span style="font-size:11px;color:#6b7280;">{{ $latestEvent->event_datetime->format('m-d-Y') }}</span>
+                                <a href="{{ route('notices.management') }}?notice={{ $latestEvent->id }}" class="btn-edit" style="display:inline-block;text-decoration:none;">Edit</a>
                             </div>
                         </div>
+                        @else
+                        <div class="activity-row" style="color:#9ca3af;font-style:italic;font-size:11px;">
+                            <span>No events posted yet</span>
+                        </div>
+                        @endif
                         <div class="activity-section-label">Recent Directory Updates:</div>
+                        @forelse ($recentProfileUpdates as $updatedAlumnus)
                         <div class="activity-row">
-                            <span>John M. Santos (Profile Updated)</span>
+                            <span>{{ trim($updatedAlumnus->user->user_first_name . ' ' . $updatedAlumnus->user->user_last_name) }} (Profile Updated)</span>
                         </div>
-                        <div class="activity-row">
-                            <span>Mark Garcia (Profile Updated)</span>
-                        </div>
+                        @empty
                         <div class="activity-row"
                             style="color:#9ca3af;font-style:italic;font-size:11px;border-top:1px solid #f1f5f9;">
-                            <span>No more recent updates</span>
+                            <span>No recent updates</span>
                         </div>
+                        @endforelse
                     </div>
 
                 </div>
@@ -1063,9 +1009,9 @@
     new Chart(document.getElementById('chartAlumniID'), {
         type: 'doughnut',
         data: {
-            labels: ['Not Yet Claimed', 'Pending', 'Claimed'],
+            labels: ['Pending', 'Ready to Claim', 'Claimed'],
             datasets: [{
-                data: [1500, 5973, 6842],
+                data: {!! json_encode([$alumniIdCounts['pending'], $alumniIdCounts['ready_to_claim'], $alumniIdCounts['claimed']]) !!},
                 backgroundColor: ['#dc2626', '#e05c00', '#16a34a'],
                 borderWidth: 2,
                 borderColor: '#fff'
@@ -1092,10 +1038,10 @@
     new Chart(document.getElementById('chartYearbook'), {
         type: 'doughnut',
         data: {
-            labels: ['Claimed', 'Pending', 'Not Claimed'],
+            labels: ['Pending', 'Ready to Claim', 'Claimed'],
             datasets: [{
-                data: [53.4, 14.6, 32],
-                backgroundColor: ['#16a34a', '#e05c00', '#dc2626'],
+                data: {!! json_encode([$yearbookCounts['pending'], $yearbookCounts['ready_to_claim'], $yearbookCounts['claimed']]) !!},
+                backgroundColor: ['#dc2626', '#e05c00', '#16a34a'],
                 borderWidth: 2,
                 borderColor: '#fff'
             }]

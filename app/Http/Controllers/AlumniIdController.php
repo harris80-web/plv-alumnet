@@ -33,7 +33,6 @@ class AlumniIdController extends Controller
         $statusCounts = [
             'total' => $alumniIds->count(),
             'pending' => $alumniIds->where('status', 'pending')->count(),
-            'under_review' => $alumniIds->where('status', 'under_review')->count(),
             'ready_to_claim' => $alumniIds->where('status', 'ready_to_claim')->count(),
             'claimed' => $alumniIds->where('status', 'claimed')->count(),
         ];
@@ -45,10 +44,8 @@ class AlumniIdController extends Controller
         $yearbookCounts = [
             'total' => $yearbooks->count(),
             'pending' => $yearbooks->where('claiming_status', 'pending')->count(),
-            'on_hand' => $yearbooks->where('claiming_status', 'on_hand')->count(),
             'ready_to_claim' => $yearbooks->where('claiming_status', 'ready_to_claim')->count(),
             'claimed' => $yearbooks->where('claiming_status', 'claimed')->count(),
-            'not_yet_claimed' => $yearbooks->where('claiming_status', 'not_yet_claimed')->count(),
         ];
 
         $programs = Program::orderBy('program_name')->get();

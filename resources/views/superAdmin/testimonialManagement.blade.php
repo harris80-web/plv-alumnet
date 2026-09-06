@@ -288,7 +288,7 @@
                                     <input type="checkbox" id="select-all" class="bulk-checkbox">
                                 </th>
                                 <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                                <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Program <i
+                                <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700 text-left">Program <i
                                         data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
                                 <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">College <i
                                         data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
@@ -322,7 +322,7 @@
                                     </td>
                                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
                                         {{ $t->alumnus->user->user_first_name }}</td>
-                                    <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                    <td class="px-4 py-3 font-medium text-black border-r border-slate-100 text-left">
                                         {{ $t->alumnus->program->program_name ?? '—' }}</td>
                                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
                                         {{ $t->alumnus->program?->collegeName() ?? '—' }}</td>

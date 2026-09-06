@@ -15,7 +15,7 @@
             </th>
             <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Company Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
             <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Full Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Email <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+            <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700 text-right">Email <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
             <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Industry <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
             <th class="px-4 py-4 font-semibold border-r border-slate-700">Contact</th>
             <th class="px-4 py-4 font-semibold border-r border-slate-700">Official Website
@@ -41,12 +41,9 @@
                 {{ $employer->employer_company_name }}
             </td>
             <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                {{ $employer->user?->user_first_name }}
-                {{ $employer->user?->user_middle_name }}
-                {{ $employer->user?->user_last_name }}
-                {{ $employer->user?->user_suffix ?? '' }}
+                {{ $employer->user?->formalNameWithSuffix() ?? 'N/A' }}
             </td>
-            <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+            <td class="px-4 py-3 font-medium text-black border-r border-slate-100 text-right">
                 {{ $employer->user?->user_email }}
             </td>
             <td class="px-4 py-3 font-medium text-black border-r border-slate-100">

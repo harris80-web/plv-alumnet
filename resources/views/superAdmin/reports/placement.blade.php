@@ -35,11 +35,6 @@
             @include('partials.super-admin-header')
 
             <div class="dash-scroll">
-                <div class="mb-4 flex items-center gap-3">
-                    <a href="{{ route('superAdmin.dashboard') }}" class="text-slate-400 hover:text-[#C73D1A]"><i data-lucide="arrow-left" class="w-5 h-5"></i></a>
-                    <span class="section-heading bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Job Placement &amp; Hiring Report</span>
-                </div>
-
                 @include('partials.report-filters-form', [
                     'formAction' => route('reports.placement'),
                     'clearRoute' => route('reports.placement'),
@@ -47,7 +42,14 @@
                     'batchYearOptions' => $batchYearOptions,
                     'programs' => $programs,
                     'yearOptions' => $yearOptions,
+                    'exportCsvUrl' => route('reports.exportCsv', array_merge(['group' => 'placement'], array_filter($dashboardFilters), ['hire_months' => $hireMonths, 'top_companies' => $topCompaniesLimit])),
                 ])
+
+                <div class="mb-4 mt-3 flex items-center">
+                    <a href="{{ route('superAdmin.dashboard') }}" class="text-xs font-normal text-[#C73D1A] border border-[#C73D1A] rounded-lg px-3 py-1 flex items-center gap-1 transition-colors duration-200 hover:bg-[#C73D1A] hover:text-white">
+                        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Return to Dashboard
+                    </a>
+                </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 my-4">
                     <div class="stat-card">
@@ -113,12 +115,6 @@
                     <div style="margin-top:10px; height:220px;"><canvas id="chartHires"></canvas></div>
                 </div>
 
-                <div class="flex justify-end">
-                    <a href="{{ route('reports.exportCsv', array_merge(['group' => 'placement'], array_filter($dashboardFilters), ['hire_months' => $hireMonths, 'top_companies' => $topCompaniesLimit])) }}"
-                        class="text-xs font-bold text-slate-500 hover:text-[#C73D1A] flex items-center gap-1">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i> Export CSV
-                    </a>
-                </div>
             </div>
         </main>
     </div>

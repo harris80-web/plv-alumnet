@@ -69,6 +69,7 @@
     </script>
 
     @include('partials.chatbot-widget')
+    @include('partials.back-to-top')
 </body>
 
 </html>

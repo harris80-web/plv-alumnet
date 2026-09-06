@@ -6,6 +6,9 @@ use App\Mail\RejectEmployerMail;
 use App\Models\User;
 use App\Models\Employer;
 use App\Models\Alumnus;
+use App\Models\AlumniId;
+use App\Models\AlumniYearbook;
+use App\Models\Notice;
 use App\Models\Office;
 use App\Models\Program;
 use App\Models\Section;
@@ -995,8 +998,24 @@ class UserController extends Controller
 
         $reports = $reportService->buildEmploymentReports($batches, $programIds, $employmentStatuses, $colleges, $years, $hireMonths, $topCompaniesLimit);
 
+        // Alumni ID & Yearbook Reports widget — real counts by status,
+        // percentages against total alumni (same base the old placeholder
+        // numbers implied: 6,842/8,552 ≈ 80%, 5,973/8,552 ≈ 69%).
+        $alumniIdTotal = Alumnus::count();
+        $alumniIdStatusCounts = AlumniId::selectRaw('status, COUNT(*) as c')->groupBy('status')->pluck('c', 'status');
+        $alumniIdCounts = collect(AlumniId::STATUSES)->mapWithKeys(fn ($s) => [$s => (int) ($alumniIdStatusCounts[$s] ?? 0)]);
+        $yearbookStatusCounts = AlumniYearbook::selectRaw('claiming_status, COUNT(*) as c')->groupBy('claiming_status')->pluck('c', 'claiming_status');
+        $yearbookCounts = collect(AlumniYearbook::CLAIMING_STATUSES)->mapWithKeys(fn ($s) => [$s => (int) ($yearbookStatusCounts[$s] ?? 0)]);
+
+        // Recent Activity & Updates widget.
+        $latestEvent = Notice::where('category', 'event')->orderByDesc('created_at')->first();
+        $recentProfileUpdates = Alumnus::with('user')->whereHas('user')->orderByDesc('updated_at')->take(2)->get();
+
         return view('superAdmin.dashboard', array_merge(
-            compact('stats', 'batchYearOptions', 'programs', 'yearOptions', 'dashboardFilters', 'hireMonths', 'topCompaniesLimit'),
+            compact(
+                'stats', 'batchYearOptions', 'programs', 'yearOptions', 'dashboardFilters', 'hireMonths', 'topCompaniesLimit',
+                'alumniIdTotal', 'alumniIdCounts', 'yearbookCounts', 'latestEvent', 'recentProfileUpdates'
+            ),
             $reports
         ));
     }

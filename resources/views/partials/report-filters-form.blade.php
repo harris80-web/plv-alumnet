@@ -20,13 +20,14 @@
       $batchYearOptions  — Collection of distinct batch years
       $programs          — Collection of Program models
       $yearOptions       — array of years for the Year filter
+      $exportCsvUrl      — optional; when passed, renders an EXPORT CSV button next to EXPORT PDF
 --}}
 <div class="w-full bg-slate-100 px-6 py-4">
     <form method="GET" action="{{ $formAction }}" id="dashboardFilterForm"
         class="flex flex-wrap items-center gap-3 bg-white px-6 py-4 rounded-xl border border-slate-200 shadow-md text-sm font-medium text-slate-700">
 
         <!-- Batch Year (multi-select, item 15) -->
-        <div class="shrink-0" style="width:170px;">
+        <div class="flex-1 min-w-[150px]">
             @include('partials.multiselect-filter', [
                 'name' => 'batch',
                 'icon' => 'fas fa-calendar',
@@ -37,7 +38,7 @@
         </div>
 
         <!-- College (item 12/13 — cascades the Course filter below) -->
-        <div class="shrink-0" style="width:190px;">
+        <div class="flex-1 min-w-[150px]">
             @include('partials.multiselect-filter', [
                 'name' => 'college',
                 'icon' => 'fas fa-university',
@@ -48,7 +49,7 @@
         </div>
 
         <!-- Course -->
-        <div class="shrink-0" style="width:220px;">
+        <div class="flex-1 min-w-[150px]">
             @include('partials.multiselect-filter', [
                 'name' => 'program_id',
                 'icon' => 'fas fa-graduation-cap',
@@ -60,7 +61,7 @@
         </div>
 
         <!-- Employment Status -->
-        <div class="shrink-0" style="width:180px;">
+        <div class="flex-1 min-w-[150px]">
             @include('partials.multiselect-filter', [
                 'name' => 'employment_status',
                 'icon' => 'fas fa-user-check',
@@ -71,7 +72,7 @@
         </div>
 
         <!-- Year (item 16 — distinct from Batch: when things happened, not when alumni graduated) -->
-        <div class="shrink-0" style="width:170px;">
+        <div class="flex-1 min-w-[150px]">
             @include('partials.multiselect-filter', [
                 'name' => 'year',
                 'icon' => 'fas fa-calendar-day',
@@ -98,6 +99,13 @@
                 class="shrink-0 whitespace-nowrap bg-[#C04828] text-[10px] text-white px-3 py-1.5 rounded-md flex items-center gap-1 hover:bg-[#A03D22] transition shadow-sm font-semibold uppercase tracking-wide">
                 <i data-lucide="file-text" class="w-3.5 h-3.5 shrink-0"></i> EXPORT PDF
             </button>
+
+            @isset($exportCsvUrl)
+            <a href="{{ $exportCsvUrl }}"
+                class="shrink-0 whitespace-nowrap border border-[#0E0F3B] text-[#0E0F3B] text-[10px] px-3 py-1.5 rounded-md flex items-center gap-1 hover:bg-[#0E0F3B] hover:text-white transition shadow-sm font-semibold uppercase tracking-wide">
+                <i data-lucide="download" class="w-3.5 h-3.5 shrink-0"></i> EXPORT CSV
+            </a>
+            @endisset
         </div>
     </form>
 </div>

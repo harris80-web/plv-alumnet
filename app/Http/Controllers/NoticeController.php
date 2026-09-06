@@ -43,6 +43,9 @@ class NoticeController extends Controller
             'event' => $notices->where('category', 'event')->count(),
             'seminar' => $notices->where('category', 'seminar')->count(),
             'announcement' => $notices->where('category', 'announcement')->count(),
+            'everyone' => $notices->where('recipient', 'everyone')->count(),
+            'alumni' => $notices->where('recipient', 'alumni')->count(),
+            'employer' => $notices->where('recipient', 'employer')->count(),
         ];
 
         return view('superAdmin.noticesManagement', compact('notices', 'counts'));
@@ -275,6 +278,37 @@ class NoticeController extends Controller
     }
 
     /**
+     * Public counterpart to alumniEventsAndSeminars() — no auth required, same
+     * shared view (resources/views/alumni/eventsSeminars.blade.php is
+     * guest-safe: $user is null here, so it swaps in the guest header/footer
+     * and shows a "log in to view full details" prompt instead of the
+     * alumni-only Interested button). Only notices explicitly marked for
+     * "everyone" are shown — alumni- or employer-only notices stay private.
+     */
+    public function guestEventsAndSeminars(Request $request)
+    {
+        $activeTab = $request->query('tab') === 'seminar' ? 'seminar' : 'events';
+        $category = $activeTab === 'seminar' ? 'seminar' : 'event';
+
+        $query = Notice::category($category)->visibleToGuest()->upcoming();
+        $this->applyNoticeFilters($query, $request, true);
+        $notices = $query->orderBy('event_datetime')
+            ->paginate(6)
+            ->withQueryString();
+
+        $filters = $request->only(['search', 'location', 'date_posted']);
+
+        return view('alumni.eventsSeminars', [
+            'notices' => $notices,
+            'activeTab' => $activeTab,
+            'interestedNoticeIds' => [],
+            'user' => null,
+            'openNoticeId' => null,
+            'filters' => $filters,
+        ]);
+    }
+
+    /**
      * Employer counterpart to alumniEventsAndSeminars() — same view
      * (resources/views/alumni/eventsSeminars.blade.php is role-aware: it
      * switches header/footer and hides the alumni-only "Interested" button
@@ -322,6 +356,32 @@ class NoticeController extends Controller
         $filters = $request->only(['search', 'date_posted']);
 
         return view('alumni.announcements', compact('notices', 'user', 'openNoticeId', 'filters'));
+    }
+
+    /**
+     * Public counterpart to alumniAnnouncements() — no auth required, same
+     * shared view (resources/views/alumni/announcements.blade.php is
+     * guest-safe: $user is null here, so it swaps in the guest header/footer
+     * and shows a "log in to view full details" prompt instead of letting
+     * the card open the full detail modal). Only notices explicitly marked
+     * for "everyone" are shown.
+     */
+    public function guestAnnouncements(Request $request)
+    {
+        $query = Notice::category('announcement')->visibleToGuest();
+        $this->applyNoticeFilters($query, $request, false);
+        $notices = $query->orderByDesc('event_datetime')
+            ->paginate(6)
+            ->withQueryString();
+
+        $filters = $request->only(['search', 'date_posted']);
+
+        return view('alumni.announcements', [
+            'notices' => $notices,
+            'user' => null,
+            'openNoticeId' => null,
+            'filters' => $filters,
+        ]);
     }
 
     /** Toggles the current alumnus's interest — one click marks/unmarks, no separate "cancel" flow needed. */

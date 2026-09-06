@@ -1,23 +1,28 @@
 {{--
-    Combined Pending + Approved job-posts table's rows + pagination —
-    replaces the old two separately-paginated tables (partials/job-management/
-    pending-table.blade.php and approved-table.blade.php) now that
-    JobPostingController::showJobManagement() filters by status instead of
-    querying each separately. Extracted out of jobManagement.blade.php so the
-    exact same markup can be reused for both the initial full-page render and
-    the AJAX pagination fragment response (JobPostingController::jobManagementFragment)
-    — swapping just this table's #jobManagementTableWrap innerHTML on a
-    page-link or status-filter change means the rest of the page (scroll
-    position, the toolbar) never moves.
+    Combined Pending + Approved + Declined job-posts table's rows +
+    pagination — replaces the old two separately-paginated tables
+    (partials/job-management/pending-table.blade.php and approved-table.blade.php)
+    now that JobPostingController::showJobManagement() filters by status
+    instead of querying each separately. Extracted out of jobManagement.blade.php
+    so the exact same markup can be reused for both the initial full-page
+    render and the AJAX pagination fragment response
+    (JobPostingController::jobManagementFragment) — swapping just this
+    table's #jobManagementTableWrap innerHTML on a page-link or
+    status-filter change means the rest of the page (scroll position, the
+    toolbar) never moves.
 
-    Each row's status/actions are conditional on $j->job_approved: a pending
-    row gets the amber badge and a single eye button (Approve/Decline live
-    inside the View modal itself); an approved row gets the green badge and
-    a View/Delete dropdown — same as the two source tables did.
+    Every row is a real JobPosting model, including declined ones — despite
+    an old comment here once claiming otherwise, job_postings has always
+    soft-deleted (see the model's SoftDeletes trait + deleted_at column), so
+    declineJobPost() only ever marked a row trashed, never actually removed
+    it. $j->trashed() (status=declined rows are onlyTrashed(), see
+    applyJobStatusFilter()) picks the red DECLINED badge and a view-only
+    action instead of job_approved's usual pending/approved split — there's
+    nothing left to approve/decline/delete on a job that's already gone.
 
-    Expects: $jobs (paginator of JobPosting, with user loaded).
+    Expects: $jobs (paginator of JobPosting, with user/programs loaded).
 --}}
-<div class="overflow-x-auto">
+<div class="overflow-x-auto table-scroll">
 <table class="jobs-table">
     <thead class="bg-[#0E0F3B] text-white">
         <tr>
@@ -77,7 +82,11 @@
                 @endforeach
             </td>
             <td class="border-r border-slate-100">
-                @if ($j->job_approved)
+                @if ($j->trashed())
+                <span class="px-2 py-1 rounded-full border text-[7px] font-bold bg-red-100 text-red-600 border-red-200 inline-block whitespace-nowrap">
+                    DECLINED
+                </span>
+                @elseif ($j->job_approved)
                 <span class="px-2 py-1 rounded-full border text-[6px] font-semibold bg-green-100 text-green-600 border-green-200 inline-block whitespace-nowrap">
                     APPROVED
                 </span>
@@ -104,12 +113,21 @@
                         'industry' => $j->industry->industry_name ?? 'N/A',
                         'closing' => $j->job_closing_date,
                         'description' => $j->job_posting_description,
-                        'status' => $j->job_approved ? 'Approved' : 'Pending',
+                        'status' => $j->trashed() ? 'Declined' : ($j->job_approved ? 'Approved' : 'Pending'),
+                        'declineReason' => $j->job_decline_reason,
                         'approveUrl' => route('jobPosting.approve', $j->job_posting_id),
                         'deleteUrl' => route('jobPosting.delete', $j->job_posting_id),
                     ];
                 @endphp
-                @if ($j->job_approved)
+                @if ($j->trashed())
+                {{-- Declined jobs are already gone — nothing left to approve/decline/delete, just look at what it was. --}}
+                <button onclick='openViewModal({{ $j->job_posting_id }}, @json($viewModalData))'
+                    data-job-id="{{ $j->job_posting_id }}"
+                    title="View"
+                    class="p-1.5 hover:bg-blue-50 rounded-full transition-colors">
+                    <i data-lucide="eye" class="w-4 h-4 text-blue-500"></i>
+                </button>
+                @elseif ($j->job_approved)
                 <div class="inline-block text-left relative">
                     <button
                         class="menu-button p-1.5 hover:bg-slate-100 rounded-full transition-colors">

@@ -87,9 +87,11 @@
                 <button type="button" onclick="switchPageTab('reports')" id="pageTabBtn-reports" class="page-tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors whitespace-nowrap">
                     <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Reports
                 </button>
+                @if (Auth::user()->user_role === 'super_admin')
                 <button type="button" onclick="switchPageTab('settings')" id="pageTabBtn-settings" class="page-tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors whitespace-nowrap">
                     <i data-lucide="settings" class="w-4 h-4"></i> Settings
                 </button>
+                @endif
             </div>
 
             <div class="flex-1 overflow-y-auto p-6">
@@ -299,8 +301,10 @@
 
                 <!-- ══════════════════════ LIVE AGENT QUEUE ══════════════════════ -->
                 <div id="pageTab-queue" class="hidden">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md" id="queueTileAvailable"
+                            title="Click to show only unclaimed threads waiting for an agent"
+                            onclick="setQueueFilter('available')">
                             <p class="text-2xl font-bold text-amber-600">{{ $liveQueue['totalInQueue'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total in queue</p>
                         </div>
@@ -316,14 +320,32 @@
                             <p class="text-2xl font-bold text-blue-600">{{ $liveQueue['agentsOnline'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Agents available</p>
                         </div>
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md" id="queueTileMine"
+                            title="Click to show only threads assigned to you"
+                            onclick="setQueueFilter('mine')">
+                            <p class="text-2xl font-bold text-purple-600">{{ $liveQueue['assignedToMe'] }}</p>
+                            <p class="text-xs font-medium text-slate-500 mt-1">Assigned to me</p>
+                        </div>
                     </div>
 
                     <div class="bg-white rounded-lg shadow-sm border border-slate-200 w-full">
-                        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-                            <h3 class="text-sm font-bold text-[#0E0F3B]">Full queue</h3>
-                            <span class="flex items-center gap-1.5 text-[10px] text-slate-400">
-                                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Live
-                            </span>
+                        <div class="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <h3 class="text-sm font-bold text-[#0E0F3B]" id="queueListTitle">Full queue</h3>
+                                <span class="flex items-center gap-1.5 text-[10px] text-slate-400">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Live
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="relative w-56">
+                                    <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    <input type="text" id="queueSearchInput" oninput="setQueueSearch(this.value)" placeholder="Search by name"
+                                        class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A] transition-all">
+                                </div>
+                                <button type="button" id="queueClearFilterBtn" onclick="setQueueFilter('all')" class="hidden text-[10px] font-semibold text-[#C73D1A] hover:underline whitespace-nowrap">
+                                    Clear filter
+                                </button>
+                            </div>
                         </div>
                         <div id="queueList" class="divide-y divide-slate-100">
                             @php $initialQueueTickets = $waitingTickets->concat($withAgentTickets); @endphp
@@ -539,7 +561,8 @@
                     </div>
                 </div>
 
-                <!-- ══════════════════════ SETTINGS ══════════════════════ -->
+                <!-- ══════════════════════ SETTINGS (super_admin only) ══════════════════════ -->
+                @if (Auth::user()->user_role === 'super_admin')
                 <div id="pageTab-settings" class="hidden">
                     <form action="{{ route('chatbot.settings.update') }}" method="POST">
                         @csrf
@@ -611,6 +634,7 @@
                         <button type="submit" class="mt-5 bg-[#C73D1A] hover:bg-orange-700 text-white text-xs font-bold px-6 py-3 rounded-lg uppercase">Save Settings</button>
                     </form>
                 </div>
+                @endif
 
             </div>
         </main>
@@ -673,9 +697,14 @@
 
         // ── PAGE TABS ──
         function switchPageTab(tab) {
+            // Settings only renders in the DOM at all for a super_admin
+            // (the settings tab button/content are conditionally rendered
+            // server-side) — the null-check keeps this loop from throwing
+            // for anyone else and silently breaking every other tab in the
+            // same pass.
             ['overview', 'aichatbot', 'queue', 'alumnimsg', 'history', 'reports', 'settings'].forEach(t => {
-                document.getElementById('pageTab-' + t).classList.toggle('hidden', t !== tab);
-                document.getElementById('pageTabBtn-' + t).classList.toggle('active', t === tab);
+                document.getElementById('pageTab-' + t)?.classList.toggle('hidden', t !== tab);
+                document.getElementById('pageTabBtn-' + t)?.classList.toggle('active', t === tab);
             });
             if (window.lucide) lucide.createIcons();
 
@@ -729,22 +758,84 @@
         let queueListPollTimer = null;
         const QUEUE_JSON_URL = {!! json_encode(route('chatbot.queue')) !!};
 
+        // Tile clicks / the search box don't refetch — they just re-render
+        // whatever the last poll already brought back, filtered client-side.
+        // 'all' = everything (waiting_agent + with_agent, same as before this
+        // feature existed); 'available' = unclaimed threads anyone can pick
+        // up (Total in queue tile); 'mine' = with_agent claimed by the
+        // current admin (Assigned to me tile).
+        let queueFilter = 'all';
+        let queueSearchTerm = '';
+        // Seeded from the server-rendered list so a filter/search click in
+        // the instant before the first poll resolves doesn't wipe the
+        // already-visible rows out to an empty state.
+        @php
+            $initialQueueTicketsJson = $initialQueueTickets->map(function ($t) {
+                return [
+                    'ticketId' => $t->ticket_id,
+                    'name' => trim(($t->user->user_first_name ?? '') . ' ' . ($t->user->user_last_name ?? '')),
+                    'initial' => mb_substr($t->user->user_first_name ?? '?', 0, 1),
+                    'preview' => $t->latestMessage->message ?? '—',
+                    'status' => $t->status,
+                    'statusLabel' => $t->statusLabel(),
+                    'badgeClass' => $t->badgeClass(),
+                    'timeLabel' => optional($t->latestMessage?->created_at)->diffForHumans(),
+                    'claimedByName' => $t->office?->user ? trim($t->office->user->user_first_name . ' ' . $t->office->user->user_last_name) : null,
+                    'claimedAt' => optional($t->claimed_at)->diffForHumans(),
+                    'claimedByMe' => $t->office?->user_id === auth()->id(),
+                ];
+            })->values();
+        @endphp
+        let lastQueueTickets = @json($initialQueueTicketsJson);
+
         function escapeHtmlQueue(str) {
             const div = document.createElement('div');
             div.textContent = str ?? '';
             return div.innerHTML;
         }
 
+        function setQueueFilter(filter) {
+            queueFilter = (queueFilter === filter && filter !== 'all') ? 'all' : filter;
+            document.getElementById('queueTileAvailable').classList.toggle('border-amber-500', queueFilter === 'available');
+            document.getElementById('queueTileAvailable').classList.toggle('ring-2', queueFilter === 'available');
+            document.getElementById('queueTileAvailable').classList.toggle('ring-amber-200', queueFilter === 'available');
+            document.getElementById('queueTileAvailable').classList.toggle('border-slate-200', queueFilter !== 'available');
+            document.getElementById('queueTileMine').classList.toggle('border-purple-500', queueFilter === 'mine');
+            document.getElementById('queueTileMine').classList.toggle('ring-2', queueFilter === 'mine');
+            document.getElementById('queueTileMine').classList.toggle('ring-purple-200', queueFilter === 'mine');
+            document.getElementById('queueTileMine').classList.toggle('border-slate-200', queueFilter !== 'mine');
+            document.getElementById('queueListTitle').textContent =
+                queueFilter === 'available' ? 'Available threads' : (queueFilter === 'mine' ? 'Assigned to me' : 'Full queue');
+            document.getElementById('queueClearFilterBtn').classList.toggle('hidden', queueFilter === 'all');
+            renderQueueList(lastQueueTickets);
+        }
+
+        function setQueueSearch(term) {
+            queueSearchTerm = term.trim().toLowerCase();
+            renderQueueList(lastQueueTickets);
+        }
+
         function renderQueueList(tickets) {
+            lastQueueTickets = tickets;
             const container = document.getElementById('queueList');
             if (!container) return;
 
-            if (tickets.length === 0) {
-                container.innerHTML = '<p class="text-center text-slate-400 text-sm py-12" id="queueEmptyState">The queue is empty — no one is waiting for an agent right now.</p>';
+            const filtered = tickets.filter(t => {
+                if (queueFilter === 'available' && t.status !== 'waiting_agent') return false;
+                if (queueFilter === 'mine' && !(t.status === 'with_agent' && t.claimedByMe)) return false;
+                if (queueSearchTerm && !t.name.toLowerCase().includes(queueSearchTerm)) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                const message = queueSearchTerm || queueFilter !== 'all'
+                    ? 'No threads match the current filter/search.'
+                    : 'The queue is empty — no one is waiting for an agent right now.';
+                container.innerHTML = `<p class="text-center text-slate-400 text-sm py-12" id="queueEmptyState">${message}</p>`;
                 return;
             }
 
-            container.innerHTML = tickets.map(t => {
+            container.innerHTML = filtered.map(t => {
                 const claimedHtml = (t.status === 'with_agent' && t.claimedByName)
                     ? `<p class="text-[10px] text-slate-400 mt-0.5"><i class="fa-solid fa-user-check text-[9px]"></i> Claimed by ${escapeHtmlQueue(t.claimedByName)}${t.claimedByMe ? ' (you)' : ''} · ${escapeHtmlQueue(t.claimedAt || '')}</p>`
                     : '';

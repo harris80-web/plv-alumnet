@@ -73,6 +73,7 @@
         </div>
     </section>
     @include('partials.success')
+    @include('partials.error-toast')
     <section id="status-section" class="py-12 px-6 max-w-6xl mx-auto">
         <h2 class="text-4xl font-bold mb-10">
             <span class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Alumni Dashboard</span>
@@ -318,27 +319,26 @@
                 $cardImage = $job->job_posting_image
                     ? asset('storage/' . $job->job_posting_image)
                     : 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=600q=80';
-                // Same $appliedJobs contract as partials.job-post-card, see AlumniDashboardController::index().
-                $hasApplied = $appliedJobs->has($job->job_posting_id);
+                // Same builder partials/job-post-card.blade.php uses — see
+                // App\Services\JobCardDataBuilder's own doc comment for why
+                // this is extract() and not a shared Blade partial include
+                // (a partial can't hand $cardData back to this scope).
+                // This is what actually makes "View Details" on a Job Match
+                // open the identical modal Job Board's own card opens —
+                // reviews/rating, working Apply, bookmark, posted-by,
+                // everything — instead of a stripped-down data-* set.
+                extract(\App\Services\JobCardDataBuilder::build($job, $user, $appliedJobs, $bookmarkedIds));
             @endphp
             <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 flex flex-col transition-transform hover:scale-[1.02]">
-                {{-- Same data-* contract + openJobModal() as partials.job-post-card
+                {{-- Same $cardData + openJobModal() as partials.job-post-card
                      (shared modal: partials.job-detail-modal) so clicking a
                      recommended job here opens the identical "View Details"
                      modal used on the job board. --}}
                 <div class="relative h-48 bg-cover bg-center group cursor-pointer" style="background-image:url('{{ $cardImage }}');"
                     role="button" tabindex="0" aria-label="View job details"
-                    data-title="{{ $job->job_posting_title }}"
-                    data-company="{{ $job->job_posting_company }}"
-                    data-address="{{ $job->job_posting_address }}"
-                    data-date="{{ $job->created_at->diffForHumans() }}"
-                    data-description="{{ $job->job_posting_description }}"
-                    data-type="{{ $job->job_posting_employment_type }}"
-                    data-setup="{{ $job->job_posting_setup }}"
-                    data-valid="{{ $job->job_closing_date }}"
-                    data-image="{{ $cardImage }}"
-                    data-programs="{{ $job->programs->pluck('program_name')->implode(', ') }}"
-                    data-industry="{{ $job->industry->industry_name ?? 'Not specified' }}"
+                    @foreach ($cardData as $attr => $value)
+                    data-{{ $attr }}="{{ $value }}"
+                    @endforeach
                     onclick="openJobModal(this)"
                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openJobModal(this);}">
                     <div class="absolute inset-0 bg-[#0E0F3B]/50 mix-blend-multiply"></div>
@@ -405,6 +405,12 @@
     </section>
 
     @include('partials.job-detail-modal')
+    {{-- Powers the star-rating/upvote-downvote widgets inside the modal
+         above (castCompanyVote()/castCompanyRating() are defined here) —
+         without this include those functions don't exist on this page at
+         all, so clicking a star or a vote button in a Job Match's detail
+         modal did nothing. --}}
+    @include('partials.company-review-modal')
 
     <section class="AlumniServices orange-gradient py-16 px-6 text-white text-center">
         <div class="max-w-4xl mx-auto">
@@ -592,7 +598,10 @@
 
                     <div>
                         <label for="testimonial_body" class="block text-white font-bold mb-2 text-base">Message:</label>
-                        <textarea name="testimonial_body" rows="7" class="w-full p-3 text-base rounded-lg bg-white border-b-2 border-[#ED7A07] focus:ring-2 focus:ring-[#C73D1A] outline-none resize-none"></textarea>
+                        <textarea id="testimonial_body" name="testimonial_body" rows="7" maxlength="1000"
+                            oninput="document.getElementById('testimonialCharCount').textContent = this.value.length"
+                            class="w-full p-3 text-base rounded-lg bg-white border-b-2 border-[#ED7A07] focus:ring-2 focus:ring-[#C73D1A] outline-none resize-none"></textarea>
+                        <p class="text-right text-[11px] text-gray-300 mt-1"><span id="testimonialCharCount">0</span>/1000</p>
                     </div>
 
                     <p class="flex items-start gap-2 text-[11px] text-gray-300 leading-relaxed">

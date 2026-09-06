@@ -405,7 +405,7 @@
                     <div class="chart-card">
                         <div class="card-title">Employment Status Breakdown</div>
                         <div class="card-sub">Overall distribution of all alumni and their employment status</div>
-                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="window.location.href='{{ route('reports.employment') }}'">
+                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.employment') }}')">
                             <canvas id="chartStatus"></canvas>
                         </div>
                     </div>
@@ -436,7 +436,7 @@
                     <div class="chart-card">
                         <div class="card-title">Employment Rate by Batch/Year</div>
                         <div class="card-sub">Employed vs. unemployed counts across graduation batches</div>
-                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="window.location.href='{{ route('reports.employment') }}'">
+                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.employment') }}')">
                             <canvas id="chartPlacement"></canvas>
                         </div>
                     </div>
@@ -446,7 +446,7 @@
                     <div class="chart-card">
                         <div class="card-title">Job-to-Degree Alignment by Program/Course</div>
                         <div class="card-sub">% of employed alumni whose job matches their degree field ({{ $alignmentRate }}% overall) &mdash; every program</div>
-                        <div class="chart-clickable" style="margin-top:10px; height:220px; overflow-y:auto;" onclick="window.location.href='{{ route('reports.employment') }}'">
+                        <div class="chart-clickable" style="margin-top:10px; height:220px; overflow-y:auto;" onclick="goToReport('{{ route('reports.employment') }}')">
                             <div style="height:{{ max(160, $programAlignment->count() * 26) }}px;">
                                 <canvas id="chartAlignment"></canvas>
                             </div>
@@ -462,7 +462,7 @@
                     <div class="chart-card">
                         <div class="card-title">Employment Rate by Gender</div>
                         <div class="card-sub">Employed vs. total alumni per gender</div>
-                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="window.location.href='{{ route('reports.employment') }}'">
+                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.employment') }}')">
                             <canvas id="chartGender"></canvas>
                         </div>
                     </div>
@@ -471,7 +471,7 @@
                     <div class="chart-card">
                         <div class="card-title">Employment Interval</div>
                         <div class="card-sub">Time from graduation to first job (alumni with a recorded first-job date)</div>
-                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="window.location.href='{{ route('reports.employment') }}'">
+                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.employment') }}')">
                             <canvas id="chartInterval"></canvas>
                         </div>
                     </div>
@@ -483,7 +483,7 @@
                     <div class="card-title">Job Before Graduation &amp; Internships</div>
                     <div class="card-sub">Of alumni with a recorded first job</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 items-center">
-                        <div class="chart-clickable" style="height:180px;" onclick="window.location.href='{{ route('reports.employment') }}'">
+                        <div class="chart-clickable" style="height:180px;" onclick="goToReport('{{ route('reports.employment') }}')">
                             <canvas id="chartJobBeforeGrad"></canvas>
                         </div>
                         <div class="space-y-2">
@@ -517,7 +517,7 @@
                             &middot; {{ $selectedProgramNames->implode(', ') }}
                         @endif
                         &mdash; includes employment recorded from a system hire and employment alumni added themselves on their profile</div>
-                    <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="window.location.href='{{ route('reports.employment') }}'">
+                    <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.employment') }}')">
                         <canvas id="chartEmploymentByMonth"></canvas>
                     </div>
                 </div>
@@ -588,7 +588,7 @@
                             <option value="24" {{ $hireMonths === 24 ? 'selected' : '' }}>Last 24 months</option>
                         </select>
                     </div>
-                    <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="window.location.href='{{ route('reports.placement') }}'">
+                    <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.placement') }}')">
                         <canvas id="chartHires"></canvas>
                     </div>
                 </div>
@@ -598,8 +598,8 @@
                      <!-- Networking Activity -->
                     <div class="chart-card">
                         <div class="card-title">Alumni <span>Networking Activity</span></div>
-                        <div class="card-sub">Monthly connections & messages — Jan to Jun 2025</div>
-                        <div style="margin-top:10px; height:130px;">
+                        <div class="card-sub">New conversations & messages — last 6 months</div>
+                        <div class="chart-clickable" style="margin-top:10px; height:130px;" onclick="goToReport('{{ route('reports.networking') }}')">
                             <canvas id="chartNetworking"></canvas>
                         </div>
                     </div>
@@ -611,7 +611,7 @@
                             <div>
                                 <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px;">Alumni ID
                                     Status</div>
-                                <div style="height:130px;"><canvas id="chartAlumniID"></canvas></div>
+                                <div class="chart-clickable" style="height:130px;" onclick="window.location.href='{{ route('reports.alumniid') }}'"><canvas id="chartAlumniID"></canvas></div>
                                 <div style="font-size:9.5px;color:#6b7280;margin-top:8px;line-height:1.7;">
                                     @php $alumniIdRegistered = $alumniIdCounts->sum(); @endphp
                                     Registered for ID: <strong>{{ number_format($alumniIdRegistered) }} ({{ $alumniIdTotal > 0 ? round($alumniIdRegistered / $alumniIdTotal * 100) : 0 }}%)</strong><br>
@@ -621,7 +621,7 @@
                             <div>
                                 <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px;">Yearbook
                                     Distribution</div>
-                                <div style="height:130px;"><canvas id="chartYearbook"></canvas></div>
+                                <div class="chart-clickable" style="height:130px;" onclick="window.location.href='{{ route('reports.alumniid') }}'"><canvas id="chartYearbook"></canvas></div>
                                 <div style="font-size:9.5px;color:#6b7280;margin-top:8px;line-height:1.7;">
                                     @php $yearbookPending = $yearbookCounts['pending'] + $yearbookCounts['ready_to_claim']; @endphp
                                     Claimed: <strong>{{ number_format($yearbookCounts['claimed']) }} ({{ $alumniIdTotal > 0 ? round($yearbookCounts['claimed'] / $alumniIdTotal * 100) : 0 }}%)</strong><br>
@@ -673,12 +673,33 @@
     <script>
     lucide.createIcons();
 
+    // Every chart on this dashboard that drills into a Reports page requires
+    // the 'reports' admin permission — an admin who only has Dashboard
+    // access (every admin does, by default) would otherwise get a raw 403
+    // on click. goToReport() is the only way any chart navigates there, so
+    // gating it here covers all of them; the DOMContentLoaded block below
+    // also strips the clickable styling itself so it doesn't even look
+    // interactive for someone who can't use it.
+    const CAN_VIEW_REPORTS = @json(Auth::user()->canAccessAdminFeature('reports'));
+    function goToReport(url) {
+        if (CAN_VIEW_REPORTS) window.location.href = url;
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!CAN_VIEW_REPORTS) {
+            document.querySelectorAll('.chart-clickable').forEach(function (el) {
+                el.classList.remove('chart-clickable');
+            });
+        }
+    });
+
     // ── Item 18: EXPORT PDF now captures every real Chart.js canvas as a
     // PNG and POSTs it alongside the currently-applied filters, so the PDF
-    // shows actual graphs instead of re-deriving everything as tables. The
-    // 3 decorative canvases below (chartNetworking/chartAlumniID/
-    // chartYearbook) are never wired to real data and are deliberately
-    // excluded — same reasoning the CSV export has always applied to them. ──
+    // shows actual graphs instead of re-deriving everything as tables.
+    // chartNetworking/chartAlumniID/chartYearbook are real data now (see
+    // buildNetworkingReport()/buildAlumniIdYearbookReport()) but aren't part
+    // of this export — they get their own dedicated exportable report pages
+    // instead (reports.networking / reports.alumniid), reached by clicking
+    // either chart. ──
     const EXPORTABLE_CHART_IDS = ['chartStatus', 'chartPlacement', 'chartAlignment', 'chartGender', 'chartInterval', 'chartJobBeforeGrad', 'chartEmploymentByMonth', 'chartHires'];
 
     function exportPdfWithCharts() {
@@ -741,15 +762,19 @@
     Chart.defaults.font = fontDef;
     Chart.defaults.color = '#6b7280';
 
-    // 1. Networking Activity — dual line
+    // 1. Networking Activity — dual line, real Conversation/Message counts
+    // (see DashboardReportService::buildNetworkingReport()), trailing 6
+    // months to match this widget's fixed (non-selectable) window.
+    const networkingConversations = @json($networkingReport['monthlyConversations']);
+    const networkingMessages = @json($networkingReport['monthlyMessages']);
     new Chart(document.getElementById('chartNetworking'), {
         type: 'line',
         data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            labels: Object.keys(networkingConversations),
             datasets: [
                 {
                     label: 'Connections',
-                    data: [120, 180, 160, 230, 290, 340],
+                    data: Object.values(networkingConversations),
                     borderColor: '#e05c00',
                     backgroundColor: 'rgba(224,92,0,.08)',
                     borderWidth: 2,
@@ -759,7 +784,7 @@
                 },
                 {
                     label: 'Messages',
-                    data: [200, 250, 220, 300, 380, 450],
+                    data: Object.values(networkingMessages),
                     borderColor: '#1a3a6e',
                     backgroundColor: 'rgba(26,58,110,.08)',
                     borderWidth: 2,

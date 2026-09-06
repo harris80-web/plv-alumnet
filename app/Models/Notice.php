@@ -107,6 +107,12 @@ class Notice extends Model
         return $query->whereIn('recipient', ['employer', 'everyone']);
     }
 
+    /** Guests (not logged in) only see notices explicitly meant for the general public — not alumni- or employer-only announcements. */
+    public function scopeVisibleToGuest($query)
+    {
+        return $query->where('recipient', 'everyone');
+    }
+
     public function scopeUpcoming($query)
     {
         return $query->where('event_datetime', '>=', now());

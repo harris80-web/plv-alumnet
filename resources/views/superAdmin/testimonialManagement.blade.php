@@ -107,11 +107,15 @@
                         <p class="text-2xl font-bold text-slate-800">{{ $total_testimonials }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Total Testimonials</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        title="Click to filter by Published"
+                        onclick="setFilter('status','Published','status-label','status-dropdown')">
                         <p class="text-2xl font-bold text-green-500">{{ $published_count }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Published</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        title="Click to filter by Hidden"
+                        onclick="setFilter('status','Hidden','status-label','status-dropdown')">
                         <p class="text-2xl font-bold text-slate-400">{{ $hidden_count }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Hidden</p>
                     </div>
@@ -280,7 +284,7 @@
                 </div><!-- end Search / Filter Row -->
 
                   <div class="overflow-hidden rounded-b-lg">
-                  <div class="overflow-x-auto">
+                  <div class="overflow-x-auto table-scroll">
                     <table class="w-full text-left text-[10px] whitespace-nowrap">
                         <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                             <tr>
@@ -461,6 +465,8 @@
     </div>
 
     @include('partials.confirm-modal')
+    @include('partials.action-dropdown-fix')
+    @include('partials.table-scroll-fix')
 
 
     <script>
@@ -536,6 +542,7 @@
                         if (m !== dropdown) m.classList.add('hidden');
                     });
                     dropdown.classList.toggle('hidden');
+                    if (!dropdown.classList.contains('hidden')) positionFixedDropdown(newBtn, dropdown);
                 });
             });
         }

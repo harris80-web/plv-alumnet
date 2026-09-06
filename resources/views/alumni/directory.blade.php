@@ -166,6 +166,7 @@
         </div>
     </div>
 
+    @include('partials.action-dropdown-fix')
     @include('partials.footer-alumni')
 
     <script>
@@ -204,7 +205,10 @@
             const dropdown = btn.nextElementSibling;
             const isHidden = dropdown.classList.contains('hidden');
             document.querySelectorAll('.action-dropdown').forEach(d => d.classList.add('hidden'));
-            if (isHidden) dropdown.classList.remove('hidden');
+            if (isHidden) {
+                dropdown.classList.remove('hidden');
+                positionFixedDropdown(btn, dropdown);
+            }
         }
 
         document.addEventListener('click', function (e) {

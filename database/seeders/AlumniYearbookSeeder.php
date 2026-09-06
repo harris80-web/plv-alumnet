@@ -15,10 +15,8 @@ class AlumniYearbookSeeder extends Seeder
     /** Weighted so most records aren't sitting at the very first stage. */
     private const CLAIMING_STATUS_POOL = [
         'pending', 'pending', 'pending',
-        'on_hand', 'on_hand', 'on_hand', 'on_hand',
-        'ready_to_claim', 'ready_to_claim', 'ready_to_claim',
-        'claimed', 'claimed', 'claimed', 'claimed', 'claimed',
-        'not_yet_claimed', 'not_yet_claimed',
+        'ready_to_claim', 'ready_to_claim', 'ready_to_claim', 'ready_to_claim', 'ready_to_claim', 'ready_to_claim', 'ready_to_claim',
+        'claimed', 'claimed', 'claimed', 'claimed', 'claimed', 'claimed', 'claimed',
     ];
 
     /**

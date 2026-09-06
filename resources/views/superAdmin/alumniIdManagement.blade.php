@@ -134,15 +134,18 @@
                             <p class="text-2xl font-bold text-slate-800">{{ $statusCounts['total'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total Alumni IDs</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                            title="Click to filter by Pending" onclick="filterAlumniIdByStatusTile('pending')">
                             <p class="text-2xl font-bold text-amber-500">{{ $statusCounts['pending'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Pending</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                            title="Click to filter by Ready to Claim" onclick="filterAlumniIdByStatusTile('ready_to_claim')">
                             <p class="text-2xl font-bold text-purple-500">{{ $statusCounts['ready_to_claim'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Ready to Claim</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                            title="Click to filter by Claimed" onclick="filterAlumniIdByStatusTile('claimed')">
                             <p class="text-2xl font-bold text-green-500">{{ $statusCounts['claimed'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Claimed</p>
                         </div>
@@ -289,15 +292,18 @@
                             <p class="text-2xl font-bold text-slate-800">{{ $yearbookCounts['total'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total Yearbooks</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                            title="Click to filter by Pending" onclick="filterYearbookByStatusTile('pending')">
                             <p class="text-2xl font-bold text-amber-500">{{ $yearbookCounts['pending'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Pending</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                            title="Click to filter by Ready to Claim" onclick="filterYearbookByStatusTile('ready_to_claim')">
                             <p class="text-2xl font-bold text-purple-500">{{ $yearbookCounts['ready_to_claim'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Ready to Claim</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                            title="Click to filter by Claimed" onclick="filterYearbookByStatusTile('claimed')">
                             <p class="text-2xl font-bold text-green-500">{{ $yearbookCounts['claimed'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Claimed</p>
                         </div>
@@ -774,6 +780,17 @@
             document.dispatchEvent(new CustomEvent('pv:filtered'));
         }
 
+        // Clicking a status stat tile toggles that single status on/off
+        // (unchecking any other status checkbox first, since these are
+        // mutually exclusive stages) and re-runs the existing filter.
+        function filterAlumniIdByStatusTile(status) {
+            const boxes = document.querySelectorAll('.aid-filter-status');
+            const target = [...boxes].find(cb => cb.value === status);
+            const alreadyOnlyThis = target.checked && [...boxes].every(cb => cb === target || !cb.checked);
+            boxes.forEach(cb => cb.checked = (cb === target) && !alreadyOnlyThis);
+            filterAlumniIdRows();
+        }
+
         // ── ALUMNI ID: BULK SELECT ──
         function getCheckedAlumniIds() {
             return [...document.querySelectorAll('.alumni-id-checkbox:checked')].map(cb => cb.value);
@@ -881,6 +898,15 @@
             });
             document.getElementById('yearbookNoSearchResults').classList.toggle('hidden', visibleCount !== 0 || rows.length === 0);
             document.dispatchEvent(new CustomEvent('pv:filtered'));
+        }
+
+        // Same toggle-on/off-a-single-status behavior as filterAlumniIdByStatusTile() above, for the Yearbook tab's claiming-status tiles.
+        function filterYearbookByStatusTile(status) {
+            const boxes = document.querySelectorAll('.yb-filter-claiming');
+            const target = [...boxes].find(cb => cb.value === status);
+            const alreadyOnlyThis = target.checked && [...boxes].every(cb => cb === target || !cb.checked);
+            boxes.forEach(cb => cb.checked = (cb === target) && !alreadyOnlyThis);
+            filterYearbookRows();
         }
 
         // ── ALUMNI YEARBOOK: BULK SELECT ──

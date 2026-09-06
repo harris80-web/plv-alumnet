@@ -140,7 +140,9 @@ $current_page = 'user_management';
                         </div>
 
                         <!-- Active Admins -->
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('admin_status') === 'Active' ? 'border-green-500 ring-2 ring-green-200' : 'border-slate-200' }}"
+                            title="Click to {{ request('admin_status') === 'Active' ? 'clear this filter' : 'filter by Active' }}"
+                            onclick="pvSearchNavigate('admin_status', '{{ request('admin_status') === 'Active' ? '' : 'Active' }}', 'adminPage')">
                             <p class="text-2xl font-bold text-green-500">
                                 {{ $adminStats['active'] }}
                             </p>
@@ -148,7 +150,9 @@ $current_page = 'user_management';
                         </div>
 
                         <!-- Inactive Admins -->
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('admin_status') === 'Inactive' ? 'border-[#C73D1A] ring-2 ring-orange-200' : 'border-slate-200' }}"
+                            title="Click to {{ request('admin_status') === 'Inactive' ? 'clear this filter' : 'filter by Inactive' }}"
+                            onclick="pvSearchNavigate('admin_status', '{{ request('admin_status') === 'Inactive' ? '' : 'Inactive' }}', 'adminPage')">
                             <p class="text-2xl font-bold text-[#C73D1A]">
                                 {{ $adminStats['inactive'] }}
                             </p>
@@ -194,7 +198,7 @@ $current_page = 'user_management';
                             </button>
                         </div>
                       </div>
-                      <div class="overflow-x-auto">
+                      <div class="overflow-x-auto table-scroll">
                         <table class="w-full text-left text-[11px] whitespace-nowrap">
                             <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                                 <tr>
@@ -302,7 +306,9 @@ $current_page = 'user_management';
                         </div>
 
                         <!-- Active Accounts -->
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('alumni_status') === 'Active' ? 'border-green-500 ring-2 ring-green-200' : 'border-slate-200' }}"
+                            title="Click to {{ request('alumni_status') === 'Active' ? 'clear this filter' : 'filter by Active' }}"
+                            onclick="pvSearchNavigate('alumni_status', '{{ request('alumni_status') === 'Active' ? '' : 'Active' }}', 'alumniPage')">
                             <p class="text-2xl font-bold text-green-500">
                                 {{ $alumniStats['active'] }}
                             </p>
@@ -310,7 +316,9 @@ $current_page = 'user_management';
                         </div>
 
                         <!-- Deactivated Accounts -->
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('alumni_status') === 'Deactivated' ? 'border-[#C73D1A] ring-2 ring-orange-200' : 'border-slate-200' }}"
+                            title="Click to {{ request('alumni_status') === 'Deactivated' ? 'clear this filter' : 'filter by Deactivated' }}"
+                            onclick="pvSearchNavigate('alumni_status', '{{ request('alumni_status') === 'Deactivated' ? '' : 'Deactivated' }}', 'alumniPage')">
                             <p class="text-2xl font-bold text-[#C73D1A]">
                                 {{ $alumniStats['deactivated'] }}
                             </p>
@@ -318,7 +326,9 @@ $current_page = 'user_management';
                         </div>
 
                         <!-- New This Month -->
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('alumni_new_this_month') ? 'border-amber-400 ring-2 ring-amber-200' : 'border-slate-200' }}"
+                            title="Click to {{ request('alumni_new_this_month') ? 'clear this filter' : 'filter by New This Month' }}"
+                            onclick="pvSearchNavigate('alumni_new_this_month', '{{ request('alumni_new_this_month') ? '' : '1' }}', 'alumniPage')">
                             <p class="text-2xl font-bold text-amber-400">
                                 {{ $alumniStats['newThisMonth'] }}
                             </p>
@@ -336,13 +346,21 @@ $current_page = 'user_management';
                             <div class="relative w-64">
                                 <i data-lucide="search"
                                     class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                <input type="text" id="alumniSearchInput" onkeyup="filterAlumniRows()" placeholder="Search by name or email"
+                                <input type="text" id="alumniSearchInput" value="{{ request('alumni_search') }}"
+                                    onkeydown="if(event.key==='Enter'){pvSearchNavigate('alumni_search', this.value, 'alumniPage')}"
+                                    placeholder="Search by name or email (press Enter)"
                                     class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A]">
                             </div>
                             <button onclick="toggleAlumniFilterSidebar()"
                                 class="p-2 border border-slate-200 bg-white rounded-lg hover:bg-slate-50 text-slate-500 transition-colors">
                                 <i data-lucide="filter" class="w-4 h-4"></i>
                             </button>
+                            @if (request()->anyFilled(['alumni_search', 'alumni_idno', 'alumni_lastname', 'alumni_firstname', 'alumni_middlename', 'alumni_program', 'alumni_batch', 'alumni_status', 'alumni_new_this_month']))
+                            <a href="{{ route('superAdmin.userManagement', ['tab' => 'alumni']) }}#content-alumni"
+                                class="p-2 border border-slate-200 bg-white rounded-lg hover:bg-slate-50 text-[#C73D1A] transition-colors flex items-center gap-1 text-xs font-semibold">
+                                <i data-lucide="x" class="w-4 h-4"></i> Clear Filters
+                            </a>
+                            @endif
                         </div>
                         <div class="flex gap-2">
                             <!-- Bulk Deactivate -->
@@ -405,7 +423,7 @@ $current_page = 'user_management';
                             </form>
                         </div>
                       </div>
-                      <div class="overflow-x-auto">
+                      <div class="overflow-x-auto table-scroll">
                         <table class="w-full text-left text-[10px] whitespace-nowrap">
                             <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                                 <tr>
@@ -456,7 +474,7 @@ $current_page = 'user_management';
                                             value="{{ $alumnus->user_id }}">
                                     </td>
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $loop->iteration }}
+                                        {{ $alumnus->user_id }}
                                     </td>
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
                                         {{ $alumnus->user?->formalNameWithSuffix() ?? 'N/A' }}
@@ -549,7 +567,6 @@ $current_page = 'user_management';
                                 @endforelse
                             </tbody>
                         </table>
-                        <p id="alumniNoSearchResults" class="hidden text-center text-gray-400 py-10 text-xs">No matching alumni.</p>
                       </div>
                       <div class="px-4 pb-4">
                         @include('partials.table-pagination-bar', ['id' => 'alumniTable', 'mode' => 'reload', 'paginator' => $alumni, 'perPageParam' => 'alumni_per_page'])
@@ -572,7 +589,9 @@ $current_page = 'user_management';
                         </div>
 
                         <!-- Awaiting Approval -->
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                            title="Click to jump to Employers Awaiting Approval"
+                            onclick="document.getElementById('employerPendingSection').scrollIntoView({behavior:'smooth', block:'start'})">
                             <p class="text-2xl font-bold text-amber-400">
                                 {{ $employerStats['awaitingApproval'] }}
                             </p>
@@ -580,7 +599,9 @@ $current_page = 'user_management';
                         </div>
 
                         <!-- Active Accounts -->
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('employer_status', 'Active') === 'Active' ? 'border-green-500 ring-2 ring-green-200' : 'border-slate-200' }}"
+                            title="Click to {{ request('employer_status', 'Active') === 'Active' ? 'clear this filter' : 'filter by Active' }}"
+                            onclick="pvSearchNavigate('employer_status', '{{ request('employer_status', 'Active') === 'Active' ? '' : 'Active' }}', 'employerApprovedPage')">
                             <p class="text-2xl font-bold text-green-500">
                                 {{ $employerStats['active'] }}
                             </p>
@@ -588,7 +609,9 @@ $current_page = 'user_management';
                         </div>
 
                         <!-- Deactivated Accounts -->
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('employer_status') === 'Deactivated' ? 'border-[#C73D1A] ring-2 ring-orange-200' : 'border-slate-200' }}"
+                            title="Click to {{ request('employer_status') === 'Deactivated' ? 'clear this filter' : 'filter by Deactivated' }}"
+                            onclick="pvSearchNavigate('employer_status', '{{ request('employer_status') === 'Deactivated' ? '' : 'Deactivated' }}', 'employerApprovedPage')">
                             <p class="text-2xl font-bold text-[#C73D1A]">
                                 {{ $employerStats['deactivated'] }}
                             </p>
@@ -601,14 +624,16 @@ $current_page = 'user_management';
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
                         <!-- Awaiting Approval (compact: # + Company Name + Actions only) -->
-                        <div>
+                        <div id="employerPendingSection">
                             <p class="text-sm font-semibold text-orange-600 mb-3">Employers Awaiting Approval:</p>
                             <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                                 <div class="flex items-center gap-2 p-4 border-b border-slate-100">
                                     <div class="relative w-64">
                                         <i data-lucide="search"
                                             class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                        <input type="text" id="employerPendingSearchInput" onkeyup="filterEmployerPendingRows()" placeholder="Search by Company Name"
+                                        <input type="text" id="employerPendingSearchInput" value="{{ request('employer_pending_search') }}"
+                                            onkeydown="if(event.key==='Enter'){pvSearchNavigate('employer_pending_search', this.value, 'employerPendingPage')}"
+                                            placeholder="Search by Company Name (press Enter)"
                                             class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A]">
                                     </div>
                                 </div>
@@ -627,13 +652,21 @@ $current_page = 'user_management';
                                     <div class="relative w-64">
                                         <i data-lucide="search"
                                             class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                        <input type="text" id="employerSearchInput" onkeyup="filterEmployerRows()" placeholder="Search by Company Name"
+                                        <input type="text" id="employerSearchInput" value="{{ request('employer_search') }}"
+                                            onkeydown="if(event.key==='Enter'){pvSearchNavigate('employer_search', this.value, 'employerApprovedPage')}"
+                                            placeholder="Search by Company Name (press Enter)"
                                             class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A]">
                                     </div>
                                     <button onclick="toggleEmployerFilter()"
                                         class="p-2 border border-slate-200 bg-white rounded-lg hover:bg-slate-50 text-slate-500 transition-colors">
                                         <i data-lucide="filter" class="w-4 h-4"></i>
                                     </button>
+                                    @if (request()->anyFilled(['employer_search', 'employer_lastname', 'employer_firstname', 'employer_middlename', 'employer_company', 'employer_industry']) || request('employer_status') === 'Deactivated')
+                                    <a href="{{ route('superAdmin.userManagement', ['tab' => 'employer']) }}#content-employer"
+                                        class="p-2 border border-slate-200 bg-white rounded-lg hover:bg-slate-50 text-[#C73D1A] transition-colors flex items-center gap-1 text-xs font-semibold">
+                                        <i data-lucide="x" class="w-4 h-4"></i> Clear Filters
+                                    </a>
+                                    @endif
                                 </div>
                                 <div class="flex gap-2">
                                     <!-- Bulk Deactivate -->
@@ -1105,22 +1138,22 @@ $current_page = 'user_management';
             <div class="flex-1 overflow-y-auto px-6 py-6 space-y-5">
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-[#0E0F3B]">Alumni ID No.</label>
-                    <input type="text" id="alumniFilterIdNo" placeholder="Enter Alumni ID No."
+                    <input type="text" id="alumniFilterIdNo" value="{{ request('alumni_idno') }}" placeholder="Enter Alumni ID No."
                         class="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-[#0E0F3B]">Last Name</label>
-                    <input type="text" id="alumniFilterLastName" placeholder="Enter Last Name"
+                    <input type="text" id="alumniFilterLastName" value="{{ request('alumni_lastname') }}" placeholder="Enter Last Name"
                         class="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-[#0E0F3B]">First Name</label>
-                    <input type="text" id="alumniFilterFirstName" placeholder="Enter First Name"
+                    <input type="text" id="alumniFilterFirstName" value="{{ request('alumni_firstname') }}" placeholder="Enter First Name"
                         class="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-[#0E0F3B]">Middle Name</label>
-                    <input type="text" id="alumniFilterMiddleName" placeholder="Enter Middle Name"
+                    <input type="text" id="alumniFilterMiddleName" value="{{ request('alumni_middlename') }}" placeholder="Enter Middle Name"
                         class="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
                 </div>
                 <div class="space-y-1.5">
@@ -1129,7 +1162,7 @@ $current_page = 'user_management';
                         class="w-full px-3 py-2 border border-slate-200 rounded text-sm text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white">
                         <option value="">Select Undergraduate Program</option>
                         @foreach ($programs as $program)
-                        <option value="{{ $program->program_name }}">{{ $program->program_name }}</option>
+                        <option value="{{ $program->program_name }}" {{ request('alumni_program') === $program->program_name ? 'selected' : '' }}>{{ $program->program_name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -1139,7 +1172,7 @@ $current_page = 'user_management';
                         class="w-full px-3 py-2 border border-slate-200 rounded text-sm text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white">
                         <option value="">Select Batch</option>
                         @foreach ($alumniBatchYears as $batchYear)
-                        <option value="{{ $batchYear }}">{{ $batchYear }}</option>
+                        <option value="{{ $batchYear }}" {{ (string) request('alumni_batch') === (string) $batchYear ? 'selected' : '' }}>{{ $batchYear }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -1147,11 +1180,11 @@ $current_page = 'user_management';
                     <p class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-wider">Account Status</p>
                     <div class="space-y-2">
                         <label class="flex items-center gap-3 cursor-pointer group">
-                            <input type="checkbox" class="alumni-filter-status w-4 h-4 rounded border-slate-300 text-[#0E0F3B] focus:ring-[#0E0F3B]" value="Active">
+                            <input type="checkbox" class="alumni-filter-status w-4 h-4 rounded border-slate-300 text-[#0E0F3B] focus:ring-[#0E0F3B]" value="Active" {{ request('alumni_status') === 'Active' ? 'checked' : '' }}>
                             <span class="text-sm font-bold text-[#0E0F3B] group-hover:text-slate-600">Active</span>
                         </label>
                         <label class="flex items-center gap-3 cursor-pointer group border-b border-slate-100 pb-4">
-                            <input type="checkbox" class="alumni-filter-status w-4 h-4 rounded border-slate-300 text-[#0E0F3B] focus:ring-[#0E0F3B]" value="Deactivated">
+                            <input type="checkbox" class="alumni-filter-status w-4 h-4 rounded border-slate-300 text-[#0E0F3B] focus:ring-[#0E0F3B]" value="Deactivated" {{ request('alumni_status') === 'Deactivated' ? 'checked' : '' }}>
                             <span class="text-sm font-bold text-[#0E0F3B] group-hover:text-slate-600">Deactivated</span>
                         </label>
                     </div>
@@ -1159,7 +1192,7 @@ $current_page = 'user_management';
             </div>
 
             <div class="p-6">
-                <button onclick="filterAlumniRows(); toggleAlumniFilterSidebar()"
+                <button onclick="applyAlumniFiltersServerSide()"
                     class="w-full py-3 bg-[#0E0F3B] hover:brightness-110 text-white rounded font-bold text-xs tracking-widest uppercase transition-all">
                     Apply Filter
                 </button>
@@ -1180,22 +1213,22 @@ $current_page = 'user_management';
             <div class="flex-1 overflow-y-auto p-6 space-y-5">
                 <div>
                     <label class="block text-xs font-bold text-[#0E0F3B] mb-1">Last Name</label>
-                    <input type="text" id="employerFilterLastName" placeholder="Enter Last Name"
+                    <input type="text" id="employerFilterLastName" value="{{ request('employer_lastname') }}" placeholder="Enter Last Name"
                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-[#0E0F3B] mb-1">First Name</label>
-                    <input type="text" id="employerFilterFirstName" placeholder="Enter First Name"
+                    <input type="text" id="employerFilterFirstName" value="{{ request('employer_firstname') }}" placeholder="Enter First Name"
                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-[#0E0F3B] mb-1">Middle Name</label>
-                    <input type="text" id="employerFilterMiddleName" placeholder="Enter Middle Name"
+                    <input type="text" id="employerFilterMiddleName" value="{{ request('employer_middlename') }}" placeholder="Enter Middle Name"
                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-[#0E0F3B] mb-1">Company Name</label>
-                    <input type="text" id="employerFilterCompany" placeholder="Enter Company Name"
+                    <input type="text" id="employerFilterCompany" value="{{ request('employer_company') }}" placeholder="Enter Company Name"
                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all">
                 </div>
                 <div>
@@ -1204,13 +1237,13 @@ $current_page = 'user_management';
                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A] outline-none transition-all text-[#0E0F3B]">
                         <option value="">Select Industry/Sector</option>
                         @foreach ($industries as $industry)
-                        <option value="{{ mb_strtolower($industry->industry_name) }}">{{ $industry->industry_name }}</option>
+                        <option value="{{ $industry->industry_name }}" {{ request('employer_industry') === $industry->industry_name ? 'selected' : '' }}>{{ $industry->industry_name }}</option>
                         @endforeach
                     </select>
                 </div>
             </div>
             <div class="p-6 bg-white border-t border-slate-100">
-                <button onclick="filterEmployerRows(); toggleEmployerFilter()"
+                <button onclick="applyEmployerFiltersServerSide()"
                     class="w-full py-3 bg-[#0E0F3B] text-white rounded font-bold text-xs uppercase tracking-widest hover:bg-[#1a1b4d] transition-all">
                     Apply Filter
                 </button>
@@ -1582,6 +1615,8 @@ $current_page = 'user_management';
         </div>
     </div>
 
+    @include('partials.action-dropdown-fix')
+    @include('partials.table-scroll-fix')
     <script>
         /* ── Tab switching ──────────────────────────────────────── */
         function switchTab(tab) {
@@ -1649,6 +1684,7 @@ $current_page = 'user_management';
                         if (m !== dropdown) m.classList.add('hidden');
                     });
                     dropdown.classList.toggle('hidden');
+                    if (!dropdown.classList.contains('hidden')) positionFixedDropdown(newBtn, dropdown);
                 });
             });
         }
@@ -2076,74 +2112,55 @@ $current_page = 'user_management';
             }
         }
 
-        // ── ALUMNI TAB: SEARCH + SIDEBAR FILTERS ──
-        function filterAlumniRows() {
-            const query = document.getElementById('alumniSearchInput').value.trim().toLowerCase();
-            const idNo = document.getElementById('alumniFilterIdNo').value.trim().toLowerCase();
-            const lastName = document.getElementById('alumniFilterLastName').value.trim().toLowerCase();
-            const firstName = document.getElementById('alumniFilterFirstName').value.trim().toLowerCase();
-            const middleName = document.getElementById('alumniFilterMiddleName').value.trim().toLowerCase();
-            const program = document.getElementById('alumniFilterProgram').value;
-            const batch = document.getElementById('alumniFilterBatch').value;
-            const statuses = [...document.querySelectorAll('.alumni-filter-status:checked')].map(cb => cb.value);
-
-            const rows = document.querySelectorAll('#alumniTbody tr[data-search]');
-            let visibleCount = 0;
-            rows.forEach(row => {
-                const match = row.dataset.search.includes(query) &&
-                    (!idNo || row.dataset.idno.includes(idNo)) &&
-                    (!lastName || row.dataset.lastname.includes(lastName)) &&
-                    (!firstName || row.dataset.firstname.includes(firstName)) &&
-                    (!middleName || row.dataset.middlename.includes(middleName)) &&
-                    (!program || row.dataset.program === program) &&
-                    (!batch || row.dataset.batch === batch) &&
-                    (statuses.length === 0 || statuses.includes(row.dataset.status));
-                row.style.display = match ? '' : 'none';
-                if (match) visibleCount++;
+        // ── ALUMNI TAB: SEARCH + SIDEBAR FILTERS (server-side — a client-
+        // side row-hide can't work here since the table is paginated; a
+        // matching row on another page would never appear no matter what
+        // was typed/checked) ──
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.alumni-filter-status').forEach(function (cb) {
+                cb.addEventListener('change', function () {
+                    if (this.checked) {
+                        document.querySelectorAll('.alumni-filter-status').forEach(function (other) {
+                            if (other !== cb) other.checked = false;
+                        });
+                    }
+                });
             });
-            const noResults = document.getElementById('alumniNoSearchResults');
-            if (noResults) noResults.classList.toggle('hidden', visibleCount !== 0 || rows.length === 0);
+        });
+
+        function applyAlumniFiltersServerSide() {
+            const url = new URL(window.location.href);
+            const setOrDelete = (param, value) => {
+                if (value) { url.searchParams.set(param, value); } else { url.searchParams.delete(param); }
+            };
+            setOrDelete('alumni_idno', document.getElementById('alumniFilterIdNo').value.trim());
+            setOrDelete('alumni_lastname', document.getElementById('alumniFilterLastName').value.trim());
+            setOrDelete('alumni_firstname', document.getElementById('alumniFilterFirstName').value.trim());
+            setOrDelete('alumni_middlename', document.getElementById('alumniFilterMiddleName').value.trim());
+            setOrDelete('alumni_program', document.getElementById('alumniFilterProgram').value);
+            setOrDelete('alumni_batch', document.getElementById('alumniFilterBatch').value);
+            const checkedStatus = document.querySelector('.alumni-filter-status:checked');
+            setOrDelete('alumni_status', checkedStatus ? checkedStatus.value : '');
+            url.searchParams.set('alumniPage', 1);
+            window.location.href = url.toString();
         }
 
-        // ── EMPLOYER TAB (Approved list): SEARCH + SIDEBAR FILTERS ──
-        function filterEmployerRows() {
-            const query = document.getElementById('employerSearchInput').value.trim().toLowerCase();
-            const lastName = document.getElementById('employerFilterLastName').value.trim().toLowerCase();
-            const firstName = document.getElementById('employerFilterFirstName').value.trim().toLowerCase();
-            const middleName = document.getElementById('employerFilterMiddleName').value.trim().toLowerCase();
-            const company = document.getElementById('employerFilterCompany').value.trim().toLowerCase();
-            const industry = document.getElementById('employerFilterIndustry').value;
-
-            const rows = document.querySelectorAll('#employerTbody tr[data-search]');
-            let visibleCount = 0;
-            rows.forEach(row => {
-                const match = row.dataset.search.includes(query) &&
-                    (!lastName || row.dataset.lastname.includes(lastName)) &&
-                    (!firstName || row.dataset.firstname.includes(firstName)) &&
-                    (!middleName || row.dataset.middlename.includes(middleName)) &&
-                    (!company || row.dataset.company.includes(company)) &&
-                    (!industry || row.dataset.industry === industry);
-                row.style.display = match ? '' : 'none';
-                if (match) visibleCount++;
-            });
-            const noResults = document.getElementById('employerNoSearchResults');
-            if (noResults) noResults.classList.toggle('hidden', visibleCount !== 0 || rows.length === 0);
-        }
-
-        // Compact counterpart for the Awaiting Approval table — company name
-        // only (that table doesn't have the other columns/sidebar filter the
-        // Approved table's filterEmployerRows() checks).
-        function filterEmployerPendingRows() {
-            const query = document.getElementById('employerPendingSearchInput').value.trim().toLowerCase();
-            const rows = document.querySelectorAll('#employerPendingTbody tr[data-search]');
-            let visibleCount = 0;
-            rows.forEach(row => {
-                const match = row.dataset.search.includes(query);
-                row.style.display = match ? '' : 'none';
-                if (match) visibleCount++;
-            });
-            const noResults = document.getElementById('employerPendingNoSearchResults');
-            if (noResults) noResults.classList.toggle('hidden', visibleCount !== 0 || rows.length === 0);
+        // ── EMPLOYER TAB (Approved list): SEARCH + SIDEBAR FILTERS
+        // (server-side — same pagination-scoping reason as the alumni tab
+        // above: both employer tables paginate server-side, so a matching
+        // row outside the current page could never be found client-side) ──
+        function applyEmployerFiltersServerSide() {
+            const url = new URL(window.location.href);
+            const setOrDelete = (param, value) => {
+                if (value) { url.searchParams.set(param, value); } else { url.searchParams.delete(param); }
+            };
+            setOrDelete('employer_lastname', document.getElementById('employerFilterLastName').value.trim());
+            setOrDelete('employer_firstname', document.getElementById('employerFilterFirstName').value.trim());
+            setOrDelete('employer_middlename', document.getElementById('employerFilterMiddleName').value.trim());
+            setOrDelete('employer_company', document.getElementById('employerFilterCompany').value.trim());
+            setOrDelete('employer_industry', document.getElementById('employerFilterIndustry').value);
+            url.searchParams.set('employerApprovedPage', 1);
+            window.location.href = url.toString();
         }
 
         /* ── Alumni Activate and Deactivate Modal ───────────────────────────────── */

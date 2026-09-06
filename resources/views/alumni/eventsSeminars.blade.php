@@ -43,7 +43,7 @@
 
 <body>
     @php $current_page = Route::currentRouteName(); @endphp
-    @include($user->user_role === 'employer' ? 'partials.header-employer' : 'partials.header-alumni')
+    @include(!$user ? 'partials.header-general' : ($user->user_role === 'employer' ? 'partials.header-employer' : 'partials.header-alumni'))
 
     <section class="HeroSection h-[200px] flex items-end text-white shadow-lg">
         <div class="max-w-6xl w-full my-7 ml-10">
@@ -52,7 +52,11 @@
         </div>
     </section>
 
-    @php $eventsSeminarsRoute = $user->user_role === 'employer' ? 'notices.employerEventsSeminars' : 'notices.eventsSeminars'; @endphp
+    @php
+        $eventsSeminarsRoute = !$user
+            ? 'notices.guestEventsSeminars'
+            : ($user->user_role === 'employer' ? 'notices.employerEventsSeminars' : 'notices.eventsSeminars');
+    @endphp
     <nav class="bg-white border-b sticky top-0 z-10 shadow-md">
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-start space-x-8 uppercase text-sm font-bold tracking-wide">
@@ -118,7 +122,8 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach ($notices as $notice)
             @php $isInterested = in_array($notice->id, $interestedNoticeIds); @endphp
-            <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 flex flex-col h-full transition-transform hover:scale-[1.01] cursor-pointer"
+            <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 flex flex-col h-full transition-transform hover:scale-[1.01] {{ $user ? 'cursor-pointer' : '' }}"
+                @if ($user)
                 onclick="openNoticeDetailModal(this)"
                 data-notice-id="{{ $notice->id }}"
                 data-category="{{ $notice->category }}"
@@ -132,6 +137,7 @@
                 @if ($user->user_role === 'alumni')
                 data-interested="{{ $isInterested ? '1' : '0' }}"
                 data-toggle-url="{{ route('notices.toggleInterest', $notice->id) }}"
+                @endif
                 @endif>
                 <div class="relative h-40 bg-cover bg-center shrink-0" style="background-image:url('{{ $notice->thumbnailUrl() }}')">
                     <div class="absolute inset-0 bg-[#0E0F3B]/25"></div>
@@ -166,7 +172,7 @@
                         <div class="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
                     </div>
 
-                    @if ($user->user_role === 'alumni')
+                    @if ($user && $user->user_role === 'alumni')
                     <div class="mt-auto pt-3 border-t border-gray-100">
                         <form class="interest-form" action="{{ route('notices.toggleInterest', $notice->id) }}" method="POST" onclick="event.stopPropagation()">
                             @csrf
@@ -176,6 +182,14 @@
                                 {{ $isInterested ? "You're Interested" : 'Interested' }}
                             </button>
                         </form>
+                    </div>
+                    @elseif (!$user)
+                    <div class="mt-auto pt-3 border-t border-gray-100">
+                        <a href="{{ route('auth.login') }}" onclick="event.stopPropagation()"
+                            class="w-full flex items-center justify-center gap-2 text-xs font-bold uppercase py-2.5 rounded-lg transition-colors bg-[#1D264F] hover:bg-[#0E0F3B] text-white">
+                            <i class="fa-solid fa-lock"></i>
+                            Log In to View Full Details
+                        </a>
                     </div>
                     @endif
                 </div>
@@ -188,6 +202,7 @@
 
     </main>
 
+    @if ($user)
     @include('partials.notice-detail-modal')
 
     <script>
@@ -205,8 +220,9 @@
             }
         });
     </script>
+    @endif
 
-    @if ($user->user_role === 'alumni')
+    @if ($user && $user->user_role === 'alumni')
     <script>
         // Card-grid "Interested" buttons — same submitInterestToggle() used
         // by the detail modal's own button (defined in
@@ -223,7 +239,7 @@
     </script>
     @endif
 
-    @include($user->user_role === 'employer' ? 'partials.footer-employer' : 'partials.footer-alumni')
+    @include(!$user ? 'partials.footer' : ($user->user_role === 'employer' ? 'partials.footer-employer' : 'partials.footer-alumni'))
 </body>
 
 </html>

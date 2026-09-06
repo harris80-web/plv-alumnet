@@ -156,6 +156,12 @@ class EmployerController extends Controller
 
     public function updateEmployerProfile(Request $request, $employer)
     {
+        // Self-service only — same missing-ownership-check bug already found
+        // and fixed once for AlumnusController::updateAlumniProfile(). Only
+        // employer/edit-profile.blade.php posts here, always with the
+        // logged-in employer's own id.
+        abort_unless(Auth::check() && Auth::id() == $employer, 403);
+
         $user = User::where('user_id', $employer)->firstOrFail();
         // Validate the incoming request data
         $validated = $request->validate([

@@ -143,52 +143,51 @@
 
     <section class="py-16 px-6 max-w-6xl mx-auto relative">
         <div class="flex justify-between items-end mb-8 pl-4">
-            <span class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent 
+            <span class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent
             text-4xl font-bold text-blue-900 uppercase tracking-tighter"> | Campus Events</span>
-            <a href="#" class="font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent uppercase text-xs hover:border-b-2 border-[#C73D1A]">Go to Events ></a>
+            <a href="{{ route('notices.guestEventsSeminars') }}" class="font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent uppercase text-xs hover:border-b-2 border-[#C73D1A]">Go to Events ></a>
         </div>
 
-        <div class="flex items-center">
-            <button class="p-2 text-gray-400 hover:text-blue-900"><i class="fa-solid fa-chevron-left text-2xl"></i></button>
+        @if ($campusEvents->isEmpty())
+        <div class="bg-white rounded-2xl shadow-md p-12 text-center text-gray-400">
+            <i class="fa-regular fa-calendar-xmark text-4xl mb-3 block text-[#C73D1A]"></i>
+            <p class="font-semibold">No upcoming events to show right now.</p>
+        </div>
+        @else
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            @foreach ($campusEvents as $event)
+            <div class="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100 flex flex-col">
+                <div class="h-40">
+                    <img src="{{ $event->thumbnailUrl() }}" class="w-full h-full object-cover mix-blend-multiply">
+                </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow">
-                <script>
-                    for (let i = 0; i < 3; i++) {
-                        document.write(`
-                        <div class="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100">
-                            <div class="h-40">
-                                <img src="assets/Landing Page/Event.png" class="w-full h-full object-cover mix-blend-multiply">
-                            </div>
-                            
-                            <div class="p-4 flex gap-4 items-start relative ">
-                                <div class="flex-grow">
-                                    <h3 class="font-bold text-blue-900 uppercase text-sm">Event Title</h3>
-                                    <p class="text-[10px] text-gray-500 mb-2">
-                                    <i class="fa-solid fa-location-dot mr-1"></i> LOCATION
-                                    </p>
-                                    <p class="text-xs text-black w-3/4 leading-tight">
-                                      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam id arcu tristique.
-                                    </p>
-                                </div>
-                                 <div class="flex-shrink-0 absolute right-0 bg-orange-700 text-white p-2 text-center w-16 rounded-sm shadow-sm">
-                                    <span class="block text-xl font-bold leading-none tracking-tighter">01</span>
-                                    <span class="text-[10px] uppercase font-semibold">Jan</span>
-                                </div> 
-                            </div>
-                            
-                        </div>
-                        `);
-                    }
-                </script>
+                <div class="p-4 flex gap-4 items-start relative flex-grow">
+                    <div class="flex-grow">
+                        <h3 class="font-bold text-blue-900 uppercase text-sm">{{ $event->title }}</h3>
+                        @if ($event->location)
+                        <p class="text-[10px] text-gray-500 mb-2">
+                            <i class="fa-solid fa-location-dot mr-1"></i> {{ $event->location }}
+                        </p>
+                        @endif
+                        <p class="text-xs text-black w-3/4 leading-tight">
+                            {{ \Illuminate\Support\Str::limit(strip_tags($event->description ?? ''), 90) ?: 'No description provided.' }}
+                        </p>
+                    </div>
+                    <div class="flex-shrink-0 absolute right-0 bg-orange-700 text-white p-2 text-center w-16 rounded-sm shadow-sm">
+                        <span class="block text-xl font-bold leading-none tracking-tighter">{{ $event->event_datetime->format('d') }}</span>
+                        <span class="text-[10px] uppercase font-semibold">{{ $event->event_datetime->format('M') }}</span>
+                    </div>
+                </div>
+
+                <div class="px-4 pb-4">
+                    <a href="{{ route('auth.login') }}" class="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase py-2 rounded-md bg-[#1D264F] hover:bg-[#0E0F3B] text-white transition-colors">
+                        <i class="fa-solid fa-lock"></i> Log In to View Full Details
+                    </a>
+                </div>
             </div>
-
-            <button class="p-2 text-gray-400 hover:text-blue-900"><i class="fa-solid fa-chevron-right text-2xl"></i></button>
+            @endforeach
         </div>
-        <div class="flex justify-center mt-6 gap-2">
-            <div class="w-2 h-2 rounded-full bg-gray-300"></div>
-            <div class="w-2 h-2 rounded-full bg-orange-600"></div>
-            <div class="w-2 h-2 rounded-full bg-gray-300"></div>
-        </div>
+        @endif
     </section>
 
     <section id="alumni-testimonials" class="AlumniTestimonial py-20 px-6 text-white text-center mb-10">

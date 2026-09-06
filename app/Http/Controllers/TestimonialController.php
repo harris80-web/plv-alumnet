@@ -106,6 +106,13 @@ class TestimonialController extends Controller
 
     public function submitTestimonial(Request $request, $id)
     {
+        // Self-service only — same missing-ownership-check bug already found
+        // and fixed once for AlumnusController::updateAlumniProfile(). Only
+        // alumni/dashboard.blade.php posts here, always with
+        // Auth::user()'s own id — without this, anyone could submit a
+        // testimonial attributed to an arbitrary alumnus.
+        abort_unless(Auth::check() && Auth::id() == $id, 403);
+
         // Validate the incoming request data
         $validatedData = $request->validate([
             'testimonial_body' => 'required|string|max:1000',
@@ -157,7 +164,13 @@ class TestimonialController extends Controller
     public function showTestimonials()
     {
         $this->authorizeStaff();
-        $testimonials = Testimonial::with(['alumnus.user', 'alumnus.program'])->get();
+        // latest() alone ties on created_at for rows seeded in the same batch
+        // (identical timestamp) — break ties by id desc so "latest to oldest"
+        // stays fully deterministic instead of falling back to insertion order.
+        $testimonials = Testimonial::with(['alumnus.user', 'alumnus.program'])
+            ->latest()
+            ->orderByDesc('testimonial_id')
+            ->get();
         return view('superAdmin.testimonialManagement', compact('testimonials'));
     }
 

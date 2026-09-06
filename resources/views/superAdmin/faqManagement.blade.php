@@ -104,15 +104,18 @@
                         <p class="text-2xl font-bold text-slate-800">{{ $counts['total'] }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Total FAQs</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        title="Click to filter by Everyone" onclick="filterFaqsByRecipientTile('everyone')">
                         <p class="text-2xl font-bold text-green-600">{{ $counts['everyone'] }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Everyone</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        title="Click to filter by Alumni Only" onclick="filterFaqsByRecipientTile('alumni')">
                         <p class="text-2xl font-bold text-blue-600">{{ $counts['alumni'] }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Alumni Only</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        title="Click to filter by Employer Only" onclick="filterFaqsByRecipientTile('employer')">
                         <p class="text-2xl font-bold text-purple-600">{{ $counts['employer'] }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Employer Only</p>
                     </div>
@@ -167,7 +170,7 @@
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto table-scroll">
                         <table class="faqs-table">
                             <thead class="bg-[#0E0F3B] text-white">
                                 <tr>
@@ -398,6 +401,8 @@
     </div>
 
     @include('partials.confirm-modal')
+    @include('partials.action-dropdown-fix')
+    @include('partials.table-scroll-fix')
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -422,12 +427,24 @@
             document.dispatchEvent(new CustomEvent('pv:filtered'));
         }
 
+        // Clicking a recipient stat tile sets the same dropdown the toolbar
+        // already uses and re-runs filterFaqRows() — clicking the tile for
+        // the currently-active recipient clears back to "All Recipients".
+        function filterFaqsByRecipientTile(recipient) {
+            const select = document.getElementById('faqRecipientFilter');
+            select.value = (select.value === recipient) ? '' : recipient;
+            filterFaqRows();
+        }
+
         // ── 3-DOT ACTION DROPDOWN ──
         function toggleFaqDropdown(btn) {
             const dropdown = btn.nextElementSibling;
             const isHidden = dropdown.classList.contains('hidden');
             document.querySelectorAll('.action-dropdown').forEach(d => d.classList.add('hidden'));
-            if (isHidden) dropdown.classList.remove('hidden');
+            if (isHidden) {
+                dropdown.classList.remove('hidden');
+                positionFixedDropdown(btn, dropdown);
+            }
         }
 
         document.addEventListener('click', function (e) {

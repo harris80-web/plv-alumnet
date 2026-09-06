@@ -132,15 +132,21 @@
                         <p class="text-2xl font-bold text-slate-800">{{ $totalJobs }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Total Job Posts</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ ($filters['status'] ?? '') === 'pending' ? 'border-[#ED7A07] ring-2 ring-orange-200' : 'border-slate-200' }}"
+                        title="Click to {{ ($filters['status'] ?? '') === 'pending' ? 'clear this filter' : 'filter by Pending' }}"
+                        onclick="pvSearchNavigate('status', '{{ ($filters['status'] ?? '') === 'pending' ? '' : 'pending' }}', 'page')">
                         <p class="text-2xl font-bold text-[#ED7A07]">{{ $pendingCount }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Pending Approval</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ ($filters['status'] ?? '') === 'approved' ? 'border-green-500 ring-2 ring-green-200' : 'border-slate-200' }}"
+                        title="Click to {{ ($filters['status'] ?? '') === 'approved' ? 'clear this filter' : 'filter by Approved' }}"
+                        onclick="pvSearchNavigate('status', '{{ ($filters['status'] ?? '') === 'approved' ? '' : 'approved' }}', 'page')">
                         <p class="text-2xl font-bold text-green-500">{{ $approvedCount }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Approved Job Posts</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ ($filters['status'] ?? '') === 'declined' ? 'border-red-500 ring-2 ring-red-200' : 'border-slate-200' }}"
+                        title="Click to {{ ($filters['status'] ?? '') === 'declined' ? 'clear this filter' : 'filter by Declined' }}"
+                        onclick="pvSearchNavigate('status', '{{ ($filters['status'] ?? '') === 'declined' ? '' : 'declined' }}', 'page')">
                         <p class="text-2xl font-bold text-red-500">{{ $declinedCount }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Declined Job Posts</p>
                     </div>
@@ -163,6 +169,7 @@
                             <option value="">All Statuses</option>
                             <option value="pending" {{ ($filters['status'] ?? '') === 'pending' ? 'selected' : '' }}>Pending</option>
                             <option value="approved" {{ ($filters['status'] ?? '') === 'approved' ? 'selected' : '' }}>Approved</option>
+                            <option value="declined" {{ ($filters['status'] ?? '') === 'declined' ? 'selected' : '' }}>Declined</option>
                         </select>
                         <i data-lucide="chevron-down" class="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
                     </div>
@@ -234,6 +241,7 @@
     </div>
 
     @include('partials.confirm-modal')
+    @include('partials.table-scroll-fix')
 
     <!-- Sidebar Overlay -->
     <div id="sidebar-overlay" onclick="toggleSidebar('filter-sidebar')"
@@ -970,6 +978,7 @@
                 <p><strong>Industry:</strong> ${data.industry ?? 'N/A'}</p>
                 <p><strong>Closing Date:</strong> ${data.closing}</p>
                 <p><strong>Status:</strong> <span class="px-2 py-1 rounded-full border text-[9px] font-bold ${statusClass}"> ${data.status.toUpperCase()}</span></p>
+                ${data.status === 'Declined' ? `<p><strong>Decline Reason:</strong> ${data.declineReason ?? 'N/A'}</p>` : ''}
                 <div><strong>Description:</strong></div>
                 <div class="job-description-content">${data.description ?? 'N/A'}</div>
             </div>`;
@@ -990,6 +999,11 @@
                     closeViewModal();
                     openDeclineNotesModal(jobId, data.title);
                 };
+            } else if (data.status === 'Declined') {
+                // View-only — the job's gone, there's nothing left to approve/decline/delete.
+                approveBtn.classList.add('hidden');
+                declineBtn.classList.add('hidden');
+                deleteBtn.classList.add('hidden');
             } else {
                 approveBtn.classList.add('hidden');
                 declineBtn.classList.add('hidden');

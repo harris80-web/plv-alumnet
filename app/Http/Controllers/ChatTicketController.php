@@ -74,6 +74,7 @@ class ChatTicketController extends Controller
             'avgWaitMinutes' => $avgWaitMinutes,
             'resolvedTodayByAgents' => $resolvedTodayByAgent,
             'agentsOnline' => $agentsOnline,
+            'assignedToMe' => $withAgentTickets->filter(fn (ChatTicket $t) => $t->office?->user_id === Auth::id())->count(),
         ];
 
         $alumniMessaging = [
@@ -331,7 +332,12 @@ class ChatTicketController extends Controller
 
     public function updateSettings(Request $request)
     {
-        $this->authorizeStaff();
+        // Chatbot settings affect every agent on the queue (auto-assign,
+        // detection toggles, etc.) — narrower than authorizeStaff()'s usual
+        // admin+super_admin check on purpose, since a regular admin with
+        // just the 'messaging' feature permission shouldn't be able to
+        // change behavior for the whole team.
+        abort_unless(Auth::user()->user_role === 'super_admin', 403);
 
         $validated = $request->validate([
             'ai_chatbot_enabled' => ['sometimes', 'boolean'],

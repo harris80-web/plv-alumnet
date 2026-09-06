@@ -6,12 +6,17 @@
     loaded more than once regardless of how many instances are on the page.
 
     Params: $uid (string, unique per instance), $fieldName (form field name
-    the hidden textarea submits as), $initialValue (existing HTML, for edit).
+    the hidden textarea submits as), $initialValue (existing HTML, for edit),
+    $maxLength (typed-character cap enforced live in Quill — see the
+    text-change handler below; JobPostingController's server-side "max"
+    rules validate the raw HTML this produces, set well above this so they
+    only ever fire as a defensive backstop, not a normal-use rejection).
 --}}
 @php
     $uid = $uid ?? 'new';
     $fieldName = $fieldName ?? 'job_posting_description';
     $initialValue = $initialValue ?? '';
+    $maxLength = $maxLength ?? 5000;
 @endphp
 
 @once
@@ -54,6 +59,9 @@
     </div>
     <div id="quillEditor-{{ $uid }}" class="bg-white rounded-b-lg border border-[#0E0F3B] text-sm" style="min-height: 150px;"></div>
     <textarea name="{{ $fieldName }}" id="quillHidden-{{ $uid }}" class="hidden">{{ $initialValue }}</textarea>
+    <p class="text-right text-[10px] text-gray-400 mt-1">
+        <span id="quillCharCount-{{ $uid }}">0</span>/{{ $maxLength }}
+    </p>
 </div>
 
 <script>
@@ -63,20 +71,42 @@
     function init() {
         var uid = @json($uid);
         var hidden = document.getElementById('quillHidden-' + uid);
+        var maxLength = @json($maxLength);
+        var charCount = document.getElementById('quillCharCount-' + uid);
 
         var quill = new Quill('#quillEditor-' + uid, {
             theme: 'snow',
             modules: { toolbar: '#quillToolbar-' + uid },
         });
 
+        // getLength() counts a trailing newline Quill always keeps, even on
+        // an empty editor — subtract it so the displayed/compared count
+        // matches what the user actually typed.
+        function typedLength() {
+            return Math.max(0, quill.getLength() - 1);
+        }
+
+        function updateCharCount() {
+            if (charCount) charCount.textContent = typedLength();
+        }
+
         // Seed with existing content (edit case) — set via API rather than
         // innerHTML so Quill's internal state matches what's on screen.
         if (hidden.value.trim() !== '') {
             quill.clipboard.dangerouslyPasteHTML(hidden.value);
         }
+        updateCharCount();
 
         quill.on('text-change', function () {
+            // Hard cap: trims anything typed/pasted past maxLength back down
+            // instead of just warning, so the submitted HTML this produces
+            // never has more than maxLength characters of real content —
+            // matching what JobPostingController's server-side rule expects.
+            if (typedLength() > maxLength) {
+                quill.deleteText(maxLength, quill.getLength());
+            }
             hidden.value = quill.root.innerHTML;
+            updateCharCount();
         });
 
         // Uploads to the server and inserts the returned URL, rather than

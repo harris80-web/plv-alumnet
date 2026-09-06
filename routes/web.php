@@ -5,7 +5,6 @@ use App\Http\Controllers\AlumniDashboardController;
 use App\Http\Controllers\AlumniIdController;
 use App\Http\Controllers\AlumniYearbookController;
 use App\Http\Controllers\AlumnusController;
-use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ChatTicketController;
 use App\Http\Controllers\ConversationController;
@@ -20,12 +19,11 @@ use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\NotificationController;
+use App\Models\Notice;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\PasswordResetTokenController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\ReportController;
-use App\Http\Controllers\SalaryMaxController;
-use App\Http\Controllers\SalaryMinController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\SeminarController;
 use App\Http\Controllers\TestimonialController;
@@ -49,7 +47,16 @@ Route::get('/', function () {
         // this at least lands back on the testimonials section instead of
         // the very top of the page.
         ->fragment('alumni-testimonials');
-    return view('general.home', compact('testimonials'));
+
+    // "Campus Events" preview strip — only notices explicitly marked for
+    // "everyone" (same rule as the public Events & Seminars page), so a
+    // guest never sees an alumni- or employer-only notice on the homepage.
+    $campusEvents = Notice::category('event')->visibleToGuest()->upcoming()
+        ->orderBy('event_datetime')
+        ->take(3)
+        ->get();
+
+    return view('general.home', compact('testimonials', 'campusEvents'));
 })->name('general.home');
 
 Route::get('/about', function () {
@@ -65,7 +72,9 @@ Route::get('/login', function () {
 })->name('auth.login');
 
 Route::get('/waitForApproval', [UserController::class, 'goToWaitForApproval'])->name('general.waitForApproval');
-Route::get('/dashboardRedirect', [UserController::class, 'redirectToDashboard'])->name('users.dashboardRedirect');
+// redirectToDashboard() reads Auth::user() directly with no null check — a
+// guest hitting this 500'd instead of getting redirected to login.
+Route::get('/dashboardRedirect', [UserController::class, 'redirectToDashboard'])->name('users.dashboardRedirect')->middleware('auth');
 
 
 Route::get('/general/privacy-policy', function () {
@@ -77,6 +86,9 @@ Route::get('/general/tou', function () {
 })->name('general.tou');
 
 Route::get('/general/faqs', [FaqController::class, 'generalFaqs'])->name('general.faqs');
+
+Route::get('/events-seminars', [NoticeController::class, 'guestEventsAndSeminars'])->name('notices.guestEventsSeminars');
+Route::get('/announcements', [NoticeController::class, 'guestAnnouncements'])->name('notices.guestAnnouncements');
 
 //alumni
 Route::get('/alumni/about', function () {
@@ -129,9 +141,11 @@ Route::get('/superAdmin/profile', [UserController::class, 'showSuperAdminProfile
 Route::get('/superAdmin/reports/employment', [ReportController::class, 'employment'])->name('reports.employment')->middleware(['auth', 'feature:reports']);
 Route::get('/superAdmin/reports/placement', [ReportController::class, 'placement'])->name('reports.placement')->middleware(['auth', 'feature:reports']);
 Route::get('/superAdmin/reports/companies', [ReportController::class, 'companies'])->name('reports.companies')->middleware(['auth', 'feature:reports']);
-Route::get('/superAdmin/reports/{group}/export-csv', [ReportController::class, 'exportCsv'])->whereIn('group', ['employment', 'placement', 'companies'])->name('reports.exportCsv')->middleware(['auth', 'feature:reports']);
-Route::get('/superAdmin/reports/{group}/export-pdf', [ReportController::class, 'exportPdf'])->whereIn('group', ['employment', 'placement', 'companies'])->name('reports.exportPdf')->middleware(['auth', 'feature:reports']);
-Route::post('/superAdmin/reports/{group}/export-pdf', [ReportController::class, 'exportPdf'])->whereIn('group', ['employment', 'placement', 'companies'])->name('reports.exportPdf.post')->middleware(['auth', 'feature:reports']);
+Route::get('/superAdmin/reports/alumniid', [ReportController::class, 'alumniid'])->name('reports.alumniid')->middleware(['auth', 'feature:reports']);
+Route::get('/superAdmin/reports/networking', [ReportController::class, 'networking'])->name('reports.networking')->middleware(['auth', 'feature:reports']);
+Route::get('/superAdmin/reports/{group}/export-csv', [ReportController::class, 'exportCsv'])->whereIn('group', ['employment', 'placement', 'companies', 'alumniid', 'networking'])->name('reports.exportCsv')->middleware(['auth', 'feature:reports']);
+Route::get('/superAdmin/reports/{group}/export-pdf', [ReportController::class, 'exportPdf'])->whereIn('group', ['employment', 'placement', 'companies', 'alumniid', 'networking'])->name('reports.exportPdf')->middleware(['auth', 'feature:reports']);
+Route::post('/superAdmin/reports/{group}/export-pdf', [ReportController::class, 'exportPdf'])->whereIn('group', ['employment', 'placement', 'companies', 'alumniid', 'networking'])->name('reports.exportPdf.post')->middleware(['auth', 'feature:reports']);
 
 
 Route::get('/admin/dashboard', function () {
@@ -243,9 +257,6 @@ Route::put('/alumni/activate/{id}', [AlumnusController::class, 'activateAlumnus'
 Route::get('/alumni/directoryFragment', [AlumnusController::class, 'directoryFragment'])->name('alumni.directoryFragment')->middleware('auth');
 Route::resource('alumni', AlumnusController::class)->middleware('auth');
 
-
-Route::resource('announcements', AnnouncementController::class);
-
 Route::get('/messages', [ConversationController::class, 'index'])->name('messages.index')->middleware('auth');
 Route::get('/messages/contacts/search', [ConversationController::class, 'searchContacts'])->name('messages.searchContacts')->middleware('auth');
 Route::get('/messages/sidebar-poll', [ConversationController::class, 'sidebarPoll'])->name('messages.sidebarPoll')->middleware('auth');
@@ -255,7 +266,10 @@ Route::post('/messages/{conversation}/send', [MessageController::class, 'store']
 Route::get('/messages/{conversation}/poll', [MessageController::class, 'poll'])->name('messages.poll')->middleware('auth');
 
 Route::resource('employers', EmployerController::class);
-Route::put('/employers/updateProfile/{employer}', [EmployerController::class, 'updateEmployerProfile'])->name('employers.updateProfile');
+// Was missing ->middleware('auth') entirely, and updateEmployerProfile()
+// itself had no ownership check — any unauthenticated request could rewrite
+// any employer's profile by id (see the abort_unless now in that method).
+Route::put('/employers/updateProfile/{employer}', [EmployerController::class, 'updateEmployerProfile'])->name('employers.updateProfile')->middleware('auth');
 // Was missing ->middleware('auth') entirely — any logged-in user, or a
 // direct unauthenticated POST, could deactivate an employer account.
 Route::put('/employer/deactivate/{id}', [EmployerController::class, 'deactivateEmployer'])->name('employers.deactivateEmployer')->middleware(['auth', 'feature:user_management']);
@@ -266,27 +280,39 @@ Route::resource('events', EventController::class);
 Route::resource('industries', IndustryController::class);
 
 Route::resource('job-applications', JobApplicationController::class);
-Route::post('/jobBoard/applyJob/{jobPostingId}', [JobApplicationController::class, 'applyJob'])->name('jobApplication.apply');
-Route::get('/jobBoard/applications/{jobPostingId}', [JobApplicationController::class, 'showApplications'])->name('jobApplication.showApplications');
-Route::post('/jobBoard/hireApplicant/{applicationId}', [JobApplicationController::class, 'hireApplicant'])->name('jobApplication.hireApplicant');
-Route::post('/jobBoard/declineApplicant/{applicationId}', [JobApplicationController::class, 'declineApplicant'])->name('jobApplication.declineApplicant');
-Route::post('/jobBoard/shortlistApplicant/{applicationId}', [JobApplicationController::class, 'shortlistApplicant'])->name('jobApplication.shortlistApplicant');
-Route::post('/jobBoard/bulkHireApplicants/{jobPostingId}', [JobApplicationController::class, 'bulkHireApplicants'])->name('jobApplication.bulkHireApplicants');
-Route::post('/jobBoard/bulkDeclineApplicants/{jobPostingId}', [JobApplicationController::class, 'bulkDeclineApplicants'])->name('jobApplication.bulkDeclineApplicants');
-Route::post('/jobBoard/bulkShortlistApplicants/{jobPostingId}', [JobApplicationController::class, 'bulkShortlistApplicants'])->name('jobApplication.bulkShortlistApplicants');
+// These all already check ownership internally (Auth::id() against the
+// job's/application's owning user, failing closed for a guest), so none of
+// this was an actual bypass — but a guest still hit a raw crash/403 instead
+// of a clean login redirect. ->middleware('auth') added for that, and for
+// defense in depth.
+Route::post('/jobBoard/applyJob/{jobPostingId}', [JobApplicationController::class, 'applyJob'])->name('jobApplication.apply')->middleware('auth');
+Route::get('/jobBoard/applications/{jobPostingId}', [JobApplicationController::class, 'showApplications'])->name('jobApplication.showApplications')->middleware('auth');
+Route::post('/jobBoard/hireApplicant/{applicationId}', [JobApplicationController::class, 'hireApplicant'])->name('jobApplication.hireApplicant')->middleware('auth');
+Route::post('/jobBoard/declineApplicant/{applicationId}', [JobApplicationController::class, 'declineApplicant'])->name('jobApplication.declineApplicant')->middleware('auth');
+Route::post('/jobBoard/shortlistApplicant/{applicationId}', [JobApplicationController::class, 'shortlistApplicant'])->name('jobApplication.shortlistApplicant')->middleware('auth');
+Route::post('/jobBoard/bulkHireApplicants/{jobPostingId}', [JobApplicationController::class, 'bulkHireApplicants'])->name('jobApplication.bulkHireApplicants')->middleware('auth');
+Route::post('/jobBoard/bulkDeclineApplicants/{jobPostingId}', [JobApplicationController::class, 'bulkDeclineApplicants'])->name('jobApplication.bulkDeclineApplicants')->middleware('auth');
+Route::post('/jobBoard/bulkShortlistApplicants/{jobPostingId}', [JobApplicationController::class, 'bulkShortlistApplicants'])->name('jobApplication.bulkShortlistApplicants')->middleware('auth');
 
 
 Route::resource('job-postings', JobPostingController::class);
 Route::get('/jobBoard', [JobPostingController::class, 'showJobBoard'])->name('jobPosting.jobBoard');
-Route::get('/jobBoard/bookmarks', [JobPostingController::class, 'showBookmarks'])->name('jobPosting.bookmarks');
+Route::get('/jobBoard/bookmarks', [JobPostingController::class, 'showBookmarks'])->name('jobPosting.bookmarks')->middleware('auth');
 Route::get('/jobBoard/myApplications', [JobPostingController::class, 'showMyApplications'])->name('jobPosting.myApplications')->middleware('auth');
-Route::post('/jobBoard/addJobPost/{id}', [JobPostingController::class, 'addJobPost'])->name('jobPosting.addJobPost');
-Route::post('/jobBoard/toggleBookmark/{jobPostingId}', [JobBookmarkController::class, 'toggle'])->name('jobBookmark.toggle');
+// addJobPost()/editJobPost()/showMyJobPosts() were missing ->middleware('auth')
+// entirely, and had no ownership check inside — any unauthenticated request
+// could post a job as anyone, edit any job posting by id, or view any
+// poster's My Job Postings management page. Fixed with abort_unless checks
+// in JobPostingController (same pattern as AlumnusController::updateAlumniProfile()).
+Route::post('/jobBoard/addJobPost/{id}', [JobPostingController::class, 'addJobPost'])->name('jobPosting.addJobPost')->middleware('auth');
+Route::post('/jobBoard/toggleBookmark/{jobPostingId}', [JobBookmarkController::class, 'toggle'])->name('jobBookmark.toggle')->middleware('auth');
 Route::post('/companies/{employer}/vote', [EmployerReviewController::class, 'vote'])->name('employerReviews.vote')->middleware('auth');
 Route::get('/companies/{employer}/reviews', [EmployerReviewController::class, 'reviews'])->name('employerReviews.index');
-Route::post('/job-postings/upload-image', [JobPostingController::class, 'uploadDescriptionImage'])->name('jobPosting.uploadDescriptionImage');
-Route::get('/myJobPosts/{id}', [JobPostingController::class, 'showMyJobPosts'])->name('jobPosting.myJobPosts');
-Route::post('/editJobPost/{id}', [JobPostingController::class, 'editJobPost'])->name('jobPosting.editJobPost');
+// Was fully unauthenticated — anyone could POST arbitrary images to this
+// endpoint and have them stored under public storage.
+Route::post('/job-postings/upload-image', [JobPostingController::class, 'uploadDescriptionImage'])->name('jobPosting.uploadDescriptionImage')->middleware('auth');
+Route::get('/myJobPosts/{id}', [JobPostingController::class, 'showMyJobPosts'])->name('jobPosting.myJobPosts')->middleware('auth');
+Route::post('/editJobPost/{id}', [JobPostingController::class, 'editJobPost'])->name('jobPosting.editJobPost')->middleware('auth');
 Route::get('/jobManagement', [JobPostingController::class, 'showJobManagement'])->name('jobPosting.jobManagement')->middleware(['auth', 'feature:job_management']);
 Route::get('/jobManagement/page', [JobPostingController::class, 'jobManagementFragment'])->name('jobPosting.jobManagementFragment')->middleware(['auth', 'feature:job_management']);
 Route::post('/approveJobPost/{id}', [JobPostingController::class, 'approveJobPost'])->name('jobPosting.approve')->middleware(['auth', 'feature:job_management']);
@@ -294,7 +320,10 @@ Route::post('/declineJobPost/{id}', [JobPostingController::class, 'declineJobPos
 Route::delete('/deleteJobPost/{id}', [JobPostingController::class, 'deleteJobPost'])->name('jobPosting.delete')->middleware(['auth', 'feature:job_management']);
 
 Route::resource('offices', OfficeController::class);
-Route::put('/offices/updateProfile/{office}', [OfficeController::class, 'updateOfficeProfile'])->name('offices.updateProfile');
+// Was missing ->middleware('auth') entirely, and updateOfficeProfile()
+// itself had no ownership check — any unauthenticated request could rewrite
+// any admin/office's profile by id (see the abort_unless now in that method).
+Route::put('/offices/updateProfile/{office}', [OfficeController::class, 'updateOfficeProfile'])->name('offices.updateProfile')->middleware('auth');
 // Admin-account management (create/delete admins, grant/edit their feature
 // permissions) is super_admin-only — an `admin` must never be able to
 // change its own or another admin's access, even one with every other
@@ -311,15 +340,15 @@ Route::post('/resetPassword', [PasswordResetTokenController::class, 'updatePassw
 
 Route::resource('programs', ProgramController::class);
 
-Route::resource('salary-maxes', SalaryMaxController::class);
-
-Route::resource('salary-mins', SalaryMinController::class);
-
 Route::resource('sections', SectionController::class);
 
 Route::resource('seminars', SeminarController::class);
 
-Route::post('/submitTestimonial/{id}', [TestimonialController::class, 'submitTestimonial'])->name('testimonials.submit');
+// Was missing ->middleware('auth') entirely, and submitTestimonial() itself
+// had no ownership check — any request could submit a testimonial
+// attributed to an arbitrary alumnus id (see the abort_unless now in that
+// method).
+Route::post('/submitTestimonial/{id}', [TestimonialController::class, 'submitTestimonial'])->name('testimonials.submit')->middleware('auth');
 Route::put('/testimonials/bulk-post', [TestimonialController::class, 'bulkPost'])->name('testimonials.bulkPost')->middleware(['auth', 'feature:testimonials']);
 Route::put('/testimonials/bulk-hide', [TestimonialController::class, 'bulkHide'])->name('testimonials.bulkHide')->middleware(['auth', 'feature:testimonials']);
 Route::put('/testimonials/bulk-delete', [TestimonialController::class, 'bulkDelete'])->name('testimonials.bulkDelete')->middleware(['auth', 'feature:testimonials']);
@@ -346,15 +375,20 @@ Route::put('/users/alumni/bulk-deactivate', [UserController::class, 'bulkDeactiv
 // Creating an admin account (and therefore choosing its initial feature
 // permissions) is super_admin-only — see the offices.* routes above.
 Route::post('/users/addAdmin', [UserController::class, 'addAdmin'])->name('users.addAdmin')->middleware(['auth', 'super_admin']);
-Route::get('/showChangePassword', [UserController::class, 'showChangePassword'])->name('users.showChangePassword');
-Route::put('/changePassword', [UserController::class, 'changePassword'])->name('users.changePassword');
+// Both read Auth::user() directly with no null check — a guest hitting
+// either 500'd instead of getting redirected to login.
+Route::get('/showChangePassword', [UserController::class, 'showChangePassword'])->name('users.showChangePassword')->middleware('auth');
+Route::put('/changePassword', [UserController::class, 'changePassword'])->name('users.changePassword')->middleware('auth');
 Route::resource('users', UserController::class);
 
-Route::get('/resume/build', [ResumeBuilderController::class, 'edit'])->name('resume.build');
-Route::post('/resume/save', [ResumeBuilderController::class, 'save'])->name('resume.save');
-Route::get('/resume/pdf', [ResumeBuilderController::class, 'downloadPdf'])->name('resume.pdf');
-Route::post('/resume/import', [ResumeBuilderController::class, 'import'])->name('resume.import');
-Route::get('/resume/view/{alumnusId}', [ResumeBuilderController::class, 'viewApplicantResume'])->name('resume.viewApplicant');
+// All five read Auth::id()/Auth::user() directly (viewApplicantResume()
+// takes a URL id but is properly ownership-checked inside) — same
+// guest-500-instead-of-login-redirect issue as showChangePassword() above.
+Route::get('/resume/build', [ResumeBuilderController::class, 'edit'])->name('resume.build')->middleware('auth');
+Route::post('/resume/save', [ResumeBuilderController::class, 'save'])->name('resume.save')->middleware('auth');
+Route::get('/resume/pdf', [ResumeBuilderController::class, 'downloadPdf'])->name('resume.pdf')->middleware('auth');
+Route::post('/resume/import', [ResumeBuilderController::class, 'import'])->name('resume.import')->middleware('auth');
+Route::get('/resume/view/{alumnusId}', [ResumeBuilderController::class, 'viewApplicantResume'])->name('resume.viewApplicant')->middleware('auth');
 
 // Local-only: renders every mails/*.blade.php exactly as it would be
 // emailed (same asset() URLs, same gradient/icon markup) without sending

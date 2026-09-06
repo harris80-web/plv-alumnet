@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Alumnus;
+use App\Models\AlumniId;
+use App\Models\AlumniYearbook;
 use App\Models\Employer;
 use App\Models\Industry;
 use App\Models\Program;
@@ -35,6 +37,15 @@ class DashboardReportService
         $value = (int) $raw;
 
         return in_array($value, $allowed, true) ? $value : 5;
+    }
+
+    /** "Networking Activity" trailing-month range selector — same fixed set as resolveHireMonths(). */
+    public function resolveNetworkMonths(?string $raw): int
+    {
+        $allowed = [3, 6, 12, 24];
+        $value = (int) $raw;
+
+        return in_array($value, $allowed, true) ? $value : 6;
     }
 
     /** Normalizes the Employment Status filter to a de-duped subset of ['employed', 'unemployed']. */
@@ -391,5 +402,119 @@ class DashboardReportService
             'employedAlumniTable', 'totalApplications', 'totalHired', 'hiresPerMonth', 'topHiringCompanies',
             'registeredCompanies', 'pendingCompanies'
         );
+    }
+
+    /**
+     * Group D (report detail page) — Alumni ID & Yearbook. Same 3 filter
+     * dimensions as the other groups' cohort lens (batch/program/college);
+     * no employment-status or year filter here, since claim status isn't
+     * event-dated or employment-scoped. Reused as-is (empty filters) by the
+     * main dashboard's "Alumni ID & Yearbook Reports" widget, so that card
+     * and this detail page can never disagree on the numbers.
+     */
+    public function buildAlumniIdYearbookReport(array $batches, array $programIds, array $colleges): array
+    {
+        $applyAlumnusFilters = function ($query) use ($batches, $programIds, $colleges) {
+            $query->whereHas('alumnus', function ($q) use ($batches, $programIds, $colleges) {
+                if (!empty($batches)) {
+                    $q->whereIn(DB::raw('YEAR(alumnus_batch)'), $batches);
+                }
+                if (!empty($programIds)) {
+                    $q->whereIn('program_id', $programIds);
+                }
+                if (!empty($colleges)) {
+                    $q->whereHas('program', fn ($p) => $p->whereIn('college', $colleges));
+                }
+            });
+            return $query;
+        };
+
+        $alumniQuery = Alumnus::query();
+        if (!empty($batches)) {
+            $alumniQuery->whereIn(DB::raw('YEAR(alumnus_batch)'), $batches);
+        }
+        if (!empty($programIds)) {
+            $alumniQuery->whereIn('program_id', $programIds);
+        }
+        if (!empty($colleges)) {
+            $alumniQuery->whereHas('program', fn ($q) => $q->whereIn('college', $colleges));
+        }
+        $alumniIdTotal = $alumniQuery->count();
+
+        $alumniIds = $applyAlumnusFilters(AlumniId::with(['alumnus.program']))->get();
+        $alumniIdStatusCounts = $alumniIds->groupBy('status')->map->count();
+        $alumniIdCounts = collect(AlumniId::STATUSES)->mapWithKeys(fn ($s) => [$s => (int) ($alumniIdStatusCounts[$s] ?? 0)]);
+
+        $yearbooks = $applyAlumnusFilters(AlumniYearbook::with(['alumnus.program']))->get();
+        $yearbookStatusCounts = $yearbooks->groupBy('claiming_status')->map->count();
+        $yearbookCounts = collect(AlumniYearbook::CLAIMING_STATUSES)->mapWithKeys(fn ($s) => [$s => (int) ($yearbookStatusCounts[$s] ?? 0)]);
+
+        $statusRow = fn ($group, string $column) => [
+            'total' => $group->count(),
+            'pending' => $group->where($column, 'pending')->count(),
+            'ready_to_claim' => $group->where($column, 'ready_to_claim')->count(),
+            'claimed' => $group->where($column, 'claimed')->count(),
+        ];
+
+        $alumniIdByBatch = $alumniIds->groupBy(fn ($a) => $a->alumnus?->alumnus_batch?->year)
+            ->filter(fn ($group, $key) => $key !== null && $key !== '')
+            ->sortKeys()
+            ->map(fn ($group) => $statusRow($group, 'status'));
+
+        $yearbookByBatch = $yearbooks->groupBy(fn ($a) => $a->alumnus?->alumnus_batch?->year)
+            ->filter(fn ($group, $key) => $key !== null && $key !== '')
+            ->sortKeys()
+            ->map(fn ($group) => $statusRow($group, 'claiming_status'));
+
+        $alumniIdByProgram = $alumniIds->groupBy(fn ($a) => $a->alumnus?->program?->program_name ?? 'Unspecified')
+            ->map(fn ($group) => $statusRow($group, 'status'))
+            ->sortByDesc('total');
+
+        $yearbookByProgram = $yearbooks->groupBy(fn ($a) => $a->alumnus?->program?->program_name ?? 'Unspecified')
+            ->map(fn ($group) => $statusRow($group, 'claiming_status'))
+            ->sortByDesc('total');
+
+        return compact(
+            'alumniIdTotal', 'alumniIdCounts', 'yearbookCounts',
+            'alumniIdByBatch', 'yearbookByBatch', 'alumniIdByProgram', 'yearbookByProgram'
+        );
+    }
+
+    /**
+     * Group E (report detail page) — Networking Activity. "Connections" =
+     * new conversation threads started that month, "messages" = total
+     * messages sent — the two lines the dashboard's chart label
+     * ("Monthly connections & messages") has always promised, now backed by
+     * real Conversation/Message rows instead of hardcoded Jan–Jun numbers.
+     * No batch/program/college lens here — a conversation isn't cleanly
+     * attributable to one side's cohort (alumni-to-alumni, alumni-to-employer,
+     * etc.), just a trailing month-count window like Hires per Month.
+     */
+    public function buildNetworkingReport(int $months): array
+    {
+        $window = collect(range($months - 1, 0))->map(fn ($i) => now()->subMonths($i));
+
+        $monthlyConversations = $window->mapWithKeys(function ($month) {
+            $count = DB::table('conversations')
+                ->whereYear('conversation_created_at', $month->year)
+                ->whereMonth('conversation_created_at', $month->month)
+                ->count();
+            return [$month->format('M Y') => $count];
+        });
+
+        $monthlyMessages = $window->mapWithKeys(function ($month) {
+            $count = DB::table('messages')
+                ->whereYear('message_created_at', $month->year)
+                ->whereMonth('message_created_at', $month->month)
+                ->count();
+            return [$month->format('M Y') => $count];
+        });
+
+        return [
+            'monthlyConversations' => $monthlyConversations,
+            'monthlyMessages' => $monthlyMessages,
+            'totalConversations' => DB::table('conversations')->count(),
+            'totalMessages' => DB::table('messages')->count(),
+        ];
     }
 }

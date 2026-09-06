@@ -256,13 +256,26 @@ class JobPostingController extends Controller
 
     public function addJobPost(Request $request, $id)
     {
+        // Self-service only — same missing-ownership-check bug already found
+        // and fixed once for AlumnusController::updateAlumniProfile(). Both
+        // callers (partials/post-job-modal.blade.php on the Job Board and My
+        // Job Postings pages) always post with Auth::user()'s own id —
+        // without this, anyone could attribute a job posting to someone else.
+        abort_unless(Auth::check() && Auth::id() == $id, 403);
+
         $validated = $request->validate([
             'job_posting_image' => ['required', 'image', 'mimes:jpeg,png,jpg,svg'],
             'job_posting_title' => ['required', 'string'],
             'job_posting_company' => ['required', 'string'],
             'job_posting_address' => ['required', 'string'],
             'job_posting_employment_type' => ['required', 'string', Rule::in('Full-Time', 'Part-Time', 'Freelance')],
-            'job_posting_description' => ['required', 'string'],
+            // 20000 is a generous ceiling on the raw HTML (tags + typed text)
+            // Quill submits — the editor itself caps actual typed content at
+            // 5000 characters (see partials/rich-text-editor.blade.php), so
+            // this only ever fires as a defensive backstop, e.g. a bypassed
+            // client, well short of the job_postings.job_posting_description
+            // TEXT column's 65535-byte limit.
+            'job_posting_description' => ['required', 'string', 'max:20000'],
             'job_closing_date' => ['required', 'date'],
             'hiring_limit' => ['required', 'integer', 'min:1'],
             'job_posting_setup' => ['required', 'string', Rule::in('On-Site', 'Remote', 'Hybrid')],
@@ -380,6 +393,11 @@ class JobPostingController extends Controller
      */
     public function showMyJobPosts(Request $request, $id)
     {
+        // Self-service only — without this, anyone could view any
+        // employer/alumni poster's full job-postings management page (with
+        // applicant counts, etc.) by changing the id in the URL.
+        abort_unless(Auth::check() && Auth::id() == (int) $id, 403);
+
         $query = JobPosting::with(['skills', 'applicants', 'industry', 'programs'])->where('user_id', $id);
 
         $jobPostings = $this->applySearchFilters($query, $request)
@@ -400,13 +418,19 @@ class JobPostingController extends Controller
     public function editJobPost(Request $request, $id)
     {
         $job = JobPosting::findOrFail($id);
+        // Only the job's own poster may edit it — without this, anyone
+        // could edit any job posting by changing the id in the URL. Same
+        // class of bug as AlumnusController::updateAlumniProfile() had.
+        abort_unless(Auth::check() && Auth::id() == $job->user_id, 403);
+
         $validated = $request->validate([
             'job_posting_image' => 'nullable|image|mimes:jpeg,png,jpg,svg',
             'job_posting_title' => 'nullable|string',
             'job_posting_company' => 'nullable|string',
             'job_posting_address' => 'nullable|string',
             'job_posting_employment_type' => 'nullable|string',
-            'job_posting_description' => 'nullable|string',
+            // See addJobPost()'s matching rule for why 20000.
+            'job_posting_description' => 'nullable|string|max:20000',
             'job_closing_date' => 'nullable|date',
             'hiring_limit' => [
                 'nullable',
@@ -512,12 +536,21 @@ class JobPostingController extends Controller
      * combined into one filterable-by-status table per request. $status
      * ('', 'pending', or 'approved') narrows the query; '' shows both.
      */
+    /**
+     * Pending/Approved/Declined all live in job_postings now — Declined
+     * reads soft-deleted rows (job_postings already soft-deletes; a job's
+     * other columns survive being declined) filtered to ones that actually
+     * went through declineJobPost() (job_decline_reason set), so a job
+     * removed via the separate "Delete" action doesn't also show up here.
+     */
     private function applyJobStatusFilter($query, ?string $status)
     {
         if ($status === 'pending') {
             $query->where('job_approved', 0);
         } elseif ($status === 'approved') {
             $query->where('job_approved', 1);
+        } elseif ($status === 'declined') {
+            $query->onlyTrashed()->whereNotNull('job_decline_reason');
         }
 
         return $query;
@@ -541,14 +574,7 @@ class JobPostingController extends Controller
         $totalJobs = $this->jobManagementBaseQuery()->count();
         $pendingCount = $this->jobManagementBaseQuery()->where('job_approved', 0)->count();
         $approvedCount = $this->jobManagementBaseQuery()->where('job_approved', 1)->count();
-        // Declined jobs are hard-deleted (see declineJobPost() below), so
-        // there's no persisted "declined" row left to count from job_postings
-        // itself — the one durable record of a decline ever happening is the
-        // notification it sends, so that's the source here. Not scoped by
-        // admin/super_admin cross-review the way the other counts are (the
-        // deleted job's submitter role isn't recoverable), so this is a
-        // system-wide total rather than a per-role one.
-        $declinedCount = UserNotification::where('type', 'job_posting_rejected')->count();
+        $declinedCount = $this->jobManagementBaseQuery()->onlyTrashed()->whereNotNull('job_decline_reason')->count();
 
         $filters = ['status' => $status];
 
@@ -618,6 +644,12 @@ class JobPostingController extends Controller
             'title' => 'Job posting rejected',
             'body' => "Your job posting \"{$job->job_posting_title}\" was not approved. Reason: {$validated['decline-reason']}",
         ]);
+        // job_postings already soft-deletes — this saves the reason on the
+        // row itself (read directly by the admin's Declined Job Posts view)
+        // before delete() marks it trashed, rather than only being able to
+        // recover it later by parsing the notification body above.
+        $job->job_decline_reason = $validated['decline-reason'];
+        $job->save();
         $job->delete();
         return redirect()->route('jobPosting.jobManagement')->with('success', 'Job posting declined successfully!');
     }

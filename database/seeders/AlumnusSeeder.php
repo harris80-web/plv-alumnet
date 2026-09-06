@@ -14,12 +14,11 @@ use Illuminate\Support\Facades\Hash;
 
 class AlumnusSeeder extends Seeder
 {
-    /** Same weighting as AlumniPracticeSeeder so both alumni pools look consistent. */
+    /** Spread across the 3-stage alumni_ids.status lifecycle so job-matching demo data looks realistic. */
     private const ALUMNI_ID_STATUS_POOL = [
         'pending', 'pending', 'pending', 'pending',
-        'under_review', 'under_review', 'under_review',
-        'ready_to_claim', 'ready_to_claim',
-        'claimed', 'claimed',
+        'ready_to_claim', 'ready_to_claim', 'ready_to_claim', 'ready_to_claim',
+        'claimed', 'claimed', 'claimed',
     ];
 
     /**

@@ -1,70 +1,15 @@
 @php
-    $isAlumni = $user && $user->user_role === 'alumni';
-    $hasApplied = $isAlumni && isset($appliedJobs) && $appliedJobs->has($job->job_posting_id);
-    $isBookmarked = $isAlumni && in_array($job->job_posting_id, $bookmarkedIds ?? [], true);
-    // match_score comes from JobPostingController::filteredJobPostingsQuery()'s
-    // correlated subquery (alumni only) — same blended score / threshold the
-    // board sorts by, so this badge always agrees with the ordering.
-    $isRecommended = $isAlumni && isset($job->match_score) && $job->match_score !== null
-        && (float) $job->match_score >= ($recommendedThreshold ?? 50);
-
-    // Company up/down votes — see App\Models\EmployerReview. Deliberately
-    // NOT shown to admin/employer roles (only the alumni-facing vote
-    // buttons are gated; the "Reviews" link below stays visible to
-    // everyone). $job->employer->reviews is eager-loaded in
-    // JobPostingController::filteredJobPostingsQuery()/showMyApplications(),
-    // so this never triggers a query per card.
-    $employer = $job->employer;
-    $companyUpvotes = $employer?->upvoteCount() ?? 0;
-    $companyDownvotes = $employer?->downvoteCount() ?? 0;
-    // The "Reviews (N)" link/page is rating-driven now (see
-    // company-review-modal.blade.php's castCompanyRating()) — a bare vote
-    // isn't a listed "review", so this counts actual star ratings, not votes.
-    $companyRatingCount = $employer?->ratingCount() ?? 0;
-    $companyAverageRating = $employer?->averageRating();
-    $myCompanyVote = $isAlumni && $employer ? $employer->reviews->firstWhere('alumnus_id', $user->user_id) : null;
-    $isEmployer = $user && $user->user_role === 'employer';
-
-    // Shared data-* payload for both "open the detail modal" triggers below
-    // (the thumbnail and the VIEW DETAILS button) — partials/job-detail-modal.blade.php's
-    // openJobModal() reads every one of these off whichever element was clicked, so the
-    // modal always mirrors this exact card (buttons, tags, "posted by", everything).
-    $cardData = [
-        'job-id' => $job->job_posting_id,
-        'title' => $job->job_posting_title,
-        'company' => $job->job_posting_company,
-        'address' => $job->job_posting_address,
-        'date' => $job->created_at->diffForHumans(),
-        'description' => $job->job_posting_description,
-        'type' => $job->job_posting_employment_type,
-        'setup' => $job->job_posting_setup,
-        'valid' => $job->job_closing_date,
-        'image' => $job->job_posting_image ? asset('storage/' . $job->job_posting_image) : '',
-        'programs' => $job->programs->pluck('program_name')->implode(', '),
-        'industry' => $job->industry->industry_name ?? 'Not specified',
-        'skills' => $job->skills->pluck('skill_name')->implode('||'),
-        'recommended' => $isRecommended ? '1' : '0',
-        'employer-id' => $employer->user_id ?? '',
-        'employer-contact' => $employer?->user?->user_number ?? '',
-        'reviews-visible' => ($employer && !$isEmployer) ? '1' : '0',
-        'upvotes' => $companyUpvotes,
-        'downvotes' => $companyDownvotes,
-        'rating-count' => $companyRatingCount,
-        'average-rating' => $companyAverageRating ?? '',
-        'my-vote' => $myCompanyVote->vote ?? '',
-        'my-rating' => $myCompanyVote->rating ?? '',
-        'vote-visible' => ($employer && $isAlumni) ? '1' : '0',
-        'is-alumni' => $isAlumni ? '1' : '0',
-        'is-guest' => (!$user) ? '1' : '0',
-        'is-bookmarked' => $isBookmarked ? '1' : '0',
-        'has-applied' => $hasApplied ? '1' : '0',
-        'has-uploaded-resume-file' => $isAlumni && $user->alumnus->hasUploadedResumeFile() ? '1' : '0',
-        'has-builder-resume' => $isAlumni && $user->alumnus->hasBuilderResume() ? '1' : '0',
-        'has-profile-cover-letter' => $isAlumni && !empty($user->alumnus->alumnus_cover_letter_file_path) ? '1' : '0',
-        'application-status' => $hasApplied ? $appliedJobs[$job->job_posting_id]->pivot->application_status : '',
-        'posted-by' => $job->user->user_first_name . ' ' . $job->user->user_last_name,
-        'posted-by-avatar' => 'https://ui-avatars.com/api/?name=' . urlencode($job->user->user_first_name . ' ' . $job->user->user_last_name) . '&background=random',
-    ];
+    // extract(), not @include() — a Blade @include() gets its own isolated
+    // scope, so anything it assigned wouldn't propagate back here. See
+    // App\Services\JobCardDataBuilder's own doc comment for why this needs
+    // to be a plain PHP class instead of a shared partial.
+    extract(\App\Services\JobCardDataBuilder::build(
+        $job,
+        $user ?? null,
+        $appliedJobs ?? null,
+        $bookmarkedIds ?? [],
+        (float) ($recommendedThreshold ?? 50)
+    ));
 @endphp
 
 <div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row relative hover:shadow-lg transition-shadow md:min-h-[340px]">
@@ -263,7 +208,7 @@
                          (same row, separate column; see EmployerReview).
                          Picking a star opens the review modal so the
                          alumnus can optionally explain the rating. --}}
-                    <div class="star-rating flex items-center gap-0.5 border border-gray-300 rounded-full px-2 py-1.5" data-employer-id="{{ $employer->user_id }}" data-my-rating="{{ $myCompanyVote?->rating ?? 0 }}">
+                    <div class="star-rating flex items-center gap-0.5 border border-gray-300 rounded-full px-2 py-1.5" data-employer-id="{{ $employer->user_id }}" data-my-rating="{{ $myCompanyVote?->rating ?? 0 }}" data-review-body="{{ $myCompanyVote?->review_body ?? '' }}">
                         @for ($i = 1; $i <= 5; $i++)
                         <button type="button" class="star-btn text-xs {{ ($myCompanyVote?->rating ?? 0) >= $i ? 'text-[#ED7A07]' : 'text-gray-300' }} hover:text-[#ED7A07] transition-colors"
                             data-star="{{ $i }}" onclick="castCompanyRating(this)">

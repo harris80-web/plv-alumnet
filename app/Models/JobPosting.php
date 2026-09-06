@@ -28,6 +28,7 @@ class JobPosting extends Model
         'job_closing_date',
         'hiring_limit',
         'job_approved',
+        'job_decline_reason',
         'job_posting_image',
         'industry_id',
     ];

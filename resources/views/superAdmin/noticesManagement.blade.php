@@ -97,17 +97,39 @@
                         <p class="text-2xl font-bold text-slate-800">{{ $counts['total'] }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Total Notices</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        title="Click to filter by Events" onclick="filterNoticesByCategoryTile('event')">
                         <p class="text-2xl font-bold text-blue-600">{{ $counts['event'] }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Events</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        title="Click to filter by Seminars" onclick="filterNoticesByCategoryTile('seminar')">
                         <p class="text-2xl font-bold text-purple-600">{{ $counts['seminar'] }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Seminars</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        title="Click to filter by Announcements" onclick="filterNoticesByCategoryTile('announcement')">
                         <p class="text-2xl font-bold text-amber-600">{{ $counts['announcement'] }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Announcements</p>
+                    </div>
+                </div>
+
+                <!-- RECIPIENT STAT CARDS -->
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        title="Click to filter by Everyone" onclick="filterNoticesByRecipientTile('everyone')">
+                        <p class="text-2xl font-bold text-slate-800">{{ $counts['everyone'] }}</p>
+                        <p class="text-xs font-medium text-slate-500 mt-1">Everyone</p>
+                    </div>
+                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        title="Click to filter by Alumni Only" onclick="filterNoticesByRecipientTile('alumni')">
+                        <p class="text-2xl font-bold text-teal-600">{{ $counts['alumni'] }}</p>
+                        <p class="text-xs font-medium text-slate-500 mt-1">Alumni Only</p>
+                    </div>
+                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        title="Click to filter by Employer Only" onclick="filterNoticesByRecipientTile('employer')">
+                        <p class="text-2xl font-bold text-indigo-600">{{ $counts['employer'] }}</p>
+                        <p class="text-xs font-medium text-slate-500 mt-1">Employer Only</p>
                     </div>
                 </div>
 
@@ -134,7 +156,7 @@
                         </button>
                     </div>
 
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto table-scroll">
                         <table class="notices-table">
                             <thead class="bg-[#0E0F3B] text-white">
                                 <tr>
@@ -572,6 +594,8 @@
     </div>
 
     @include('partials.confirm-modal')
+    @include('partials.action-dropdown-fix')
+    @include('partials.table-scroll-fix')
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -612,6 +636,26 @@
             document.querySelector(groupSelector + '[value=""]').checked = false;
         }
 
+        // Clicking a stat tile isolates that one category/recipient (clicking
+        // it again restores "All"), reusing the same checkbox group +
+        // filterNoticeRows() the sidebar checkboxes already drive.
+        function filterNoticesByGroupTile(groupSelector, value) {
+            const boxes = document.querySelectorAll(groupSelector);
+            const target = [...boxes].find(cb => cb.value === value);
+            const allBox = document.querySelector(groupSelector + '[value=""]');
+            const alreadyOnlyThis = target.checked;
+            boxes.forEach(cb => { if (cb.value !== '') cb.checked = false; });
+            allBox.checked = alreadyOnlyThis;
+            target.checked = !alreadyOnlyThis;
+            filterNoticeRows();
+        }
+        function filterNoticesByCategoryTile(category) {
+            filterNoticesByGroupTile('.notice-filter-category', category);
+        }
+        function filterNoticesByRecipientTile(recipient) {
+            filterNoticesByGroupTile('.notice-filter-recipient', recipient);
+        }
+
         // ── SEARCH + SIDEBAR FILTERS ──
         function filterNoticeRows() {
             const query = document.getElementById('noticeSearchInput').value.trim().toLowerCase();
@@ -638,7 +682,10 @@
             const dropdown = btn.nextElementSibling;
             const isHidden = dropdown.classList.contains('hidden');
             document.querySelectorAll('.action-dropdown').forEach(d => d.classList.add('hidden'));
-            if (isHidden) dropdown.classList.remove('hidden');
+            if (isHidden) {
+                dropdown.classList.remove('hidden');
+                positionFixedDropdown(btn, dropdown);
+            }
         }
 
         document.addEventListener('click', function (e) {

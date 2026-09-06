@@ -338,7 +338,15 @@ $title = request()->routeIs('notifications.all')
     function attachHeaderListeners() {
         document.getElementById('notif-btn').addEventListener('click', toggleNotifications);
         document.getElementById('settings-btn').addEventListener('click', toggleHeaderSettings);
-        window.addEventListener('click', closeAllMenus);
+        // Only close for a click genuinely outside both panels/their trigger
+        // buttons — previously unconditional, so clicking anything inside
+        // the notification panel (e.g. the Unread/All tabs, which don't
+        // stopPropagation()) bubbled up here and closed the panel right
+        // after/during the tab switch.
+        window.addEventListener('click', function (e) {
+            if (e.target.closest('#notification-menu, #notif-btn, #header-settings-menu, #settings-btn')) return;
+            closeAllMenus();
+        });
     }
 
     /* ── Open / close helpers ─────────────────────────────────── */

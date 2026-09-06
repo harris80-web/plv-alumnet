@@ -20,12 +20,24 @@
 
 <body>
     @php
-        $titles = ['employment' => 'Employment & Alignment Report', 'placement' => 'Job Placement & Hiring Report', 'companies' => 'Alumni & Company Registration Reports'];
+        $titles = [
+            'employment' => 'Employment & Alignment Report',
+            'placement' => 'Job Placement & Hiring Report',
+            'companies' => 'Alumni & Company Registration Reports',
+            'alumniid' => 'Alumni ID & Yearbook Report',
+            'networking' => 'Networking Activity Report',
+        ];
     @endphp
     <h1>PLV-AlumNet &mdash; {{ $titles[$group] }}</h1>
     <p class="meta">
         Generated {{ now()->format('M d, Y h:i A') }}<br>
+        @if (in_array($group, ['employment', 'placement', 'companies']))
         Filters &mdash; Batch: {{ $batchLabel }} | Program: {{ $programLabel }} | Employment Status: {{ $statusLabel }} | College: {{ $collegeLabel }} | Year: {{ $yearLabel }}
+        @elseif ($group === 'alumniid')
+        Filters &mdash; Batch: {{ $batchLabel }} | Program: {{ $programLabel }} | College: {{ $collegeLabel }}
+        @elseif ($group === 'networking')
+        Range &mdash; Last {{ $networkMonths }} months
+        @endif
     </p>
 
     @if ($group === 'employment')
@@ -218,6 +230,95 @@
             <tr><th>Company</th><th>Industry</th><th>Contact</th></tr>
             @foreach ($r['pendingCompanies'] as $employer)
                 <tr><td>{{ $employer->employer_company_name }}</td><td>{{ $employer->industry->industry_name ?? 'N/A' }}</td><td>{{ $employer->user->user_email ?? 'N/A' }}</td></tr>
+            @endforeach
+        </table>
+    </div>
+    @endif
+
+    @if ($group === 'alumniid')
+    <div class="section">
+        <h2>Alumni ID Status</h2>
+        @if (!empty($charts['chartAlumniID']))
+            <img class="chart-img" src="{{ $charts['chartAlumniID'] }}">
+        @endif
+        <table class="stat-table">
+            @foreach ($r['alumniIdCounts'] as $status => $count)
+                <tr><td>{{ ucwords(str_replace('_', ' ', $status)) }}</td><td>{{ $count }} ({{ $r['alumniIdTotal'] > 0 ? round($count / $r['alumniIdTotal'] * 100) : 0 }}%)</td></tr>
+            @endforeach
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Yearbook Claiming Status</h2>
+        @if (!empty($charts['chartYearbook']))
+            <img class="chart-img" src="{{ $charts['chartYearbook'] }}">
+        @endif
+        <table class="stat-table">
+            @foreach ($r['yearbookCounts'] as $status => $count)
+                <tr><td>{{ ucwords(str_replace('_', ' ', $status)) }}</td><td>{{ $count }} ({{ $r['alumniIdTotal'] > 0 ? round($count / $r['alumniIdTotal'] * 100) : 0 }}%)</td></tr>
+            @endforeach
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Alumni ID Status by Batch</h2>
+        <table>
+            <tr><th>Batch</th><th>Total</th><th>Pending</th><th>Ready to Claim</th><th>Claimed</th></tr>
+            @foreach ($r['alumniIdByBatch'] as $batch => $row)
+                <tr><td>{{ $batch }}</td><td>{{ $row['total'] }}</td><td>{{ $row['pending'] }}</td><td>{{ $row['ready_to_claim'] }}</td><td>{{ $row['claimed'] }}</td></tr>
+            @endforeach
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Yearbook Status by Batch</h2>
+        <table>
+            <tr><th>Batch</th><th>Total</th><th>Pending</th><th>Ready to Claim</th><th>Claimed</th></tr>
+            @foreach ($r['yearbookByBatch'] as $batch => $row)
+                <tr><td>{{ $batch }}</td><td>{{ $row['total'] }}</td><td>{{ $row['pending'] }}</td><td>{{ $row['ready_to_claim'] }}</td><td>{{ $row['claimed'] }}</td></tr>
+            @endforeach
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Alumni ID Status by Program</h2>
+        <table>
+            <tr><th>Program</th><th>Total</th><th>Pending</th><th>Ready to Claim</th><th>Claimed</th></tr>
+            @foreach ($r['alumniIdByProgram'] as $program => $row)
+                <tr><td>{{ $program }}</td><td>{{ $row['total'] }}</td><td>{{ $row['pending'] }}</td><td>{{ $row['ready_to_claim'] }}</td><td>{{ $row['claimed'] }}</td></tr>
+            @endforeach
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Yearbook Status by Program</h2>
+        <table>
+            <tr><th>Program</th><th>Total</th><th>Pending</th><th>Ready to Claim</th><th>Claimed</th></tr>
+            @foreach ($r['yearbookByProgram'] as $program => $row)
+                <tr><td>{{ $program }}</td><td>{{ $row['total'] }}</td><td>{{ $row['pending'] }}</td><td>{{ $row['ready_to_claim'] }}</td><td>{{ $row['claimed'] }}</td></tr>
+            @endforeach
+        </table>
+    </div>
+    @endif
+
+    @if ($group === 'networking')
+    <div class="section">
+        <h2>Overview</h2>
+        <table class="stat-table">
+            <tr><td>Total Conversations</td><td>{{ $r['totalConversations'] }}</td></tr>
+            <tr><td>Total Messages</td><td>{{ $r['totalMessages'] }}</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Monthly Activity (Last {{ $networkMonths }} Months)</h2>
+        @if (!empty($charts['chartNetworking']))
+            <img class="chart-img" src="{{ $charts['chartNetworking'] }}">
+        @endif
+        <table>
+            <tr><th>Month</th><th>New Conversations</th><th>Messages Sent</th></tr>
+            @foreach ($r['monthlyConversations'] as $month => $count)
+                <tr><td>{{ $month }}</td><td>{{ $count }}</td><td>{{ $r['monthlyMessages'][$month] ?? 0 }}</td></tr>
             @endforeach
         </table>
     </div>

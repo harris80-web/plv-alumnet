@@ -142,9 +142,8 @@ class CohortSeeder extends Seeder
     /** Same weighting AlumnusSeeder uses, so both pools of alumni IDs look consistent. */
     private const ALUMNI_ID_STATUS_POOL = [
         'pending', 'pending', 'pending', 'pending',
-        'under_review', 'under_review', 'under_review',
-        'ready_to_claim', 'ready_to_claim',
-        'claimed', 'claimed',
+        'ready_to_claim', 'ready_to_claim', 'ready_to_claim', 'ready_to_claim',
+        'claimed', 'claimed', 'claimed',
     ];
 
     public function run(): void

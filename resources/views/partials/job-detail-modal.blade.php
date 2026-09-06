@@ -254,6 +254,7 @@
             const myRating = Number(d.myRating || 0);
             starRating.dataset.employerId = d.employerId;
             starRating.dataset.myRating = myRating;
+            starRating.dataset.reviewBody = d.myReviewBody || '';
             starRating.querySelectorAll('.star-btn').forEach(function (starBtn) {
                 const filled = Number(starBtn.dataset.star) <= myRating;
                 starBtn.classList.toggle('text-[#ED7A07]', filled);

@@ -335,7 +335,7 @@
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto table-scroll">
                 <table class="w-full text-sm whitespace-nowrap">
                     <thead>
                         <tr class="bg-[#1D264F] text-white text-xs uppercase tracking-wider">
@@ -681,6 +681,7 @@
         </div>
     </div>
 
+    @include('partials.table-scroll-fix')
     @include('partials.footer-employer')
 
 </body>

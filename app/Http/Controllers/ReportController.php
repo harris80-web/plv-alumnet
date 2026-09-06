@@ -22,6 +22,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
  * - companies   (Group C): Employed Alumni Report + Registered/Pending
  *   Companies — this group's page IS the new sidebar page item 17 asked
  *   for, not a separate page built twice.
+ * - alumniid    (Group D): Alumni ID & Yearbook claim-status breakdown.
+ * - networking  (Group E): monthly conversations/messages activity.
  *
  * Gated behind Office::PERMISSIONS['reports'] like every other admin
  * section — existing `admin` accounts won't have it until a super_admin
@@ -29,7 +31,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
  */
 class ReportController extends Controller
 {
-    private const GROUPS = ['employment', 'placement', 'companies'];
+    private const GROUPS = ['employment', 'placement', 'companies', 'alumniid', 'networking'];
 
     private function authorizeReports(): void
     {
@@ -105,6 +107,32 @@ class ReportController extends Controller
         ));
     }
 
+    /** Group D — batch/program/college lens only (no employment-status or year filter; see buildAlumniIdYearbookReport()'s doc comment). */
+    public function alumniid(DashboardReportService $reportService)
+    {
+        $this->authorizeReports();
+        [$batches, $programIds, $colleges] = $this->alumniIdFilters($reportService);
+        $dashboardFilters = ['batch' => $batches, 'program_id' => $programIds, 'college' => $colleges];
+
+        $r = $reportService->buildAlumniIdYearbookReport($batches, $programIds, $colleges);
+
+        return view('superAdmin.reports.alumniid', array_merge(
+            compact('r', 'dashboardFilters'),
+            $this->filterOptions($reportService)
+        ));
+    }
+
+    /** Group E — just a trailing-month range, no cohort filters (see buildNetworkingReport()'s doc comment). */
+    public function networking(DashboardReportService $reportService)
+    {
+        $this->authorizeReports();
+        $networkMonths = $reportService->resolveNetworkMonths(request()->input('network_months'));
+
+        $r = $reportService->buildNetworkingReport($networkMonths);
+
+        return view('superAdmin.reports.networking', compact('r', 'networkMonths'));
+    }
+
     private function groupLabels(array $values, \Closure $labelFor): string
     {
         return empty($values) ? 'All' : collect($values)->map($labelFor)->implode(', ');
@@ -121,11 +149,18 @@ class ReportController extends Controller
         ];
     }
 
-    /** One CSV export route for all 3 groups — {group} picks which section of the shared report data to write out. */
+    /** One CSV export route for all 5 groups — {group} picks which section of the shared report data to write out. */
     public function exportCsv(string $group, DashboardReportService $reportService)
     {
         $this->authorizeReports();
         abort_unless(in_array($group, self::GROUPS, true), 404);
+
+        if ($group === 'alumniid') {
+            return $this->exportAlumniIdCsv($reportService);
+        }
+        if ($group === 'networking') {
+            return $this->exportNetworkingCsv($reportService);
+        }
 
         [$batches, $programIds, $employmentStatuses, $colleges, $years] = $this->resolveFilters($reportService);
         $hireMonths = $reportService->resolveHireMonths(request()->input('hire_months'));
@@ -260,11 +295,18 @@ class ReportController extends Controller
         ]);
     }
 
-    /** One PDF export route for all 3 groups, same GET+POST/chart-image pattern as the main dashboard (item 18). */
+    /** One PDF export route for all 5 groups, same GET+POST/chart-image pattern as the main dashboard (item 18). */
     public function exportPdf(string $group, DashboardReportService $reportService)
     {
         $this->authorizeReports();
         abort_unless(in_array($group, self::GROUPS, true), 404);
+
+        if ($group === 'alumniid') {
+            return $this->exportAlumniIdPdf($reportService);
+        }
+        if ($group === 'networking') {
+            return $this->exportNetworkingPdf($reportService);
+        }
 
         [$batches, $programIds, $employmentStatuses, $colleges, $years] = $this->resolveFilters($reportService);
         $hireMonths = $reportService->resolveHireMonths(request()->input('hire_months'));
@@ -281,5 +323,129 @@ class ReportController extends Controller
         ))->setPaper('a4', 'portrait');
 
         return $pdf->download($group . '_report_' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    private function alumniIdFilters(DashboardReportService $reportService): array
+    {
+        return [
+            $reportService->resolveIntArray(request()->input('batch')),
+            $reportService->resolveIntArray(request()->input('program_id')),
+            $reportService->resolveColleges(request()->input('college')),
+        ];
+    }
+
+    private function alumniIdFilterSummary(array $batches, array $programIds, array $colleges): array
+    {
+        return [
+            'batchLabel' => $this->groupLabels($batches, fn ($v) => $v),
+            'programLabel' => empty($programIds) ? 'All' : Program::whereIn('program_id', $programIds)->pluck('program_name')->implode(', '),
+            'collegeLabel' => $this->groupLabels($colleges, fn ($v) => Program::COLLEGES[$v] ?? $v),
+        ];
+    }
+
+    private function exportAlumniIdCsv(DashboardReportService $reportService)
+    {
+        [$batches, $programIds, $colleges] = $this->alumniIdFilters($reportService);
+        $labels = $this->alumniIdFilterSummary($batches, $programIds, $colleges);
+        $r = $reportService->buildAlumniIdYearbookReport($batches, $programIds, $colleges);
+
+        $callback = function () use ($r, $labels) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['PLV-AlumNet — Alumni ID & Yearbook Report Export']);
+            fputcsv($out, ['Generated', now()->format('M d, Y h:i A')]);
+            fputcsv($out, ['Filters', "Batch: {$labels['batchLabel']} | Program: {$labels['programLabel']} | College: {$labels['collegeLabel']}"]);
+            fputcsv($out, []);
+
+            $statusTable = function ($out, string $title, $counts, int $total) {
+                fputcsv($out, [$title]);
+                fputcsv($out, ['Status', 'Count', 'Percent']);
+                foreach ($counts as $status => $count) {
+                    fputcsv($out, [ucwords(str_replace('_', ' ', $status)), $count, ($total > 0 ? round($count / $total * 100) : 0) . '%']);
+                }
+                fputcsv($out, []);
+            };
+            $statusTable($out, 'ALUMNI ID STATUS', $r['alumniIdCounts'], $r['alumniIdTotal']);
+            $statusTable($out, 'YEARBOOK CLAIMING STATUS', $r['yearbookCounts'], $r['alumniIdTotal']);
+
+            $breakdownTable = function ($out, string $title, $rows, string $keyLabel) {
+                fputcsv($out, [$title]);
+                fputcsv($out, [$keyLabel, 'Total', 'Pending', 'Ready to Claim', 'Claimed']);
+                foreach ($rows as $key => $row) {
+                    fputcsv($out, [$key, $row['total'], $row['pending'], $row['ready_to_claim'], $row['claimed']]);
+                }
+                fputcsv($out, []);
+            };
+            $breakdownTable($out, 'ALUMNI ID STATUS BY BATCH', $r['alumniIdByBatch'], 'Batch');
+            $breakdownTable($out, 'YEARBOOK STATUS BY BATCH', $r['yearbookByBatch'], 'Batch');
+            $breakdownTable($out, 'ALUMNI ID STATUS BY PROGRAM', $r['alumniIdByProgram'], 'Program');
+            $breakdownTable($out, 'YEARBOOK STATUS BY PROGRAM', $r['yearbookByProgram'], 'Program');
+
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="alumniid_report_' . now()->format('Y-m-d') . '.csv"',
+        ]);
+    }
+
+    private function exportNetworkingCsv(DashboardReportService $reportService)
+    {
+        $networkMonths = $reportService->resolveNetworkMonths(request()->input('network_months'));
+        $r = $reportService->buildNetworkingReport($networkMonths);
+
+        $callback = function () use ($r, $networkMonths) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['PLV-AlumNet — Networking Activity Report Export']);
+            fputcsv($out, ['Generated', now()->format('M d, Y h:i A')]);
+            fputcsv($out, ['Range', "Last {$networkMonths} months"]);
+            fputcsv($out, []);
+
+            fputcsv($out, ['OVERVIEW']);
+            fputcsv($out, ['Total Conversations', $r['totalConversations']]);
+            fputcsv($out, ['Total Messages', $r['totalMessages']]);
+            fputcsv($out, []);
+
+            fputcsv($out, ['MONTHLY ACTIVITY']);
+            fputcsv($out, ['Month', 'New Conversations', 'Messages Sent']);
+            foreach ($r['monthlyConversations'] as $month => $count) {
+                fputcsv($out, [$month, $count, $r['monthlyMessages'][$month] ?? 0]);
+            }
+
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="networking_report_' . now()->format('Y-m-d') . '.csv"',
+        ]);
+    }
+
+    private function exportAlumniIdPdf(DashboardReportService $reportService)
+    {
+        [$batches, $programIds, $colleges] = $this->alumniIdFilters($reportService);
+        $labels = $this->alumniIdFilterSummary($batches, $programIds, $colleges);
+        $r = $reportService->buildAlumniIdYearbookReport($batches, $programIds, $colleges);
+        $charts = json_decode((string) request()->input('charts', '{}'), true) ?: [];
+
+        $pdf = Pdf::loadView('superAdmin.reports.report-pdf', array_merge(
+            ['group' => 'alumniid', 'r' => $r, 'charts' => $charts],
+            $labels
+        ))->setPaper('a4', 'portrait');
+
+        return $pdf->download('alumniid_report_' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    private function exportNetworkingPdf(DashboardReportService $reportService)
+    {
+        $networkMonths = $reportService->resolveNetworkMonths(request()->input('network_months'));
+        $r = $reportService->buildNetworkingReport($networkMonths);
+        $charts = json_decode((string) request()->input('charts', '{}'), true) ?: [];
+
+        $pdf = Pdf::loadView('superAdmin.reports.report-pdf', [
+            'group' => 'networking', 'r' => $r, 'charts' => $charts, 'networkMonths' => $networkMonths,
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download('networking_report_' . now()->format('Y-m-d') . '.pdf');
     }
 }

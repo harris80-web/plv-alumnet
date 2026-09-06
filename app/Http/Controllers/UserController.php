@@ -6,8 +6,6 @@ use App\Mail\RejectEmployerMail;
 use App\Models\User;
 use App\Models\Employer;
 use App\Models\Alumnus;
-use App\Models\AlumniId;
-use App\Models\AlumniYearbook;
 use App\Models\Notice;
 use App\Models\Office;
 use App\Models\Program;
@@ -235,6 +233,14 @@ class UserController extends Controller
         ]);
 
         if (Auth::attempt(['user_email' => $validated['user_email'], 'password' => $validated['user_password']], true)) {
+            // Regenerates the session ID (and, as part of that, the CSRF
+            // token) on every successful login — without this, a session
+            // that existed before authentication keeps the same ID after
+            // (a session-fixation risk), and switching accounts back and
+            // forth in one browser without it is what let a stale token
+            // from an earlier session's page linger and cause a "Page
+            // Expired" on an otherwise-ordinary next action like logout.
+            $request->session()->regenerate();
             // Authentication passed...
             // if ((Auth::User()->user_role == 'super_admin' || Auth::User()->user_role == 'admin') && Auth::User()->user_active == true) {
             //     $jobPlacementCount = DB::table('job_applications')
@@ -279,6 +285,13 @@ class UserController extends Controller
 
     public function logout(Request $request)
     {
+        // Cleared before Auth::logout() (which would make Auth::user() null)
+        // so isOnline()/scopeOnline() stop counting this user as present
+        // immediately — otherwise the last heartbeat's timestamp keeps them
+        // looking "online" for up to ONLINE_WITHIN_MINUTES after they've
+        // actually logged out, which is exactly how the chatbot's
+        // auto-assign picked a logged-out admin to hand a ticket to.
+        Auth::user()?->update(['last_active_at' => null]);
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -330,12 +343,35 @@ class UserController extends Controller
                             ->orWhere('user_email', 'like', "%{$search}%");
                     });
                 }
+                // Clickable "Active"/"Inactive" stat tiles (item — status
+                // filters must be server-side, not client-side row-hiding on
+                // an already-paginated page: a matching row on page 3 would
+                // never show up while filtering only page 1's DOM rows).
+                if ($status = request('admin_status')) {
+                    $q->where('user_active', $status === 'Active');
+                }
             })
             ->orderBy('user_id')
             ->paginate($this->resolvePerPage(10, 'admin_per_page'), ['*'], 'adminPage')
             ->withQueryString();
 
         $alumni = Alumnus::with('user')
+            ->when(trim((string) request('alumni_search')), function ($q, $search) {
+                $q->whereHas('user', function ($q2) use ($search) {
+                    $q2->where('user_first_name', 'like', "%{$search}%")
+                        ->orWhere('user_last_name', 'like', "%{$search}%")
+                        ->orWhere('user_middle_name', 'like', "%{$search}%")
+                        ->orWhere('user_email', 'like', "%{$search}%");
+                });
+            })
+            ->when(trim((string) request('alumni_idno')), fn ($q, $idno) => $q->where('user_id', (int) $idno))
+            ->when(trim((string) request('alumni_lastname')), fn ($q, $v) => $q->whereHas('user', fn ($q2) => $q2->where('user_last_name', 'like', "%{$v}%")))
+            ->when(trim((string) request('alumni_firstname')), fn ($q, $v) => $q->whereHas('user', fn ($q2) => $q2->where('user_first_name', 'like', "%{$v}%")))
+            ->when(trim((string) request('alumni_middlename')), fn ($q, $v) => $q->whereHas('user', fn ($q2) => $q2->where('user_middle_name', 'like', "%{$v}%")))
+            ->when(request('alumni_program'), fn ($q, $v) => $q->whereHas('program', fn ($q2) => $q2->where('program_name', $v)))
+            ->when(request('alumni_batch'), fn ($q, $v) => $q->whereYear('alumnus_batch', $v))
+            ->when(request('alumni_status'), fn ($q, $status) => $q->whereHas('user', fn ($q2) => $q2->where('user_active', $status === 'Active')))
+            ->when(request('alumni_new_this_month'), fn ($q) => $q->whereHas('user', fn ($q2) => $q2->whereYear('created_at', now()->year)->whereMonth('created_at', now()->month)))
             ->orderBy('user_id')
             ->paginate($this->resolvePerPage(15, 'alumni_per_page'), ['*'], 'alumniPage')
             ->withQueryString();
@@ -349,12 +385,7 @@ class UserController extends Controller
             ->paginate($this->resolvePerPage(10, 'employer_pending_per_page'), ['*'], 'employerPendingPage')
             ->withQueryString();
 
-        // Kept as `user_active` (not `employer_approved`) to match the
-        // table's existing filter exactly — a formerly-approved employer
-        // who's since been deactivated intentionally falls out of both
-        // tables here, same as before this change.
-        $approvedEmployers = Employer::with(['user', 'industry'])
-            ->whereHas('user', fn ($q) => $q->where('user_active', true))
+        $approvedEmployers = $this->applyEmployerApprovedFilters(Employer::with(['user', 'industry']))
             ->orderBy('user_id')
             ->paginate($this->resolvePerPage(10, 'employer_approved_per_page'), ['*'], 'employerApprovedPage')
             ->withQueryString();
@@ -427,12 +458,45 @@ class UserController extends Controller
     public function employerApprovedFragment(Request $request)
     {
         $this->authorizeStaff();
-        $approvedEmployers = Employer::with(['user', 'industry'])
-            ->whereHas('user', fn ($q) => $q->where('user_active', true))
+        $approvedEmployers = $this->applyEmployerApprovedFilters(Employer::with(['user', 'industry']))
             ->orderBy('user_id')
             ->paginate($this->resolvePerPage(10, 'employer_approved_per_page'), ['*'], 'employerApprovedPage');
 
         return view('partials.user-management.employer-approved-table', compact('approvedEmployers'));
+    }
+
+    /**
+     * Shared by showUsers() (initial render) and employerApprovedFragment()
+     * (AJAX page-change) so a filter applied via the sidebar/stat tiles
+     * survives clicking to page 2 — table-pagination-bar's ajax mode
+     * forwards the current URL's query string to the fragment endpoint (see
+     * ajaxLoad() in partials/table-pagination-bar.blade.php), so both
+     * places just need to read the same request params.
+     *
+     * Default (no employer_status param) stays "active only" — the
+     * pre-existing behavior this table always had, since the section is
+     * literally titled "Approved & Active Employers". Explicitly filtering
+     * to "Deactivated" is what makes that stat tile clickable/meaningful —
+     * without this, a deactivated employer could never appear in this table
+     * at all, no matter what was clicked.
+     */
+    private function applyEmployerApprovedFilters($query)
+    {
+        $status = request('employer_status', 'Active');
+
+        return $query
+            // "Deactivated" here must match $employerStats['deactivated']'s own
+            // definition exactly (employer_approved=true AND user_active=false)
+            // — without this, an employer who was simply never approved (and
+            // happens to also be inactive) would wrongly show up here too.
+            ->when($status === 'Deactivated', fn ($q) => $q->where('employer_approved', true))
+            ->when(trim((string) request('employer_search')), fn ($q, $v) => $q->where('employer_company_name', 'like', "%{$v}%"))
+            ->when(trim((string) request('employer_lastname')), fn ($q, $v) => $q->whereHas('user', fn ($q2) => $q2->where('user_last_name', 'like', "%{$v}%")))
+            ->when(trim((string) request('employer_firstname')), fn ($q, $v) => $q->whereHas('user', fn ($q2) => $q2->where('user_first_name', 'like', "%{$v}%")))
+            ->when(trim((string) request('employer_middlename')), fn ($q, $v) => $q->whereHas('user', fn ($q2) => $q2->where('user_middle_name', 'like', "%{$v}%")))
+            ->when(trim((string) request('employer_company')), fn ($q, $v) => $q->where('employer_company_name', 'like', "%{$v}%"))
+            ->when(request('employer_industry'), fn ($q, $v) => $q->whereHas('industry', fn ($q2) => $q2->where('industry_name', $v)))
+            ->when($status, fn ($q) => $q->whereHas('user', fn ($q2) => $q2->where('user_active', $status === 'Active')));
     }
 
     public function approveEmployer($id)
@@ -998,14 +1062,19 @@ class UserController extends Controller
 
         $reports = $reportService->buildEmploymentReports($batches, $programIds, $employmentStatuses, $colleges, $years, $hireMonths, $topCompaniesLimit);
 
-        // Alumni ID & Yearbook Reports widget — real counts by status,
-        // percentages against total alumni (same base the old placeholder
-        // numbers implied: 6,842/8,552 ≈ 80%, 5,973/8,552 ≈ 69%).
-        $alumniIdTotal = Alumnus::count();
-        $alumniIdStatusCounts = AlumniId::selectRaw('status, COUNT(*) as c')->groupBy('status')->pluck('c', 'status');
-        $alumniIdCounts = collect(AlumniId::STATUSES)->mapWithKeys(fn ($s) => [$s => (int) ($alumniIdStatusCounts[$s] ?? 0)]);
-        $yearbookStatusCounts = AlumniYearbook::selectRaw('claiming_status, COUNT(*) as c')->groupBy('claiming_status')->pluck('c', 'claiming_status');
-        $yearbookCounts = collect(AlumniYearbook::CLAIMING_STATUSES)->mapWithKeys(fn ($s) => [$s => (int) ($yearbookStatusCounts[$s] ?? 0)]);
+        // Alumni ID & Yearbook Reports widget — unfiltered (no batch/program/
+        // college lens on the main dashboard card), built via the same
+        // service method Group D's detail page uses, so the two can never
+        // disagree on the numbers.
+        $alumniIdYearbook = $reportService->buildAlumniIdYearbookReport([], [], []);
+        $alumniIdTotal = $alumniIdYearbook['alumniIdTotal'];
+        $alumniIdCounts = $alumniIdYearbook['alumniIdCounts'];
+        $yearbookCounts = $alumniIdYearbook['yearbookCounts'];
+
+        // Networking Activity widget — trailing 6 months, same service
+        // method Group E's detail page uses (which also offers a 3/6/12/24
+        // month range picker).
+        $networkingReport = $reportService->buildNetworkingReport(6);
 
         // Recent Activity & Updates widget.
         $latestEvent = Notice::where('category', 'event')->orderByDesc('created_at')->first();
@@ -1014,7 +1083,7 @@ class UserController extends Controller
         return view('superAdmin.dashboard', array_merge(
             compact(
                 'stats', 'batchYearOptions', 'programs', 'yearOptions', 'dashboardFilters', 'hireMonths', 'topCompaniesLimit',
-                'alumniIdTotal', 'alumniIdCounts', 'yearbookCounts', 'latestEvent', 'recentProfileUpdates'
+                'alumniIdTotal', 'alumniIdCounts', 'yearbookCounts', 'networkingReport', 'latestEvent', 'recentProfileUpdates'
             ),
             $reports
         ));

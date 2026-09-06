@@ -120,13 +120,15 @@
                         </button>
                         <input type="file" id="attachmentInput" class="hidden" onchange="handleAttachmentPreview(this)"
                             accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.zip">
-                        <input type="text" id="messageInput" placeholder="Type Message..." autocomplete="off"
+                        <input type="text" id="messageInput" placeholder="Type Message..." autocomplete="off" maxlength="4000"
+                            oninput="const n = this.value.length; const c = document.getElementById('messageCharCount'); c.textContent = n + '/4000'; c.classList.toggle('hidden', n < 3500);"
                             class="flex-1 border border-gray-200 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
                         <button type="submit" title="Send"
                             class="w-10 h-10 shrink-0 rounded-full bg-[#1D264F] hover:bg-[#0E0F3B] text-white flex items-center justify-center transition-colors disabled:opacity-50">
                             <i class="fas fa-paper-plane text-sm"></i>
                         </button>
                     </div>
+                    <p id="messageCharCount" class="hidden text-right text-[10px] text-gray-400 mt-1"></p>
                 </form>
                 @endif
             </div>
@@ -412,7 +414,14 @@
                     const res = await fetch(SEND_URL, { method: 'POST', body: formData });
                     if (!res.ok) {
                         const err = await res.json().catch(() => ({}));
-                        alert(err.error || 'Failed to send message.');
+                        // Laravel's actual validation-failure shape is
+                        // {message, errors: {field: [messages]}} — there's
+                        // no top-level `error` key, so that always fell
+                        // through to the generic fallback below and a real
+                        // reason (e.g. "message content must not exceed
+                        // 4000 characters") never reached the user.
+                        const reason = err.errors?.message_content?.[0] || err.errors?.attachment?.[0] || err.message;
+                        alert(reason || 'Failed to send message.');
                         return;
                     }
                     const message = await res.json();
@@ -420,6 +429,7 @@
                     lastMessageId = Math.max(lastMessageId, message.id);
                     scrollThreadToBottom();
                     input.value = '';
+                    document.getElementById('messageCharCount').classList.add('hidden');
                     clearAttachment();
                 } catch (e) {
                     alert('Failed to send message. Please check your connection and try again.');

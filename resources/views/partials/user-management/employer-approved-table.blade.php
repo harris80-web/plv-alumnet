@@ -6,7 +6,7 @@
     partials/user-management/employer-pending-table.blade.php for why.
     Expects: $approvedEmployers (paginator of Employer, with user/industry loaded).
 --}}
-<div class="overflow-x-auto">
+<div class="overflow-x-auto table-scroll">
 <table class="w-full text-left text-[10px] whitespace-nowrap">
     <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
         <tr>
@@ -113,7 +113,6 @@
     </tbody>
 </table>
 </div>
-<p id="employerNoSearchResults" class="hidden text-center text-gray-400 py-10 text-xs">No matching employers.</p>
 <div class="px-4 py-3">
     @include('partials.table-pagination-bar', [
         'id' => 'employerApprovedTable',

@@ -70,6 +70,7 @@
 
     @include('partials.chatbot-widget')
     @include('partials.back-to-top')
+    @include('partials.alert-modal')
 </body>
 
 </html>

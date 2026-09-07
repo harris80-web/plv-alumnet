@@ -214,7 +214,7 @@
                     <button type="button" onclick="backToApplyStep1()" class="px-8 py-2 border-2 border-[#1D264F] text-[#1D264F] rounded-md font-bold text-sm hover:bg-[#0E0F3B] hover:text-white transition-colors">
                         BACK
                     </button>
-                    <button type="button" onclick="handleApplySubmit()" class="px-10 py-2 bg-[#0E0F3B] hover:bg-blue-900 text-white rounded-md font-bold text-sm transition-colors">
+                    <button type="button" id="applySubmitBtn" onclick="handleApplySubmit()" class="px-10 py-2 bg-[#0E0F3B] hover:bg-blue-900 text-white rounded-md font-bold text-sm transition-colors">
                         SUBMIT APPLICATION
                     </button>
                 </div>
@@ -714,7 +714,11 @@
 
     // Step 2's real submit — the review step itself is the deliberate
     // confirmation now, so this goes straight to submitting (no extra
-    // generic "are you sure?" dialog on top of it).
+    // generic "are you sure?" dialog on top of it). Submits via fetch()
+    // FIRST and only shows "Successfully Applied!" once the server actually
+    // confirms it — previously this showed that modal optimistically, then
+    // only submitted the real form once "Done" was clicked, so a failed
+    // submission still told the alumnus they'd successfully applied.
     function handleApplySubmit() {
         const resumeSource = document.querySelector('#jobApplyForm input[name=resume_source]:checked')?.value;
 
@@ -729,19 +733,59 @@
         }
 
         document.getElementById('applyStep2Errors').classList.add('hidden');
-        document.getElementById('jobApplyModal').classList.add('hidden');
-        document.getElementById('jobApplySuccessModal').classList.remove('hidden');
+
+        const submitBtn = document.getElementById('applySubmitBtn');
+        const originalLabel = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'SUBMITTING...';
+        submitBtn.classList.add('opacity-60', 'cursor-not-allowed');
+
+        const form = document.getElementById('jobApplyForm');
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: { 'Accept': 'application/json' },
+        })
+        .then(async (response) => {
+            let data = null;
+            try { data = await response.json(); } catch (e) { /* non-JSON response */ }
+
+            if (response.ok && data && data.success) {
+                document.getElementById('jobApplyModal').classList.add('hidden');
+                document.getElementById('jobApplySuccessModal').classList.remove('hidden');
+                return;
+            }
+
+            const message = (data && (data.message || (data.errors && Object.values(data.errors).flat().join(' '))))
+                || 'Something went wrong submitting your application. Please try again.';
+            document.getElementById('applyStep2ErrorText').textContent = message;
+            document.getElementById('applyStep2Errors').classList.remove('hidden');
+            document.getElementById('applyStep2Errors').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        })
+        .catch(() => {
+            document.getElementById('applyStep2ErrorText').textContent = 'Network error — please check your connection and try again.';
+            document.getElementById('applyStep2Errors').classList.remove('hidden');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalLabel;
+            submitBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+        });
     }
 
     function closeApplySuccessModal() {
         document.getElementById('jobApplySuccessModal').classList.add('hidden');
         document.body.style.overflow = 'auto';
-        document.getElementById('jobApplyForm').submit();
+        // The application already happened server-side before this modal
+        // ever showed — just reload so the card reflects the new "Applied" state.
+        window.location.reload();
     }
 </script>
 
 <!-- SUCCESSFULLY APPLIED MODAL — styled after post-job-modal.blade.php's #pendingModal -->
-<div id="jobApplySuccessModal" class="fixed inset-0 z-[200] flex items-center justify-center bg-black bg-opacity-50 hidden">
+<div id="jobApplySuccessModal" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 hidden">
     <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full relative text-center">
         <div class="flex justify-center mb-6">
             <div class="bg-[#0E0F3B] rounded-full p-4">

@@ -322,10 +322,15 @@ $title = request()->routeIs('notifications.all')
         window.addEventListener('DOMContentLoaded', () => {
             const messages = @json($errors->all());
             messages.forEach(message => showToast(message));
-            // The error means the modal's submit failed — reopen it so the
-            // admin sees the message in context instead of just a toast.
-            document.getElementById('password-modal')?.classList.remove('hidden');
-            document.getElementById('password-modal')?.classList.add('flex');
+            // $errors is shared across every form on the page (Add Alumni,
+            // Add Admin, etc.), not just this modal's own form — only reopen
+            // the password modal when the failed validation actually came
+            // from it, or every unrelated form's error would wrongly pop
+            // this modal open instead of showing the error where it happened.
+            @if ($errors->hasAny(['current_password', 'new_password', 'new_password_confirmation']))
+                document.getElementById('password-modal')?.classList.remove('hidden');
+                document.getElementById('password-modal')?.classList.add('flex');
+            @endif
         });
     @endif
 
@@ -595,3 +600,4 @@ $title = request()->routeIs('notifications.all')
 </script>
 
 @include('partials.back-to-top')
+@include('partials.alert-modal')

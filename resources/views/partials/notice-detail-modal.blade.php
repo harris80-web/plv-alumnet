@@ -56,7 +56,7 @@
      or this modal's own Interested button is clicked, no page reload needed.
      Styled after partials/job-apply-modal.blade.php's #jobApplySuccessModal
      (navy icon circle, gradient title/body, single action button). ===== --}}
-<div id="interestConfirmModal" class="fixed inset-0 z-[80] hidden opacity-0 transition-opacity duration-200 bg-black bg-opacity-50 flex items-center justify-center p-4">
+<div id="interestConfirmModal" class="fixed inset-0 z-[80] hidden opacity-0 transition-opacity duration-200 bg-black/50 flex items-center justify-center p-4">
     <div id="interestConfirmModalPanel" class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full relative text-center opacity-0 scale-95 transition-all duration-200">
         <div class="flex justify-center mb-6">
             <div class="bg-[#0E0F3B] rounded-full p-4">

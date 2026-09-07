@@ -315,6 +315,8 @@ Route::get('/myJobPosts/{id}', [JobPostingController::class, 'showMyJobPosts'])-
 Route::post('/editJobPost/{id}', [JobPostingController::class, 'editJobPost'])->name('jobPosting.editJobPost')->middleware('auth');
 Route::get('/jobManagement', [JobPostingController::class, 'showJobManagement'])->name('jobPosting.jobManagement')->middleware(['auth', 'feature:job_management']);
 Route::get('/jobManagement/page', [JobPostingController::class, 'jobManagementFragment'])->name('jobPosting.jobManagementFragment')->middleware(['auth', 'feature:job_management']);
+Route::get('/jobManagement/applicantJobs', [JobPostingController::class, 'jobApplicantsPickerFragment'])->name('jobPosting.jobApplicantsPickerFragment')->middleware(['auth', 'feature:job_management']);
+Route::get('/jobManagement/applicants/{jobPostingId}', [JobPostingController::class, 'jobApplicantsFragment'])->name('jobPosting.jobApplicantsFragment')->middleware(['auth', 'feature:job_management']);
 Route::post('/approveJobPost/{id}', [JobPostingController::class, 'approveJobPost'])->name('jobPosting.approve')->middleware(['auth', 'feature:job_management']);
 Route::post('/declineJobPost/{id}', [JobPostingController::class, 'declineJobPost'])->name('jobPosting.decline')->middleware(['auth', 'feature:job_management']);
 Route::delete('/deleteJobPost/{id}', [JobPostingController::class, 'deleteJobPost'])->name('jobPosting.delete')->middleware(['auth', 'feature:job_management']);

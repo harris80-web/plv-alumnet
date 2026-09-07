@@ -152,7 +152,20 @@
                     </div>
                 </div>
 
-                <!-- ══ JOB POSTS TABLE (Pending + Approved combined, filterable by status) ══ -->
+                <!-- ══ TAB SWITCHER ══ -->
+                <div class="flex items-center gap-2 mb-4 border-b border-slate-200">
+                    <button type="button" id="jm-tab-btn-jobposts" onclick="jmSwitchTab('jobposts')"
+                        class="jm-tab-btn px-4 py-2.5 text-sm font-bold border-b-2 border-[#0E0F3B] text-[#0E0F3B] transition-colors">
+                        Job Posts
+                    </button>
+                    <button type="button" id="jm-tab-btn-applicants" onclick="jmSwitchTab('applicants')"
+                        class="jm-tab-btn px-4 py-2.5 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition-colors">
+                        My Job Postings
+                    </button>
+                </div>
+
+                <!-- ══ TAB: JOB POSTS (Pending + Approved combined, filterable by status) ══ -->
+                <div id="jm-tab-jobposts">
                 <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden w-full">
                   <!-- Search / Status Filter / Filter Sidebar / Export Row -->
                   <form method="GET" action="{{ route('jobPosting.jobManagement') }}" class="flex flex-col md:flex-row md:items-center gap-3 p-4 border-b border-slate-100">
@@ -194,6 +207,26 @@
                   <div id="jobManagementTableWrap">
                     @include('partials.job-management.jobs-table')
                   </div>
+                </div>
+                </div>
+
+                <!-- ══ TAB: MY JOB POSTINGS (view a job post's details, or its applicants + hire/decline/shortlist for an approved one) ══ -->
+                <div id="jm-tab-applicants" class="hidden">
+                    <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden w-full mb-6">
+                        <div class="px-4 py-3 border-b border-slate-100">
+                            <h3 class="text-sm font-bold text-[#0E0F3B]">My Job Postings</h3>
+                            <p class="text-xs text-slate-400 mt-0.5">Job posts you personally created (see "Post a New Job") — view the post itself, or its applicants once approved.</p>
+                        </div>
+                        <div id="applicantJobsTableWrap">
+                            @include('partials.job-management.applicant-jobs-table', ['applicantJobs' => $applicantJobs])
+                        </div>
+                    </div>
+
+                    <div id="applicantsPanelWrap" class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden w-full hidden"></div>
+                    <div id="applicantsPanelEmpty" class="text-center py-12 text-slate-400 text-sm">
+                        <i data-lucide="users" class="w-10 h-10 mx-auto mb-2 opacity-40"></i>
+                        Select "Applicants" on an approved job above to see who applied.
+                    </div>
                 </div>
 
             </div><!-- end overflow-y-auto -->
@@ -345,235 +378,11 @@
         </div>
     </div>
 
-    <!-- Post a new job modal -->
-    <div id="postJobModal" class="fixed inset-0 z-[110] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 overflow-y-auto">
-
-        <div class="bg-white w-full max-w-3xl rounded-[1.8rem] shadow-2xl relative max-h-[90vh] overflow-y-auto my-8">
-
-            <form action="{{ route('jobPosting.addJobPost', ['id' => $users->user_id]) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-
-                <!-- CLOSE -->
-                <button type="button" onclick="closePostModal()"
-                    class="absolute top-5 right-5 text-gray-300 hover:text-gray-500 transition-colors z-10">
-                    <i class="fas fa-times-circle text-2xl"></i>
-                </button>
-
-                <!-- TITLE -->
-                <div class="w-full pt-6 text-center">
-                    <h2 class="inline-block text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent tracking-tight">
-                        POST A NEW JOB
-                    </h2>
-                </div>
-
-                <!-- CONTENT -->
-                <div class="p-5 text-sm">
-
-                    <!-- TOP GRID -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                        <!-- LEFT -->
-                        <div class="space-y-2">
-
-                            <!-- JOB TITLE -->
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">
-                                    Job Title <span class="text-red-500">*</span>
-                                </label>
-                                <input type="text" name="job_posting_title"
-                                    placeholder="e.g., Senior Full Stack Developer"
-                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#C73D1A]">
-                            </div>
-
-                            <!-- BUSINESS NAME -->
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">
-                                    Business Name <span class="text-red-500">*</span>
-                                </label>
-                                <input type="text" name="job_posting_company"
-                                    placeholder="Enter the registered name"
-                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#C73D1A]">
-                            </div>
-
-                            <!-- TYPE + SETUP -->
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="space-y-1">
-                                    <label class="text-[10px] font-bold text-[#1D264F] uppercase">
-                                        Job Type <span class="text-red-500">*</span>
-                                    </label>
-                                    <select name="job_posting_employment_type"
-                                        class="w-full border border-[#0E0F3B] rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#C73D1A] appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em_1em]">
-                                        <option>Select Type (e.g., Full-time)</option>
-                                        <option>Full-Time</option>
-                                        <option>Part-Time</option>
-                                        <option>Freelance</option>
-                                    </select>
-                                </div>
-
-                                <div class="space-y-1">
-                                    <label class="text-[10px] font-bold text-[#1D264F] uppercase">
-                                        Job Setup <span class="text-red-500">*</span>
-                                    </label>
-                                    <select name="job_posting_setup"
-                                        class="w-full border border-[#0E0F3B] rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#C73D1A] appearance-none">
-                                        <option>Select Setup (e.g., Remote)</option>
-                                        <option>Remote</option>
-                                        <option>On-Site</option>
-                                        <option>Hybrid</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- ADDRESS -->
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">
-                                    Business Address <span class="text-red-500">*</span>
-                                </label>
-                                <input type="text" name="job_posting_address"
-                                    placeholder="Enter business address"
-                                    class="w-full border border-[#0E0F3B] rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#C73D1A]">
-                            </div>
-
-                            <!-- DATE -->
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">
-                                    Closing / Validity Date <span class="text-red-500">*</span>
-                                </label>
-                                <input type="date" name="job_closing_date"
-                                    class="w-full border border-[#0E0F3B] uppercase rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#C73D1A] text-gray-400"
-                                    onchange="this.classList.remove('text-gray-400'); this.classList.add('text-black');">
-                            </div>
-
-                        </div>
-
-                        <!-- RIGHT -->
-                        <div class="space-y-2">
-
-                            <!-- IMAGE -->
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">
-                                    Upload Image <span class="text-red-500">*</span>
-                                </label>
-
-                                <div id="imageFrame"
-                                    class="w-full h-[150px] border-2 border-dashed border-[#1D264F] rounded-2xl flex flex-col items-center justify-center bg-[#F8FAFC] relative overflow-hidden">
-
-                                    <div id="uploadPlaceholder"
-                                        class="flex flex-col items-center justify-center text-center px-4">
-                                        <div class="w-12 h-12 rounded-full bg-[#1D264F] flex items-center justify-center mb-2 shadow-md">
-                                            <i class="fas fa-cloud-upload-alt text-white text-lg"></i>
-                                        </div>
-                                        <p class="text-[11px] text-gray-500 mb-2">Upload job image</p>
-                                        <button type="button" onclick="document.getElementById('jobImageInput').click()"
-                                            class="bg-[#0E0F3B] text-white px-4 py-1.5 rounded-lg font-semibold text-[10px] tracking-wide hover:bg-blue-900 transition-all shadow-sm">
-                                            CHOOSE FILE
-                                        </button>
-                                    </div>
-
-                                    <img id="jobImagePreview" src="#" class="hidden w-full h-full object-cover" />
-
-                                    <input type="file" name="job_posting_image" id="jobImageInput"
-                                        accept="image/*" class="hidden" onchange="previewJobImage(this)">
-
-                                    <button id="changeImgBtn" type="button"
-                                        onclick="document.getElementById('jobImageInput').click()"
-                                        class="hidden absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm text-[#1D264F] px-3 py-1 rounded-lg font-bold text-[9px] hover:bg-white transition-all shadow-md">
-                                        CHANGE IMAGE
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- COURSE -->
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-[#1D264F] uppercase">
-                                    Recommended Course/Program <span class="text-red-500">*</span>
-                                </label>
-
-                                <div id="course-input-container" class="space-y-2">
-                                    <div class="flex items-center gap-2 course-row">
-                                        <select name="program[]"
-                                            class="flex-1 border border-[#0E0F3B] rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#C73D1A] bg-white w-full">
-                                            <option selected disabled>Select Undergraduate Program</option>
-                                            @foreach ($programs as $program)
-                                            <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
-                                            @endforeach
-                                        </select>
-
-                                        <button type="button" id="add-course-btn" onclick="addCourseField()"
-                                            class="bg-[#1D264F] text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#0E0F3B] transition-colors shadow-sm">
-                                            <i class="fas fa-plus text-[10px]"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <p id="course-limit-msg" class="text-[9px] text-gray-400 italic hidden">
-                                    Maximum of 3 programs reached.
-                                </p>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <!-- INDUSTRY -->
-                    <div class="space-y-1 mt-4">
-                        <label class="text-[13px] font-bold text-[#1e1b4b] block mb-2">Industry / Sector</label>
-                        <select name="industry_id"
-                            class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white">
-                            <option value="">Select Industry</option>
-                            @foreach($industries as $industry)
-                            <option value="{{ $industry->industry_id }}">{{ $industry->industry_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- REQUIRED SKILLS -->
-                    <div class="mt-4">
-                        @include('partials.job-posting-skills-field', ['uid' => 'management-create'])
-                    </div>
-
-                    <!-- DESCRIPTION -->
-                    <div class="space-y-1 mt-4">
-                        <label class="text-[10px] font-bold text-[#1D264F] uppercase">
-                            Job Description <span class="text-red-500">*</span>
-                        </label>
-                        @include('partials.rich-text-editor', ['uid' => 'management-create', 'fieldName' => 'job_posting_description'])
-                    </div>
-
-                    <div id="adminModalErrors" class="hidden flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-5 py-4 mt-5 mb-7 shadow-sm">
-                        <i class="fas fa-circle-exclamation mt-0.5 text-red-500 text-base shrink-0"></i>
-                        <ul id="adminModalErrorList" class="text-xs space-y-0.5 list-disc list-inside text-red-600"></ul>
-                    </div>
-
-                    @if ($errors->any())
-                    <div style="display: flex; gap: 12px; background: var(--color-background-danger); border: 0.5px solid var(--color-border-danger); border-radius: var(--border-radius-md); padding: 12px 16px; margin-bottom: 1rem;">
-                        <i data-lucide="alert-circle" style="width: 18px; height: 18px; color: var(--color-text-danger); flex-shrink: 0; margin-top: 1px;"></i>
-                        <div>
-                            <ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 2px;">
-                                @foreach ($errors->all() as $error)
-                                <li style="font-size: 13px; color: var(--color-text-danger);">{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    </div>
-                    @endif
-
-                    <!-- BUTTONS -->
-                    <div class="flex justify-end gap-3 mt-5">
-                        <button type="button" onclick="closePostModal()"
-                            class="px-6 py-2 border-2 border-[#1D264F] text-[#1D264F] rounded-lg font-bold text-xs hover:bg-[#0E0F3B] hover:text-white transition-colors">
-                            CANCEL
-                        </button>
-                        <button type="button" onclick="handleJobSubmit()"
-                            class="px-7 py-2 bg-[#0E0F3B] text-white rounded-lg font-bold text-xs hover:bg-blue-900 transition-colors shadow-md">
-                            POST
-                        </button>
-                    </div>
-
-                </div>
-            </form>
-        </div>
-    </div>
-
+    {{-- "Post a New Job" modal — same shared partial the employer/alumni Job
+         Board and My Job Postings pages use (see partials/post-job-modal.blade.php),
+         so admin gets the identical layout/format instead of a hand-copied
+         (and drifted) second version. --}}
+    @include('partials.post-job-modal', ['jobPoster' => $users])
 
     <!--JOB APPROVAL CONFIRMATION MODAL-->
     <!-- Confirmation Modal -->
@@ -638,25 +447,6 @@
         </div>
     </div>
 
-    <!-- POST JOB CONFIRMATION MODAL (admin) -->
-    <div id="postConfirmModal" class="fixed inset-0 z-[210] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center">
-            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-paper-plane text-[#1D46A4] text-2xl"></i>
-            </div>
-            <h2 class="text-xl font-bold text-[#0E0F3B] mb-2">Post this Job?</h2>
-            <p class="text-gray-500 text-sm mb-6">Please confirm that all job details are correct before submitting.</p>
-            <div class="flex gap-3">
-                <button onclick="cancelAdminPostConfirm()" class="flex-1 border border-gray-300 text-gray-600 py-2.5 rounded-lg font-bold text-sm hover:bg-gray-100 transition-colors">
-                    CANCEL
-                </button>
-                <button onclick="confirmAdminPostJob()" class="flex-1 bg-[#0E0F3B] text-white py-2.5 rounded-lg font-bold text-sm hover:bg-[#1D46A4] transition-colors">
-                    YES, POST IT
-                </button>
-            </div>
-        </div>
-    </div>
-
     {{-- Hidden Delete Form --}}
     <form id="deleteForm" action="" method="POST" class="hidden">
         @csrf
@@ -713,95 +503,313 @@
                 const btn = document.querySelector('[data-job-id="' + openJobId + '"]');
                 if (btn) btn.click();
             }
+
+            // ?tab=applicants&applicantsJob=123 — where a hire/decline/
+            // shortlist action redirects back to (see JobApplicationController
+            // ::applicantsRedirectTarget()), so the admin lands back on the
+            // same tab + job panel they were just working in, not the Job
+            // Posts tab.
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('tab') === 'applicants') {
+                jmSwitchTab('applicants');
+                const applicantsJobId = params.get('applicantsJob');
+                if (applicantsJobId) japp_openApplicantsPanel(applicantsJobId);
+            }
         });
 
-        //POST A NEW JOB MODAL
-        function openPostJobModal() {
-            const modal = document.getElementById('postJobModal');
-            modal.classList.remove('hidden');
+        /* ── Tab switcher (Job Posts / Applicants) ─────────────────── */
+        function jmSwitchTab(tab) {
+            const isApplicants = tab === 'applicants';
+            document.getElementById('jm-tab-jobposts').classList.toggle('hidden', isApplicants);
+            document.getElementById('jm-tab-applicants').classList.toggle('hidden', !isApplicants);
+
+            document.getElementById('jm-tab-btn-jobposts').classList.toggle('border-[#0E0F3B]', !isApplicants);
+            document.getElementById('jm-tab-btn-jobposts').classList.toggle('text-[#0E0F3B]', !isApplicants);
+            document.getElementById('jm-tab-btn-jobposts').classList.toggle('border-transparent', isApplicants);
+            document.getElementById('jm-tab-btn-jobposts').classList.toggle('text-slate-400', isApplicants);
+
+            document.getElementById('jm-tab-btn-applicants').classList.toggle('border-[#0E0F3B]', isApplicants);
+            document.getElementById('jm-tab-btn-applicants').classList.toggle('text-[#0E0F3B]', isApplicants);
+            document.getElementById('jm-tab-btn-applicants').classList.toggle('border-transparent', !isApplicants);
+            document.getElementById('jm-tab-btn-applicants').classList.toggle('text-slate-400', !isApplicants);
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        /* ── Applicants tab: load one job's applicant panel ────────── */
+        let japp_currentJobId = null;
+
+        function japp_openApplicantsPanel(jobId) {
+            japp_currentJobId = jobId;
+            fetch('{{ url("/jobManagement/applicants") }}/' + jobId, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => r.text())
+                .then(html => {
+                    const wrap = document.getElementById('applicantsPanelWrap');
+                    wrap.innerHTML = html;
+                    wrap.classList.remove('hidden');
+                    document.getElementById('applicantsPanelEmpty').classList.add('hidden');
+                    if (window.lucide) lucide.createIcons();
+                    // Initializes the freshly-injected client-mode pagination
+                    // bar (its own DOMContentLoaded-driven init already ran
+                    // before this fragment existed) and applies any active
+                    // status filter's row count.
+                    document.dispatchEvent(new CustomEvent('pv:filtered'));
+                    wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+        }
+
+        /* ── Applicants panel: row actions dropdown ────────────────── */
+        // Stopping propagation is required here — a page-wide click
+        // listener further down (registered for the Job Posts tab's own
+        // .menu-button dropdowns) unconditionally closes every open
+        // .action-dropdown on ANY click, including this same click as it
+        // bubbles up. Without this, the dropdown opened one line above
+        // immediately got closed again by that handler before the user
+        // ever saw it, making every action button look completely dead.
+        //
+        // Positioned with fixed coords computed from the button's own
+        // on-screen rect (same escape trick initMenuButtons() below uses for
+        // the Job Posts tab) — the dropdown otherwise inherits .action-dropdown's
+        // plain `position: absolute; top: 100%`, which is clipped by the
+        // applicants table's own overflow-x-auto scroll container instead of
+        // floating over it, especially for a row near the bottom of the table.
+        function japp_closeAllActionDropdowns() {
+            document.querySelectorAll('.action-dropdown.open').forEach(d => {
+                d.classList.remove('open');
+                d.style.position = '';
+                d.style.top = '';
+                d.style.left = '';
+                d.style.right = '';
+            });
+        }
+
+        function japp_toggleDropdown(btn, event) {
+            event?.stopPropagation();
+            const dropdown = btn.nextElementSibling;
+            const isOpen = dropdown.classList.contains('open');
+            japp_closeAllActionDropdowns();
+            if (isOpen) return;
+
+            const rect = btn.getBoundingClientRect();
+            dropdown.style.position = 'fixed';
+            dropdown.style.top = (rect.bottom + 4) + 'px';
+            dropdown.style.left = (rect.right - 160) + 'px';
+            dropdown.style.right = 'auto';
+            dropdown.classList.add('open');
+        }
+
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.relative')) {
+                japp_closeAllActionDropdowns();
+            }
+        });
+
+        /* ── Applicants panel: status filter ────────────────────────── */
+        // Same fixed-position escape as japp_toggleDropdown() above — this
+        // header dropdown lives inside the same overflow-x-auto table
+        // wrapper, so it gets clipped the same way without it. The
+        // left-1/2 -translate-x-1/2 classes stay in the markup and keep
+        // doing the horizontal centering; only the anchor point (left)
+        // needs to move from "under the header cell" to "under the button,
+        // in fixed viewport coords".
+        function japp_toggleStatusFilter(btn, event) {
+            event?.stopPropagation();
+            const dropdown = document.getElementById('japp-statusFilterDropdown');
+            const isOpen = dropdown.classList.contains('open');
+            japp_closeAllActionDropdowns();
+            if (isOpen) return;
+
+            const rect = btn.getBoundingClientRect();
+            dropdown.style.position = 'fixed';
+            dropdown.style.top = (rect.bottom + 4) + 'px';
+            dropdown.style.left = (rect.left + rect.width / 2) + 'px';
+            dropdown.classList.add('open');
+        }
+
+        function japp_filterStatus(status) {
+            const rows = document.querySelectorAll('#japp-applicants-tbody tr[data-status]');
+            rows.forEach(row => {
+                row.style.display = (status === 'All' || row.dataset.status === status) ? '' : 'none';
+            });
+            japp_closeAllActionDropdowns();
+            document.dispatchEvent(new CustomEvent('pv:filtered'));
+        }
+
+        /* ── Applicants panel: bulk selection + actions ────────────── */
+        function japp_getCheckedApplicationIds() {
+            return [...document.querySelectorAll('.japp-applicant-checkbox:checked')].map(cb => cb.value);
+        }
+
+        function japp_updateBulkActionUI() {
+            const count = japp_getCheckedApplicationIds().length;
+            document.getElementById('japp-selectedCount').textContent = count;
+            document.getElementById('japp-bulkHireBtn').disabled = count === 0;
+            document.getElementById('japp-bulkDeclineBtn').disabled = count === 0;
+            document.getElementById('japp-bulkShortlistBtn').disabled = count === 0;
+
+            const allCheckboxes = document.querySelectorAll('.japp-applicant-checkbox');
+            allCheckboxes.forEach(cb => cb.closest('tr')?.classList.toggle('bg-blue-50', cb.checked));
+
+            const selectAll = document.getElementById('japp-selectAllCheckbox');
+            if (selectAll) selectAll.checked = allCheckboxes.length > 0 && count === allCheckboxes.length;
+        }
+
+        function japp_toggleSelectAll(source) {
+            document.querySelectorAll('#japp-applicants-tbody tr[data-status]').forEach(row => {
+                if (row.style.display === 'none') return;
+                const cb = row.querySelector('.japp-applicant-checkbox');
+                if (cb) cb.checked = source.checked;
+            });
+            japp_updateBulkActionUI();
+        }
+
+        function japp_submitBulkAction(action) {
+            const ids = japp_getCheckedApplicationIds();
+            if (ids.length === 0) return;
+
+            const remainingSlots = parseInt(document.getElementById('japp-remaining-slots')?.textContent || '0', 10);
+            if (action === 'hire' && ids.length > remainingSlots) {
+                alert('You can only hire ' + remainingSlots + ' more applicant(s) for this job post. Uncheck some and try again.');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to ' + action + ' ' + ids.length + ' selected applicant(s)?')) return;
+
+            const formIds = { hire: 'japp-bulkHireForm', decline: 'japp-bulkDeclineForm', shortlist: 'japp-bulkShortlistForm' };
+            const form = document.getElementById(formIds[action]);
+            form.querySelectorAll('input[name="application_ids[]"]').forEach(el => el.remove());
+            ids.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'application_ids[]';
+                input.value = id;
+                form.appendChild(input);
+            });
+            form.submit();
+        }
+
+        /* ── Applicants panel: View Application modal ──────────────── */
+        function japp_openApplicationViewModal(data) {
+            document.getElementById('japp-avm-name').textContent = data.applicantName;
+            document.getElementById('japp-avm-email').textContent = data.applicantEmail || '—';
+            document.getElementById('japp-avm-contact').textContent = data.applicantContact || '—';
+
+            const photo = document.getElementById('japp-avm-photo');
+            const photoFallback = document.getElementById('japp-avm-photo-fallback');
+            if (data.applicantPhoto) {
+                photo.src = data.applicantPhoto;
+                photo.classList.remove('hidden');
+                photoFallback.classList.add('hidden');
+            } else {
+                photo.classList.add('hidden');
+                photoFallback.classList.remove('hidden');
+                photoFallback.textContent = (data.applicantName || '?').trim().charAt(0).toUpperCase();
+            }
+
+            document.getElementById('japp-avm-applied-at').textContent = data.appliedAt || 'Unknown date';
+            document.getElementById('japp-avm-status').textContent = data.status;
+            document.getElementById('japp-avm-score').textContent = data.score || '—';
+            document.getElementById('japp-avm-resume-source').textContent = data.resumeSourceLabel;
+
+            const resumeBox = document.getElementById('japp-avm-resume-content');
+            resumeBox.innerHTML = '';
+            if (data.isBuilderResume && data.builderSnapshot) {
+                resumeBox.appendChild(japp_buildSnapshotView(data.builderSnapshot));
+            } else if (data.resumeUrl) {
+                resumeBox.appendChild(japp_buildFileLinkView(data.resumeUrl, 'View resume file'));
+            } else {
+                resumeBox.innerHTML = '<p class="text-xs text-gray-400">No resume submitted.</p>';
+            }
+
+            const coverBox = document.getElementById('japp-avm-cover-letter-content');
+            coverBox.innerHTML = '';
+            if (data.coverLetterUrl) {
+                coverBox.appendChild(japp_buildFileLinkView(data.coverLetterUrl, 'View cover letter file'));
+            } else {
+                coverBox.innerHTML = '<p class="text-xs text-gray-400">No cover letter submitted.</p>';
+            }
+
+            document.getElementById('japp-applicationViewModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
         }
 
-        function closePostModal() {
-            const modal = document.getElementById('postJobModal');
-            modal.classList.add('hidden');
+        function japp_closeApplicationViewModal() {
+            document.getElementById('japp-applicationViewModal').classList.add('hidden');
             document.body.style.overflow = 'auto';
         }
 
-        // Ensure clicking outside the modal content closes it
-        window.addEventListener('click', (e) => {
-            const modal = document.getElementById('postJobModal');
-            if (e.target === modal) {
-                closePostModal();
-            }
-        });
-
-        //POST A NEW JOB MODAL - UPLOAD DOCUMENT
-        function previewJobImage(input) {
-            const frame = document.getElementById('imageFrame');
-            const placeholder = document.getElementById('uploadPlaceholder');
-            const preview = document.getElementById('jobImagePreview');
-            const changeBtn = document.getElementById('changeImgBtn');
-
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-
-                reader.onload = function(e) {
-                    // Set image source
-                    preview.src = e.target.result;
-
-                    // Show image and "Change" button, hide placeholder
-                    preview.classList.remove('hidden');
-                    changeBtn.classList.remove('hidden');
-                    placeholder.classList.add('hidden');
-
-                    // Remove padding from frame to make image full-size
-                    frame.classList.remove('p-6');
-                    frame.classList.add('p-0');
-                }
-
-                reader.readAsDataURL(input.files[0]);
-            }
+        function japp_buildFileLinkView(url, label) {
+            const div = document.createElement('div');
+            div.className = 'border border-gray-200 rounded-xl p-4 flex items-center gap-3';
+            div.innerHTML = '<i class="fas fa-file-lines text-[#C73D1A] text-lg"></i>' +
+                '<a href="' + url + '" target="_blank" class="text-sm font-semibold text-[#1D46A4] hover:underline">' + label + '</a>';
+            return div;
         }
 
-        //POST A NEW JOB MODAL - ADD COURSE/PROGRAM INPUT FIELD
-        function addCourseField() {
-            const container = document.getElementById('course-input-container');
-            const rows = container.getElementsByClassName('course-row');
+        function japp_buildSnapshotView(snap) {
+            const wrap = document.createElement('div');
+            wrap.className = 'border border-gray-200 rounded-xl p-4 space-y-4 text-sm';
 
-            if (rows.length < 3) {
-                // Clone the first row
-                const newRow = rows[0].cloneNode(true);
-
-                // Reset the selection in the new row
-                const select = newRow.querySelector('select');
-                select.selectedIndex = 0;
-
-                // Change the button on the NEW row to a "minus" button
-                const btn = newRow.querySelector('button');
-                btn.innerHTML = '<i class="fas fa-minus text-xs"></i>';
-                btn.classList.replace('bg-[#1D264F]', 'bg-red-500');
-                btn.setAttribute('onclick', 'removeCourseField(this)');
-
-                // Append the row
-                container.appendChild(newRow);
-
-                // Hide add button on the original row if limit is reached
-                if (rows.length === 3) {
-                    document.getElementById('course-limit-msg').classList.remove('hidden');
-                    document.getElementById('add-course-btn').classList.add('opacity-50', 'pointer-events-none');
-                }
+            if (snap.summary) {
+                const p = document.createElement('p');
+                p.className = 'text-gray-600 text-xs leading-relaxed';
+                p.textContent = snap.summary;
+                wrap.appendChild(p);
             }
+
+            if (snap.skills && snap.skills.length) {
+                const skillsWrap = document.createElement('div');
+                skillsWrap.className = 'flex flex-wrap gap-1.5';
+                snap.skills.forEach(s => {
+                    const chip = document.createElement('span');
+                    chip.className = 'bg-blue-50 text-[#1D46A4] text-[10px] font-semibold px-2.5 py-1 rounded-full';
+                    chip.textContent = s.name;
+                    skillsWrap.appendChild(chip);
+                });
+                wrap.appendChild(skillsWrap);
+            }
+
+            if (snap.experiences && snap.experiences.length) {
+                const expTitle = document.createElement('p');
+                expTitle.className = 'text-[10px] font-bold text-gray-400 uppercase mt-2';
+                expTitle.textContent = 'Experience';
+                wrap.appendChild(expTitle);
+                snap.experiences.forEach(e => {
+                    const row = document.createElement('div');
+                    row.className = 'text-xs border-l-2 border-gray-200 pl-3';
+                    row.innerHTML = '<span class="font-bold text-[#0E0F3B]"></span> <span class="text-gray-400"></span><p class="text-gray-500 mt-0.5"></p>';
+                    row.querySelector('.font-bold').textContent = e.job_title || '';
+                    row.querySelector('.text-gray-400').textContent = e.duration_months ? '(' + e.duration_months + ' mos)' : '';
+                    row.querySelector('p').textContent = e.job_description || '';
+                    wrap.appendChild(row);
+                });
+            }
+
+            if (snap.certifications && snap.certifications.length) {
+                const certTitle = document.createElement('p');
+                certTitle.className = 'text-[10px] font-bold text-gray-400 uppercase mt-2';
+                certTitle.textContent = 'Certifications';
+                wrap.appendChild(certTitle);
+                snap.certifications.forEach(c => {
+                    const row = document.createElement('p');
+                    row.className = 'text-xs text-gray-600';
+                    row.textContent = c.certification_name + (c.certification_from ? ' — ' + c.certification_from : '');
+                    wrap.appendChild(row);
+                });
+            }
+
+            if (!wrap.children.length) {
+                wrap.innerHTML = '<p class="text-xs text-gray-400">Empty resume.</p>';
+            }
+
+            return wrap;
         }
 
-        function removeCourseField(button) {
-            const row = button.closest('.course-row');
-            row.remove();
-
-            // Re-enable the add button and hide limit message
-            document.getElementById('course-limit-msg').classList.add('hidden');
-            document.getElementById('add-course-btn').classList.remove('opacity-50', 'pointer-events-none');
-        }
+        // openPostJobModal/closePostModal/previewJobImage/addCourseField/
+        // removeCourseField/handleJobSubmit/the confirm→pending submit flow
+        // now all live in partials/post-job-modal.blade.php (included above)
+        // — same shared "Post a New Job" modal the employer/alumni pages use,
+        // so there's nothing admin-specific left to define here.
 
         function initMenuButtons() {
             document.querySelectorAll('.menu-button').forEach(btn => {
@@ -987,7 +995,13 @@
             const declineBtn = document.getElementById('declineBtn');
             const deleteBtn = document.getElementById('deleteBtn');
 
-            if (data.status === 'Pending') {
+            // A pending post the acting staff member posted themselves
+            // (My Job Postings tab — data.ownPost) can never be approved/
+            // declined here: self-approval isn't allowed. A super_admin
+            // approves an admin's posts and vice versa (jobManagementBaseQuery()
+            // already only ever shows the OTHER role's postings on the Job
+            // Posts tab), so that's the only place Approve/Decline ever appear.
+            if (data.status === 'Pending' && !data.ownPost) {
                 approveBtn.classList.remove('hidden');
                 declineBtn.classList.remove('hidden');
                 deleteBtn.classList.add('hidden');
@@ -999,8 +1013,10 @@
                     closeViewModal();
                     openDeclineNotesModal(jobId, data.title);
                 };
-            } else if (data.status === 'Declined') {
-                // View-only — the job's gone, there's nothing left to approve/decline/delete.
+            } else if (data.status === 'Declined' || (data.status === 'Pending' && data.ownPost)) {
+                // View-only: either the job's gone (declined — nothing left
+                // to act on) or it's the acting staff member's own pending
+                // post, waiting on a DIFFERENT admin/super_admin to approve it.
                 approveBtn.classList.add('hidden');
                 declineBtn.classList.add('hidden');
                 deleteBtn.classList.add('hidden');
@@ -1148,61 +1164,8 @@
             form.submit();
         }
 
-        function handleJobSubmit() {
-            const form = document.querySelector('#postJobModal form');
-            const errors = [];
-
-            const title = form.querySelector('[name="job_posting_title"]').value.trim();
-            const company = form.querySelector('[name="job_posting_company"]').value.trim();
-            const address = form.querySelector('[name="job_posting_address"]').value.trim();
-            const description = form.querySelector('[name="job_posting_description"]').value.trim();
-            const employmentType = form.querySelector('[name="job_posting_employment_type"]').value;
-            const setup = form.querySelector('[name="job_posting_setup"]').value;
-            const closingDate = form.querySelector('[name="job_closing_date"]').value;
-            const image = form.querySelector('[name="job_posting_image"]').files.length;
-            const programs = form.querySelectorAll('[name="program[]"]');
-
-            if (!title) errors.push('Job title is required.');
-            if (!company) errors.push('Business name is required.');
-            if (employmentType.startsWith('Select')) errors.push('Please select a job type.');
-            if (setup.startsWith('Select')) errors.push('Please select a job setup.');
-            if (!address) errors.push('Business address is required.');
-            if (!closingDate) errors.push('Closing / validity date is required.');
-            if (!image) errors.push('Please upload a job image.');
-            if (!description) errors.push('Job description is required.');
-
-            let programSelected = false;
-            programs.forEach(select => {
-                if (select.selectedIndex > 0) programSelected = true;
-            });
-            if (!programSelected) errors.push('Please select at least one recommended program.');
-
-            if (errors.length > 0) {
-                const errorBox = document.getElementById('adminModalErrors');
-                const errorList = document.getElementById('adminModalErrorList');
-                errorList.innerHTML = errors.map(e => `<li>${e}</li>`).join('');
-                errorBox.classList.remove('hidden');
-                errorBox.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'nearest'
-                });
-                return;
-            }
-
-            document.getElementById('adminModalErrors').classList.add('hidden');
-            document.getElementById('postJobModal').classList.add('hidden');
-            document.getElementById('postConfirmModal').classList.remove('hidden');
-        }
-
-        function cancelAdminPostConfirm() {
-            document.getElementById('postConfirmModal').classList.add('hidden');
-            document.getElementById('postJobModal').classList.remove('hidden');
-        }
-
-        function confirmAdminPostJob() {
-            document.getElementById('postConfirmModal').classList.add('hidden');
-            document.querySelector('#postJobModal form').submit();
-        }
+        // handleJobSubmit()/the confirm→pending submit flow now live in
+        // partials/post-job-modal.blade.php (included above).
     </script>
 
 </body>

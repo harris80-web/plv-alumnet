@@ -596,6 +596,13 @@
             dropdown.style.left = (rect.right - 160) + 'px';
             dropdown.style.right = 'auto';
             dropdown.classList.add('open');
+
+            // Flip above the button if it would overflow the bottom of the
+            // viewport — measured after .open actually renders it.
+            const ddRect = dropdown.getBoundingClientRect();
+            if (ddRect.bottom > window.innerHeight) {
+                dropdown.style.top = (rect.top - ddRect.height - 4) + 'px';
+            }
         }
 
         document.addEventListener('click', function (e) {
@@ -650,15 +657,26 @@
             const allCheckboxes = document.querySelectorAll('.japp-applicant-checkbox');
             allCheckboxes.forEach(cb => cb.closest('tr')?.classList.toggle('bg-blue-50', cb.checked));
 
+            // Only count checkboxes japp_toggleSelectAll() actually controls
+            // — not disabled (already hired/declined; can never become
+            // checked) and not hidden by the current status filter.
+            // Comparing against EVERY checkbox meant "select all" could
+            // never show as fully checked once any row was disabled, which
+            // broke its own toggle: clicking it while it wrongly showed
+            // unchecked just re-checked everything instead of clearing it.
+            const eligibleCheckboxes = [...document.querySelectorAll('.japp-applicant-checkbox:not(:disabled)')]
+                .filter(cb => cb.closest('tr')?.style.display !== 'none');
+            const eligibleCheckedCount = eligibleCheckboxes.filter(cb => cb.checked).length;
+
             const selectAll = document.getElementById('japp-selectAllCheckbox');
-            if (selectAll) selectAll.checked = allCheckboxes.length > 0 && count === allCheckboxes.length;
+            if (selectAll) selectAll.checked = eligibleCheckboxes.length > 0 && eligibleCheckedCount === eligibleCheckboxes.length;
         }
 
         function japp_toggleSelectAll(source) {
             document.querySelectorAll('#japp-applicants-tbody tr[data-status]').forEach(row => {
-                if (row.style.display === 'none') return;
+                if (row.style.display === 'none') return; // respect the current status filter
                 const cb = row.querySelector('.japp-applicant-checkbox');
-                if (cb) cb.checked = source.checked;
+                if (cb && !cb.disabled) cb.checked = source.checked; // disabled = already hired/declined, not bulk-eligible
             });
             japp_updateBulkActionUI();
         }

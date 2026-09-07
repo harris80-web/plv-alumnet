@@ -148,13 +148,15 @@
                     'coverLetterUrl' => $coverLetterUrl,
                 ];
             @endphp
-            <tr data-status="{{ $status }}" data-application-id="{{ $applicant->pivot->application_id }}">
+            @php $isBulkEligible = in_array(strtolower($status), ['pending', 'shortlisted']); @endphp
+            <tr data-status="{{ $status }}" data-application-id="{{ $applicant->pivot->application_id }}"
+                data-name="{{ strtolower(trim($applicant->user->user_first_name . ' ' . $applicant->user->user_last_name)) }}">
                 <td class="px-4 py-4 text-center">
-                    @if(in_array(strtolower($status), ['pending', 'shortlisted']))
-                    <input type="checkbox" class="japp-applicant-checkbox w-4 h-4 accent-[#1D264F] cursor-pointer"
+                    <input type="checkbox" class="japp-applicant-checkbox w-4 h-4 accent-[#1D264F] cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                         value="{{ $applicant->pivot->application_id }}"
+                        {{ $isBulkEligible ? '' : 'disabled' }}
+                        title="{{ $isBulkEligible ? '' : 'Already ' . strtolower($status) . ' — no bulk action left to take' }}"
                         onchange="japp_updateBulkActionUI()">
-                    @endif
                 </td>
                 <td class="px-4 py-4 text-center text-gray-400 font-semibold">{{ $index + 1 }}</td>
                 <td class="px-4 py-4">

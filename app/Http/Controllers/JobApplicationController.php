@@ -395,7 +395,10 @@ class JobApplicationController extends Controller
      * (with ownership check) and the subset of the requested application
      * ids that actually belong to it and aren't already in an excluded
      * status, so e.g. an already-hired or already-declined row silently
-     * drops out of a batch instead of erroring the whole request.
+     * drops out of a batch instead of erroring the whole request. Hired/
+     * declined are excluded from every bulk action (not just hire) —
+     * re-running hireApplication()/declineApplication() on one would
+     * re-send its "you're hired"/"not selected" email a second time.
      */
     private function resolveBulkTargets(Request $request, $jobPostingId, array $excludedStatuses): array
     {

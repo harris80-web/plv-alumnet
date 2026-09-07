@@ -19,20 +19,20 @@
 
 <style>
     .HeroSection {
-        background: url("{{ asset('assets/heroSectionBackground.png') }}");
+        background: url("{{ asset('assets/heroSection.svg') }}");
         background-size: cover;
         background-position: center;
     }
 
     .AlumniServices {
-        background: url("{{ asset('assets/Landing Page/Alumni Services.png') }}");
+        background: url("{{ asset('assets/Landing Page/alumniServices.jpg') }}");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
     }
 
     .AlumniTestimonial {
-        background: url("{{ asset('assets/Landing Page/Alumni Testimonial.png') }}");
+        background: url("{{ asset('assets/alumniTestimonial.jpg') }}");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -311,98 +311,127 @@
             </a>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-
-            @forelse ($jobMatches as $match)
-            @php
-                $job = $match->jobPosting;
-                $cardImage = $job->job_posting_image
-                    ? asset('storage/' . $job->job_posting_image)
-                    : 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=600q=80';
-                // Same builder partials/job-post-card.blade.php uses — see
-                // App\Services\JobCardDataBuilder's own doc comment for why
-                // this is extract() and not a shared Blade partial include
-                // (a partial can't hand $cardData back to this scope).
-                // This is what actually makes "View Details" on a Job Match
-                // open the identical modal Job Board's own card opens —
-                // reviews/rating, working Apply, bookmark, posted-by,
-                // everything — instead of a stripped-down data-* set.
-                extract(\App\Services\JobCardDataBuilder::build($job, $user, $appliedJobs, $bookmarkedIds));
-            @endphp
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 flex flex-col transition-transform hover:scale-[1.02]">
-                {{-- Same $cardData + openJobModal() as partials.job-post-card
-                     (shared modal: partials.job-detail-modal) so clicking a
-                     recommended job here opens the identical "View Details"
-                     modal used on the job board. --}}
-                <div class="relative h-48 bg-cover bg-center group cursor-pointer" style="background-image:url('{{ $cardImage }}');"
-                    role="button" tabindex="0" aria-label="View job details"
-                    @foreach ($cardData as $attr => $value)
-                    data-{{ $attr }}="{{ $value }}"
-                    @endforeach
-                    onclick="openJobModal(this)"
-                    onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openJobModal(this);}">
-                    <div class="absolute inset-0 bg-[#0E0F3B]/50 mix-blend-multiply"></div>
-                    <div class="absolute inset-0 bg-blue-600/20"></div>
-                    <span class="absolute top-3 right-3 bg-white/90 text-[#C73D1A] text-[10px] font-bold uppercase px-2 py-1 rounded-full">
-                        {{ round($match->blendedScore()) }}% Match
-                    </span>
-                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span class="bg-white/90 text-[#1D264F] text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
-                            <i class="fas fa-eye mr-1"></i> VIEW DETAILS
-                        </span>
-                    </div>
-                </div>
-
-                <div class="p-6 flex flex-col flex-grow">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-bold text-[#0E0F3B] uppercase text-xl">{{ $job->job_posting_title }}</h3>
-                        <span class="text-[9px] text-gray-400 flex items-center gap-1 mt-1 shrink-0">
-                            <i class="fa-regular fa-calendar"></i> {{ $job->created_at->diffForHumans() }}
-                        </span>
-                    </div>
-
-                    <p class="text-xs text-gray-400 font-semibold uppercase mb-4 tracking-wider">{{ $job->job_posting_company }}</p>
-
-                    <p class="text-[10px] text-gray-500 font-bold uppercase mb-2">
-                        {{ $job->programs->pluck('program_name')->implode(', ') ?: 'Open to all programs' }}
-                    </p>
-
-                    <p class="text-[11px] text-gray-600 leading-relaxed mb-6">
-                        {{ $match->ai_explanation ?: Str::limit(strip_tags($job->job_posting_description), 160) }}
-                    </p>
-
-                    <div class="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between gap-2">
-                        <p class="text-[9px] text-gray-400 flex items-center gap-1 uppercase font-bold">
-                            <i class="fa-regular fa-calendar-check"></i>
-                            {{ $job->job_closing_date ? 'Closes ' . \Carbon\Carbon::parse($job->job_closing_date)->format('M d, Y') : 'Open-ended' }}
-                        </p>
-                        @if ($hasApplied)
-                        <button disabled class="bg-green-600 cursor-not-allowed text-white px-4 py-1.5 rounded-md font-bold text-xs flex items-center gap-1.5 shrink-0">
-                            <i class="fas fa-check-circle"></i> APPLIED
-                        </button>
-                        @else
-                        <form action="{{ route('jobApplication.apply', $job->job_posting_id) }}" method="POST" class="shrink-0">
-                            @csrf
-                            <button type="submit" class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white px-4 py-1.5 rounded-md font-bold text-xs transition-colors">
-                                APPLY
-                            </button>
-                        </form>
-                        @endif
-                    </div>
-                </div>
-            </div>
-            @empty
-            <div class="md:col-span-3 bg-white rounded-2xl shadow-md border border-gray-100 p-10 text-center text-gray-500">
-                <i class="fa-solid fa-magnifying-glass text-3xl mb-3 block text-gray-300"></i>
-                <p class="mb-4">No job matches yet. Complete your resume so we can start recommending jobs for you.</p>
-                <a href="{{ route('resume.build') }}" class="inline-block px-6 py-2 rounded-md bg-[#0E0F3B] text-white text-sm font-bold uppercase hover:bg-[#1D264F] transition-colors">
-                    Build Your Resume
-                </a>
-            </div>
-            @endforelse
-
+        @if ($jobMatches->isEmpty())
+        <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-10 text-center text-gray-500">
+            <i class="fa-solid fa-magnifying-glass text-3xl mb-3 block text-gray-300"></i>
+            <p class="mb-4">No job matches yet. Complete your resume so we can start recommending jobs for you.</p>
+            <a href="{{ route('resume.build') }}" class="inline-block px-6 py-2 rounded-md bg-[#0E0F3B] text-white text-sm font-bold uppercase hover:bg-[#1D264F] transition-colors">
+                Build Your Resume
+            </a>
         </div>
+        @else
+        <div class="relative">
+            <button id="jobMatchesCarouselPrev" type="button" aria-label="Previous job matches"
+                class="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg items-center justify-center text-[#0E0F3B] hover:bg-slate-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+
+            <div id="jobMatchesCarouselTrack" class="carousel-track flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-8 pb-2">
+                @foreach ($jobMatches as $match)
+                @php
+                    $job = $match->jobPosting;
+                    $cardImage = $job->job_posting_image
+                        ? asset('storage/' . $job->job_posting_image)
+                        : 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=600q=80';
+                    // Same builder partials/job-post-card.blade.php uses — see
+                    // App\Services\JobCardDataBuilder's own doc comment for why
+                    // this is extract() and not a shared Blade partial include
+                    // (a partial can't hand $cardData back to this scope).
+                    // This is what actually makes "View Details" on a Job Match
+                    // open the identical modal Job Board's own card opens —
+                    // reviews/rating, working Apply, bookmark, posted-by,
+                    // everything — instead of a stripped-down data-* set.
+                    extract(\App\Services\JobCardDataBuilder::build($job, $user, $appliedJobs, $bookmarkedIds));
+                @endphp
+                <div class="snap-start shrink-0 w-full md:w-[calc(33.333%-1.334rem)]">
+                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 flex flex-col h-full transition-transform hover:scale-[1.02]">
+                        {{-- Same $cardData + openJobModal() as partials.job-post-card
+                             (shared modal: partials.job-detail-modal) so clicking a
+                             recommended job here opens the identical "View Details"
+                             modal used on the job board. --}}
+                        <div class="relative h-48 bg-cover bg-center group cursor-pointer" style="background-image:url('{{ $cardImage }}');"
+                            role="button" tabindex="0" aria-label="View job details"
+                            @foreach ($cardData as $attr => $value)
+                            data-{{ $attr }}="{{ $value }}"
+                            @endforeach
+                            onclick="openJobModal(this)"
+                            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openJobModal(this);}">
+                            <div class="absolute inset-0 bg-[#0E0F3B]/50 mix-blend-multiply"></div>
+                            <div class="absolute inset-0 bg-blue-600/20"></div>
+                            <span class="absolute top-3 right-3 bg-white/90 text-[#C73D1A] text-[10px] font-bold uppercase px-2 py-1 rounded-full">
+                                {{ round($match->blendedScore()) }}% Match
+                            </span>
+                            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span class="bg-white/90 text-[#1D264F] text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
+                                    <i class="fas fa-eye mr-1"></i> VIEW DETAILS
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="p-6 flex flex-col flex-grow">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-bold text-[#0E0F3B] uppercase text-xl">{{ $job->job_posting_title }}</h3>
+                                <span class="text-[9px] text-gray-400 flex items-center gap-1 mt-1 shrink-0">
+                                    <i class="fa-regular fa-calendar"></i> {{ $job->created_at->diffForHumans() }}
+                                </span>
+                            </div>
+
+                            <p class="text-xs text-gray-400 font-semibold uppercase mb-4 tracking-wider">{{ $job->job_posting_company }}</p>
+
+                            <p class="text-[10px] text-gray-500 font-bold uppercase mb-2">
+                                {{ $job->programs->pluck('program_name')->implode(', ') ?: 'Open to all programs' }}
+                            </p>
+
+                            <p class="text-[11px] text-gray-600 leading-relaxed mb-6">
+                                {{ $match->ai_explanation ?: Str::limit(strip_tags($job->job_posting_description), 160) }}
+                            </p>
+
+                            <div class="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between gap-2">
+                                <p class="text-[9px] text-gray-400 flex items-center gap-1 uppercase font-bold">
+                                    <i class="fa-regular fa-calendar-check"></i>
+                                    {{ $job->job_closing_date ? 'Closes ' . \Carbon\Carbon::parse($job->job_closing_date)->format('M d, Y') : 'Open-ended' }}
+                                </p>
+                                @if ($hasApplied)
+                                <button disabled class="bg-green-600 cursor-not-allowed text-white px-4 py-1.5 rounded-md font-bold text-xs flex items-center gap-1.5 shrink-0">
+                                    <i class="fas fa-check-circle"></i> APPLIED
+                                </button>
+                                @else
+                                <form action="{{ route('jobApplication.apply', $job->job_posting_id) }}" method="POST" class="shrink-0">
+                                    @csrf
+                                    <button type="submit" class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white px-4 py-1.5 rounded-md font-bold text-xs transition-colors">
+                                        APPLY
+                                    </button>
+                                </form>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+
+            <button id="jobMatchesCarouselNext" type="button" aria-label="Next job matches"
+                class="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg items-center justify-center text-[#0E0F3B] hover:bg-slate-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <div id="jobMatchesCarouselDots" class="flex justify-center gap-2 mt-6"></div>
+        @endif
     </section>
+
+    @include('partials.carousel-init')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            initCardCarousel({
+                trackId: 'jobMatchesCarouselTrack',
+                prevId: 'jobMatchesCarouselPrev',
+                nextId: 'jobMatchesCarouselNext',
+                dotsId: 'jobMatchesCarouselDots',
+                itemsPerPage: 3,
+            });
+        });
+    </script>
 
     @include('partials.job-detail-modal')
     {{-- Powers the star-rating/upvote-downvote widgets inside the modal
@@ -480,7 +509,7 @@
             ->visibleToAlumni()
             ->upcoming()
             ->orderBy('event_datetime')
-            ->limit(3)
+            ->limit(9)
             ->get();
         $recentAnnouncements = \App\Models\Notice::category('announcement')
             ->visibleToAlumni()
@@ -502,36 +531,64 @@
             <p>No upcoming events or seminars right now.</p>
         </div>
         @else
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            @foreach ($upcomingNotices as $notice)
-            <a href="{{ route('notices.eventsSeminars', ['tab' => $notice->category === 'seminar' ? 'seminar' : 'events', 'notice' => $notice->id]) }}"
-                class="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition-shadow">
-                <div class="h-40">
-                    <img src="{{ $notice->thumbnailUrl() }}" class="w-full h-full object-cover mix-blend-multiply">
-                </div>
+        <div class="relative">
+            <button id="alumniEventsCarouselPrev" type="button" aria-label="Previous events"
+                class="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg items-center justify-center text-[#0E0F3B] hover:bg-slate-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
 
-                <div class="p-4 flex gap-4 items-start relative">
-                    <div class="flex-grow">
-                        <h3 class="font-bold text-blue-900 uppercase text-sm">{{ $notice->title }}</h3>
-                        @if($notice->location)
-                        <p class="text-[10px] text-gray-500 mb-2">
-                            <i class="fa-solid fa-location-dot mr-1"></i> {{ $notice->location }}
-                        </p>
-                        @endif
-                        <p class="text-xs text-black w-3/4 leading-tight notice-description-content">
-                            {{ \Illuminate\Support\Str::limit(strip_tags($notice->description ?? ''), 80) ?: 'No description provided.' }}
-                        </p>
-                    </div>
-                    <div class="flex-shrink-0 absolute right-0 bg-orange-700 text-white p-2 text-center w-16 rounded-sm shadow-sm">
-                        <span class="block text-xl font-bold leading-none tracking-tighter">{{ $notice->event_datetime->format('d') }}</span>
-                        <span class="text-[10px] uppercase font-semibold">{{ $notice->event_datetime->format('M') }}</span>
-                    </div>
+            <div id="alumniEventsCarouselTrack" class="carousel-track flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-6 pb-2">
+                @foreach ($upcomingNotices as $notice)
+                <div class="snap-start shrink-0 w-full md:w-[calc(33.333%-1rem)]">
+                    <a href="{{ route('notices.eventsSeminars', ['tab' => $notice->category === 'seminar' ? 'seminar' : 'events', 'notice' => $notice->id]) }}"
+                        class="block bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition-shadow h-full">
+                        <div class="h-40">
+                            <img src="{{ $notice->thumbnailUrl() }}" class="w-full h-full object-cover mix-blend-multiply">
+                        </div>
+
+                        <div class="p-4 flex gap-4 items-start relative">
+                            <div class="flex-grow">
+                                <h3 class="font-bold text-blue-900 uppercase text-sm">{{ $notice->title }}</h3>
+                                @if($notice->location)
+                                <p class="text-[10px] text-gray-500 mb-2">
+                                    <i class="fa-solid fa-location-dot mr-1"></i> {{ $notice->location }}
+                                </p>
+                                @endif
+                                <p class="text-xs text-black w-3/4 leading-tight notice-description-content">
+                                    {{ \Illuminate\Support\Str::limit(strip_tags($notice->description ?? ''), 80) ?: 'No description provided.' }}
+                                </p>
+                            </div>
+                            <div class="flex-shrink-0 absolute right-0 bg-orange-700 text-white p-2 text-center w-16 rounded-sm shadow-sm">
+                                <span class="block text-xl font-bold leading-none tracking-tighter">{{ $notice->event_datetime->format('d') }}</span>
+                                <span class="text-[10px] uppercase font-semibold">{{ $notice->event_datetime->format('M') }}</span>
+                            </div>
+                        </div>
+                    </a>
                 </div>
-            </a>
-            @endforeach
+                @endforeach
+            </div>
+
+            <button id="alumniEventsCarouselNext" type="button" aria-label="Next events"
+                class="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg items-center justify-center text-[#0E0F3B] hover:bg-slate-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
         </div>
+
+        <div id="alumniEventsCarouselDots" class="flex justify-center gap-2 mt-6"></div>
         @endif
     </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            initCardCarousel({
+                trackId: 'alumniEventsCarouselTrack',
+                prevId: 'alumniEventsCarouselPrev',
+                nextId: 'alumniEventsCarouselNext',
+                dotsId: 'alumniEventsCarouselDots',
+                itemsPerPage: 3,
+            });
+        });
+    </script>
 
     <section class="py-4 px-6 max-w-6xl mx-auto relative pb-16">
         <div class="flex justify-between items-end mb-8 pl-4">

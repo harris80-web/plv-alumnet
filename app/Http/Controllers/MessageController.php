@@ -78,6 +78,7 @@ class MessageController extends Controller
 
         // Outside the transaction — a flagging hiccup should never roll back
         // a legitimate send. Skipped entirely (no query) when auditing is off.
+        $reasons = [];
         if (ChatbotSetting::current()->chat_auditing_enabled && $message->message_content !== '') {
             $reasons = app(MessageAuditor::class)->scan($message->message_content);
             if (!empty($reasons)) {
@@ -89,7 +90,16 @@ class MessageController extends Controller
             }
         }
 
-        return response()->json($message->toChatArray(), 201);
+        // The message still sends either way — flagging only queues it for
+        // admin review, it never blocks delivery — but the sender gets an
+        // immediate on-screen warning (see message-violation-modal) so they
+        // know *why* it was flagged instead of finding out only if/when an
+        // admin acts on it.
+        return response()->json(array_merge($message->toChatArray(), [
+            'flagged' => !empty($reasons),
+            'flag_reasons' => $reasons,
+            'flag_reason_labels' => array_map(fn ($r) => MessageFlag::reasonLabels()[$r] ?? $r, $reasons),
+        ]), 201);
     }
 
     /**

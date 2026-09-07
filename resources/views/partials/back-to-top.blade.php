@@ -7,9 +7,14 @@
     the window normally. findScrollContainer() picks whichever one is
     actually overflowing, so this same partial works on both without
     per-page wiring.
+
+    Pass ['nearChatWidget' => true] on pages that also include
+    partials.chatbot-widget (alumni/employer) — that toggle button sits at
+    the same bottom-6 right-6 spot, so this shifts left to sit beside it
+    instead of on top of it.
 --}}
 <button id="backToTopBtn" type="button" aria-label="Back to top"
-    class="fixed bottom-6 right-6 z-[200] w-11 h-11 rounded-full bg-[#C73D1A] text-white shadow-lg flex items-center justify-center opacity-0 pointer-events-none translate-y-2 transition-all duration-200 hover:bg-[#a8331a]">
+    class="fixed bottom-6 {{ ($nearChatWidget ?? false) ? 'right-24' : 'right-6' }} z-[200] w-11 h-11 rounded-full bg-[#C73D1A] text-white shadow-lg flex items-center justify-center opacity-0 pointer-events-none translate-y-2 transition-all duration-200 hover:bg-[#a8331a]">
     <i data-lucide="arrow-up" class="w-5 h-5"></i>
 </button>
 

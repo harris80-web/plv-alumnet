@@ -21,14 +21,14 @@
 <style>
     .HeroSection {
         background:
-            url("{{ asset('assets/heroSectionBackground.png') }}");
+            url("{{ asset('assets/heroSection.svg') }}");
         background-size: cover;
         background-position: center;
     }
 
     .EmployerFeatures {
         background:
-            url("{{ asset('assets/Landing Page/Alumni Services.png') }}");
+            url("{{ asset('assets/Landing Page/employerFeatures.jpg') }}");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;

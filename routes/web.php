@@ -53,7 +53,7 @@ Route::get('/', function () {
     // guest never sees an alumni- or employer-only notice on the homepage.
     $campusEvents = Notice::category('event')->visibleToGuest()->upcoming()
         ->orderBy('event_datetime')
-        ->take(3)
+        ->take(9)
         ->get();
 
     return view('general.home', compact('testimonials', 'campusEvents'));

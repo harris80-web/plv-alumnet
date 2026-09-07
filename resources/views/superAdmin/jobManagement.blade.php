@@ -115,6 +115,22 @@
         #postJobModal>div::-webkit-scrollbar {
             display: none;
         }
+
+        /* Same tab style as superAdmin/userManagement.blade.php's .tab-btn */
+        .page-tab-btn {
+            border-bottom: 2px solid transparent;
+            color: #64748b;
+        }
+
+        .page-tab-btn.active {
+            border-bottom: 2px solid #ea580c;
+            color: #ea580c;
+            font-weight: 600;
+        }
+
+        .page-tab-btn:hover:not(.active) {
+            color: #ea580c;
+        }
     </style>
 </head>
 
@@ -123,6 +139,19 @@
         @include('partials.super-admin-side-bar')
         <main class="flex-1 flex flex-col overflow-hidden min-w-0">
             @include('partials.super-admin-header')
+
+            <!-- PAGE TABS -->
+            <div class="bg-white px-8 flex gap-8 border-b border-slate-200 shrink-0 shadow-md">
+                <button type="button" id="jm-tab-btn-jobposts" onclick="jmSwitchTab('jobposts')"
+                    class="page-tab-btn active py-3 px-2 flex items-center gap-2 text-sm transition-colors">
+                    <i data-lucide="briefcase" class="w-4 h-4"></i> Job Posts
+                </button>
+                <button type="button" id="jm-tab-btn-applicants" onclick="jmSwitchTab('applicants')"
+                    class="page-tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors">
+                    <i data-lucide="user-check" class="w-4 h-4"></i> My Job Postings
+                </button>
+            </div>
+
             <div class="flex-1 overflow-y-auto p-6">
 
                 @include('partials.success')
@@ -150,18 +179,6 @@
                         <p class="text-2xl font-bold text-red-500">{{ $declinedCount }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Declined Job Posts</p>
                     </div>
-                </div>
-
-                <!-- ══ TAB SWITCHER ══ -->
-                <div class="flex items-center gap-2 mb-4 border-b border-slate-200">
-                    <button type="button" id="jm-tab-btn-jobposts" onclick="jmSwitchTab('jobposts')"
-                        class="jm-tab-btn px-4 py-2.5 text-sm font-bold border-b-2 border-[#0E0F3B] text-[#0E0F3B] transition-colors">
-                        Job Posts
-                    </button>
-                    <button type="button" id="jm-tab-btn-applicants" onclick="jmSwitchTab('applicants')"
-                        class="jm-tab-btn px-4 py-2.5 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition-colors">
-                        My Job Postings
-                    </button>
                 </div>
 
                 <!-- ══ TAB: JOB POSTS (Pending + Approved combined, filterable by status) ══ -->
@@ -523,15 +540,8 @@
             document.getElementById('jm-tab-jobposts').classList.toggle('hidden', isApplicants);
             document.getElementById('jm-tab-applicants').classList.toggle('hidden', !isApplicants);
 
-            document.getElementById('jm-tab-btn-jobposts').classList.toggle('border-[#0E0F3B]', !isApplicants);
-            document.getElementById('jm-tab-btn-jobposts').classList.toggle('text-[#0E0F3B]', !isApplicants);
-            document.getElementById('jm-tab-btn-jobposts').classList.toggle('border-transparent', isApplicants);
-            document.getElementById('jm-tab-btn-jobposts').classList.toggle('text-slate-400', isApplicants);
-
-            document.getElementById('jm-tab-btn-applicants').classList.toggle('border-[#0E0F3B]', isApplicants);
-            document.getElementById('jm-tab-btn-applicants').classList.toggle('text-[#0E0F3B]', isApplicants);
-            document.getElementById('jm-tab-btn-applicants').classList.toggle('border-transparent', !isApplicants);
-            document.getElementById('jm-tab-btn-applicants').classList.toggle('text-slate-400', !isApplicants);
+            document.getElementById('jm-tab-btn-jobposts').classList.toggle('active', !isApplicants);
+            document.getElementById('jm-tab-btn-applicants').classList.toggle('active', isApplicants);
 
             if (window.lucide) lucide.createIcons();
         }

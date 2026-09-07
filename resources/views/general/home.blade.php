@@ -20,14 +20,14 @@
 <style>
     .HeroSection {
         background:
-            url('assets/heroSectionBackground.png');
+            url('assets/heroSection.svg');
         background-size: cover;
         background-position: center;
     }
 
     .AlumniServices {
         background:
-            url('assets/Landing Page/Alumni Services.png');
+            url('assets/Landing Page/alumniServices.jpg');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -35,7 +35,7 @@
 
     .AlumniTestimonial {
         background:
-            url('assets/Landing Page/Alumni Testimonial.png');
+            url('assets/alumniTestimonial.jpg');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -154,41 +154,70 @@
             <p class="font-semibold">No upcoming events to show right now.</p>
         </div>
         @else
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            @foreach ($campusEvents as $event)
-            <div class="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100 flex flex-col">
-                <div class="h-40">
-                    <img src="{{ $event->thumbnailUrl() }}" class="w-full h-full object-cover mix-blend-multiply">
-                </div>
+        <div class="relative">
+            <button id="eventsCarouselPrev" type="button" aria-label="Previous events"
+                class="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg items-center justify-center text-[#0E0F3B] hover:bg-slate-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
 
-                <div class="p-4 flex gap-4 items-start relative flex-grow">
-                    <div class="flex-grow">
-                        <h3 class="font-bold text-blue-900 uppercase text-sm">{{ $event->title }}</h3>
-                        @if ($event->location)
-                        <p class="text-[10px] text-gray-500 mb-2">
-                            <i class="fa-solid fa-location-dot mr-1"></i> {{ $event->location }}
-                        </p>
-                        @endif
-                        <p class="text-xs text-black w-3/4 leading-tight">
-                            {{ \Illuminate\Support\Str::limit(strip_tags($event->description ?? ''), 90) ?: 'No description provided.' }}
-                        </p>
-                    </div>
-                    <div class="flex-shrink-0 absolute right-0 bg-orange-700 text-white p-2 text-center w-16 rounded-sm shadow-sm">
-                        <span class="block text-xl font-bold leading-none tracking-tighter">{{ $event->event_datetime->format('d') }}</span>
-                        <span class="text-[10px] uppercase font-semibold">{{ $event->event_datetime->format('M') }}</span>
-                    </div>
-                </div>
+            <div id="eventsCarouselTrack" class="carousel-track flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-6 pb-2">
+                @foreach ($campusEvents as $event)
+                <div class="snap-start shrink-0 w-full md:w-[calc(33.333%-1rem)]">
+                    <div class="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100 flex flex-col h-full">
+                        <div class="h-40">
+                            <img src="{{ $event->thumbnailUrl() }}" class="w-full h-full object-cover mix-blend-multiply">
+                        </div>
 
-                <div class="px-4 pb-4">
-                    <a href="{{ route('auth.login') }}" class="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase py-2 rounded-md bg-[#1D264F] hover:bg-[#0E0F3B] text-white transition-colors">
-                        <i class="fa-solid fa-lock"></i> Log In to View Full Details
-                    </a>
+                        <div class="p-4 flex gap-4 items-start relative flex-grow">
+                            <div class="flex-grow">
+                                <h3 class="font-bold text-blue-900 uppercase text-sm">{{ $event->title }}</h3>
+                                @if ($event->location)
+                                <p class="text-[10px] text-gray-500 mb-2">
+                                    <i class="fa-solid fa-location-dot mr-1"></i> {{ $event->location }}
+                                </p>
+                                @endif
+                                <p class="text-xs text-black w-3/4 leading-tight">
+                                    {{ \Illuminate\Support\Str::limit(strip_tags($event->description ?? ''), 90) ?: 'No description provided.' }}
+                                </p>
+                            </div>
+                            <div class="flex-shrink-0 absolute right-0 bg-orange-700 text-white p-2 text-center w-16 rounded-sm shadow-sm">
+                                <span class="block text-xl font-bold leading-none tracking-tighter">{{ $event->event_datetime->format('d') }}</span>
+                                <span class="text-[10px] uppercase font-semibold">{{ $event->event_datetime->format('M') }}</span>
+                            </div>
+                        </div>
+
+                        <div class="px-4 pb-4">
+                            <a href="{{ route('auth.login') }}" class="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase py-2 rounded-md bg-[#1D264F] hover:bg-[#0E0F3B] text-white transition-colors">
+                                <i class="fa-solid fa-lock"></i> Log In to View Full Details
+                            </a>
+                        </div>
+                    </div>
                 </div>
+                @endforeach
             </div>
-            @endforeach
+
+            <button id="eventsCarouselNext" type="button" aria-label="Next events"
+                class="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg items-center justify-center text-[#0E0F3B] hover:bg-slate-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
         </div>
+
+        <div id="eventsCarouselDots" class="flex justify-center gap-2 mt-6"></div>
         @endif
     </section>
+
+    @include('partials.carousel-init')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            initCardCarousel({
+                trackId: 'eventsCarouselTrack',
+                prevId: 'eventsCarouselPrev',
+                nextId: 'eventsCarouselNext',
+                dotsId: 'eventsCarouselDots',
+                itemsPerPage: 3,
+            });
+        });
+    </script>
 
     <section id="alumni-testimonials" class="AlumniTestimonial py-20 px-6 text-white text-center mb-10">
         <h2 class="text-3xl font-bold uppercase mb-12 tracking-widest">Alumni Testimonials</h2>

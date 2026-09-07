@@ -42,6 +42,7 @@
     @include('partials.success')
 
     @include('partials.messaging-guidelines-modal')
+    @include('partials.message-violation-modal')
 
     <main class="max-w-7xl mx-auto p-4">
         <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex" style="height: calc(100vh - 130px);">
@@ -431,6 +432,10 @@
                     input.value = '';
                     document.getElementById('messageCharCount').classList.add('hidden');
                     clearAttachment();
+
+                    if (message.flagged) {
+                        openMessageViolationModal(message.flag_reason_labels);
+                    }
                 } catch (e) {
                     alert('Failed to send message. Please check your connection and try again.');
                 } finally {

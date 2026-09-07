@@ -83,7 +83,7 @@
 
     @include('partials.success')
     <div class="absolute inset-0 z-0">
-        <img src="assets/alumnetBackground.svg" alt="PLV Building" class="w-full h-full object-cover">
+        <img src="assets/loginBackground.svg" alt="PLV Building" class="w-full h-full object-cover">
     </div>
 
     <div class="relative z-10 container mx-auto px-6 lg:px-5 flex flex-col lg:flex-row items-center justify-evenly">

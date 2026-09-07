@@ -14,7 +14,7 @@
 </head>
 <style>
     .HeroSection {
-        background: url("{{ asset('assets/heroSectionBackground.png') }}");
+        background: url("{{ asset('assets/heroSection.svg') }}");
         background-size: cover;
         background-position: center;
     }

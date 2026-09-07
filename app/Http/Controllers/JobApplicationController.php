@@ -73,7 +73,16 @@ class JobApplicationController extends Controller
         //
     }
 
-    public function applyJob($jobPostingId)
+    /**
+     * Applying now goes through partials/job-apply-modal.blade.php's 2-step
+     * review flow instead of a bare one-click form: the alumnus explicitly
+     * picks a resume — their uploaded profile file, a one-off upload just
+     * for this job, or their Resume Builder profile (optionally edited in
+     * the review step as a one-time scratch copy, see
+     * $validated['builder_resume_snapshot'] below) — and optionally a cover
+     * letter the same way.
+     */
+    public function applyJob(Request $request, $jobPostingId)
     {
         abort_unless(Auth::user()->user_role === 'alumni', 403);
 
@@ -81,11 +90,49 @@ class JobApplicationController extends Controller
         $alumniId = Auth::id();
         $alumni = Alumnus::with(['skills', 'experiences', 'certifications'])->findOrFail($alumniId);
 
-        // `alumnus_resume` was removed when the resume feature was rebuilt
-        // (see alumnus_resume_summary/alumnus_resume_completeness) — gate on
-        // having started a resume instead of requiring it to be finished,
-        // since applying shouldn't wait on a 100%-complete resume.
-        if (($alumni->alumnus_resume_completeness ?? 0) <= 0) {
+        // The review step's builder-resume editor posts one JSON blob
+        // (deeply-nested indexed form fields for a variable-length
+        // skills/experiences/certifications list would be painful to
+        // generate client-side) — decode it into the request before
+        // validating, so the rest of this method can treat it as a normal
+        // nested array like everything else here.
+        if ($request->filled('builder_resume_snapshot_json')) {
+            $request->merge([
+                'builder_resume_snapshot' => json_decode($request->input('builder_resume_snapshot_json'), true) ?? [],
+            ]);
+        }
+
+        $validated = $request->validate([
+            'resume_source' => ['required', 'in:profile,upload,builder'],
+            'resume_file' => ['required_if:resume_source,upload', 'nullable', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
+            'cover_letter_source' => ['nullable', 'in:none,profile,upload'],
+            'cover_letter_file' => ['required_if:cover_letter_source,upload', 'nullable', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
+            // Scratch copy edited in the review step, never written back to
+            // alumni/experiences/skills — same field shape as
+            // Alumnus::toResumeFormArray()/ResumeBuilderController::save().
+            'builder_resume_snapshot' => ['required_if:resume_source,builder', 'nullable', 'array'],
+            'builder_resume_snapshot.summary' => ['nullable', 'string', 'max:2000'],
+            'builder_resume_snapshot.skills' => ['nullable', 'array'],
+            'builder_resume_snapshot.skills.*.name' => ['required', 'string', 'max:100'],
+            'builder_resume_snapshot.experiences' => ['nullable', 'array'],
+            'builder_resume_snapshot.experiences.*.type' => ['required', 'in:work,project'],
+            'builder_resume_snapshot.experiences.*.job_title' => ['required', 'string', 'max:255'],
+            'builder_resume_snapshot.experiences.*.job_description' => ['nullable', 'string', 'max:2000'],
+            'builder_resume_snapshot.experiences.*.duration_months' => ['nullable', 'integer', 'min:0', 'max:600'],
+            'builder_resume_snapshot.certifications' => ['nullable', 'array'],
+            'builder_resume_snapshot.certifications.*.certification_type' => ['required', 'in:certification,seminar,training'],
+            'builder_resume_snapshot.certifications.*.certification_name' => ['required', 'string', 'max:255'],
+            'builder_resume_snapshot.certifications.*.certification_from' => ['nullable', 'string', 'max:255'],
+            'builder_resume_snapshot.certifications.*.certification_date' => ['nullable', 'date'],
+        ]);
+
+        // Belt-and-suspenders — the apply modal only ever offers each
+        // resume option when the corresponding hasXResume() check is true,
+        // but the server can't trust that a request actually came from it.
+        if ($validated['resume_source'] === 'profile' && ! $alumni->hasUploadedResumeFile()) {
+            return redirect()->back()->with('noResume', 'flex');
+        }
+        if ($validated['resume_source'] === 'builder' && ! $alumni->hasBuilderResume()) {
             return redirect()->back()->with('noResume', 'flex');
         }
 
@@ -105,6 +152,17 @@ class JobApplicationController extends Controller
             return redirect()->route('jobPosting.jobBoard')->with('success', 'You have already applied to this job.');
         }
 
+        $resumePath = null;
+        if ($validated['resume_source'] === 'upload' && $request->hasFile('resume_file')) {
+            $resumePath = $request->file('resume_file')->store('jobApplications/resumes', 'public');
+        }
+
+        $coverLetterSource = $validated['cover_letter_source'] ?? 'none';
+        $coverLetterPath = null;
+        if ($coverLetterSource === 'upload' && $request->hasFile('cover_letter_file')) {
+            $coverLetterPath = $request->file('cover_letter_file')->store('jobApplications/coverLetters', 'public');
+        }
+
         $match = app(JobMatchService::class)->scoreFor($job, $alumni);
 
         // Create a new job application
@@ -113,6 +171,13 @@ class JobApplicationController extends Controller
             'job_id' => $jobPostingId,
             'application_status' => 'pending',
             'application_score' => $match->score,
+            'resume_source' => $validated['resume_source'],
+            'resume_path' => $resumePath,
+            'cover_letter_source' => $coverLetterSource,
+            'cover_letter_path' => $coverLetterPath,
+            'builder_resume_snapshot' => $validated['resume_source'] === 'builder'
+                ? ($validated['builder_resume_snapshot'] ?? null)
+                : null,
         ]);
         Mail::to($job->user->user_email)->queue(new ApplyJobMail($job, $alumni));
 
@@ -195,6 +260,7 @@ class JobApplicationController extends Controller
         UserNotification::create([
             'user_id' => $alumnus->user_id,
             'type' => 'job_application_hired',
+            'reference_id' => $application->job_id,
             'title' => 'Congratulations — you were hired!',
             'body' => "You've been hired for \"{$application->job->job_posting_title}\" at {$application->job->job_posting_company}.",
         ]);
@@ -210,7 +276,7 @@ class JobApplicationController extends Controller
 
         $this->hireApplication($application);
 
-        return redirect()->route("jobApplication.showApplications", ["jobPostingId" => $application->job_id])->with('success', 'Application status updated successfully.');
+        return $this->statusUpdateRedirect($application, 'hired');
     }
 
     private function declineApplication(JobApplication $application): void
@@ -221,6 +287,7 @@ class JobApplicationController extends Controller
         UserNotification::create([
             'user_id' => $application->alumnus_id,
             'type' => 'job_application_declined',
+            'reference_id' => $application->job_id,
             'title' => 'Application update',
             'body' => "Your application for \"{$application->job->job_posting_title}\" at {$application->job->job_posting_company} was not selected this time.",
         ]);
@@ -231,7 +298,7 @@ class JobApplicationController extends Controller
         $application = $this->authorizedApplication($applicationId);
         $this->declineApplication($application);
 
-        return redirect()->route("jobApplication.showApplications", ["jobPostingId" => $application->job_id])->with('success', 'Application status updated successfully.');
+        return $this->statusUpdateRedirect($application, 'declined');
     }
 
     private function shortlistApplication(JobApplication $application): void
@@ -242,6 +309,7 @@ class JobApplicationController extends Controller
         UserNotification::create([
             'user_id' => $application->alumnus_id,
             'type' => 'job_application_shortlisted',
+            'reference_id' => $application->job_id,
             'title' => "You've been shortlisted!",
             'body' => "You've been shortlisted for \"{$application->job->job_posting_title}\" at {$application->job->job_posting_company}.",
         ]);
@@ -252,7 +320,23 @@ class JobApplicationController extends Controller
         $application = $this->authorizedApplication($applicationId);
         $this->shortlistApplication($application);
 
-        return redirect()->route("jobApplication.showApplications", ["jobPostingId" => $application->job_id])->with('success', 'Application status updated successfully.');
+        return $this->statusUpdateRedirect($application, 'shortlisted');
+    }
+
+    /**
+     * Shared by the 3 single-applicant status actions above — names exactly
+     * who changed and to what (not just a generic "updated successfully"),
+     * and flashes the affected row's id so the view can highlight/scroll to
+     * it after the redirect. The employer shouldn't have to hunt through a
+     * long applicant list to confirm a status change actually took.
+     */
+    private function statusUpdateRedirect(JobApplication $application, string $status)
+    {
+        $name = trim($application->alumnus->user->user_first_name . ' ' . $application->alumnus->user->user_last_name);
+
+        return redirect()->route('jobApplication.showApplications', ['jobPostingId' => $application->job_id])
+            ->with('success', "{$name}'s application has been marked as " . ucfirst($status) . '.')
+            ->with('updatedApplicationIds', [$application->application_id]);
     }
 
     /**
@@ -305,7 +389,8 @@ class JobApplicationController extends Controller
         }
 
         return redirect()->route('jobApplication.showApplications', ['jobPostingId' => $jobPost->job_posting_id])
-            ->with('success', $applications->count() . ' applicant(s) hired successfully.');
+            ->with('success', $applications->count() . ' applicant(s) hired successfully.')
+            ->with('updatedApplicationIds', $applications->pluck('application_id')->values()->all());
     }
 
     /** Bulk-tag applicants to decline — no cap, any non-hired/non-declined row is fair game. */
@@ -322,7 +407,8 @@ class JobApplicationController extends Controller
         }
 
         return redirect()->route('jobApplication.showApplications', ['jobPostingId' => $jobPost->job_posting_id])
-            ->with('success', $applications->count() . ' applicant(s) declined.');
+            ->with('success', $applications->count() . ' applicant(s) declined.')
+            ->with('updatedApplicationIds', $applications->pluck('application_id')->values()->all());
     }
 
     /** Bulk-tag applicants to shortlist — no cap, skips anything already hired/declined/shortlisted. */
@@ -339,6 +425,7 @@ class JobApplicationController extends Controller
         }
 
         return redirect()->route('jobApplication.showApplications', ['jobPostingId' => $jobPost->job_posting_id])
-            ->with('success', $applications->count() . ' applicant(s) shortlisted.');
+            ->with('success', $applications->count() . ' applicant(s) shortlisted.')
+            ->with('updatedApplicationIds', $applications->pluck('application_id')->values()->all());
     }
 }

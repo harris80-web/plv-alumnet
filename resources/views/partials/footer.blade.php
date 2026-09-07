@@ -33,7 +33,8 @@
                         class="{{ request()->routeIs('general.about') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                         ABOUT
                     </a>
-                    <a href="" class="hover:text-[#ED7A07]">EVENTS</a>
+                    <a href="{{ route('notices.guestEventsSeminars') }}" class="{{ request()->routeIs('notices.guestEventsSeminars') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">EVENTS</a>
+                    <a href="{{ route('notices.guestAnnouncements') }}" class="{{ request()->routeIs('notices.guestAnnouncements') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">ANNOUNCEMENTS</a>
                 </nav>
             </div>
 

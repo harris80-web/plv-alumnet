@@ -45,8 +45,7 @@
             letter-spacing: 0.04em;
             text-transform: uppercase;
             line-height: 1.3;
-            white-space: normal;
-            word-break: normal;
+            white-space: nowrap;
         }
 
         /* Body cells */
@@ -55,8 +54,7 @@
             text-align: center;
             vertical-align: middle;
             font-size: 10px;
-            word-break: break-word;
-            white-space: normal;
+            white-space: nowrap;
             line-height: 1.3;
         }
 
@@ -134,54 +132,68 @@
                         <p class="text-2xl font-bold text-slate-800">{{ $totalJobs }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Total Job Posts</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ ($filters['status'] ?? '') === 'pending' ? 'border-[#ED7A07] ring-2 ring-orange-200' : 'border-slate-200' }}"
+                        title="Click to {{ ($filters['status'] ?? '') === 'pending' ? 'clear this filter' : 'filter by Pending' }}"
+                        onclick="pvSearchNavigate('status', '{{ ($filters['status'] ?? '') === 'pending' ? '' : 'pending' }}', 'page')">
                         <p class="text-2xl font-bold text-[#ED7A07]">{{ $pendingCount }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Pending Approval</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ ($filters['status'] ?? '') === 'approved' ? 'border-green-500 ring-2 ring-green-200' : 'border-slate-200' }}"
+                        title="Click to {{ ($filters['status'] ?? '') === 'approved' ? 'clear this filter' : 'filter by Approved' }}"
+                        onclick="pvSearchNavigate('status', '{{ ($filters['status'] ?? '') === 'approved' ? '' : 'approved' }}', 'page')">
                         <p class="text-2xl font-bold text-green-500">{{ $approvedCount }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Approved Job Posts</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ ($filters['status'] ?? '') === 'declined' ? 'border-red-500 ring-2 ring-red-200' : 'border-slate-200' }}"
+                        title="Click to {{ ($filters['status'] ?? '') === 'declined' ? 'clear this filter' : 'filter by Declined' }}"
+                        onclick="pvSearchNavigate('status', '{{ ($filters['status'] ?? '') === 'declined' ? '' : 'declined' }}', 'page')">
+                        <p class="text-2xl font-bold text-red-500">{{ $declinedCount }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Declined Job Posts</p>
                     </div>
                 </div>
 
-                <!-- ══ PENDING TABLE ══ -->
-                <p class="text-xs font-bold text-[#C73D1A] mb-3">Job Posts pending for approval:</p>
-                <div id="jobPendingTableWrap" class="bg-white rounded-lg shadow-sm border border-slate-200 mb-6 w-full">
-                    @include('partials.job-management.pending-table')
-                </div>
-
-                <!-- Search / Filter / Export Row -->
-                <div class="flex items-center mb-4 gap-3">
+                <!-- ══ JOB POSTS TABLE (Pending + Approved combined, filterable by status) ══ -->
+                <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden w-full">
+                  <!-- Search / Status Filter / Filter Sidebar / Export Row -->
+                  <form method="GET" action="{{ route('jobPosting.jobManagement') }}" class="flex flex-col md:flex-row md:items-center gap-3 p-4 border-b border-slate-100">
                     <div class="relative flex-1 max-w-md">
                         <i data-lucide="search"
                             class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
                         <input id="search-input" type="text" placeholder="Search by Job Title or Company Name"
+                            onkeydown="if(event.key==='Enter'){event.preventDefault();}"
                             class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A] transition-all">
                     </div>
-                    <button onclick="toggleSidebar('filter-sidebar')"
+                    <div class="relative shrink-0 w-44">
+                        <select name="status" onchange="this.form.submit()"
+                            class="w-full pl-4 pr-8 py-2 bg-white border border-slate-200 rounded-full text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A] transition-all">
+                            <option value="">All Statuses</option>
+                            <option value="pending" {{ ($filters['status'] ?? '') === 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="approved" {{ ($filters['status'] ?? '') === 'approved' ? 'selected' : '' }}>Approved</option>
+                            <option value="declined" {{ ($filters['status'] ?? '') === 'declined' ? 'selected' : '' }}>Declined</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                    </div>
+                    <button type="button" onclick="toggleSidebar('filter-sidebar')"
                         class="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:border-[#C73D1A] transition-all shrink-0">
                         <i data-lucide="filter" class="w-4 h-4"></i>
                     </button>
-                    <div class="ml-auto flex items-center gap-3">
-                        <button
+                    <div class="md:ml-auto flex items-center gap-3">
+                        <button type="button"
                             onclick="openPostJobModal()"
                             class="flex items-center gap-2 bg-[#1D264F] hover:bg-blue-900 text-white px-4 py-2 rounded-lg font-bold text-xs tracking-widest shadow-lg transition-all">
                             <i class="fas fa-plus text-xs"></i>
                             <span>POST A NEW JOB</span>
                         </button>
                     </div>
-                    <button onclick="exportCSV()"
+                    <button type="button" onclick="exportCSV()"
                         class="shrink-0 flex items-center gap-2 px-5 py-2 bg-[#C73D1A] hover:bg-[#a83215] text-white text-xs font-bold rounded-lg transition-all uppercase">
                         <i data-lucide="download" class="w-4 h-4"></i> EXPORT CSV
                     </button>
-                </div>
+                  </form>
 
-                <!-- ══ ALL JOBS TABLE ══ -->
-                <div id="jobApprovedTableWrap" class="bg-white rounded-lg shadow-sm border border-slate-200 w-full">
-                    @include('partials.job-management.approved-table')
+                  <div id="jobManagementTableWrap">
+                    @include('partials.job-management.jobs-table')
+                  </div>
                 </div>
 
             </div><!-- end overflow-y-auto -->
@@ -229,6 +241,7 @@
     </div>
 
     @include('partials.confirm-modal')
+    @include('partials.table-scroll-fix')
 
     <!-- Sidebar Overlay -->
     <div id="sidebar-overlay" onclick="toggleSidebar('filter-sidebar')"
@@ -689,6 +702,17 @@
             lucide.createIcons();
             initMenuButtons();
             document.getElementById('search-input').addEventListener('input', applyFilters);
+
+            // Deep-link from a notification (?job=123) — open that job's
+            // View modal automatically if it's on the currently-rendered
+            // page of either table. Silently no-ops if it's on a page the
+            // pagination hasn't loaded (same tradeoff as the Notices deep
+            // link on eventsSeminars.blade.php).
+            const openJobId = new URLSearchParams(window.location.search).get('job');
+            if (openJobId) {
+                const btn = document.querySelector('[data-job-id="' + openJobId + '"]');
+                if (btn) btn.click();
+            }
         });
 
         //POST A NEW JOB MODAL
@@ -819,39 +843,10 @@
            Swaps just one table's wrapper innerHTML on a page-link click
            instead of letting the link do a normal full-page navigation —
            the rest of the page (scroll position, the other table, filters)
-           never moves. Re-binds pagination links on the freshly-fetched
-           markup too, since those are new DOM nodes with no listeners of
-           their own. Same pattern as userManagement.blade.php's employer
-           tables. */
-        function initAjaxTablePagination(wrapId, pageParam, fetchUrl, reinit) {
-            const wrap = document.getElementById(wrapId);
-            if (!wrap) return;
-
-            function bind() {
-                wrap.querySelectorAll('nav[aria-label="Pagination"] a[href]').forEach(function (link) {
-                    link.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        const page = new URL(this.href).searchParams.get(pageParam) || 1;
-                        fetch(fetchUrl + '?' + pageParam + '=' + page, {
-                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                        })
-                            .then(function (r) { return r.text(); })
-                            .then(function (html) {
-                                wrap.innerHTML = html;
-                                if (window.lucide) lucide.createIcons();
-                                initMenuButtons();
-                                if (reinit) reinit();
-                                bind();
-                            });
-                    });
-                });
-            }
-
-            bind();
-        }
-
-        initAjaxTablePagination('jobPendingTableWrap', 'pendingPage', "{{ route('jobPosting.pendingFragment') }}");
-        initAjaxTablePagination('jobApprovedTableWrap', 'approvedPage', "{{ route('jobPosting.approvedFragment') }}", applyFilters);
+           never moves. Pagination itself is now handled by the
+           table-pagination-bar partial embedded in each fragment (ajax
+           mode) — it's event-delegated so it keeps working after a swap
+           without this needing to bind()/rebind() by hand. */
 
         function toggleSidebar(id) {
             const sidebar = document.getElementById(id);
@@ -983,6 +978,7 @@
                 <p><strong>Industry:</strong> ${data.industry ?? 'N/A'}</p>
                 <p><strong>Closing Date:</strong> ${data.closing}</p>
                 <p><strong>Status:</strong> <span class="px-2 py-1 rounded-full border text-[9px] font-bold ${statusClass}"> ${data.status.toUpperCase()}</span></p>
+                ${data.status === 'Declined' ? `<p><strong>Decline Reason:</strong> ${data.declineReason ?? 'N/A'}</p>` : ''}
                 <div><strong>Description:</strong></div>
                 <div class="job-description-content">${data.description ?? 'N/A'}</div>
             </div>`;
@@ -1003,6 +999,11 @@
                     closeViewModal();
                     openDeclineNotesModal(jobId, data.title);
                 };
+            } else if (data.status === 'Declined') {
+                // View-only — the job's gone, there's nothing left to approve/decline/delete.
+                approveBtn.classList.add('hidden');
+                declineBtn.classList.add('hidden');
+                deleteBtn.classList.add('hidden');
             } else {
                 approveBtn.classList.add('hidden');
                 declineBtn.classList.add('hidden');

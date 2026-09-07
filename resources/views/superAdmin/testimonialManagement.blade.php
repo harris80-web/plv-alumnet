@@ -107,11 +107,15 @@
                         <p class="text-2xl font-bold text-slate-800">{{ $total_testimonials }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Total Testimonials</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        title="Click to filter by Published"
+                        onclick="setFilter('status','Published','status-label','status-dropdown')">
                         <p class="text-2xl font-bold text-green-500">{{ $published_count }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Published</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        title="Click to filter by Hidden"
+                        onclick="setFilter('status','Hidden','status-label','status-dropdown')">
                         <p class="text-2xl font-bold text-slate-400">{{ $hidden_count }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Hidden</p>
                     </div>
@@ -121,8 +125,10 @@
                     </div>
                 </div>
 
+                <!-- Table -->
+                <div class="bg-white rounded-lg shadow-sm border border-slate-200">
                 <!-- Search / Filter Row -->
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex justify-between items-center p-4 border-b border-slate-100">
                     <!-- Left: Search + Filters -->
                     <div class="flex gap-2 items-center">
                         <!-- Search -->
@@ -277,21 +283,23 @@
 
                 </div><!-- end Search / Filter Row -->
 
-                <!-- Table -->
-                <div class="bg-white rounded-lg shadow-sm border border-slate-200">
-                    <table class="w-full text-left text-[10px]">
+                  <div class="overflow-hidden rounded-b-lg">
+                  <div class="overflow-x-auto table-scroll">
+                    <table class="w-full text-left text-[10px] whitespace-nowrap">
                         <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center">
                             <tr>
                                 <th class="px-4 py-4 font-semibold border-r border-slate-700">
                                     <input type="checkbox" id="select-all" class="bulk-checkbox">
                                 </th>
-                                <th class="px-4 py-4 font-semibold border-r border-slate-700">Name</th>
-                                <th class="px-4 py-4 font-semibold border-r border-slate-700">Program <i
-                                        data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
-                                <th class="px-4 py-4 font-semibold border-r border-slate-700">Batch <i
-                                        data-lucide="chevron-down" class="inline w-3 h-3 ml-1 opacity-50"></i></th>
+                                <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700 text-left">Program <i
+                                        data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
+                                <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">College <i
+                                        data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
+                                <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Batch <i
+                                        data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
                                 <th class="px-4 py-4 font-semibold border-r border-slate-700">Message</th>
-                                <th class="px-4 py-4 font-semibold border-r border-slate-700">Status</th>
+                                <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Status <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                 <th class="px-4 py-4 font-semibold text-center">Action</th>
                             </tr>
                         </thead>
@@ -309,6 +317,7 @@
                                 <tr class="hover:bg-slate-50/80 transition-colors text-center"
                                     data-id="{{ $t->testimonial_id }}" data-name="{{ $t->alumnus->user->user_first_name }}"
                                     data-program="{{ $t->alumnus->program->program_name ?? '' }}"
+                                    data-college="{{ $t->alumnus->program?->collegeName() ?? '' }}"
                                     data-batch="{{ optional($t->alumnus->alumnus_batch)->format('Y') }}" data-status="{{ $statusLabel }}"
                                     data-message="{{ $t->testimonial_body }}">
                                     <td class="px-4 py-3 border-r border-slate-100">
@@ -317,8 +326,10 @@
                                     </td>
                                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
                                         {{ $t->alumnus->user->user_first_name }}</td>
-                                    <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                    <td class="px-4 py-3 font-medium text-black border-r border-slate-100 text-left">
                                         {{ $t->alumnus->program->program_name ?? '—' }}</td>
+                                    <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
+                                        {{ $t->alumnus->program?->collegeName() ?? '—' }}</td>
                                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
                                         {{ optional($t->alumnus->alumnus_batch)->format('Y') ?: '—' }}</td>
                                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100 text-left">
@@ -369,7 +380,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="py-12 text-center text-slate-400 text-sm">No testimonials found.
+                                    <td colspan="8" class="py-12 text-center text-slate-400 text-sm">No testimonials found.
                                     </td>
                                 </tr>
                             @endforelse
@@ -377,6 +388,16 @@
                     </table>
                     <div id="empty-state" class="hidden text-center py-12 text-slate-400 text-sm">No testimonials found.
                     </div>
+                  </div>
+                  <div class="px-4 py-3">
+                    @include('partials.table-pagination-bar', [
+                        'id' => 'testimonialsTable',
+                        'mode' => 'client',
+                        'rowSelector' => '#testimonials-tbody tr[data-id]',
+                        'totalItems' => $testimonials->count(),
+                    ])
+                  </div>
+                  </div>
                 </div><!-- end Table -->
 
             </div><!-- end flex-1 overflow-y-auto p-8 -->
@@ -416,6 +437,10 @@
                     <span id="view-program" class="text-slate-800 font-medium"></span>
                 </div>
                 <div class="flex items-center gap-2">
+                    <span class="font-bold text-[#C73D1A] w-24 shrink-0">College:</span>
+                    <span id="view-college" class="text-slate-800 font-medium"></span>
+                </div>
+                <div class="flex items-center gap-2">
                     <span class="font-bold text-[#C73D1A] w-24 shrink-0">Batch:</span>
                     <span id="view-batch" class="text-slate-800 font-medium"></span>
                 </div>
@@ -440,6 +465,8 @@
     </div>
 
     @include('partials.confirm-modal')
+    @include('partials.action-dropdown-fix')
+    @include('partials.table-scroll-fix')
 
 
     <script>
@@ -447,6 +474,7 @@
     'id' => $t->testimonial_id,
     'name' => $t->alumnus->user->user_first_name,
     'program' => $t->alumnus->program->program_name ?? '—',
+    'college' => $t->alumnus->program?->collegeName() ?? '—',
     'batch' => optional($t->alumnus->alumnus_batch)->format('Y') ?: '—',
     'message' => $t->testimonial_body,
     'status' => $t->testimonial_post ? 'Published' : 'Hidden',
@@ -496,6 +524,7 @@
                 if (show) visible++;
             });
             document.getElementById('empty-state').classList.toggle('hidden', visible > 0);
+            document.dispatchEvent(new CustomEvent('pv:filtered'));
         }
 
         document.addEventListener('click', closeAllFilterDropdowns);
@@ -513,6 +542,7 @@
                         if (m !== dropdown) m.classList.add('hidden');
                     });
                     dropdown.classList.toggle('hidden');
+                    if (!dropdown.classList.contains('hidden')) positionFixedDropdown(newBtn, dropdown);
                 });
             });
         }
@@ -524,6 +554,15 @@
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             initDropdowns();
+
+            // Deep-link from a notification (?testimonial=123) — open that
+            // testimonial's view modal directly. This page loads every
+            // testimonial unpaginated, so (unlike the AJAX-paginated admin
+            // pages) there's no "not on this page" case to worry about.
+            const openTestimonialId = new URLSearchParams(window.location.search).get('testimonial');
+            if (openTestimonialId && testimonialData.find(t => t.id == openTestimonialId)) {
+                openView(openTestimonialId);
+            }
         });
 
         /* ── Checkbox ─────────────────────────────────────── */
@@ -543,6 +582,7 @@
             const t = testimonialData.find(x => x.id == id);
             document.getElementById('view-name').textContent = t.name;
             document.getElementById('view-program').textContent = t.program;
+            document.getElementById('view-college').textContent = t.college;
             document.getElementById('view-batch').textContent = t.batch;
             document.getElementById('view-message').textContent = '"' + t.message + '"';
 

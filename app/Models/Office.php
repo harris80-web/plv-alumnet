@@ -28,7 +28,23 @@ class Office extends Model
         'messaging' => 'Chatbot & Messaging Management',
         'testimonials' => 'Testimonial Management',
         'faqs' => 'Manage FAQs',
+        'reports' => 'Alumni & Company Reports',
     ];
+
+    /** Lucide icon name for each PERMISSIONS key — used by the Feature Access checklists. */
+    public static function permissionIcons(): array
+    {
+        return [
+            'user_management' => 'users',
+            'job_management' => 'briefcase',
+            'alumni_id_management' => 'id-card',
+            'notices' => 'calendar',
+            'messaging' => 'message-circle',
+            'testimonials' => 'quote',
+            'faqs' => 'circle-help',
+            'reports' => 'bar-chart-3',
+        ];
+    }
 
     protected $fillable = [
         'user_id',

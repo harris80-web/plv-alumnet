@@ -61,33 +61,35 @@
                 </div>
             </div>
 
-            <div class="mt-6 flex items-center gap-6">
-                <div class="flex items-center gap-2 text-green-600">
-                    <i class="fas fa-thumbs-up text-xl"></i>
-                    <span class="text-2xl font-bold">{{ $upvotes }}</span>
-                    <span class="text-sm text-gray-400">Upvotes</span>
+            <div class="mt-6 flex items-center gap-6 flex-wrap">
+                @if ($ratingCount > 0)
+                <div class="flex items-center gap-2 text-[#ED7A07]">
+                    <div class="flex items-center gap-0.5 text-xl">
+                        @for ($i = 1; $i <= 5; $i++)
+                            <i class="fas fa-star {{ $i <= round($averageRating) ? '' : 'text-gray-300' }}"></i>
+                        @endfor
+                    </div>
+                    <span class="text-2xl font-bold text-[#0E0F3B]">{{ $averageRating }}</span>
+                    <span class="text-sm text-gray-400">({{ $ratingCount }} {{ \Illuminate\Support\Str::plural('rating', $ratingCount) }})</span>
                 </div>
-                <div class="flex items-center gap-2 text-red-600">
-                    <i class="fas fa-thumbs-down text-xl"></i>
-                    <span class="text-2xl font-bold">{{ $downvotes }}</span>
-                    <span class="text-sm text-gray-400">Downvotes</span>
-                </div>
+                @else
+                <p class="text-sm text-gray-400">No ratings yet.</p>
+                @endif
             </div>
         </div>
 
-        <div class="flex items-center gap-2 mb-6">
+        {{-- Item: filter by star count, not vote type — a rating is what a review is attached to now. --}}
+        <div class="flex items-center gap-2 mb-6 flex-wrap">
             <a href="{{ route('employerReviews.index', ['employer' => $employer->user_id, 'back' => $backUrl]) }}"
                 class="px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wide transition-colors {{ !$filter ? 'bg-[#1D46A4] filter-active' : 'bg-white text-gray-500 border hover:border-[#1D46A4]' }}">
-                All ({{ $upvotes + $downvotes }})
+                All ({{ $ratingCount }})
             </a>
-            <a href="{{ route('employerReviews.index', ['employer' => $employer->user_id, 'vote' => 'upvote', 'back' => $backUrl]) }}"
-                class="px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wide transition-colors {{ $filter === 'upvote' ? 'bg-green-600 filter-active' : 'bg-white text-gray-500 border hover:border-green-500' }}">
-                <i class="fas fa-thumbs-up mr-1"></i> Upvotes ({{ $upvotes }})
+            @for ($star = 5; $star >= 1; $star--)
+            <a href="{{ route('employerReviews.index', ['employer' => $employer->user_id, 'rating' => $star, 'back' => $backUrl]) }}"
+                class="px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wide transition-colors inline-flex items-center gap-1 {{ $filter === $star ? 'bg-[#ED7A07] filter-active' : 'bg-white text-gray-500 border hover:border-[#ED7A07]' }}">
+                {{ $star }} <i class="fas fa-star"></i> ({{ $ratingBreakdown->get($star, 0) }})
             </a>
-            <a href="{{ route('employerReviews.index', ['employer' => $employer->user_id, 'vote' => 'downvote', 'back' => $backUrl]) }}"
-                class="px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wide transition-colors {{ $filter === 'downvote' ? 'bg-red-600 filter-active' : 'bg-white text-gray-500 border hover:border-red-500' }}">
-                <i class="fas fa-thumbs-down mr-1"></i> Downvotes ({{ $downvotes }})
-            </a>
+            @endfor
         </div>
 
         <div class="space-y-4">
@@ -102,15 +104,21 @@
                                 {{ $review->alumnus->user->user_first_name ?? 'Alumnus' }} {{ $review->alumnus->user->user_last_name ?? '' }}
                             </p>
                             <p class="text-xs text-gray-400">
-                                {{ $review->alumnus->program->program_name ?? 'PLV Alumnus' }} &middot; {{ $review->created_at->diffForHumans() }}
+                                {{ $review->alumnus->program->program_name ?? 'PLV Alumnus' }}
+                                @if ($review->alumnus->program?->collegeName())
+                                &middot; {{ $review->alumnus->program->collegeName() }}
+                                @endif
+                                &middot; {{ $review->created_at->diffForHumans() }}
                             </p>
                         </div>
                     </div>
-                    <span class="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full {{ $review->vote === 'upvote' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                        <i class="fas fa-thumbs-{{ $review->vote === 'upvote' ? 'up' : 'down' }}"></i>
-                        {{ ucfirst($review->vote) }}
+                    <span class="flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full bg-orange-100 text-[#C73D1A] shrink-0">
+                        @for ($i = 1; $i <= 5; $i++)
+                            <i class="fas fa-star {{ $i <= $review->rating ? '' : 'text-orange-200' }}"></i>
+                        @endfor
                     </span>
                 </div>
+                {{-- The star rating is what actually prompts a review now (see castCompanyRating()) — voting is a separate, independent signal not shown on this page. --}}
                 @if ($review->review_body)
                 <p class="text-sm text-gray-600 mt-4 leading-relaxed break-words whitespace-pre-line">{{ $review->review_body }}</p>
                 @endif

@@ -42,6 +42,7 @@
             font-weight: 600;
             letter-spacing: 0.04em;
             text-transform: uppercase;
+            white-space: nowrap;
         }
 
         .faqs-table tbody td {
@@ -49,7 +50,12 @@
             text-align: center;
             vertical-align: middle;
             font-size: 11px;
-            word-break: break-word;
+        }
+
+        /* Question/Answer stay wrapped (clamp-2) — nowrap only for the
+           other, naturally-short columns. */
+        .faqs-table tbody td:not(:has(.clamp-2)) {
+            white-space: nowrap;
         }
 
         .clamp-2 {
@@ -98,21 +104,24 @@
                         <p class="text-2xl font-bold text-slate-800">{{ $counts['total'] }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Total FAQs</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        title="Click to filter by Everyone" onclick="filterFaqsByRecipientTile('everyone')">
                         <p class="text-2xl font-bold text-green-600">{{ $counts['everyone'] }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Everyone</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        title="Click to filter by Alumni Only" onclick="filterFaqsByRecipientTile('alumni')">
                         <p class="text-2xl font-bold text-blue-600">{{ $counts['alumni'] }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Alumni Only</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        title="Click to filter by Employer Only" onclick="filterFaqsByRecipientTile('employer')">
                         <p class="text-2xl font-bold text-purple-600">{{ $counts['employer'] }}</p>
                         <p class="text-xs font-medium text-slate-500 mt-1">Employer Only</p>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-sm border border-slate-200 w-full">
+                <div class="bg-white rounded-lg shadow-sm border border-slate-200 w-full overflow-hidden">
 
                     <!-- TOOLBAR: search + bulk actions + add -->
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-b border-slate-100">
@@ -161,17 +170,17 @@
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto table-scroll">
                         <table class="faqs-table">
                             <thead class="bg-[#0E0F3B] text-white">
                                 <tr>
                                     <th class="border-r border-slate-700 w-10">
                                         <input type="checkbox" id="faqSelectAllCheckbox" class="bulk-checkbox" title="Select all">
                                     </th>
-                                    <th class="border-r border-slate-700">ID No.</th>
-                                    <th class="border-r border-slate-700" style="width: 26%;">Question</th>
+                                    <th data-sort class="border-r border-slate-700">ID No. <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                    <th data-sort class="border-r border-slate-700" style="width: 26%;">Question <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                     <th class="border-r border-slate-700" style="width: 34%;">Answer</th>
-                                    <th class="border-r border-slate-700">Recipient</th>
+                                    <th data-sort class="border-r border-slate-700">Recipient <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -238,6 +247,14 @@
                             </tbody>
                         </table>
                         <p id="faqNoSearchResults" class="hidden text-center text-gray-400 py-10 text-xs">No matching FAQs.</p>
+                    </div>
+                    <div class="px-4 py-3">
+                        @include('partials.table-pagination-bar', [
+                            'id' => 'faqsTable',
+                            'mode' => 'client',
+                            'rowSelector' => '#faqsTbody tr[data-search]',
+                            'totalItems' => $faqs->count(),
+                        ])
                     </div>
                 </div>
 
@@ -384,6 +401,8 @@
     </div>
 
     @include('partials.confirm-modal')
+    @include('partials.action-dropdown-fix')
+    @include('partials.table-scroll-fix')
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -405,6 +424,16 @@
                 if (match) visibleCount++;
             });
             document.getElementById('faqNoSearchResults').classList.toggle('hidden', visibleCount !== 0 || rows.length === 0);
+            document.dispatchEvent(new CustomEvent('pv:filtered'));
+        }
+
+        // Clicking a recipient stat tile sets the same dropdown the toolbar
+        // already uses and re-runs filterFaqRows() — clicking the tile for
+        // the currently-active recipient clears back to "All Recipients".
+        function filterFaqsByRecipientTile(recipient) {
+            const select = document.getElementById('faqRecipientFilter');
+            select.value = (select.value === recipient) ? '' : recipient;
+            filterFaqRows();
         }
 
         // ── 3-DOT ACTION DROPDOWN ──
@@ -412,7 +441,10 @@
             const dropdown = btn.nextElementSibling;
             const isHidden = dropdown.classList.contains('hidden');
             document.querySelectorAll('.action-dropdown').forEach(d => d.classList.add('hidden'));
-            if (isHidden) dropdown.classList.remove('hidden');
+            if (isHidden) {
+                dropdown.classList.remove('hidden');
+                positionFixedDropdown(btn, dropdown);
+            }
         }
 
         document.addEventListener('click', function (e) {

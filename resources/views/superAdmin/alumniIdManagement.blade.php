@@ -42,7 +42,7 @@
             font-weight: 600;
             letter-spacing: 0.04em;
             text-transform: uppercase;
-            white-space: normal;
+            white-space: nowrap;
         }
 
         .ids-table tbody td {
@@ -50,7 +50,7 @@
             text-align: center;
             vertical-align: middle;
             font-size: 11px;
-            word-break: break-word;
+            white-space: nowrap;
         }
 
         .status-choice {
@@ -65,14 +65,20 @@
             color: white;
         }
 
+        /* Same tab style as superAdmin/userManagement.blade.php's .tab-btn */
         .page-tab-btn {
-            border-bottom: 3px solid transparent;
+            border-bottom: 2px solid transparent;
             color: #64748b;
         }
 
         .page-tab-btn.active {
-            border-color: #C73D1A;
-            color: #0E0F3B;
+            border-bottom: 2px solid #ea580c;
+            color: #ea580c;
+            font-weight: 600;
+        }
+
+        .page-tab-btn:hover:not(.active) {
+            color: #ea580c;
         }
 
         .modal-tab-btn {
@@ -105,47 +111,47 @@
         @include('partials.super-admin-side-bar')
         <main class="flex-1 flex flex-col overflow-hidden min-w-0">
             @include('partials.super-admin-header')
+
+            <!-- PAGE TABS -->
+            <div class="bg-white px-8 flex gap-8 border-b border-slate-200 shrink-0 shadow-md">
+                <button type="button" onclick="switchPageTab('id')" id="pageTabBtn-id" class="page-tab-btn active py-3 px-2 flex items-center gap-2 text-sm transition-colors">
+                    <i data-lucide="id-card" class="w-4 h-4"></i> Alumni ID
+                </button>
+                <button type="button" onclick="switchPageTab('yearbook')" id="pageTabBtn-yearbook" class="page-tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors">
+                    <i data-lucide="book-open" class="w-4 h-4"></i> Alumni Yearbook
+                </button>
+            </div>
+
             <div class="flex-1 overflow-y-auto p-6">
 
                 @include('partials.success')
 
-                <!-- PAGE TABS -->
-                <div class="flex gap-6 border-b border-slate-200 mb-6">
-                    <button type="button" onclick="switchPageTab('id')" id="pageTabBtn-id" class="page-tab-btn active px-1 pb-3 text-sm font-bold uppercase tracking-wide transition-colors">
-                        Alumni ID
-                    </button>
-                    <button type="button" onclick="switchPageTab('yearbook')" id="pageTabBtn-yearbook" class="page-tab-btn px-1 pb-3 text-sm font-bold uppercase tracking-wide transition-colors">
-                        Alumni Yearbook
-                    </button>
-                </div>
-
                 <!-- ══════════════════════ ALUMNI ID TAB ══════════════════════ -->
                 <div id="pageTab-id">
 
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-slate-800">{{ $statusCounts['total'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total Alumni IDs</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                            title="Click to filter by Pending" onclick="filterAlumniIdByStatusTile('pending')">
                             <p class="text-2xl font-bold text-amber-500">{{ $statusCounts['pending'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Pending</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-blue-500">{{ $statusCounts['under_review'] }}</p>
-                            <p class="text-xs font-medium text-slate-500 mt-1">Under Review</p>
-                        </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                            title="Click to filter by Ready to Claim" onclick="filterAlumniIdByStatusTile('ready_to_claim')">
                             <p class="text-2xl font-bold text-purple-500">{{ $statusCounts['ready_to_claim'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Ready to Claim</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                            title="Click to filter by Claimed" onclick="filterAlumniIdByStatusTile('claimed')">
                             <p class="text-2xl font-bold text-green-500">{{ $statusCounts['claimed'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Claimed</p>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-lg shadow-sm border border-slate-200 w-full">
+                    <div class="bg-white rounded-lg shadow-sm border border-slate-200 w-full overflow-hidden">
 
                         <!-- TOOLBAR: search + bulk actions -->
                         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-b border-slate-100">
@@ -187,11 +193,12 @@
                                         <th class="border-r border-slate-700 w-10">
                                             <input type="checkbox" id="selectAllCheckbox" class="bulk-checkbox" title="Select all">
                                         </th>
-                                        <th class="border-r border-slate-700">Reference No.</th>
-                                        <th class="border-r border-slate-700">Student Full Name</th>
-                                        <th class="border-r border-slate-700">Program</th>
-                                        <th class="border-r border-slate-700">Date Submitted</th>
-                                        <th class="border-r border-slate-700">ID Status</th>
+                                        <th data-sort class="border-r border-slate-700">Reference No. <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Student Full Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Program <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">College <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Date Submitted <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">ID Status <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -208,6 +215,7 @@
                                             'reference' => $referenceNo,
                                             'name' => $fullName,
                                             'program' => $alumniIdRecord->alumnus->program->program_name ?? 'N/A',
+                                            'college' => $alumniIdRecord->alumnus->program?->collegeName() ?? 'N/A',
                                             'submitted' => $alumniIdRecord->created_at->format('M d, Y h:i A'),
                                             'lastUpdate' => optional($alumniIdRecord->status_updated_at)->format('M d, Y h:i A') ?? 'Never',
                                             'updatedBy' => $updatedByName,
@@ -224,6 +232,7 @@
                                         <td class="border-r border-slate-100 font-semibold text-[#0E0F3B]">{{ $referenceNo }}</td>
                                         <td class="border-r border-slate-100">{{ $fullName }}</td>
                                         <td class="border-r border-slate-100">{{ $alumniIdRecord->alumnus->program->program_name ?? 'N/A' }}</td>
+                                        <td class="border-r border-slate-100">{{ $alumniIdRecord->alumnus->program?->collegeName() ?? 'N/A' }}</td>
                                         <td class="border-r border-slate-100">{{ $alumniIdRecord->created_at->format('M d, Y h:i A') }}</td>
                                         <td class="border-r border-slate-100">
                                             <span class="px-2 py-1 rounded-full text-[9px] font-bold uppercase {{ $alumniIdRecord->badgeClass() }}">
@@ -254,7 +263,7 @@
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="7" class="py-16 text-center text-gray-400">
+                                        <td colspan="8" class="py-16 text-center text-gray-400">
                                             <i class="fas fa-id-card text-4xl mb-3 block"></i>
                                             No alumni ID records yet.
                                         </td>
@@ -264,40 +273,43 @@
                             </table>
                             <p id="noSearchResults" class="hidden text-center text-gray-400 py-10 text-xs">No matching alumni IDs.</p>
                         </div>
+                        <div class="px-4 py-3">
+                            @include('partials.table-pagination-bar', [
+                                'id' => 'alumniIdTable',
+                                'mode' => 'client',
+                                'rowSelector' => '#alumniIdsTbody tr[data-search]',
+                                'totalItems' => $alumniIds->count(),
+                            ])
+                        </div>
                     </div>
                 </div>
 
                 <!-- ══════════════════════ ALUMNI YEARBOOK TAB ══════════════════════ -->
                 <div id="pageTab-yearbook" class="hidden">
 
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                             <p class="text-2xl font-bold text-slate-800">{{ $yearbookCounts['total'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total Yearbooks</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                            title="Click to filter by Pending" onclick="filterYearbookByStatusTile('pending')">
                             <p class="text-2xl font-bold text-amber-500">{{ $yearbookCounts['pending'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Pending</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-cyan-500">{{ $yearbookCounts['on_hand'] }}</p>
-                            <p class="text-xs font-medium text-slate-500 mt-1">On Hand</p>
-                        </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                            title="Click to filter by Ready to Claim" onclick="filterYearbookByStatusTile('ready_to_claim')">
                             <p class="text-2xl font-bold text-purple-500">{{ $yearbookCounts['ready_to_claim'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Ready to Claim</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                            title="Click to filter by Claimed" onclick="filterYearbookByStatusTile('claimed')">
                             <p class="text-2xl font-bold text-green-500">{{ $yearbookCounts['claimed'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Claimed</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-400">{{ $yearbookCounts['not_yet_claimed'] }}</p>
-                            <p class="text-xs font-medium text-slate-500 mt-1">Not Yet Claimed</p>
-                        </div>
                     </div>
 
-                    <div class="bg-white rounded-lg shadow-sm border border-slate-200 w-full">
+                    <div class="bg-white rounded-lg shadow-sm border border-slate-200 w-full overflow-hidden">
 
                         <!-- TOOLBAR: search + bulk edit -->
                         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-b border-slate-100">
@@ -330,13 +342,13 @@
                                         <th class="border-r border-slate-700 w-10">
                                             <input type="checkbox" id="yearbookSelectAllCheckbox" class="bulk-checkbox" title="Select all">
                                         </th>
-                                        <th class="border-r border-slate-700">Reference No.</th>
-                                        <th class="border-r border-slate-700">Full Name</th>
-                                        <th class="border-r border-slate-700">Batch</th>
-                                        <th class="border-r border-slate-700">Distribution Status</th>
-                                        <th class="border-r border-slate-700">Distribution Schedule</th>
-                                        <th class="border-r border-slate-700">Distribution Location</th>
-                                        <th class="border-r border-slate-700">Claiming Status</th>
+                                        <th data-sort class="border-r border-slate-700">Reference No. <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Full Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Batch <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Distribution Status <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Distribution Schedule <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Distribution Location <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort class="border-r border-slate-700">Claiming Status <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -403,6 +415,14 @@
                                 </tbody>
                             </table>
                             <p id="yearbookNoSearchResults" class="hidden text-center text-gray-400 py-10 text-xs">No matching yearbook records.</p>
+                        </div>
+                        <div class="px-4 py-3">
+                            @include('partials.table-pagination-bar', [
+                                'id' => 'yearbookTable',
+                                'mode' => 'client',
+                                'rowSelector' => '#yearbooksTbody tr[data-search]',
+                                'totalItems' => $yearbooks->count(),
+                            ])
                         </div>
                     </div>
                 </div>
@@ -544,6 +564,10 @@
                     <div>
                         <p class="text-[10px] font-bold text-slate-400 uppercase">Program</p>
                         <p id="aim-program" class="font-semibold"></p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">College</p>
+                        <p id="aim-college" class="font-semibold"></p>
                     </div>
                     <div>
                         <p class="text-[10px] font-bold text-slate-400 uppercase">Date Submitted</p>
@@ -753,6 +777,18 @@
                 if (match) visibleCount++;
             });
             document.getElementById('noSearchResults').classList.toggle('hidden', visibleCount !== 0 || rows.length === 0);
+            document.dispatchEvent(new CustomEvent('pv:filtered'));
+        }
+
+        // Clicking a status stat tile toggles that single status on/off
+        // (unchecking any other status checkbox first, since these are
+        // mutually exclusive stages) and re-runs the existing filter.
+        function filterAlumniIdByStatusTile(status) {
+            const boxes = document.querySelectorAll('.aid-filter-status');
+            const target = [...boxes].find(cb => cb.value === status);
+            const alreadyOnlyThis = target.checked && [...boxes].every(cb => cb === target || !cb.checked);
+            boxes.forEach(cb => cb.checked = (cb === target) && !alreadyOnlyThis);
+            filterAlumniIdRows();
         }
 
         // ── ALUMNI ID: BULK SELECT ──
@@ -801,19 +837,18 @@
             document.getElementById('aim-reference').textContent = data.reference;
             document.getElementById('aim-name').textContent = data.name;
             document.getElementById('aim-program').textContent = data.program;
+            document.getElementById('aim-college').textContent = data.college;
             document.getElementById('aim-submitted').textContent = data.submitted;
             document.getElementById('aim-lastUpdate').textContent = data.lastUpdate;
             document.getElementById('aim-updatedBy').textContent = data.updatedBy;
 
             const statusClasses = {
                 'pending': 'bg-amber-100 text-amber-700',
-                'under_review': 'bg-blue-100 text-blue-700',
                 'ready_to_claim': 'bg-purple-100 text-purple-700',
                 'claimed': 'bg-green-100 text-green-700',
             };
             const statusLabels = {
                 'pending': 'Pending',
-                'under_review': 'Under Review',
                 'ready_to_claim': 'Ready to Claim',
                 'claimed': 'Claimed',
             };
@@ -862,6 +897,16 @@
                 if (match) visibleCount++;
             });
             document.getElementById('yearbookNoSearchResults').classList.toggle('hidden', visibleCount !== 0 || rows.length === 0);
+            document.dispatchEvent(new CustomEvent('pv:filtered'));
+        }
+
+        // Same toggle-on/off-a-single-status behavior as filterAlumniIdByStatusTile() above, for the Yearbook tab's claiming-status tiles.
+        function filterYearbookByStatusTile(status) {
+            const boxes = document.querySelectorAll('.yb-filter-claiming');
+            const target = [...boxes].find(cb => cb.value === status);
+            const alreadyOnlyThis = target.checked && [...boxes].every(cb => cb === target || !cb.checked);
+            boxes.forEach(cb => cb.checked = (cb === target) && !alreadyOnlyThis);
+            filterYearbookRows();
         }
 
         // ── ALUMNI YEARBOOK: BULK SELECT ──
@@ -903,13 +948,11 @@
         }
 
         const claimingStatusLabels = {
-            'pending': 'Pending', 'on_hand': 'On Hand', 'ready_to_claim': 'Ready to Claim',
-            'claimed': 'Claimed', 'not_yet_claimed': 'Not Yet Claimed',
+            'pending': 'Pending', 'ready_to_claim': 'Ready to Claim', 'claimed': 'Claimed',
         };
         const claimingStatusClasses = {
-            'pending': 'bg-amber-100 text-amber-700', 'on_hand': 'bg-cyan-100 text-cyan-700',
+            'pending': 'bg-amber-100 text-amber-700',
             'ready_to_claim': 'bg-purple-100 text-purple-700', 'claimed': 'bg-green-100 text-green-700',
-            'not_yet_claimed': 'bg-slate-100 text-slate-500',
         };
 
         function openYearbookModal(id, data) {

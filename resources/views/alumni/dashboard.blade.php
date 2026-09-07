@@ -73,6 +73,7 @@
         </div>
     </section>
     @include('partials.success')
+    @include('partials.error-toast')
     <section id="status-section" class="py-12 px-6 max-w-6xl mx-auto">
         <h2 class="text-4xl font-bold mb-10">
             <span class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Alumni Dashboard</span>
@@ -84,7 +85,6 @@
                 $alumniIdRecord = Auth::user()->alumnus->alumniId ?? null;
                 $alumniIdCardConfig = [
                     'pending' => ['icon' => 'fa-clock', 'title' => 'Pending Submission', 'desc' => 'Your Alumni ID request has been submitted and is waiting to be processed.'],
-                    'under_review' => ['icon' => 'fa-magnifying-glass', 'title' => 'Under Review', 'desc' => 'Your Alumni ID is currently under review by the Alumni Office.'],
                     'ready_to_claim' => ['icon' => 'fa-bell', 'title' => 'Ready to Claim', 'desc' => 'Your Alumni ID is ready! Visit the Alumni Office to claim it.'],
                     'claimed' => ['icon' => 'fa-check', 'title' => 'Alumni ID Claimed', 'desc' => 'Your Alumni ID has been claimed.'],
                 ];
@@ -117,7 +117,7 @@
                     <button type="button"
                         onclick="openAnimatedModal(document.getElementById('alumniIdStatusModal'), document.getElementById('alumniIdStatusModalPanel'))"
                         class="px-8 py-2 rounded-md border-2 border-[#0E0F3B] text-[#0E0F3B] font-bold hover:bg-[#0E0F3B] hover:text-white transition-colors duration-300 uppercase text-sm tracking-widest">
-                        View Status
+                        View Details
                     </button>
                 </div>
             </div>
@@ -126,20 +126,14 @@
                 $yearbookRecord = Auth::user()->alumnus->yearbook ?? null;
                 $yearbookCardConfig = [
                     'pending' => ['title' => 'Pending', 'desc' => 'Your yearbook request is being processed.'],
-                    'on_hand' => ['title' => 'On Hand', 'desc' => 'Your yearbook has arrived at the Alumni Office and is being prepared for release.'],
                     'ready_to_claim' => ['title' => 'Ready to Claim', 'desc' => 'Your yearbook is ready! See the distribution details below.'],
                     'claimed' => ['title' => 'Yearbook Claimed', 'desc' => 'You have claimed your yearbook.'],
-                    'not_yet_claimed' => ['title' => 'Not Yet Claimed', 'desc' => 'Your yearbook has not been claimed yet.'],
                 ];
                 $yearbookCard = $yearbookCardConfig[$yearbookRecord->claiming_status ?? null] ?? ['title' => 'No Record Found', 'desc' => 'No yearbook record found yet. Please contact the Alumni Office.'];
 
-                // 'not_yet_claimed' is a separate terminal state, not a stage
-                // further along than 'claimed' — kept out of the linear
-                // stepper and called out as its own message instead.
-                $yearbookSteps = ['pending', 'on_hand', 'ready_to_claim', 'claimed'];
+                $yearbookSteps = \App\Models\AlumniYearbook::CLAIMING_STATUSES;
                 $yearbookStepLabels = \App\Models\AlumniYearbook::claimingStatusLabels();
-                $yearbookIsNotYetClaimed = ($yearbookRecord->claiming_status ?? null) === 'not_yet_claimed';
-                $yearbookCurrentIndex = $yearbookRecord && !$yearbookIsNotYetClaimed
+                $yearbookCurrentIndex = $yearbookRecord
                     ? array_search($yearbookRecord->claiming_status, $yearbookSteps, true)
                     : -1;
             @endphp
@@ -166,7 +160,7 @@
                     <button type="button"
                         onclick="openAnimatedModal(document.getElementById('yearbookStatusModal'), document.getElementById('yearbookStatusModalPanel'))"
                         class="px-8 py-2 rounded-md border-2 border-[#0E0F3B] text-[#0E0F3B] font-bold hover:bg-[#0E0F3B] hover:text-white transition-colors duration-300 uppercase text-sm tracking-widest">
-                        View Status
+                        View Details
                     </button>
                 </div>
             </div>
@@ -206,7 +200,7 @@
                             @endif
                         @endforeach
                     </div>
-                    <div class="grid grid-cols-4 text-[10px] font-medium text-center mb-6">
+                    <div class="grid grid-cols-3 text-[10px] font-medium text-center mb-6">
                         @foreach($alumniIdSteps as $i => $stepKey)
                             <span class="{{ $i <= $alumniIdCurrentIndex ? 'text-[#C73D1A]' : 'text-gray-400' }}">{{ $alumniIdStepLabels[$stepKey] }}</span>
                         @endforeach
@@ -242,31 +236,25 @@
                     <p class="text-xs font-bold text-[#C73D1A] uppercase tracking-wide mb-1">Reference No.</p>
                     <p class="text-lg font-bold text-[#0E0F3B] mb-6">ALYB-{{ str_pad($yearbookRecord->id, 6, '0', STR_PAD_LEFT) }}</p>
 
-                    @if($yearbookIsNotYetClaimed)
-                        <div class="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 mb-6 text-sm text-slate-600">
-                            <i class="fa-solid fa-circle-exclamation mr-1"></i> {{ $yearbookCard['desc'] }}
-                        </div>
-                    @else
-                        <div class="flex items-center mb-2">
-                            @foreach($yearbookSteps as $i => $stepKey)
-                                <div class="w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold {{ $i <= $yearbookCurrentIndex ? 'bg-[#C73D1A] text-white' : 'bg-gray-200 text-gray-400' }}">
-                                    @if($i < $yearbookCurrentIndex)
-                                        <i class="fa-solid fa-check"></i>
-                                    @else
-                                        {{ $i + 1 }}
-                                    @endif
-                                </div>
-                                @if(!$loop->last)
-                                    <div class="flex-1 h-0.5 {{ $i < $yearbookCurrentIndex ? 'bg-[#C73D1A]' : 'bg-gray-200' }}"></div>
+                    <div class="flex items-center mb-2">
+                        @foreach($yearbookSteps as $i => $stepKey)
+                            <div class="w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold {{ $i <= $yearbookCurrentIndex ? 'bg-[#C73D1A] text-white' : 'bg-gray-200 text-gray-400' }}">
+                                @if($i < $yearbookCurrentIndex)
+                                    <i class="fa-solid fa-check"></i>
+                                @else
+                                    {{ $i + 1 }}
                                 @endif
-                            @endforeach
-                        </div>
-                        <div class="grid grid-cols-4 text-[10px] font-medium text-center mb-6">
-                            @foreach($yearbookSteps as $i => $stepKey)
-                                <span class="{{ $i <= $yearbookCurrentIndex ? 'text-[#C73D1A]' : 'text-gray-400' }}">{{ $yearbookStepLabels[$stepKey] }}</span>
-                            @endforeach
-                        </div>
-                    @endif
+                            </div>
+                            @if(!$loop->last)
+                                <div class="flex-1 h-0.5 {{ $i < $yearbookCurrentIndex ? 'bg-[#C73D1A]' : 'bg-gray-200' }}"></div>
+                            @endif
+                        @endforeach
+                    </div>
+                    <div class="grid grid-cols-3 text-[10px] font-medium text-center mb-6">
+                        @foreach($yearbookSteps as $i => $stepKey)
+                            <span class="{{ $i <= $yearbookCurrentIndex ? 'text-[#C73D1A]' : 'text-gray-400' }}">{{ $yearbookStepLabels[$stepKey] }}</span>
+                        @endforeach
+                    </div>
 
                     <p class="text-sm text-gray-600 mb-4">{{ $yearbookCard['desc'] }}</p>
 
@@ -331,27 +319,26 @@
                 $cardImage = $job->job_posting_image
                     ? asset('storage/' . $job->job_posting_image)
                     : 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=600q=80';
-                // Same $appliedJobs contract as partials.job-post-card, see AlumniDashboardController::index().
-                $hasApplied = $appliedJobs->has($job->job_posting_id);
+                // Same builder partials/job-post-card.blade.php uses — see
+                // App\Services\JobCardDataBuilder's own doc comment for why
+                // this is extract() and not a shared Blade partial include
+                // (a partial can't hand $cardData back to this scope).
+                // This is what actually makes "View Details" on a Job Match
+                // open the identical modal Job Board's own card opens —
+                // reviews/rating, working Apply, bookmark, posted-by,
+                // everything — instead of a stripped-down data-* set.
+                extract(\App\Services\JobCardDataBuilder::build($job, $user, $appliedJobs, $bookmarkedIds));
             @endphp
             <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 flex flex-col transition-transform hover:scale-[1.02]">
-                {{-- Same data-* contract + openJobModal() as partials.job-post-card
+                {{-- Same $cardData + openJobModal() as partials.job-post-card
                      (shared modal: partials.job-detail-modal) so clicking a
                      recommended job here opens the identical "View Details"
                      modal used on the job board. --}}
                 <div class="relative h-48 bg-cover bg-center group cursor-pointer" style="background-image:url('{{ $cardImage }}');"
                     role="button" tabindex="0" aria-label="View job details"
-                    data-title="{{ $job->job_posting_title }}"
-                    data-company="{{ $job->job_posting_company }}"
-                    data-address="{{ $job->job_posting_address }}"
-                    data-date="{{ $job->created_at->diffForHumans() }}"
-                    data-description="{{ $job->job_posting_description }}"
-                    data-type="{{ $job->job_posting_employment_type }}"
-                    data-setup="{{ $job->job_posting_setup }}"
-                    data-valid="{{ $job->job_closing_date }}"
-                    data-image="{{ $cardImage }}"
-                    data-programs="{{ $job->programs->pluck('program_name')->implode(', ') }}"
-                    data-industry="{{ $job->industry->industry_name ?? 'Not specified' }}"
+                    @foreach ($cardData as $attr => $value)
+                    data-{{ $attr }}="{{ $value }}"
+                    @endforeach
                     onclick="openJobModal(this)"
                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openJobModal(this);}">
                     <div class="absolute inset-0 bg-[#0E0F3B]/50 mix-blend-multiply"></div>
@@ -418,6 +405,12 @@
     </section>
 
     @include('partials.job-detail-modal')
+    {{-- Powers the star-rating/upvote-downvote widgets inside the modal
+         above (castCompanyVote()/castCompanyRating() are defined here) —
+         without this include those functions don't exist on this page at
+         all, so clicking a star or a vote button in a Job Match's detail
+         modal did nothing. --}}
+    @include('partials.company-review-modal')
 
     <section class="AlumniServices orange-gradient py-16 px-6 text-white text-center">
         <div class="max-w-4xl mx-auto">
@@ -472,7 +465,7 @@
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-id-card text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase mb-4 text-center">Membership Status</span>
+                    <span class="text-xs font-bold uppercase mb-4 text-center">Alumni ID &amp; Yearbook Claiming Status</span>
                     <a href="#status-section" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
                         View More
                     </a>
@@ -499,8 +492,8 @@
     <section class="py-16 px-6 max-w-6xl mx-auto relative">
         <div class="flex justify-between items-end mb-8 pl-4">
             <span class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent
-            text-4xl font-bold text-blue-900 uppercase tracking-tighter"> | Campus Events</span>
-            <a href="{{ route('notices.eventsSeminars') }}" class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent font-bold uppercase text-sm hover:border-b-2 border-[#C73D1A]">Go to Events ></a>
+            text-4xl font-bold  uppercase tracking-tighter"> | Campus Events</span>
+            <a href="{{ route('notices.eventsSeminars') }}" class="font-bold uppercase text-xs bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent hover:border-b-2 border-[#C73D1A] transition-colors">Go to Events ></a>
         </div>
 
         @if ($upcomingNotices->isEmpty())
@@ -543,8 +536,8 @@
     <section class="py-4 px-6 max-w-6xl mx-auto relative pb-16">
         <div class="flex justify-between items-end mb-8 pl-4">
             <span class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent
-            text-4xl font-bold text-blue-900 uppercase tracking-tighter"> | Announcements</span>
-            <a href="{{ route('notices.announcements') }}" class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent font-bold uppercase text-sm hover:border-b-2 border-[#C73D1A]">Go to Announcements ></a>
+            text-4xl font-bold uppercase tracking-tighter"> | Announcements</span>
+            <a href="{{ route('notices.announcements') }}" class="font-bold uppercase text-xs bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent hover:border-b-2 border-[#C73D1A] transition-colors">Go to Announcements ></a>
         </div>
 
         @if ($recentAnnouncements->isEmpty())
@@ -584,7 +577,7 @@
 
         <div class="relative w-full ">
 
-            <div class="relative z-10 bg-[#0E0F3B] p-8 rounded-2xl shadow-2xl w-full max-w-md mx-auto shadow-outer">
+            <div class="relative z-10 bg-[#0E0F3B] p-10 rounded-2xl shadow-2xl w-full max-w-xl mx-auto shadow-outer">
                 <form action="{{ route('testimonials.submit', Auth::user()) }}" method="POST" class="space-y-4">
                     @csrf
                     <!-- <div>
@@ -604,12 +597,20 @@
                     </div> -->
 
                     <div>
-                        <label for="testimonial_body" class="block text-white font-bold mb-1 text-sm">Message:</label>
-                        <textarea name="testimonial_body" rows="4" class="w-full p-2 rounded-lg bg-white border-b-2 border-[#ED7A07] focus:ring-2 focus:ring-[#C73D1A] outline-none resize-none"></textarea>
+                        <label for="testimonial_body" class="block text-white font-bold mb-2 text-base">Message:</label>
+                        <textarea id="testimonial_body" name="testimonial_body" rows="7" maxlength="1000"
+                            oninput="document.getElementById('testimonialCharCount').textContent = this.value.length"
+                            class="w-full p-3 text-base rounded-lg bg-white border-b-2 border-[#ED7A07] focus:ring-2 focus:ring-[#C73D1A] outline-none resize-none"></textarea>
+                        <p class="text-right text-[11px] text-gray-300 mt-1"><span id="testimonialCharCount">0</span>/1000</p>
                     </div>
 
+                    <p class="flex items-start gap-2 text-[11px] text-gray-300 leading-relaxed">
+                        <i class="fa-solid fa-circle-info mt-0.5 shrink-0"></i>
+                        <span>By submitting, you agree that your testimonial, name, and course/program will be publicly displayed on PLV-AlumNet, in accordance with our data privacy policy.</span>
+                    </p>
+
                     <div class="flex justify-center pt-2">
-                        <button type="submit" class="bg-[#ED7A07] text-white font-bold px-10 py-2 rounded-md hover:bg-orange-600 transition uppercase tracking-wider text-sm shadow-lg">
+                        <button type="submit" class="bg-[#ED7A07] text-white font-bold px-10 py-2.5 rounded-md hover:bg-orange-600 transition uppercase tracking-wider text-base shadow-lg">
                             Submit
                         </button>
                     </div>
@@ -618,11 +619,11 @@
         </div>
 
         <div class="w-full md:w-1/2 space-y-3 text-center flex flex-col items-center">
-            <h2 class="text-3xl md:text-4xl font-bold text-[#0E0F3B] leading-tight">
+            <h2 class="text-4xl md:text-5xl font-bold text-[#0E0F3B] leading-tight">
                 Share your experience
             </h2>
 
-            <p class="text-[#0E0F3B] font-medium text-sm text-center leading-relaxed max-w-md mx-auto">
+            <p class="text-[#0E0F3B] font-medium text-base text-center leading-relaxed max-w-md mx-auto">
                 Tell us about the connections, opportunities, or mentorship you've gained through the AlumNet. Your testimonial helps highlight the value of our network for all PLV graduates.
             </p>
         </div>

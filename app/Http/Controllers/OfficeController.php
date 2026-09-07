@@ -6,6 +6,7 @@ use App\Mail\DeleteAdminMail;
 use App\Models\Office;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -70,6 +71,12 @@ class OfficeController extends Controller
     }
     public function updateOfficeProfile(Request $request, $id)
     {
+        // Self-service only — same missing-ownership-check bug already found
+        // and fixed once for AlumnusController::updateAlumniProfile(). Only
+        // superAdmin/edit-profile.blade.php and superAdmin/profile.blade.php
+        // post here, always with the logged-in admin/super_admin's own id.
+        abort_unless(Auth::check() && Auth::id() == $id, 403);
+
         $validated = $request->validate([
             'user_first_name'    => 'required|string|max:255',
             'user_middle_name'   => 'nullable|string|max:255',

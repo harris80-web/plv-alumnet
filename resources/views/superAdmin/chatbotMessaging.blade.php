@@ -18,8 +18,10 @@
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .page-tab-btn { border-bottom: 3px solid transparent; color: #64748b; }
-        .page-tab-btn.active { border-color: #C73D1A; color: #0E0F3B; }
+        /* Same tab style as superAdmin/userManagement.blade.php's .tab-btn */
+        .page-tab-btn { border-bottom: 2px solid transparent; color: #64748b; }
+        .page-tab-btn.active { border-bottom: 2px solid #ea580c; color: #ea580c; font-weight: 600; }
+        .page-tab-btn:hover:not(.active) { color: #ea580c; }
 
         .bar-track { background: #e2e8f0; border-radius: 999px; overflow: hidden; height: 8px; }
         .bar-fill { height: 100%; border-radius: 999px; }
@@ -34,6 +36,25 @@
         #queueThreadModal>div, #flagDetailPanel { scrollbar-width: none; -ms-overflow-style: none; }
         #queueThreadModal>div::-webkit-scrollbar { display: none; }
 
+        /* Message threads need their own visible scrollbar — the page-wide
+           `* { scrollbar-width: none }` / `::-webkit-scrollbar { display: none }`
+           reset above hides every scrollbar by default, including these,
+           which is unusable once a thread has more than a screenful of
+           messages. Same thin-scrollbar look as .chat-scroll in
+           alumni/messages.blade.php. */
+        #qt-messages, #ht-messages {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+        #qt-messages::-webkit-scrollbar, #ht-messages::-webkit-scrollbar {
+            display: block;
+            width: 6px;
+        }
+        #qt-messages::-webkit-scrollbar-thumb, #ht-messages::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
         .msg-bubble-user { background: #f1f5f9; color: #0E0F3B; }
         .msg-bubble-ai { background: #eef2ff; color: #3730a3; }
         .msg-bubble-agent { background: #1D264F; color: white; }
@@ -45,6 +66,34 @@
         @include('partials.super-admin-side-bar')
         <main class="flex-1 flex flex-col overflow-hidden min-w-0">
             @include('partials.super-admin-header')
+
+            <!-- PAGE TABS -->
+            <div class="bg-white px-8 flex gap-8 border-b border-slate-200 shrink-0 shadow-md overflow-x-auto">
+                <button type="button" onclick="switchPageTab('overview')" id="pageTabBtn-overview" class="page-tab-btn active py-3 px-2 flex items-center gap-2 text-sm transition-colors whitespace-nowrap">
+                    <i data-lucide="gauge" class="w-4 h-4"></i> Overview
+                </button>
+                <button type="button" onclick="switchPageTab('aichatbot')" id="pageTabBtn-aichatbot" class="page-tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors whitespace-nowrap">
+                    <i data-lucide="bot" class="w-4 h-4"></i> AI Chatbot
+                </button>
+                <button type="button" onclick="switchPageTab('queue')" id="pageTabBtn-queue" class="page-tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors whitespace-nowrap">
+                    <i data-lucide="headset" class="w-4 h-4"></i> Live Agent Queue
+                </button>
+                <button type="button" onclick="switchPageTab('alumnimsg')" id="pageTabBtn-alumnimsg" class="page-tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors whitespace-nowrap">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i> Alumni Messaging
+                </button>
+                <button type="button" onclick="switchPageTab('history')" id="pageTabBtn-history" class="page-tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors whitespace-nowrap">
+                    <i data-lucide="history" class="w-4 h-4"></i> Chatbot History
+                </button>
+                <button type="button" onclick="switchPageTab('reports')" id="pageTabBtn-reports" class="page-tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors whitespace-nowrap">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Reports
+                </button>
+                @if (Auth::user()->user_role === 'super_admin')
+                <button type="button" onclick="switchPageTab('settings')" id="pageTabBtn-settings" class="page-tab-btn py-3 px-2 flex items-center gap-2 text-sm transition-colors whitespace-nowrap">
+                    <i data-lucide="settings" class="w-4 h-4"></i> Settings
+                </button>
+                @endif
+            </div>
+
             <div class="flex-1 overflow-y-auto p-6">
 
                 @include('partials.success')
@@ -55,18 +104,6 @@
                     @endforeach
                 </div>
                 @endif
-
-                <!-- <h1 class="text-2xl font-bold text-[#0E0F3B] mb-4">Chatbot &amp; Messaging</h1> -->
-
-                <!-- PAGE TABS -->
-                <div class="flex gap-6 border-b border-slate-200 mb-6 overflow-x-auto">
-                    <button type="button" onclick="switchPageTab('overview')" id="pageTabBtn-overview" class="page-tab-btn active px-1 pb-3 text-sm font-bold uppercase tracking-wide transition-colors whitespace-nowrap">Overview</button>
-                    <button type="button" onclick="switchPageTab('aichatbot')" id="pageTabBtn-aichatbot" class="page-tab-btn px-1 pb-3 text-sm font-bold uppercase tracking-wide transition-colors whitespace-nowrap">AI Chatbot</button>
-                    <button type="button" onclick="switchPageTab('queue')" id="pageTabBtn-queue" class="page-tab-btn px-1 pb-3 text-sm font-bold uppercase tracking-wide transition-colors whitespace-nowrap">Live Agent Queue</button>
-                    <button type="button" onclick="switchPageTab('alumnimsg')" id="pageTabBtn-alumnimsg" class="page-tab-btn px-1 pb-3 text-sm font-bold uppercase tracking-wide transition-colors whitespace-nowrap">Alumni Messaging</button>
-                    <button type="button" onclick="switchPageTab('reports')" id="pageTabBtn-reports" class="page-tab-btn px-1 pb-3 text-sm font-bold uppercase tracking-wide transition-colors whitespace-nowrap">Reports</button>
-                    <button type="button" onclick="switchPageTab('settings')" id="pageTabBtn-settings" class="page-tab-btn px-1 pb-3 text-sm font-bold uppercase tracking-wide transition-colors whitespace-nowrap">Settings</button>
-                </div>
 
                 <!-- ══════════════════════ OVERVIEW ══════════════════════ -->
                 <div id="pageTab-overview">
@@ -264,8 +301,10 @@
 
                 <!-- ══════════════════════ LIVE AGENT QUEUE ══════════════════════ -->
                 <div id="pageTab-queue" class="hidden">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md" id="queueTileAvailable"
+                            title="Click to show only unclaimed threads waiting for an agent"
+                            onclick="setQueueFilter('available')">
                             <p class="text-2xl font-bold text-amber-600">{{ $liveQueue['totalInQueue'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total in queue</p>
                         </div>
@@ -281,14 +320,32 @@
                             <p class="text-2xl font-bold text-blue-600">{{ $liveQueue['agentsOnline'] }}</p>
                             <p class="text-xs font-medium text-slate-500 mt-1">Agents available</p>
                         </div>
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md" id="queueTileMine"
+                            title="Click to show only threads assigned to you"
+                            onclick="setQueueFilter('mine')">
+                            <p class="text-2xl font-bold text-purple-600">{{ $liveQueue['assignedToMe'] }}</p>
+                            <p class="text-xs font-medium text-slate-500 mt-1">Assigned to me</p>
+                        </div>
                     </div>
 
                     <div class="bg-white rounded-lg shadow-sm border border-slate-200 w-full">
-                        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-                            <h3 class="text-sm font-bold text-[#0E0F3B]">Full queue</h3>
-                            <span class="flex items-center gap-1.5 text-[10px] text-slate-400">
-                                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Live
-                            </span>
+                        <div class="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <h3 class="text-sm font-bold text-[#0E0F3B]" id="queueListTitle">Full queue</h3>
+                                <span class="flex items-center gap-1.5 text-[10px] text-slate-400">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Live
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="relative w-56">
+                                    <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    <input type="text" id="queueSearchInput" oninput="setQueueSearch(this.value)" placeholder="Search by name"
+                                        class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A] transition-all">
+                                </div>
+                                <button type="button" id="queueClearFilterBtn" onclick="setQueueFilter('all')" class="hidden text-[10px] font-semibold text-[#C73D1A] hover:underline whitespace-nowrap">
+                                    Clear filter
+                                </button>
+                            </div>
                         </div>
                         <div id="queueList" class="divide-y divide-slate-100">
                             @php $initialQueueTickets = $waitingTickets->concat($withAgentTickets); @endphp
@@ -312,6 +369,9 @@
                                 <span class="text-[10px] text-slate-400 shrink-0">{{ $t->latestMessage?->created_at?->diffForHumans() }}</span>
                                 @if ($t->status === 'waiting_agent')
                                 <button type="button" onclick="claimTicket({{ $t->ticket_id }})" class="shrink-0 bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold px-3 py-2 rounded-md uppercase whitespace-nowrap">Assign to me</button>
+                                @elseif ($t->status === 'with_agent' && $t->office?->user_id !== auth()->id())
+                                {{-- Not yours — you can still take it over if you want to handle (and eventually resolve) it yourself, but you can't resolve someone else's ticket without doing this first. --}}
+                                <button type="button" onclick="claimTicket({{ $t->ticket_id }}, true)" class="shrink-0 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold px-3 py-2 rounded-md uppercase whitespace-nowrap">Take Over</button>
                                 @endif
                                 <button type="button" onclick="openQueueThread({{ $t->ticket_id }})" class="shrink-0 bg-[#1D264F] hover:bg-[#0E0F3B] text-white text-[10px] font-bold px-3 py-2 rounded-md uppercase whitespace-nowrap">Open thread</button>
                             </div>
@@ -403,6 +463,39 @@
                     </div>
                 </div>
 
+                <!-- ══════════════════════ CHATBOT HISTORY (read-only) ══════════════════════ -->
+                <div id="pageTab-history" class="hidden">
+                    <div class="bg-white rounded-lg shadow-sm border border-slate-200 w-full">
+                        <div class="p-4 border-b border-slate-100">
+                            <h3 class="text-sm font-bold text-[#0E0F3B]">Chatbot history</h3>
+                            <p class="text-[10px] text-slate-400 mt-1">Every alumnus who has ever started a chatbot conversation, across every status. Read-only — you cannot reply from here.</p>
+                        </div>
+                        <div class="divide-y divide-slate-100">
+                            @forelse ($chatHistoryAlumni as $alum)
+                            <div class="px-4 py-3">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-8 h-8 rounded-full bg-[#0E0F3B] flex items-center justify-center text-white text-xs font-bold shrink-0">{{ mb_substr($alum->user_first_name ?? '?', 0, 1) }}</div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="font-semibold text-[#0E0F3B] text-sm truncate">{{ trim($alum->user_first_name . ' ' . $alum->user_last_name) }}</p>
+                                        <p class="text-[10px] text-slate-400 truncate">{{ $alum->user_email }} · {{ $alum->chat_tickets_count }} {{ \Illuminate\Support\Str::plural('conversation', $alum->chat_tickets_count) }}</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-wrap gap-2 pl-11">
+                                    @foreach ($alum->chatTickets as $t)
+                                    <button type="button" onclick="openHistoryThread({{ $t->ticket_id }})" class="flex items-center gap-1.5 border border-slate-200 hover:border-slate-300 rounded-md px-2.5 py-1.5 text-[10px]">
+                                        <span class="px-1.5 py-0.5 rounded-full font-bold uppercase {{ $t->badgeClass() }}">{{ $t->statusLabel() }}</span>
+                                        <span class="text-slate-500">{{ $t->created_at->format('M d, Y') }}</span>
+                                    </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @empty
+                            <p class="text-center text-slate-400 text-sm py-12">No alumni have started a chatbot conversation yet.</p>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+
                 <!-- ══════════════════════ REPORTS ══════════════════════ -->
                 <div id="pageTab-reports" class="hidden">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -468,7 +561,8 @@
                     </div>
                 </div>
 
-                <!-- ══════════════════════ SETTINGS ══════════════════════ -->
+                <!-- ══════════════════════ SETTINGS (super_admin only) ══════════════════════ -->
+                @if (Auth::user()->user_role === 'super_admin')
                 <div id="pageTab-settings" class="hidden">
                     <form action="{{ route('chatbot.settings.update') }}" method="POST">
                         @csrf
@@ -479,10 +573,6 @@
                                     @foreach ([
                                         'ai_chatbot_enabled' => 'AI chatbot enabled',
                                         'live_agent_escalation_enabled' => 'Live agent escalation',
-                                        'job_board_queries_enabled' => 'Job board queries',
-                                        'events_queries_enabled' => 'Events & announcement queries',
-                                        'general_faq_queries_enabled' => 'General FAQ queries',
-                                        'career_advice_queries_enabled' => 'Career / personal advice queries',
                                     ] as $key => $label)
                                     <label class="flex items-center justify-between gap-3 cursor-pointer">
                                         <span class="text-xs text-[#0E0F3B]">{{ $label }}</span>
@@ -503,7 +593,6 @@
                                         'money_transfer_detection' => 'Money transfer detection',
                                         'personal_info_detection' => 'Personal info detection',
                                         'external_link_detection' => 'External link detection',
-                                        'auto_notify_admin_on_flag' => 'Auto-notify admin on flag',
                                     ] as $key => $label)
                                     <label class="flex items-center justify-between gap-3 cursor-pointer">
                                         <span class="text-xs text-[#0E0F3B]">{{ $label }}</span>
@@ -532,13 +621,6 @@
                                         </span>
                                     </label>
                                     <label class="flex items-center justify-between gap-3 cursor-pointer">
-                                        <span class="text-xs text-[#0E0F3B]">Allow queue wait-time estimation</span>
-                                        <span class="toggle-switch">
-                                            <input type="checkbox" name="allow_queue_estimation" value="1" {{ $settings->allow_queue_estimation ? 'checked' : '' }}>
-                                            <span class="toggle-slider"></span>
-                                        </span>
-                                    </label>
-                                    <label class="flex items-center justify-between gap-3 cursor-pointer">
                                         <span class="text-xs text-[#0E0F3B]">Live agent notification</span>
                                         <span class="toggle-switch">
                                             <input type="checkbox" name="live_agent_notification" value="1" {{ $settings->live_agent_notification ? 'checked' : '' }}>
@@ -552,6 +634,7 @@
                         <button type="submit" class="mt-5 bg-[#C73D1A] hover:bg-orange-700 text-white text-xs font-bold px-6 py-3 rounded-lg uppercase">Save Settings</button>
                     </form>
                 </div>
+                @endif
 
             </div>
         </main>
@@ -574,19 +657,54 @@
                     <button type="button" id="qt-send-btn" onclick="sendAgentReply()" class="w-10 h-10 rounded-full bg-[#1D264F] hover:bg-[#0E0F3B] text-white flex items-center justify-center shrink-0"><i data-lucide="send" class="w-4 h-4"></i></button>
                 </div>
                 <button type="button" id="qt-resolve-btn" onclick="resolveQueueTicket()" class="mt-3 w-full bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 rounded-lg uppercase">Mark resolved</button>
+                {{-- Shown instead of the reply box when this ticket is with_agent but assigned to someone else — take it over to reply or resolve it. --}}
+                <button type="button" id="qt-takeover-btn" onclick="takeOverQueueTicket()" class="mt-3 w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2 rounded-lg uppercase hidden">Take Over This Ticket</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════ CHATBOT HISTORY THREAD MODAL (read-only, no reply UI) ══════════════════════ -->
+    <div id="historyThreadModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden mx-4 flex flex-col" style="height: 80vh;">
+            <div class="relative bg-[#0E0F3B] flex items-center justify-between p-5 shrink-0">
+                <div class="min-w-0">
+                    <h2 class="text-lg font-bold text-white truncate" id="ht-title">Conversation</h2>
+                    <p class="text-[11px] text-white/60" id="ht-subtitle"></p>
+                </div>
+                <button type="button" onclick="closeHistoryThread()" class="text-white/80 hover:text-white shrink-0"><i data-lucide="x-circle" class="w-6 h-6"></i></button>
+            </div>
+            <div id="ht-messages" class="flex-1 overflow-y-auto p-5 space-y-3 bg-slate-50"></div>
+            <div class="p-3 border-t border-slate-100 shrink-0 text-center">
+                <p class="text-[10px] text-slate-400 uppercase font-bold">Read-only — admins cannot reply from the Chatbot History tab</p>
             </div>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => { if (window.lucide) lucide.createIcons(); });
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) lucide.createIcons();
+
+            // Deep-link from a "live agent requested" notification
+            // (?ticket=123) — jump to the Live Agent Queue tab and open
+            // that ticket's thread directly.
+            const openTicketId = new URLSearchParams(window.location.search).get('ticket');
+            if (openTicketId) {
+                switchPageTab('queue');
+                openQueueThread(parseInt(openTicketId, 10));
+            }
+        });
         const CSRF_TOKEN = '{{ csrf_token() }}';
 
         // ── PAGE TABS ──
         function switchPageTab(tab) {
-            ['overview', 'aichatbot', 'queue', 'alumnimsg', 'reports', 'settings'].forEach(t => {
-                document.getElementById('pageTab-' + t).classList.toggle('hidden', t !== tab);
-                document.getElementById('pageTabBtn-' + t).classList.toggle('active', t === tab);
+            // Settings only renders in the DOM at all for a super_admin
+            // (the settings tab button/content are conditionally rendered
+            // server-side) — the null-check keeps this loop from throwing
+            // for anyone else and silently breaking every other tab in the
+            // same pass.
+            ['overview', 'aichatbot', 'queue', 'alumnimsg', 'history', 'reports', 'settings'].forEach(t => {
+                document.getElementById('pageTab-' + t)?.classList.toggle('hidden', t !== tab);
+                document.getElementById('pageTabBtn-' + t)?.classList.toggle('active', t === tab);
             });
             if (window.lucide) lucide.createIcons();
 
@@ -640,28 +758,94 @@
         let queueListPollTimer = null;
         const QUEUE_JSON_URL = {!! json_encode(route('chatbot.queue')) !!};
 
+        // Tile clicks / the search box don't refetch — they just re-render
+        // whatever the last poll already brought back, filtered client-side.
+        // 'all' = everything (waiting_agent + with_agent, same as before this
+        // feature existed); 'available' = unclaimed threads anyone can pick
+        // up (Total in queue tile); 'mine' = with_agent claimed by the
+        // current admin (Assigned to me tile).
+        let queueFilter = 'all';
+        let queueSearchTerm = '';
+        // Seeded from the server-rendered list so a filter/search click in
+        // the instant before the first poll resolves doesn't wipe the
+        // already-visible rows out to an empty state.
+        @php
+            $initialQueueTicketsJson = $initialQueueTickets->map(function ($t) {
+                return [
+                    'ticketId' => $t->ticket_id,
+                    'name' => trim(($t->user->user_first_name ?? '') . ' ' . ($t->user->user_last_name ?? '')),
+                    'initial' => mb_substr($t->user->user_first_name ?? '?', 0, 1),
+                    'preview' => $t->latestMessage->message ?? '—',
+                    'status' => $t->status,
+                    'statusLabel' => $t->statusLabel(),
+                    'badgeClass' => $t->badgeClass(),
+                    'timeLabel' => optional($t->latestMessage?->created_at)->diffForHumans(),
+                    'claimedByName' => $t->office?->user ? trim($t->office->user->user_first_name . ' ' . $t->office->user->user_last_name) : null,
+                    'claimedAt' => optional($t->claimed_at)->diffForHumans(),
+                    'claimedByMe' => $t->office?->user_id === auth()->id(),
+                ];
+            })->values();
+        @endphp
+        let lastQueueTickets = @json($initialQueueTicketsJson);
+
         function escapeHtmlQueue(str) {
             const div = document.createElement('div');
             div.textContent = str ?? '';
             return div.innerHTML;
         }
 
+        function setQueueFilter(filter) {
+            queueFilter = (queueFilter === filter && filter !== 'all') ? 'all' : filter;
+            document.getElementById('queueTileAvailable').classList.toggle('border-amber-500', queueFilter === 'available');
+            document.getElementById('queueTileAvailable').classList.toggle('ring-2', queueFilter === 'available');
+            document.getElementById('queueTileAvailable').classList.toggle('ring-amber-200', queueFilter === 'available');
+            document.getElementById('queueTileAvailable').classList.toggle('border-slate-200', queueFilter !== 'available');
+            document.getElementById('queueTileMine').classList.toggle('border-purple-500', queueFilter === 'mine');
+            document.getElementById('queueTileMine').classList.toggle('ring-2', queueFilter === 'mine');
+            document.getElementById('queueTileMine').classList.toggle('ring-purple-200', queueFilter === 'mine');
+            document.getElementById('queueTileMine').classList.toggle('border-slate-200', queueFilter !== 'mine');
+            document.getElementById('queueListTitle').textContent =
+                queueFilter === 'available' ? 'Available threads' : (queueFilter === 'mine' ? 'Assigned to me' : 'Full queue');
+            document.getElementById('queueClearFilterBtn').classList.toggle('hidden', queueFilter === 'all');
+            renderQueueList(lastQueueTickets);
+        }
+
+        function setQueueSearch(term) {
+            queueSearchTerm = term.trim().toLowerCase();
+            renderQueueList(lastQueueTickets);
+        }
+
         function renderQueueList(tickets) {
+            lastQueueTickets = tickets;
             const container = document.getElementById('queueList');
             if (!container) return;
 
-            if (tickets.length === 0) {
-                container.innerHTML = '<p class="text-center text-slate-400 text-sm py-12" id="queueEmptyState">The queue is empty — no one is waiting for an agent right now.</p>';
+            const filtered = tickets.filter(t => {
+                if (queueFilter === 'available' && t.status !== 'waiting_agent') return false;
+                if (queueFilter === 'mine' && !(t.status === 'with_agent' && t.claimedByMe)) return false;
+                if (queueSearchTerm && !t.name.toLowerCase().includes(queueSearchTerm)) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                const message = queueSearchTerm || queueFilter !== 'all'
+                    ? 'No threads match the current filter/search.'
+                    : 'The queue is empty — no one is waiting for an agent right now.';
+                container.innerHTML = `<p class="text-center text-slate-400 text-sm py-12" id="queueEmptyState">${message}</p>`;
                 return;
             }
 
-            container.innerHTML = tickets.map(t => {
+            container.innerHTML = filtered.map(t => {
                 const claimedHtml = (t.status === 'with_agent' && t.claimedByName)
                     ? `<p class="text-[10px] text-slate-400 mt-0.5"><i class="fa-solid fa-user-check text-[9px]"></i> Claimed by ${escapeHtmlQueue(t.claimedByName)}${t.claimedByMe ? ' (you)' : ''} · ${escapeHtmlQueue(t.claimedAt || '')}</p>`
                     : '';
-                const assignBtn = t.status === 'waiting_agent'
-                    ? `<button type="button" onclick="claimTicket(${t.ticketId})" class="shrink-0 bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold px-3 py-2 rounded-md uppercase whitespace-nowrap">Assign to me</button>`
-                    : '';
+                let assignBtn = '';
+                if (t.status === 'waiting_agent') {
+                    assignBtn = `<button type="button" onclick="claimTicket(${t.ticketId})" class="shrink-0 bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold px-3 py-2 rounded-md uppercase whitespace-nowrap">Assign to me</button>`;
+                } else if (t.status === 'with_agent' && !t.claimedByMe) {
+                    // Not yours — take it over if you want to handle (and eventually resolve) it yourself.
+                    assignBtn = `<button type="button" onclick="claimTicket(${t.ticketId}, true)" class="shrink-0 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold px-3 py-2 rounded-md uppercase whitespace-nowrap">Take Over</button>`;
+                }
 
                 return `
                     <div class="flex items-center gap-3 px-4 py-3" data-ticket-row="${t.ticketId}">
@@ -701,8 +885,16 @@
             if (queueListPollTimer) { clearInterval(queueListPollTimer); queueListPollTimer = null; }
         }
 
-        /** Claim is AJAX now — no page reload — and jumps straight into the thread on success. */
-        async function claimTicket(ticketId) {
+        /**
+         * Claim is AJAX now — no page reload — and jumps straight into the
+         * thread on success. isTakeover=true is the "Take Over" button on an
+         * already-with_agent ticket assigned to someone else — confirmed
+         * first since it reassigns the ticket away from that other agent.
+         */
+        async function claimTicket(ticketId, isTakeover) {
+            if (isTakeover && !confirm('This ticket is currently assigned to another agent. Take it over so you can handle and resolve it yourself?')) {
+                return;
+            }
             try {
                 const res = await fetch(`{{ url('/chatbotMessaging') }}/${ticketId}/claim`, {
                     method: 'POST',
@@ -745,15 +937,22 @@
             const input = document.getElementById('qt-input');
             const sendBtn = document.getElementById('qt-send-btn');
             const resolveBtn = document.getElementById('qt-resolve-btn');
+            const takeoverBtn = document.getElementById('qt-takeover-btn');
             const subtitle = document.getElementById('qt-subtitle');
-            const canReply = status === 'with_agent';
+            // Assigned to someone else — you can view the thread, but you
+            // can't reply or resolve until you take it over (see claim()'s
+            // take-over path and resolve()'s ownership check server-side).
+            const assignedToOther = status === 'with_agent' && !data.claimedByMe;
+            const canReply = status === 'with_agent' && data.claimedByMe;
 
             input.disabled = !canReply;
             sendBtn.disabled = !canReply;
-            resolveBtn.classList.toggle('hidden', status === 'resolved');
+            resolveBtn.classList.toggle('hidden', !canReply);
+            takeoverBtn.classList.toggle('hidden', !assignedToOther);
             input.placeholder = status === 'waiting_agent'
                 ? 'Claim this ticket from the queue to reply'
-                : (status === 'resolved' ? 'This conversation is resolved.' : 'Type a reply...');
+                : (status === 'resolved' ? 'This conversation is resolved.'
+                    : (assignedToOther ? 'Take over this ticket to reply' : 'Type a reply...'));
 
             if (status === 'with_agent' && data.claimedByName) {
                 subtitle.textContent = data.claimedByMe ? 'Claimed by you' : `Claimed by ${data.claimedByName}`;
@@ -764,6 +963,31 @@
             } else {
                 subtitle.textContent = '';
             }
+        }
+
+        /** "Take Over This Ticket" button inside the thread modal itself — same claim() endpoint, just re-fetches the thread afterward instead of leaving/reopening it. */
+        async function takeOverQueueTicket() {
+            if (!queueThreadTicketId || !confirm('This ticket is currently assigned to another agent. Take it over so you can handle and resolve it yourself?')) return;
+
+            try {
+                const res = await fetch(`{{ url('/chatbotMessaging') }}/${queueThreadTicketId}/claim`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    alert(err.error || 'Could not take over this ticket.');
+                    return;
+                }
+            } catch (e) {
+                alert('Failed to take over this ticket. Please check your connection and try again.');
+                return;
+            }
+
+            pollQueue();
+            const r = await fetch(`{{ url('/chatbotMessaging') }}/${queueThreadTicketId}/thread`);
+            const d = await r.json();
+            applyThreadStatus(d);
         }
 
         async function openQueueThread(ticketId) {
@@ -823,13 +1047,24 @@
         async function resolveQueueTicket() {
             if (!queueThreadTicketId || !confirm('Mark this conversation as resolved?')) return;
 
+            let res;
             try {
-                await fetch(`{{ url('/chatbotMessaging') }}/${queueThreadTicketId}/resolve`, {
+                res = await fetch(`{{ url('/chatbotMessaging') }}/${queueThreadTicketId}/resolve`, {
                     method: 'POST',
                     headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
                 });
             } catch (e) {
                 alert('Failed to mark as resolved. Please check your connection and try again.');
+                return;
+            }
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alert(err.error || 'Could not mark this ticket as resolved.');
+                // Someone else may have taken it over (or it changed status) since this modal opened — refresh to reflect reality.
+                const r = await fetch(`{{ url('/chatbotMessaging') }}/${queueThreadTicketId}/thread`);
+                applyThreadStatus(await r.json());
+                pollQueue();
                 return;
             }
 
@@ -843,6 +1078,47 @@
 
         window.addEventListener('click', function (event) {
             if (event.target === document.getElementById('queueThreadModal')) closeQueueThread();
+        });
+
+        // ── CHATBOT HISTORY: read-only thread viewer ──
+        // Reuses the same /chatbotMessaging/{id}/thread JSON endpoint the
+        // live queue uses (it already works for a ticket in any status), but
+        // renders into a separate modal with no input/send/resolve controls
+        // at all — not just disabled — so there is no reply path here.
+        function renderHistoryMessages(messages) {
+            const container = document.getElementById('ht-messages');
+            container.innerHTML = '';
+            messages.forEach(m => {
+                const bubbleClass = m.senderType === 'agent' ? 'msg-bubble-agent ml-auto' : (m.senderType === 'ai' ? 'msg-bubble-ai' : 'msg-bubble-user');
+                const div = document.createElement('div');
+                div.className = 'max-w-[75%] rounded-2xl px-4 py-2 text-xs ' + bubbleClass;
+                div.textContent = m.message;
+                container.appendChild(div);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function openHistoryThread(ticketId) {
+            document.getElementById('historyThreadModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            document.getElementById('ht-messages').innerHTML = '';
+            document.getElementById('ht-title').textContent = 'Loading…';
+            document.getElementById('ht-subtitle').textContent = '';
+
+            const res = await fetch(`{{ url('/chatbotMessaging') }}/${ticketId}/thread`);
+            const data = await res.json();
+            document.getElementById('ht-title').textContent = data.userName;
+            document.getElementById('ht-subtitle').textContent = data.claimedByName ? `Handled by ${data.claimedByName}` : '';
+            renderHistoryMessages(data.messages);
+        }
+
+        function closeHistoryThread() {
+            document.getElementById('historyThreadModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        window.addEventListener('click', function (event) {
+            if (event.target === document.getElementById('historyThreadModal')) closeHistoryThread();
         });
     </script>
 </body>

@@ -6,11 +6,13 @@ use App\Models\ChatbotSetting;
 use App\Models\ChatTicket;
 use App\Models\ChatTicketMessage;
 use App\Models\Faq;
+use App\Models\Office;
 use App\Models\User;
 use App\Models\UserNotification;
 use App\Services\GeminiChatbotService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -157,6 +159,7 @@ class ChatbotController extends Controller
                     : "I'm not able to answer that — connecting you with a member of our team. Someone will be with you shortly.",
             ]);
             $ticket->escalate();
+            $this->autoAssignIfEnabled($ticket, $settings);
 
             if ($settings->live_agent_notification) {
                 $this->notifyAgentsOfEscalation($ticket);
@@ -170,6 +173,57 @@ class ChatbotController extends Controller
                     : "I'm sorry, I don't have an answer for that right now. Please try the FAQ page or check back later.",
             ]);
         }
+    }
+
+    /**
+     * Item 20b — genuine presence-driven auto-assign. Picks whichever
+     * admin/super_admin is actually online right now (User::isOnline(),
+     * driven by the heartbeat ping in partials/super-admin-header.blade.php
+     * — NOT the static user_active flag), breaking ties by whoever currently
+     * has the fewest open with_agent tickets. If nobody is online, or the
+     * setting is off, the ticket just stays in waiting_agent for manual
+     * "Assign to me", same as before this feature existed. Locks the ticket
+     * row first, mirroring ChatTicketController::claim()'s race-safety.
+     */
+    private function autoAssignIfEnabled(ChatTicket $ticket, ChatbotSetting $settings): void
+    {
+        if (!$settings->auto_assign_available_agent) {
+            return;
+        }
+
+        DB::transaction(function () use ($ticket) {
+            $locked = ChatTicket::where('ticket_id', $ticket->ticket_id)->lockForUpdate()->first();
+
+            if (!$locked || $locked->status !== 'waiting_agent') {
+                return;
+            }
+
+            $onlineAgentIds = User::whereIn('user_role', ['admin', 'super_admin'])->online()->pluck('user_id');
+
+            if ($onlineAgentIds->isEmpty()) {
+                return;
+            }
+
+            $busyCounts = ChatTicket::where('status', 'with_agent')
+                ->whereHas('office', fn ($q) => $q->whereIn('user_id', $onlineAgentIds))
+                ->with('office:office_id,user_id')
+                ->get()
+                ->groupBy(fn (ChatTicket $t) => $t->office->user_id)
+                ->map->count();
+
+            $agentId = $onlineAgentIds->sortBy(fn ($id) => $busyCounts->get($id, 0))->first();
+            $agent = User::find($agentId);
+
+            $office = Office::firstOrCreate(['user_id' => $agentId], ['office_address' => '']);
+            $locked->claimBy($office);
+
+            ChatTicketMessage::create([
+                'ticket_id' => $locked->ticket_id,
+                'sender_type' => 'agent',
+                'sender_id' => $agentId,
+                'message' => trim($agent->user_first_name . ' from the PLV-AlumNet team has joined the chat.'),
+            ]);
+        });
     }
 
     /**
@@ -191,6 +245,7 @@ class ChatbotController extends Controller
         $rows = $recipientIds->map(fn ($userId) => [
             'user_id' => $userId,
             'type' => 'live_agent_escalation',
+            'reference_id' => $ticket->ticket_id,
             'title' => 'Live agent requested',
             'body' => "{$requesterName} needs help in the chatbot and is waiting for a live agent.",
             'created_at' => $now,

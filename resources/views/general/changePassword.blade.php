@@ -22,6 +22,9 @@
 
 <body class="bg-white">
 
+    <!-- Error Toast Container -->
+    <div id="toastContainer" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 w-[90%] max-w-sm pointer-events-none"></div>
+
     @if(auth()->user()->user_role === 'employer')
         @include('partials.header-employer')
     @else
@@ -52,15 +55,6 @@
             </div>
             @endif
 
-            @if ($errors->any())
-            <div class="mb-4 text-red-600 text-sm">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
             @include('partials.success')
             <form class="space-y-6" method="POST" action="{{ route('users.changePassword') }}">
                 @csrf
@@ -68,7 +62,7 @@
                 <div class="w-full">
                     <label class="block text-sm font-bold text-[#12123B] mb-2">Old Password:</label>
                     <div class="relative">
-                        <input type="password" name="current_password" class="pw-input w-full p-3 border border-orange-300 rounded focus:ring-2 focus:ring-[#C73D1A] outline-none transition shadow-inner">
+                        <input type="password" name="current_password" class="pw-input w-full p-3 border rounded focus:ring-2 focus:ring-[#C73D1A] outline-none transition shadow-inner {{ $errors->has('current_password') ? 'border-red-600' : 'border-orange-300' }}">
                         <button type="button" class="toggle-pw absolute right-4 top-3.5 text-gray-400 hover:text-orange-500">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 eye-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -81,7 +75,7 @@
                 <div class="w-full">
                     <label class="block text-sm font-bold text-[#12123B] mb-2">New Password:</label>
                     <div class="relative">
-                        <input type="password" name="new_password" class="pw-input w-full p-3 border border-orange-300 rounded focus:ring-2 focus:ring-[#C73D1A] outline-none transition shadow-inner">
+                        <input type="password" name="new_password" class="pw-input w-full p-3 border rounded focus:ring-2 focus:ring-[#C73D1A] outline-none transition shadow-inner {{ $errors->has('new_password') ? 'border-red-600' : 'border-orange-300' }}">
                         <button type="button" class="toggle-pw absolute right-4 top-3.5 text-gray-400 hover:text-orange-500">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 eye-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -95,7 +89,7 @@
                 <div class="w-full">
                     <label class="block text-sm font-bold text-[#12123B] mb-2">Confirm New Password:</label>
                     <div class="relative">
-                        <input type="password" name="new_password_confirmation" class="pw-input w-full p-3 border border-orange-300 rounded focus:ring-2 focus:ring-[#C73D1A] outline-none transition shadow-inner">
+                        <input type="password" name="new_password_confirmation" class="pw-input w-full p-3 border rounded focus:ring-2 focus:ring-[#C73D1A] outline-none transition shadow-inner {{ $errors->has('new_password_confirmation') ? 'border-red-600' : 'border-orange-300' }}">
                         <button type="button" class="toggle-pw absolute right-4 top-3.5 text-gray-400 hover:text-orange-500">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 eye-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -109,30 +103,6 @@
                     Update Password
                 </button>
             </form>
-        </div>
-    </div>
-
-    <!-- SUCCESS MODAL -->
-    <div id="successModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-2xl max-w-md w-full p-8 relative text-center">
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-300 hover:text-gray-500 transition">
-                <i class="fa-solid fa-circle-xmark text-2xl"></i>
-            </button>
-            <div class="flex justify-center mb-6">
-                <div class="bg-[#0D0D2B] w-20 h-20 rounded-full flex items-center justify-center">
-                    <i class="fa-solid fa-check text-white text-4xl"></i>
-                </div>
-            </div>
-            <h3 class="text-3xl font-bold mb-4">
-                <span class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Password Updated</span>
-                <span class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Successfully</span>
-            </h3>
-            <p class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-sm mb-8 leading-relaxed">
-                Your account security <span class="font-medium">has been updated</span>. Please use your new password the next time you log in.
-            </p>
-            <button onclick="closeModal()" class="w-full max-w-[150px] bg-[#0D0D2B] text-white py-3 rounded font-bold tracking-widest hover:bg-blue-900 transition duration-200 uppercase text-sm">
-                DONE
-            </button>
         </div>
     </div>
 
@@ -171,14 +141,46 @@
             });
         });
 
-        function closeModal() {
-            document.getElementById('successModal').classList.add('hidden');
+        // Error toasts (red), populated from server-side validation errors
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+
+            const toast = document.createElement('div');
+            toast.className = 'pointer-events-auto flex items-start gap-2 bg-red-50 text-red-700 border border-red-500 text-[12px] font-medium px-4 py-3 rounded-md shadow-lg opacity-0 -translate-y-2 transition-all duration-300 ease-out';
+
+            const text = document.createElement('span');
+            text.className = 'flex-1';
+            text.textContent = message;
+
+            const closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'text-red-500 hover:text-red-700 leading-none text-lg';
+            closeBtn.innerHTML = '&times;';
+            closeBtn.onclick = () => dismissToast(toast);
+
+            toast.appendChild(text);
+            toast.appendChild(closeBtn);
+            container.appendChild(toast);
+
+            toast.getBoundingClientRect();
+            requestAnimationFrame(() => {
+                toast.classList.remove('opacity-0', '-translate-y-2');
+            });
+
+            setTimeout(() => dismissToast(toast), 8000);
         }
 
-        @if(session('success'))
-        window.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('successModal').classList.remove('hidden');
-        });
+        function dismissToast(toast) {
+            if (!toast.isConnected) return;
+            toast.classList.add('opacity-0', '-translate-y-2');
+            setTimeout(() => toast.remove(), 300);
+        }
+
+        @if ($errors->any())
+            window.addEventListener('DOMContentLoaded', () => {
+                const messages = @json($errors->all());
+                messages.forEach(message => showToast(message));
+            });
         @endif
     </script>
 </body>

@@ -106,6 +106,13 @@ class TestimonialController extends Controller
 
     public function submitTestimonial(Request $request, $id)
     {
+        // Self-service only — same missing-ownership-check bug already found
+        // and fixed once for AlumnusController::updateAlumniProfile(). Only
+        // alumni/dashboard.blade.php posts here, always with
+        // Auth::user()'s own id — without this, anyone could submit a
+        // testimonial attributed to an arbitrary alumnus.
+        abort_unless(Auth::check() && Auth::id() == $id, 403);
+
         // Validate the incoming request data
         $validatedData = $request->validate([
             'testimonial_body' => 'required|string|max:1000',
@@ -113,8 +120,8 @@ class TestimonialController extends Controller
 
         // Create a new testimonial record in the database
         try {
-            DB::transaction(function () use ($validatedData, $id) {
-                Testimonial::create([
+            $testimonial = DB::transaction(function () use ($validatedData, $id) {
+                return Testimonial::create([
                     'testimonial_body' => $validatedData['testimonial_body'],
                     'user_id' => $id,
                     'testimonial_post' => false,
@@ -125,13 +132,13 @@ class TestimonialController extends Controller
         }
         $testimonials = Testimonial::all();
 
-        $this->notifyStaffOfNewTestimonial($id);
+        $this->notifyStaffOfNewTestimonial($id, $testimonial->testimonial_id);
 
         // Redirect back with a success message
         return redirect()->route('users.dashboardRedirect', compact('testimonials'))->with('success', 'Your testimonial has been submitted successfully!');
     }
 
-    private function notifyStaffOfNewTestimonial($submitterId): void
+    private function notifyStaffOfNewTestimonial($submitterId, $testimonialId): void
     {
         $submitter = User::find($submitterId);
         $recipientIds = User::whereIn('user_role', ['admin', 'super_admin'])->pluck('user_id');
@@ -144,6 +151,7 @@ class TestimonialController extends Controller
         $rows = $recipientIds->map(fn ($userId) => [
             'user_id' => $userId,
             'type' => 'testimonial_submitted',
+            'reference_id' => $testimonialId,
             'title' => 'New testimonial submitted',
             'body' => "{$submitterName} submitted a testimonial awaiting review.",
             'created_at' => $now,
@@ -156,7 +164,13 @@ class TestimonialController extends Controller
     public function showTestimonials()
     {
         $this->authorizeStaff();
-        $testimonials = Testimonial::with(['alumnus.user', 'alumnus.program'])->get();
+        // latest() alone ties on created_at for rows seeded in the same batch
+        // (identical timestamp) — break ties by id desc so "latest to oldest"
+        // stays fully deterministic instead of falling back to insertion order.
+        $testimonials = Testimonial::with(['alumnus.user', 'alumnus.program'])
+            ->latest()
+            ->orderByDesc('testimonial_id')
+            ->get();
         return view('superAdmin.testimonialManagement', compact('testimonials'));
     }
 

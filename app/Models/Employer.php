@@ -57,6 +57,12 @@ class Employer extends Model
         return $this->hasMany(EmployerReview::class, 'employer_id', 'user_id');
     }
 
+    /** Saved company addresses — picked from a dropdown when posting a job instead of retyping. */
+    public function addresses()
+    {
+        return $this->hasMany(EmployerAddress::class, 'employer_id', 'user_id');
+    }
+
     /**
      * Uses the already-loaded `reviews` collection when eager-loaded (see
      * JobPostingController::filteredJobPostingsQuery()), so listing job
@@ -76,6 +82,24 @@ class Employer extends Model
         return $this->relationLoaded('reviews')
             ? $this->reviews->where('vote', 'downvote')->count()
             : $this->reviews()->where('vote', 'downvote')->count();
+    }
+
+    /** Count of alumni who've left a 5-star rating (independent of vote) on this company. */
+    public function ratingCount(): int
+    {
+        return $this->relationLoaded('reviews')
+            ? $this->reviews->whereNotNull('rating')->count()
+            : $this->reviews()->whereNotNull('rating')->count();
+    }
+
+    /** Average of every alumnus's 1-5 star rating, or null if nobody's rated yet. */
+    public function averageRating(): ?float
+    {
+        $ratings = $this->relationLoaded('reviews')
+            ? $this->reviews->pluck('rating')->filter()
+            : $this->reviews()->whereNotNull('rating')->pluck('rating');
+
+        return $ratings->isEmpty() ? null : round($ratings->avg(), 1);
     }
 
     public function scopeApproved($query)

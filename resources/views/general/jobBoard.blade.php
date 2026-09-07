@@ -78,7 +78,15 @@
 
     <section class="HeroSection h-[200px] flex items-end text-white shadow-lg">
         <div class="max-w-6xl  w-full my-7 ml-10">
-            <h1 class="text-5xl font-bold mb-2">Welcome to PLV-AlumNet!</h1>
+            <h1 class="text-5xl font-bold mb-2">
+                @if($activeTab === 'bookmarks')
+                My Bookmarked Jobs
+                @elseif($activeTab === 'applications')
+                My Job Applications
+                @else
+                Job Board
+                @endif
+            </h1>
             <p class="text-xl font-light">PLV-AlumNet: Honoring the Past. Shaping the Future.</p>
         </div>
     </section>
@@ -114,68 +122,87 @@
 
         <!-- SEARCH & FILTER -->
         <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-5 mb-8">
-            <form method="GET" action="{{ $activeTabRoute }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <form method="GET" action="{{ $activeTabRoute }}">
 
-                <div class="relative">
-                    <button type="submit" class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 hover:text-[#C73D1A]">
-                        <i class="fas fa-search"></i>
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="relative flex-1">
+                        <button type="submit" class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 hover:text-[#C73D1A]">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search job title or company" class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                    </div>
+
+                    <button type="button" onclick="toggleMoreFilters()"
+                        class="more-filters-toggle flex items-center justify-center gap-2 px-6 py-2 rounded-full border font-bold text-xs uppercase tracking-wide shrink-0 transition-colors {{ $moreFiltersActive ? 'bg-[#0E0F3B] text-white border-[#0E0F3B]' : 'border-gray-300 text-gray-600 hover:border-[#C73D1A] hover:text-[#C73D1A]' }}">
+                        <i class="fas fa-sliders"></i>
+                        <span>More Filter</span>
+                        <i class="fas fa-chevron-down text-[10px] transition-transform more-filters-chevron {{ $moreFiltersActive ? 'rotate-180' : '' }}"></i>
                     </button>
-                    <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search job title or company" class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
                 </div>
 
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
-                        <i class="fas fa-graduation-cap"></i>
-                    </span>
-                    <select name="program" onchange="this.form.submit()" class="w-full pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
-                        <option value="">Select Undergraduate Program</option>
-                        @foreach ($programs as $program)
-                        <option value="{{ $program->program_id }}" {{ (string) ($filters['program'] ?? '') === (string) $program->program_id ? 'selected' : '' }}>{{ $program->program_name }}</option>
-                        @endforeach
-                    </select>
-                    <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
-                        <i class="fas fa-chevron-down text-xs"></i>
-                    </span>
+                <div id="moreFiltersPanel" class="{{ $moreFiltersActive ? '' : 'hidden' }} grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mt-4 pt-4 border-t border-gray-100">
+
+                    @include('partials.multiselect-filter', [
+                        'name' => 'industry',
+                        'icon' => 'fas fa-industry',
+                        'placeholder' => 'Industry',
+                        'options' => $industries->pluck('industry_name', 'industry_id'),
+                        'selected' => $filters['industry'] ?? [],
+                    ])
+
+                    @include('partials.multiselect-filter', [
+                        'name' => 'job_type',
+                        'icon' => 'fas fa-briefcase',
+                        'placeholder' => 'Job Type',
+                        'options' => ['Full-Time' => 'Full-Time', 'Part-Time' => 'Part-Time', 'Freelance' => 'Freelance'],
+                        'selected' => $filters['job_type'] ?? [],
+                    ])
+
+                    @include('partials.multiselect-filter', [
+                        'name' => 'job_setup',
+                        'icon' => 'fas fa-building',
+                        'placeholder' => 'Job Setup',
+                        'options' => ['On-Site' => 'On-Site', 'Remote' => 'Remote', 'Hybrid' => 'Hybrid'],
+                        'selected' => $filters['job_setup'] ?? [],
+                    ])
+
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none text-xs">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </span>
+                        <input type="text" name="location" value="{{ $filters['location'] ?? '' }}" placeholder="Location" class="w-full pl-11 pr-4 py-1.5 border rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                    </div>
+
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none text-xs">
+                            <i class="fas fa-calendar-alt"></i>
+                        </span>
+                        <select name="date_posted" class="w-full pl-11 pr-10 py-1.5 border rounded-full bg-white text-xs appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                            <option value="">Date Posted</option>
+                            <option value="24h" {{ ($filters['date_posted'] ?? '') === '24h' ? 'selected' : '' }}>Last 24 Hours</option>
+                            <option value="7d" {{ ($filters['date_posted'] ?? '') === '7d' ? 'selected' : '' }}>Last 7 Days</option>
+                            <option value="30d" {{ ($filters['date_posted'] ?? '') === '30d' ? 'selected' : '' }}>Last 30 Days</option>
+                        </select>
+                        <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
+                            <i class="fas fa-chevron-down text-[10px]"></i>
+                        </span>
+                    </div>
+
                 </div>
 
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
-                        <i class="fas fa-briefcase"></i>
-                    </span>
-                    <select name="job_type" onchange="this.form.submit()" class="w-full pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
-                        <option value="">Job Type</option>
-                        <option value="Full-Time" {{ ($filters['job_type'] ?? '') === 'Full-Time' ? 'selected' : '' }}>Full-Time</option>
-                        <option value="Part-Time" {{ ($filters['job_type'] ?? '') === 'Part-Time' ? 'selected' : '' }}>Part-Time</option>
-                        <option value="Freelance" {{ ($filters['job_type'] ?? '') === 'Freelance' ? 'selected' : '' }}>Freelance</option>
-                    </select>
-                    <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
-                        <i class="fas fa-chevron-down text-xs"></i>
-                    </span>
+                <div class="mt-4 pt-4 border-t border-gray-100 flex items-center justify-end gap-4">
+                    @if (array_filter($filters))
+                    <a href="{{ $activeTabRoute }}" class="text-xs font-bold text-gray-400 hover:text-[#C73D1A]">
+                        <i class="fas fa-times mr-1"></i>CLEAR FILTERS
+                    </a>
+                    @endif
+                    <button type="submit"
+                        class="flex items-center justify-center gap-2 px-6 py-2 rounded-full bg-[#C73D1A] hover:bg-[#a83215] text-white font-bold text-xs uppercase tracking-wide shrink-0 transition-colors">
+                        <i class="fas fa-filter"></i>
+                        <span>Apply Filters</span>
+                    </button>
                 </div>
-
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
-                        <i class="fas fa-calendar-alt"></i>
-                    </span>
-                    <select name="date_posted" onchange="this.form.submit()" class="w-full pl-11 pr-10 py-2 border rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
-                        <option value="">Date Posted</option>
-                        <option value="24h" {{ ($filters['date_posted'] ?? '') === '24h' ? 'selected' : '' }}>Last 24 Hours</option>
-                        <option value="7d" {{ ($filters['date_posted'] ?? '') === '7d' ? 'selected' : '' }}>Last 7 Days</option>
-                        <option value="30d" {{ ($filters['date_posted'] ?? '') === '30d' ? 'selected' : '' }}>Last 30 Days</option>
-                    </select>
-                    <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
-                        <i class="fas fa-chevron-down text-xs"></i>
-                    </span>
-                </div>
-
             </form>
-            @if (array_filter($filters))
-            <div class="mt-3 text-right">
-                <a href="{{ $activeTabRoute }}" class="text-xs font-bold text-gray-400 hover:text-[#C73D1A]">
-                    <i class="fas fa-times mr-1"></i>CLEAR FILTERS
-                </a>
-            </div>
-            @endif
         </div>
 
         @if($user && $user->user_role === 'employer')
@@ -219,6 +246,10 @@
     @include('partials.job-detail-modal')
     @include('partials.company-review-modal')
 
+    @if($user && $user->user_role === 'alumni')
+    @include('partials.job-apply-modal')
+    @endif
+
     @if($user && $user->user_role === 'employer')
     @include('partials.post-job-modal', ['jobPoster' => $user])
     @endif
@@ -234,6 +265,19 @@
 </body>
 
 <script>
+    // Deep-link from a job/application-related notification (?job=123) —
+    // open that specific job's detail modal directly (works on the Job
+    // Board, My Applications, and Bookmarks tabs alike, since they all
+    // render partials/job-post-card.blade.php with the same data-job-id).
+    // Silently no-ops if that job isn't on the currently-rendered page.
+    document.addEventListener('DOMContentLoaded', () => {
+        const openJobId = new URLSearchParams(window.location.search).get('job');
+        if (openJobId) {
+            const el = document.querySelector('[data-job-id="' + openJobId + '"]');
+            if (el) el.click();
+        }
+    });
+
     // Share Button Copy Logic
     function copyJobLink(button) {
         const dummyUrl = "https://alumnihub.example/jobs/12345";
@@ -254,6 +298,14 @@
     // "Post a New Job" modal JS (open/close, image preview, add/remove
     // program row, client validation, confirm/pending flow) now lives in
     // partials/post-job-modal.blade.php, shared with jobPostings.blade.php.
+
+    // MORE FILTER PANEL
+    function toggleMoreFilters() {
+        document.getElementById('moreFiltersPanel').classList.toggle('hidden');
+        document.querySelector('.more-filters-chevron').classList.toggle('rotate-180');
+    }
 </script>
+
+@include('partials.staged-multiselect')
 
 </html>

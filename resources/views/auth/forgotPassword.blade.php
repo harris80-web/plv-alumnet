@@ -77,6 +77,10 @@
 
 
 <body class="min-h-screen flex items-center justify-center font-[Montserrat]">
+
+    <!-- Error Toast Container -->
+    <div id="toastContainer" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 w-[90%] max-w-sm pointer-events-none"></div>
+
     @include('partials.success')
     <div class="absolute inset-0 z-0">
         <img src="assets/alumnetBackground.svg" alt="PLV Building" class="w-full h-full object-cover">
@@ -118,13 +122,7 @@
             <form id="resetForm" action="{{ route('passReset.forgetPasswordPost') }}" method="POST" class="space-y-4">
                 @csrf
                 <input type="email" name="email" id="emailInput" required placeholder="juan.delacruz@plv.edu.ph"
-                    class="w-full px-4 py-3 border border-[#0E0F3B] rounded-md text-black focus:outline-none focus:border-[#C73D1A] transition-all text-center">
-                @error('email')
-                    <span class="my-custom-error font-semibold text-sm">
-                        <i class="fas fa-exclamation-circle"></i>
-                        {{ $message }}
-                    </span>
-                @enderror
+                    class="w-full px-4 py-3 border rounded-md text-black focus:outline-none transition-all text-center {{ $errors->has('email') ? 'border-red-600 focus:border-red-600' : 'border-[#0E0F3B] focus:border-[#C73D1A]' }}">
 
                 <button type="submit"
                     class="w-full bg-[#0E0F3B] text-white font-bold py-3 rounded-md hover:bg-blue-900 transition-colors tracking-widest text-sm uppercase">
@@ -191,6 +189,52 @@
 </body>
 
 <script>
+    // Error toasts (red), populated from server-side validation errors
+    function showToast(message) {
+        const container = document.getElementById('toastContainer');
+
+        const toast = document.createElement('div');
+        toast.className = 'pointer-events-auto flex items-start gap-2 bg-red-50 text-red-700 border border-red-500 text-[12px] font-medium px-4 py-3 rounded-md shadow-lg opacity-0 -translate-y-2 transition-all duration-300 ease-out';
+
+        const text = document.createElement('span');
+        text.className = 'flex-1';
+        text.textContent = message;
+
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'text-red-500 hover:text-red-700 leading-none text-lg';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.onclick = () => dismissToast(toast);
+
+        toast.appendChild(text);
+        toast.appendChild(closeBtn);
+        container.appendChild(toast);
+
+        // Force a layout flush so the opacity-0/-translate-y-2 starting state is
+        // actually painted before we transition away from it, otherwise the
+        // browser can collapse both class changes into a single frame and the
+        // toast just snaps in/out instead of animating.
+        toast.getBoundingClientRect();
+        requestAnimationFrame(() => {
+            toast.classList.remove('opacity-0', '-translate-y-2');
+        });
+
+        setTimeout(() => dismissToast(toast), 8000);
+    }
+
+    function dismissToast(toast) {
+        if (!toast.isConnected) return;
+        toast.classList.add('opacity-0', '-translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+    }
+
+    @if ($errors->any())
+        window.addEventListener('DOMContentLoaded', () => {
+            const messages = @json($errors->all());
+            messages.forEach(message => showToast(message));
+        });
+    @endif
+
     const resetForm = document.getElementById('resetForm');
     const successModal = document.getElementById('successModal');
     const emailInput = document.getElementById('emailInput');

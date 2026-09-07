@@ -14,7 +14,16 @@ class Skill extends Model
         'skill_name',
         'skill_category',
     ];
- 
+
+    /** Item 22 — categories a newly-added custom skill can be filed under, matching the skill_category enum. */
+    public const CATEGORIES = [
+        'technical' => 'Technical',
+        'tool' => 'Tools & Software',
+        'language' => 'Languages',
+        'soft' => 'Soft Skills',
+        'domain' => 'Domain Knowledge',
+    ];
+
     public function alumni()
     {
         return $this->belongsToMany(Alumnus::class, 'alumnus_skill', 'skill_id', 'alumnus_id')

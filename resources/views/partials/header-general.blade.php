@@ -15,8 +15,6 @@
 </head>
 
 <body>
-    <?php $current_page = basename($_SERVER['PHP_SELF'], ".php");  ?>
-
     <header class="sticky top-0 z-50 w-full h-20 bg-[#0E0F3B] font-semibold flex justify-between">
         <a href="{{ route('general.home') }}" class="flex items-center gap-3 ml-10">
             <img src="{{ asset('assets/PLV-AlumNet LOGOMARK_WHITE.svg') }}" alt="" class="h-12 w-12">
@@ -33,13 +31,13 @@
                 ABOUT
             </a>
 
-            <a href="events.php"
-                class="<?php echo ($current_page == 'events') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; ?>">
+            <a href="{{ route('notices.guestEventsSeminars') }}"
+                class="{{ request()->routeIs('notices.guestEventsSeminars') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                 EVENTS
             </a>
 
-            <a href="announcements.php"
-                class="<?php echo ($current_page == 'announcements') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]'; ?>">
+            <a href="{{ route('notices.guestAnnouncements') }}"
+                class="{{ request()->routeIs('notices.guestAnnouncements') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                 ANNOUNCEMENTS
             </a>
 
@@ -64,11 +62,6 @@
         </nav>
     </header>
     @include('partials.ui-animations')
-    <script src="script.js"></script>
 </body>
 
 </html>
-
-<!--<a href="{{ route('auth.register') }}">Sign Up</a>
-    <br><br>
-    <a href="{{ route('auth.login') }}">Login</a>-->

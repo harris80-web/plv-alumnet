@@ -136,7 +136,7 @@ class JobPostingController extends Controller
         $user = Auth::user();
         abort_unless($user && $user->user_role === 'alumni', 403);
 
-        $query = JobPosting::with(['skills', 'programs', 'industry', 'user', 'employer.reviews'])
+        $query = JobPosting::with(['skills', 'programs', 'industry', 'user', 'employer.reviews', 'employer.user'])
             ->whereHas('applications', fn ($q) => $q->where('alumnus_id', $user->user_id))
             ->addSelect(['applied_at' => JobApplication::selectRaw('application_date')
                 ->whereColumn('job_applications.job_id', 'job_postings.job_posting_id')
@@ -164,7 +164,7 @@ class JobPostingController extends Controller
      */
     private function filteredJobPostingsQuery(Request $request, ?\App\Models\User $user = null)
     {
-        $query = JobPosting::active()->approved()->with(['skills', 'programs', 'industry', 'user', 'employer.reviews']);
+        $query = JobPosting::active()->approved()->with(['skills', 'programs', 'industry', 'user', 'employer.reviews', 'employer.user']);
 
         if ($user && $user->user_role === 'alumni' && $user->alumnus) {
             $query->addSelect(['match_score' => \App\Models\JobMatch::selectRaw('COALESCE(score * 0.7 + ai_score * 0.3, score)')
@@ -178,9 +178,12 @@ class JobPostingController extends Controller
     }
 
     /**
-     * search/program/job_type/date_posted filters — shared by every job
-     * listing query (board, bookmarks, my-applications) so filtering
-     * behaves identically no matter which tab you're on.
+     * search/industry/job_type/job_setup/location/date_posted filters —
+     * shared by every job listing query (board, bookmarks, my-applications)
+     * so filtering behaves identically no matter which tab you're on.
+     * industry/job_type/job_setup are multi-select (checkbox) filters on
+     * the board, so each arrives as an array — array_filter() drops blank
+     * entries and the empty-array/no-selection case reads as falsy.
      */
     private function applySearchFilters($query, Request $request)
     {
@@ -191,12 +194,20 @@ class JobPostingController extends Controller
             });
         }
 
-        if ($programId = $request->input('program')) {
-            $query->forProgram($programId);
+        if ($industryIds = array_filter((array) $request->input('industry'))) {
+            $query->whereIn('industry_id', $industryIds);
         }
 
-        if ($jobType = $request->input('job_type')) {
-            $query->where('job_posting_employment_type', $jobType);
+        if ($jobTypes = array_filter((array) $request->input('job_type'))) {
+            $query->whereIn('job_posting_employment_type', $jobTypes);
+        }
+
+        if ($jobSetups = array_filter((array) $request->input('job_setup'))) {
+            $query->whereIn('job_posting_setup', $jobSetups);
+        }
+
+        if ($location = trim((string) $request->input('location'))) {
+            $query->where('job_posting_address', 'like', "%{$location}%");
         }
 
         if ($datePosted = $request->input('date_posted')) {
@@ -232,21 +243,39 @@ class JobPostingController extends Controller
             $bookmarkedIds = $user->alumnus->bookmarkedJobs->pluck('job_posting_id')->toArray();
         }
 
-        $filters = $request->only(['search', 'program', 'job_type', 'date_posted']);
+        $filters = $request->only(['search', 'industry', 'job_type', 'job_setup', 'location', 'date_posted']);
         $recommendedThreshold = self::RECOMMENDED_SCORE_THRESHOLD;
+        // Panel starts expanded whenever an advanced filter (anything but
+        // the always-visible search box) is already applied, so a filtered
+        // link/bookmark never lands on a page that hides its own filters.
+        $advancedFilters = collect($filters)->except('search')->all();
+        $moreFiltersActive = (bool) array_filter($advancedFilters);
 
-        return compact('jobPostings', 'programs', 'industries', 'user', 'appliedJobs', 'bookmarkedIds', 'activeTab', 'filters', 'recommendedThreshold');
+        return compact('jobPostings', 'programs', 'industries', 'user', 'appliedJobs', 'bookmarkedIds', 'activeTab', 'filters', 'recommendedThreshold', 'moreFiltersActive');
     }
 
     public function addJobPost(Request $request, $id)
     {
+        // Self-service only — same missing-ownership-check bug already found
+        // and fixed once for AlumnusController::updateAlumniProfile(). Both
+        // callers (partials/post-job-modal.blade.php on the Job Board and My
+        // Job Postings pages) always post with Auth::user()'s own id —
+        // without this, anyone could attribute a job posting to someone else.
+        abort_unless(Auth::check() && Auth::id() == $id, 403);
+
         $validated = $request->validate([
             'job_posting_image' => ['required', 'image', 'mimes:jpeg,png,jpg,svg'],
             'job_posting_title' => ['required', 'string'],
             'job_posting_company' => ['required', 'string'],
             'job_posting_address' => ['required', 'string'],
             'job_posting_employment_type' => ['required', 'string', Rule::in('Full-Time', 'Part-Time', 'Freelance')],
-            'job_posting_description' => ['required', 'string'],
+            // 20000 is a generous ceiling on the raw HTML (tags + typed text)
+            // Quill submits — the editor itself caps actual typed content at
+            // 5000 characters (see partials/rich-text-editor.blade.php), so
+            // this only ever fires as a defensive backstop, e.g. a bypassed
+            // client, well short of the job_postings.job_posting_description
+            // TEXT column's 65535-byte limit.
+            'job_posting_description' => ['required', 'string', 'max:20000'],
             'job_closing_date' => ['required', 'date'],
             'hiring_limit' => ['required', 'integer', 'min:1'],
             'job_posting_setup' => ['required', 'string', Rule::in('On-Site', 'Remote', 'Hybrid')],
@@ -328,6 +357,7 @@ class JobPostingController extends Controller
         $rows = $recipientIds->map(fn ($userId) => [
             'user_id' => $userId,
             'type' => 'job_posting_submitted',
+            'reference_id' => $jobPost->job_posting_id,
             'title' => 'New job posting awaiting approval',
             'body' => "\"{$jobPost->job_posting_title}\" at {$jobPost->job_posting_company} was submitted for review.",
             'created_at' => $now,
@@ -355,56 +385,52 @@ class JobPostingController extends Controller
         }
     }
 
+    /**
+     * Same filter shape as the Job Board (search/industry/job_type/job_setup/
+     * location/date_posted, via the shared applySearchFilters()) so "My Job
+     * Postings" behaves identically to the board instead of the old
+     * Program-only filter it used to have.
+     */
     public function showMyJobPosts(Request $request, $id)
     {
+        // Self-service only — without this, anyone could view any
+        // employer/alumni poster's full job-postings management page (with
+        // applicant counts, etc.) by changing the id in the URL.
+        abort_unless(Auth::check() && Auth::id() == (int) $id, 403);
+
         $query = JobPosting::with(['skills', 'applicants', 'industry', 'programs'])->where('user_id', $id);
 
-        if ($search = trim((string) $request->input('search'))) {
-            $query->where(function ($q) use ($search) {
-                $q->where('job_posting_title', 'like', "%{$search}%")
-                    ->orWhere('job_posting_company', 'like', "%{$search}%");
-            });
-        }
+        $jobPostings = $this->applySearchFilters($query, $request)
+            ->latest()
+            ->paginate(6)
+            ->withQueryString();
 
-        if ($programId = $request->input('program')) {
-            $query->forProgram($programId);
-        }
-
-        if ($jobType = $request->input('job_type')) {
-            $query->where('job_posting_employment_type', $jobType);
-        }
-
-        if ($datePosted = $request->input('date_posted')) {
-            $since = match ($datePosted) {
-                '24h' => now()->subDay(),
-                '7d' => now()->subDays(7),
-                '30d' => now()->subDays(30),
-                default => null,
-            };
-            if ($since) {
-                $query->where('created_at', '>=', $since);
-            }
-        }
-
-        $jobPostings = $query->latest()->paginate(6)->withQueryString();
         $programs = Program::all();
         $industries = Industry::all();
         $users = Auth::user();
-        $filters = $request->only(['search', 'program', 'job_type', 'date_posted']);
+        $filters = $request->only(['search', 'industry', 'job_type', 'job_setup', 'location', 'date_posted']);
+        $advancedFilters = collect($filters)->except('search')->all();
+        $moreFiltersActive = (bool) array_filter($advancedFilters);
 
-        return view('general.jobPostings', compact('jobPostings', 'programs', 'industries', 'users', 'filters'));
+        return view('general.jobPostings', compact('jobPostings', 'programs', 'industries', 'users', 'filters', 'moreFiltersActive'));
     }
 
     public function editJobPost(Request $request, $id)
     {
         $job = JobPosting::findOrFail($id);
+        // Only the job's own poster may edit it — without this, anyone
+        // could edit any job posting by changing the id in the URL. Same
+        // class of bug as AlumnusController::updateAlumniProfile() had.
+        abort_unless(Auth::check() && Auth::id() == $job->user_id, 403);
+
         $validated = $request->validate([
             'job_posting_image' => 'nullable|image|mimes:jpeg,png,jpg,svg',
             'job_posting_title' => 'nullable|string',
             'job_posting_company' => 'nullable|string',
             'job_posting_address' => 'nullable|string',
             'job_posting_employment_type' => 'nullable|string',
-            'job_posting_description' => 'nullable|string',
+            // See addJobPost()'s matching rule for why 20000.
+            'job_posting_description' => 'nullable|string|max:20000',
             'job_closing_date' => 'nullable|date',
             'hiring_limit' => [
                 'nullable',
@@ -505,65 +531,75 @@ class JobPostingController extends Controller
         return $query;
     }
 
-    public function showJobManagement()
+    /**
+     * Pending and Approved used to be two separately-paginated tables —
+     * combined into one filterable-by-status table per request. $status
+     * ('', 'pending', or 'approved') narrows the query; '' shows both.
+     */
+    /**
+     * Pending/Approved/Declined all live in job_postings now — Declined
+     * reads soft-deleted rows (job_postings already soft-deletes; a job's
+     * other columns survive being declined) filtered to ones that actually
+     * went through declineJobPost() (job_decline_reason set), so a job
+     * removed via the separate "Delete" action doesn't also show up here.
+     */
+    private function applyJobStatusFilter($query, ?string $status)
+    {
+        if ($status === 'pending') {
+            $query->where('job_approved', 0);
+        } elseif ($status === 'approved') {
+            $query->where('job_approved', 1);
+        } elseif ($status === 'declined') {
+            $query->onlyTrashed()->whereNotNull('job_decline_reason');
+        }
+
+        return $query;
+    }
+
+    public function showJobManagement(Request $request)
     {
         $this->authorizeStaff();
         $programs = Program::all();
         $industries = Industry::all();
         $users = Auth::user();
 
-        // Two independently-paginated queries (own pageName each) instead of
-        // one ->get() split into $pending_jobs/$approved_jobs after the
-        // fact in the view — that approach can't paginate since the whole
-        // collection has to be fetched up front. Metric-card counts are
-        // computed separately (not read off the paginators) so they always
-        // reflect the WHOLE dataset, not just the current page.
-        $pendingJobs = $this->jobManagementBaseQuery()
-            ->where('job_approved', 0)
+        $status = $request->input('status');
+        $jobs = $this->applyJobStatusFilter($this->jobManagementBaseQuery(), $status)
             ->orderByDesc('created_at')
-            ->paginate(10, ['*'], 'pendingPage');
+            ->paginate($this->resolvePerPage(10, 'job_management_per_page'))
+            ->withQueryString();
 
-        $approvedJobs = $this->jobManagementBaseQuery()
-            ->where('job_approved', 1)
-            ->orderByDesc('created_at')
-            ->paginate(10, ['*'], 'approvedPage');
-
+        // Counts computed separately (not read off the paginator) so they
+        // always reflect the whole dataset, not just the current filter/page.
         $totalJobs = $this->jobManagementBaseQuery()->count();
-        $pendingCount = $pendingJobs->total();
-        $approvedCount = $approvedJobs->total();
+        $pendingCount = $this->jobManagementBaseQuery()->where('job_approved', 0)->count();
+        $approvedCount = $this->jobManagementBaseQuery()->where('job_approved', 1)->count();
+        $declinedCount = $this->jobManagementBaseQuery()->onlyTrashed()->whereNotNull('job_decline_reason')->count();
+
+        $filters = ['status' => $status];
 
         return view('superAdmin.jobManagement', compact(
-            'pendingJobs', 'approvedJobs', 'totalJobs', 'pendingCount', 'approvedCount',
-            'programs', 'industries', 'users'
+            'jobs', 'totalJobs', 'pendingCount', 'approvedCount', 'declinedCount',
+            'programs', 'industries', 'users', 'filters'
         ));
     }
 
     /**
-     * AJAX pagination endpoints for the Pending/Approved job tables —
-     * mirrors UserController::employerPendingFragment()/employerApprovedFragment():
-     * each returns just its own table partial (rows + pagination nav) so a
-     * page-link click can swap it in via fetch() without a full reload.
+     * AJAX pagination endpoint for the combined job-management table —
+     * mirrors UserController::employerApprovedFragment(): returns just the
+     * table partial (rows + pagination nav) so a page-link or status-filter
+     * change can swap it in via fetch() without a full reload.
      */
-    public function jobManagementPendingFragment()
+    public function jobManagementFragment(Request $request)
     {
         $this->authorizeStaff();
-        $pendingJobs = $this->jobManagementBaseQuery()
-            ->where('job_approved', 0)
+        $status = $request->input('status');
+        $jobs = $this->applyJobStatusFilter($this->jobManagementBaseQuery(), $status)
             ->orderByDesc('created_at')
-            ->paginate(10, ['*'], 'pendingPage');
+            ->paginate($this->resolvePerPage(10, 'job_management_per_page'))
+            ->withQueryString();
 
-        return view('partials.job-management.pending-table', compact('pendingJobs'));
-    }
-
-    public function jobManagementApprovedFragment()
-    {
-        $this->authorizeStaff();
-        $approvedJobs = $this->jobManagementBaseQuery()
-            ->where('job_approved', 1)
-            ->orderByDesc('created_at')
-            ->paginate(10, ['*'], 'approvedPage');
-
-        return view('partials.job-management.approved-table', compact('approvedJobs'));
+        return view('partials.job-management.jobs-table', compact('jobs'));
     }
 
     public function approveJobPost($id)
@@ -582,6 +618,7 @@ class JobPostingController extends Controller
         UserNotification::create([
             'user_id' => $job->user_id,
             'type' => 'job_posting_approved',
+            'reference_id' => $job->job_posting_id,
             'title' => 'Job posting approved',
             'body' => "Your job posting \"{$job->job_posting_title}\" was approved and is now live on the job board.",
         ]);
@@ -607,6 +644,12 @@ class JobPostingController extends Controller
             'title' => 'Job posting rejected',
             'body' => "Your job posting \"{$job->job_posting_title}\" was not approved. Reason: {$validated['decline-reason']}",
         ]);
+        // job_postings already soft-deletes — this saves the reason on the
+        // row itself (read directly by the admin's Declined Job Posts view)
+        // before delete() marks it trashed, rather than only being able to
+        // recover it later by parsing the notification body above.
+        $job->job_decline_reason = $validated['decline-reason'];
+        $job->save();
         $job->delete();
         return redirect()->route('jobPosting.jobManagement')->with('success', 'Job posting declined successfully!');
     }

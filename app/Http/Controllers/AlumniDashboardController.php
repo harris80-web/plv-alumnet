@@ -48,7 +48,16 @@ class AlumniDashboardController extends Controller
                 $matchService->refreshForAlumnus($alumnus);
             }
 
-            $jobMatches = JobMatch::with(['jobPosting.programs', 'jobPosting.industry'])
+            // Same eager-loads job-post-card.blade.php's $cardData needs
+            // (via App\Services\JobCardDataBuilder) — without these, the
+            // "View Details" modal opened from here still worked, just with
+            // most fields silently undefined (no reviews/rating, no working
+            // Apply, no bookmark, no posted-by), since Job Matches used to
+            // build its own much smaller data-* payload from scratch.
+            $jobMatches = JobMatch::with([
+                'jobPosting.programs', 'jobPosting.industry', 'jobPosting.skills',
+                'jobPosting.user', 'jobPosting.employer.reviews', 'jobPosting.employer.user',
+            ])
                 ->where('alumnus_id', $alumnus->user_id)
                 ->whereHas('jobPosting', fn ($q) => $q->approved()->open())
                 ->get()
@@ -62,6 +71,9 @@ class AlumniDashboardController extends Controller
             $appliedJobs = $alumnus->appliedJobs->keyBy('job_posting_id');
         }
 
-        return view('alumni.dashboard', compact('testimonials', 'jobMatches', 'appliedJobs'));
+        $user = Auth::user();
+        $bookmarkedIds = $alumnus ? $alumnus->bookmarkedJobs->pluck('job_posting_id')->toArray() : [];
+
+        return view('alumni.dashboard', compact('testimonials', 'jobMatches', 'appliedJobs', 'user', 'bookmarkedIds'));
     }
 }

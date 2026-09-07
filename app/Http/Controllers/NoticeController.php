@@ -43,6 +43,9 @@ class NoticeController extends Controller
             'event' => $notices->where('category', 'event')->count(),
             'seminar' => $notices->where('category', 'seminar')->count(),
             'announcement' => $notices->where('category', 'announcement')->count(),
+            'everyone' => $notices->where('recipient', 'everyone')->count(),
+            'alumni' => $notices->where('recipient', 'alumni')->count(),
+            'employer' => $notices->where('recipient', 'employer')->count(),
         ];
 
         return view('superAdmin.noticesManagement', compact('notices', 'counts'));
@@ -140,6 +143,7 @@ class NoticeController extends Controller
             'type' => $isAnnouncement ? 'new_announcement' : 'new_' . $notice->category,
             'title' => $isAnnouncement ? 'New announcement' : 'New ' . $notice->categoryLabel() . ' posted',
             'body' => $notice->title,
+            'reference_id' => $notice->id,
             'created_at' => $now,
             'updated_at' => $now,
         ])->all();
@@ -191,6 +195,37 @@ class NoticeController extends Controller
     }
 
     /**
+     * search/location/date_posted filters shared by every alumni- and
+     * employer-facing notice listing below, same shape as JobPostingController::
+     * applySearchFilters() ("Date Posted" bucket options included) so this
+     * behaves identically to the Job Board's filter bar. $withLocation is
+     * false for announcements, which don't have a location field or a
+     * "More Filter" panel to put one in.
+     */
+    private function applyNoticeFilters($query, Request $request, bool $withLocation): void
+    {
+        if ($search = trim((string) $request->input('search'))) {
+            $query->where('title', 'like', "%{$search}%");
+        }
+
+        if ($withLocation && ($location = trim((string) $request->input('location')))) {
+            $query->where('location', 'like', "%{$location}%");
+        }
+
+        if ($datePosted = $request->input('date_posted')) {
+            $since = match ($datePosted) {
+                '24h' => now()->subDay(),
+                '7d' => now()->subDays(7),
+                '30d' => now()->subDays(30),
+                default => null,
+            };
+            if ($since) {
+                $query->where('created_at', '>=', $since);
+            }
+        }
+    }
+
+    /**
      * One page, two tabs — ?tab=events (default) or ?tab=seminar, each with
      * its own paginated query rather than loading both categories at once,
      * so "pagination below" applies per-tab like the rest of this app's
@@ -205,10 +240,9 @@ class NoticeController extends Controller
 
         // Past events/seminars are done — this listing is "what's coming up",
         // not an archive (see Notice::scopeUpcoming()).
-        $notices = Notice::category($category)
-            ->visibleToAlumni()
-            ->upcoming()
-            ->orderBy('event_datetime')
+        $query = Notice::category($category)->visibleToAlumni()->upcoming();
+        $this->applyNoticeFilters($query, $request, true);
+        $notices = $query->orderBy('event_datetime')
             ->paginate(6)
             ->withQueryString();
 
@@ -218,17 +252,18 @@ class NoticeController extends Controller
         // — the view auto-opens this notice's detail modal on load, if it's
         // present on the current page.
         $openNoticeId = $request->query('notice');
+        $filters = $request->only(['search', 'location', 'date_posted']);
 
-        return view('alumni.eventsSeminars', compact('notices', 'activeTab', 'interestedNoticeIds', 'user', 'openNoticeId'));
+        return view('alumni.eventsSeminars', compact('notices', 'activeTab', 'interestedNoticeIds', 'user', 'openNoticeId', 'filters'));
     }
 
     public function alumniAnnouncements(Request $request)
     {
         $this->authorizeAlumnus();
 
-        $notices = Notice::category('announcement')
-            ->visibleToAlumni()
-            ->orderByDesc('event_datetime')
+        $query = Notice::category('announcement')->visibleToAlumni();
+        $this->applyNoticeFilters($query, $request, false);
+        $notices = $query->orderByDesc('event_datetime')
             ->paginate(6)
             ->withQueryString();
 
@@ -237,8 +272,40 @@ class NoticeController extends Controller
         // — the view auto-opens this notice's detail modal on load, if it's
         // present on the current page.
         $openNoticeId = $request->query('notice');
+        $filters = $request->only(['search', 'date_posted']);
 
-        return view('alumni.announcements', compact('notices', 'user', 'openNoticeId'));
+        return view('alumni.announcements', compact('notices', 'user', 'openNoticeId', 'filters'));
+    }
+
+    /**
+     * Public counterpart to alumniEventsAndSeminars() — no auth required, same
+     * shared view (resources/views/alumni/eventsSeminars.blade.php is
+     * guest-safe: $user is null here, so it swaps in the guest header/footer
+     * and shows a "log in to view full details" prompt instead of the
+     * alumni-only Interested button). Only notices explicitly marked for
+     * "everyone" are shown — alumni- or employer-only notices stay private.
+     */
+    public function guestEventsAndSeminars(Request $request)
+    {
+        $activeTab = $request->query('tab') === 'seminar' ? 'seminar' : 'events';
+        $category = $activeTab === 'seminar' ? 'seminar' : 'event';
+
+        $query = Notice::category($category)->visibleToGuest()->upcoming();
+        $this->applyNoticeFilters($query, $request, true);
+        $notices = $query->orderBy('event_datetime')
+            ->paginate(6)
+            ->withQueryString();
+
+        $filters = $request->only(['search', 'location', 'date_posted']);
+
+        return view('alumni.eventsSeminars', [
+            'notices' => $notices,
+            'activeTab' => $activeTab,
+            'interestedNoticeIds' => [],
+            'user' => null,
+            'openNoticeId' => null,
+            'filters' => $filters,
+        ]);
     }
 
     /**
@@ -259,18 +326,18 @@ class NoticeController extends Controller
         $category = $activeTab === 'seminar' ? 'seminar' : 'event';
 
         // Same "upcoming only" rule as alumniEventsAndSeminars() above.
-        $notices = Notice::category($category)
-            ->visibleToEmployer()
-            ->upcoming()
-            ->orderBy('event_datetime')
+        $query = Notice::category($category)->visibleToEmployer()->upcoming();
+        $this->applyNoticeFilters($query, $request, true);
+        $notices = $query->orderBy('event_datetime')
             ->paginate(6)
             ->withQueryString();
 
         $user = Auth::user();
         $interestedNoticeIds = [];
         $openNoticeId = $request->query('notice');
+        $filters = $request->only(['search', 'location', 'date_posted']);
 
-        return view('alumni.eventsSeminars', compact('notices', 'activeTab', 'interestedNoticeIds', 'user', 'openNoticeId'));
+        return view('alumni.eventsSeminars', compact('notices', 'activeTab', 'interestedNoticeIds', 'user', 'openNoticeId', 'filters'));
     }
 
     /** Employer counterpart to alumniAnnouncements() — see employerEventsAndSeminars() for why the same view is reused. */
@@ -278,16 +345,43 @@ class NoticeController extends Controller
     {
         $this->authorizeEmployer();
 
-        $notices = Notice::category('announcement')
-            ->visibleToEmployer()
-            ->orderByDesc('event_datetime')
+        $query = Notice::category('announcement')->visibleToEmployer();
+        $this->applyNoticeFilters($query, $request, false);
+        $notices = $query->orderByDesc('event_datetime')
             ->paginate(6)
             ->withQueryString();
 
         $user = Auth::user();
         $openNoticeId = $request->query('notice');
+        $filters = $request->only(['search', 'date_posted']);
 
-        return view('alumni.announcements', compact('notices', 'user', 'openNoticeId'));
+        return view('alumni.announcements', compact('notices', 'user', 'openNoticeId', 'filters'));
+    }
+
+    /**
+     * Public counterpart to alumniAnnouncements() — no auth required, same
+     * shared view (resources/views/alumni/announcements.blade.php is
+     * guest-safe: $user is null here, so it swaps in the guest header/footer
+     * and shows a "log in to view full details" prompt instead of letting
+     * the card open the full detail modal). Only notices explicitly marked
+     * for "everyone" are shown.
+     */
+    public function guestAnnouncements(Request $request)
+    {
+        $query = Notice::category('announcement')->visibleToGuest();
+        $this->applyNoticeFilters($query, $request, false);
+        $notices = $query->orderByDesc('event_datetime')
+            ->paginate(6)
+            ->withQueryString();
+
+        $filters = $request->only(['search', 'date_posted']);
+
+        return view('alumni.announcements', [
+            'notices' => $notices,
+            'user' => null,
+            'openNoticeId' => null,
+            'filters' => $filters,
+        ]);
     }
 
     /** Toggles the current alumnus's interest — one click marks/unmarks, no separate "cancel" flow needed. */

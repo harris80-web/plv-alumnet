@@ -1,64 +1,3 @@
-<!--<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-
-<body class="flex gap-[20px]">
-    <div class="flex flex-col">
-        <h1>Superadmin Dashboard</h1>
-        <a href="{{ route('superAdmin.dashboard') }}">Dashboard</a>
-        <br><br>
-        <a href="{{ route('superAdmin.userManagement') }}">User Management</a>
-        <br><br>
-        <a href="{{ route('jobPosting.jobManagement') }}">Job Management</a>
-        <br><br>
-        <a href="">Alumni ID and yearbook management</a>
-        <br><br>
-        <a href="">Notice and events management</a>
-        <br><br>
-        <a href="">Chatbot and messaging management</a>
-        <br><br>
-        <a href="{{ route('testimonials.manage') }}">Testimonial management</a>
-        <br><br>
-        <a href="">Manage faqs</a>
-        <br><br>
-        <a href="{{ route('user.profile') }}">View Profile</a>
-        <br><br><br>
-        <form method="POST" action="{{ route('user.logout') }}">
-            @csrf
-            <button type="submit">Logout</button>
-        </form>
-    </div>
-    <div>
-        <h2>SYSTEM OVERVIEW</h2>
-        <div class="flex gap-[20px]">
-            <div>
-                <h3>Job Placement Rate</h3>
-                <p>{{ $stats['jobPlacementRate'] }}</p>
-            </div>
-            <div>
-                <h3>Active job postings</h3>
-                <p>{{ $stats['activeJobs'] }}</p>
-            </div>
-            <div>
-                <h3>Industry Partners</h3>
-                <p>{{ $stats['industryPartners'] }}</p>
-            </div>
-            <div>
-                <h3>Alumni Users</h3>
-                <p>{{ $stats['alumniUsers'] }}</p>
-            </div>
-        </div>
-    </div>
-
-</body>
-
-</html>-->
-
 @php
     $current_page = 'dashboard';
 @endphp
@@ -243,6 +182,20 @@
             margin-top: 2px;
         }
 
+        /* ── Clickable graphs — each chart links to its detailed,
+           filterable, exportable breakdown page. Scoped to just the
+           canvas's own wrapper (not the whole chart-card), so cards with
+           their own controls (a <select>, a search box) keep working
+           normally instead of navigating away on every click. ── */
+        .chart-clickable {
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.15s;
+        }
+        .chart-clickable:hover {
+            background: rgba(199, 61, 26, 0.05);
+        }
+
         /* ── Industry bars ── */
         .ind-bar-wrap {
             display: flex;
@@ -340,67 +293,22 @@
             @include('partials.success')
             <div class="dash-scroll">
                 <!-- Filter Section Container -->
-                <div class="w-full bg-slate-100 px-6 py-4">
-                    <form method="GET" action="{{ route('superAdmin.dashboard') }}"
-                        class="flex flex-nowrap items-center gap-3 bg-white px-6 py-4 rounded-xl border border-slate-200 shadow-md text-sm font-medium text-slate-700 overflow-x-auto">
-
-                        <!-- Batch Year -->
-                        <div class="flex items-center gap-1.5 shrink-0">
-                            <label class="whitespace-nowrap font-[Montserrat] font-semibold text-[#0E0F3B]">Batch
-                                Year:</label>
-                            <select name="batch" onchange="this.form.submit()"
-                                class="border border-slate-300 rounded-md px-2 py-1.5 w-28 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
-                                <option value="" {{ !$dashboardFilters['batch'] ? 'selected' : '' }}>All Years</option>
-                                @foreach ($batches as $batchYear)
-                                <option value="{{ $batchYear }}" {{ (string) $dashboardFilters['batch'] === (string) $batchYear ? 'selected' : '' }}>{{ $batchYear }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Course -->
-                        <div class="flex items-center gap-1.5 shrink min-w-0">
-                            <label
-                                class="whitespace-nowrap font-[Montserrat] font-semibold text-[#0E0F3B]">Course:</label>
-                            <select name="program_id" onchange="this.form.submit()"
-                                class="border border-slate-300 rounded-md px-2 py-1.5 w-64 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
-                                <option value="" {{ !$dashboardFilters['program_id'] ? 'selected' : '' }}>All Programs</option>
-                                @foreach ($programs as $program)
-                                <option value="{{ $program->program_id }}" {{ (string) $dashboardFilters['program_id'] === (string) $program->program_id ? 'selected' : '' }}>{{ $program->program_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Employment Status -->
-                        <div class="flex items-center gap-1.5 shrink-0">
-                            <label class="whitespace-nowrap font-[Montserrat] font-semibold text-[#0E0F3B]">Employment
-                                Status:</label>
-                            <select name="employment_status" onchange="this.form.submit()"
-                                class="border border-slate-300 rounded-md px-2 py-1.5 w-32 focus:outline-none focus:ring-2 focus:ring-[#C73D1A] bg-white">
-                                <option value="" {{ !$dashboardFilters['employment_status'] ? 'selected' : '' }}>All Statuses</option>
-                                <option value="employed" {{ $dashboardFilters['employment_status'] === 'employed' ? 'selected' : '' }}>Employed</option>
-                                <option value="unemployed" {{ $dashboardFilters['employment_status'] === 'unemployed' ? 'selected' : '' }}>Unemployed</option>
-                            </select>
-                        </div>
-
-                        <!-- Clear Filters Button -->
-                        <a href="{{ route('superAdmin.dashboard') }}"
-                            class="ml-auto shrink-0 whitespace-nowrap bg-slate-200 text-[10px] text-slate-600 px-3 py-1.5 rounded-md flex items-center gap-1 hover:bg-slate-300 transition shadow-sm font-semibold uppercase tracking-wide">
-                            <i data-lucide="x" class="w-3.5 h-3.5 shrink-0"></i> Clear Filters
-                        </a>
-
-                        <!-- Export Button -->
-                        <a href="{{ route('superAdmin.dashboard.exportPdf', array_filter($dashboardFilters) + ['hire_months' => $hireMonths, 'top_companies' => $topCompaniesLimit]) }}"
-                            class="shrink-0 whitespace-nowrap bg-[#C04828] text-[10px] text-white px-3 py-1.5 rounded-md flex items-center gap-1 hover:bg-[#A03D22] transition shadow-sm font-semibold uppercase tracking-wide">
-                            <i data-lucide="file-text" class="w-3.5 h-3.5 shrink-0"></i> EXPORT PDF
-                        </a>
-                    </form>
-                </div>
+                @include('partials.report-filters-form', [
+                    'formAction' => route('superAdmin.dashboard'),
+                    'clearRoute' => route('superAdmin.dashboard'),
+                    'dashboardFilters' => $dashboardFilters,
+                    'batchYearOptions' => $batchYearOptions,
+                    'programs' => $programs,
+                    'yearOptions' => $yearOptions,
+                ])
 
                 <!-- System Overview Heading -->
-                <div class="mb-2 ml-1">
+                <div class="mb-2 ml-1 flex items-center justify-between">
                     <span
-                        class="section-heading bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">System
-                        Overview</span>
+                        class="section-heading bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Overview</span>
+                    <a href="{{ route('reports.employment') }}" class="text-xs font-normal text-[#C73D1A] border border-[#C73D1A] rounded-lg px-3 py-1 flex items-center gap-1 transition-colors duration-200 hover:bg-[#C73D1A] hover:text-white">
+                        View Detailed Report <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </a>
                 </div>
 
                 <!-- Stat Cards -->
@@ -497,7 +405,7 @@
                     <div class="chart-card">
                         <div class="card-title">Employment Status Breakdown</div>
                         <div class="card-sub">Overall distribution of all alumni and their employment status</div>
-                        <div style="margin-top:10px; height:160px;">
+                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.employment') }}')">
                             <canvas id="chartStatus"></canvas>
                         </div>
                     </div>
@@ -528,7 +436,7 @@
                     <div class="chart-card">
                         <div class="card-title">Employment Rate by Batch/Year</div>
                         <div class="card-sub">Employed vs. unemployed counts across graduation batches</div>
-                        <div style="margin-top:10px; height:160px;">
+                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.employment') }}')">
                             <canvas id="chartPlacement"></canvas>
                         </div>
                     </div>
@@ -538,43 +446,13 @@
                     <div class="chart-card">
                         <div class="card-title">Job-to-Degree Alignment by Program/Course</div>
                         <div class="card-sub">% of employed alumni whose job matches their degree field ({{ $alignmentRate }}% overall) &mdash; every program</div>
-                        <div style="margin-top:10px; height:220px; overflow-y:auto;">
+                        <div class="chart-clickable" style="margin-top:10px; height:220px; overflow-y:auto;" onclick="goToReport('{{ route('reports.employment') }}')">
                             <div style="height:{{ max(160, $programAlignment->count() * 26) }}px;">
                                 <canvas id="chartAlignment"></canvas>
                             </div>
                         </div>
                     </div>
 
-                </div>
-
-                <!-- Employed Alumni per Batch -->
-                <div class="chart-card mb-4">
-                    <div class="card-title">Employed Alumni per Batch</div>
-                    <div class="card-sub">Employed headcount and rate for every graduation batch</div>
-                    <div style="margin-top:10px; max-height:220px; overflow-y:auto;">
-                        <table class="w-full text-left" style="font-size:11px; border-collapse:collapse;">
-                            <thead>
-                                <tr style="position:sticky; top:0; background:#fff;">
-                                    <th style="padding:6px 10px; color:#0E0F3B; border-bottom:1px solid #e5e7eb;">Batch</th>
-                                    <th style="padding:6px 10px; color:#0E0F3B; border-bottom:1px solid #e5e7eb;">Total Alumni</th>
-                                    <th style="padding:6px 10px; color:#0E0F3B; border-bottom:1px solid #e5e7eb;">Employed</th>
-                                    <th style="padding:6px 10px; color:#0E0F3B; border-bottom:1px solid #e5e7eb;">Rate</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($employmentByBatch as $batchYear => $row)
-                                <tr>
-                                    <td style="padding:6px 10px; border-bottom:1px solid #f1f5f9;">{{ $batchYear }}</td>
-                                    <td style="padding:6px 10px; border-bottom:1px solid #f1f5f9;">{{ $row['total'] }}</td>
-                                    <td style="padding:6px 10px; border-bottom:1px solid #f1f5f9;">{{ $row['employed'] }}</td>
-                                    <td style="padding:6px 10px; border-bottom:1px solid #f1f5f9;">{{ $row['rate'] }}%</td>
-                                </tr>
-                                @empty
-                                <tr><td colspan="4" style="padding:6px 10px; color:#9ca3af;">No batches match the current filters.</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
 
                 <!-- Row 3b: Gender + Employment Interval -->
@@ -584,7 +462,7 @@
                     <div class="chart-card">
                         <div class="card-title">Employment Rate by Gender</div>
                         <div class="card-sub">Employed vs. total alumni per gender</div>
-                        <div style="margin-top:10px; height:160px;">
+                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.employment') }}')">
                             <canvas id="chartGender"></canvas>
                         </div>
                     </div>
@@ -593,7 +471,7 @@
                     <div class="chart-card">
                         <div class="card-title">Employment Interval</div>
                         <div class="card-sub">Time from graduation to first job (alumni with a recorded first-job date)</div>
-                        <div style="margin-top:10px; height:160px;">
+                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.employment') }}')">
                             <canvas id="chartInterval"></canvas>
                         </div>
                     </div>
@@ -604,24 +482,14 @@
                 <div class="chart-card mb-4">
                     <div class="card-title">Job Before Graduation &amp; Internships</div>
                     <div class="card-sub">Of alumni with a recorded first job</div>
-                    <div class="grid grid-cols-3 gap-4 mt-3">
-                        <div class="stat-card">
-                            <div class="s-top">
-                                <span class="s-label">Employed Before Graduation</span>
-                            </div>
-                            <div class="s-value">{{ $beforeGraduationCount }} <span style="font-size:13px;color:#9ca3af;">({{ $beforeGraduationRate }}%)</span></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 items-center">
+                        <div class="chart-clickable" style="height:180px;" onclick="goToReport('{{ route('reports.employment') }}')">
+                            <canvas id="chartJobBeforeGrad"></canvas>
                         </div>
-                        <div class="stat-card">
-                            <div class="s-top">
-                                <span class="s-label">First Job Was an Internship</span>
-                            </div>
-                            <div class="s-value">{{ $internshipCount }} <span style="font-size:13px;color:#9ca3af;">({{ $internshipRate }}%)</span></div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="s-top">
-                                <span class="s-label">Before Graduation &amp; an Internship</span>
-                            </div>
-                            <div class="s-value">{{ $beforeGraduationInternshipCount }}</div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-xs"><span class="text-slate-500">Employed Before Graduation</span><span class="font-bold text-[#0E0F3B]">{{ $beforeGraduationCount }} <span style="color:#9ca3af;">({{ $beforeGraduationRate }}%)</span></span></div>
+                            <div class="flex justify-between text-xs"><span class="text-slate-500">First Job Was an Internship</span><span class="font-bold text-[#0E0F3B]">{{ $internshipCount }} <span style="color:#9ca3af;">({{ $internshipRate }}%)</span></span></div>
+                            <div class="flex justify-between text-xs"><span class="text-slate-500">Before Graduation &amp; an Internship</span><span class="font-bold text-[#0E0F3B]">{{ $beforeGraduationInternshipCount }}</span></div>
                         </div>
                     </div>
                 </div>
@@ -638,29 +506,30 @@
                     // "All years" still refers to employment years pooled
                     // together, not graduation years — those alumni can
                     // have been hired anywhere from graduation to now.
-                    $selectedProgramName = $dashboardFilters['program_id']
-                        ? ($programs->firstWhere('program_id', $dashboardFilters['program_id'])->program_name ?? null)
-                        : null;
+                    $selectedProgramNames = $programs->whereIn('program_id', $dashboardFilters['program_id'])->pluck('program_name');
+                    $selectedYears = !empty($dashboardFilters['year']) ? $dashboardFilters['year'] : null;
                 @endphp
                 <div class="chart-card mb-4">
                     <div class="card-title">Employment by Month</div>
-                    <div class="card-sub">Which month alumni get employed (Jan&ndash;Dec, pooled across
-                        employment years) for
-                        {{ $dashboardFilters['batch'] ? $dashboardFilters['batch'] . ' batch' : 'all batches' }}
-                        @if ($selectedProgramName)
-                            &middot; {{ $selectedProgramName }}
+                    <div class="card-sub">Which month alumni get employed (Jan&ndash;Dec{{ $selectedYears ? ', ' . implode(', ', $selectedYears) : ', pooled across employment years' }}) for
+                        {{ !empty($dashboardFilters['batch']) ? implode(', ', $dashboardFilters['batch']) . ' batch' : 'all batches' }}
+                        @if ($selectedProgramNames->isNotEmpty())
+                            &middot; {{ $selectedProgramNames->implode(', ') }}
                         @endif
                         &mdash; includes employment recorded from a system hire and employment alumni added themselves on their profile</div>
-                    <div style="margin-top:10px; height:160px;">
+                    <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.employment') }}')">
                         <canvas id="chartEmploymentByMonth"></canvas>
                     </div>
                 </div>
 
                 <!-- System Overview Heading -->
-                <div class="mb-2 ml-1 mt-6">
+                <div class="mb-2 ml-1 mt-6 flex items-center justify-between">
                     <span
                         class="section-heading bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Job
                         Placement &amp; Hiring</span>
+                    <a href="{{ route('reports.placement') }}" class="text-xs font-normal text-[#C73D1A] border border-[#C73D1A] rounded-lg px-3 py-1 flex items-center gap-1 transition-colors duration-200 hover:bg-[#C73D1A] hover:text-white">
+                        View Detailed Report <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </a>
                 </div>
 
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
@@ -719,136 +588,8 @@
                             <option value="24" {{ $hireMonths === 24 ? 'selected' : '' }}>Last 24 months</option>
                         </select>
                     </div>
-                    <div style="margin-top:10px; height:160px;">
+                    <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.placement') }}')">
                         <canvas id="chartHires"></canvas>
-                    </div>
-                </div>
-
-                <!-- System Overview Heading -->
-                <div class="mb-2 ml-1 mt-6">
-                    <span
-                        class="section-heading bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Employed
-                        Alumni Report</span>
-                </div>
-
-                <div class="chart-card mb-4">
-                    <div class="flex items-center justify-between mb-3 gap-3">
-                        <p class="card-sub" style="margin:0;">
-                            {{ $employedAlumniTable->count() }}
-                            {{ $dashboardFilters['employment_status'] === 'unemployed' ? 'unemployed' : 'employed' }}
-                            {{ $employedAlumniTable->count() === 1 ? 'alumnus' : 'alumni' }} matching the current filters
-                        </p>
-                        <div style="position:relative; width:260px;">
-                            <input type="text" id="employedAlumniSearch" onkeyup="filterEmployedAlumniRows()"
-                                placeholder="Search by name"
-                                style="width:100%; padding:6px 10px; font-size:12px; border:1px solid #d1d5db; border-radius:6px; font-family:'Montserrat',sans-serif; outline:none;">
-                        </div>
-                    </div>
-                    <div style="overflow-x:auto; overflow-y:auto; max-height:420px;">
-                        <table style="width:100%; border-collapse:collapse; font-size:11px;">
-                            <thead>
-                                <tr style="background:#0E0F3B; color:#fff; text-align:left; position:sticky; top:0; z-index:1;">
-                                    <th style="padding:8px 10px;">Name</th>
-                                    <th style="padding:8px 10px;">Batch</th>
-                                    <th style="padding:8px 10px;">Program</th>
-                                    <th style="padding:8px 10px;">Workplace</th>
-                                    <th style="padding:8px 10px;">Position</th>
-                                    <th style="padding:8px 10px;">Industry</th>
-                                    <th style="padding:8px 10px;">Employment Date</th>
-                                    <th style="padding:8px 10px;">Aligned?</th>
-                                </tr>
-                            </thead>
-                            <tbody id="employedAlumniTbody">
-                                @forelse ($employedAlumniTable as $a)
-                                @php $fullName = trim(($a->user->user_first_name ?? '') . ' ' . ($a->user->user_last_name ?? '')); @endphp
-                                <tr data-search="{{ mb_strtolower($fullName) }}" style="border-top:1px solid #f1f5f9;">
-                                    <td style="padding:7px 10px; font-weight:600; color:#0E0F3B;">{{ $fullName }}</td>
-                                    <td style="padding:7px 10px;">{{ optional($a->alumnus_batch)->format('Y') }}</td>
-                                    <td style="padding:7px 10px;">{{ $a->program->program_name ?? 'N/A' }}</td>
-                                    <td style="padding:7px 10px;">{{ $a->alumnus_workplace_undisclosed ? 'Undisclosed' : ($a->alumnus_workplace ?? 'N/A') }}</td>
-                                    <td style="padding:7px 10px;">{{ $a->alumnus_job_position ?? 'N/A' }}</td>
-                                    <td style="padding:7px 10px;">{{ $a->industry->industry_name ?? 'N/A' }}</td>
-                                    <td style="padding:7px 10px;">{{ optional($a->alumnus_employment_date)->format('M d, Y') ?? 'N/A' }}</td>
-                                    <td style="padding:7px 10px;">
-                                        @if ($a->alumnus_employment_status)
-                                        <span style="padding:2px 8px; border-radius:999px; font-size:9px; font-weight:700; {{ $a->hasCourseAlignedJob() ? 'background:#dcfce7;color:#16a34a;' : 'background:#f1f5f9;color:#64748b;' }}">
-                                            {{ $a->hasCourseAlignedJob() ? 'ALIGNED' : 'NOT ALIGNED' }}
-                                        </span>
-                                        @else
-                                        —
-                                        @endif
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="8" style="padding:24px; text-align:center; color:#9ca3af;">No matching alumni.</td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                        <p id="employedAlumniNoResults" class="hidden" style="text-align:center; color:#9ca3af; padding:20px 0; font-size:11px;">No matching alumni.</p>
-                    </div>
-                </div>
-
-                <!-- System Overview Heading -->
-                <div class="mb-2 ml-1 mt-6">
-                    <span
-                        class="section-heading bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Company
-                        Registration Report</span>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div class="chart-card">
-                        <div class="card-title">Registered Companies <span>({{ $registeredCompanies->count() }})</span></div>
-                        <div class="card-sub">Approved employer accounts</div>
-                        <div style="overflow-x:auto; margin-top:10px; max-height:260px; overflow-y:auto;">
-                            <table style="width:100%; border-collapse:collapse; font-size:11px;">
-                                <thead>
-                                    <tr style="background:#0E0F3B; color:#fff; text-align:left;">
-                                        <th style="padding:6px 8px;">Company</th>
-                                        <th style="padding:6px 8px;">Industry</th>
-                                        <th style="padding:6px 8px;">Contact</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse ($registeredCompanies as $employer)
-                                    <tr style="border-top:1px solid #f1f5f9;">
-                                        <td style="padding:6px 8px; font-weight:600; color:#0E0F3B;">{{ $employer->employer_company_name }}</td>
-                                        <td style="padding:6px 8px;">{{ $employer->industry->industry_name ?? 'N/A' }}</td>
-                                        <td style="padding:6px 8px;">{{ $employer->user->user_email ?? 'N/A' }}</td>
-                                    </tr>
-                                    @empty
-                                    <tr><td colspan="3" style="padding:16px; text-align:center; color:#9ca3af;">None yet.</td></tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="card-title">Pending / Unregistered Companies <span>({{ $pendingCompanies->count() }})</span></div>
-                        <div class="card-sub">Awaiting admin approval</div>
-                        <div style="overflow-x:auto; margin-top:10px; max-height:260px; overflow-y:auto;">
-                            <table style="width:100%; border-collapse:collapse; font-size:11px;">
-                                <thead>
-                                    <tr style="background:#0E0F3B; color:#fff; text-align:left;">
-                                        <th style="padding:6px 8px;">Company</th>
-                                        <th style="padding:6px 8px;">Industry</th>
-                                        <th style="padding:6px 8px;">Contact</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse ($pendingCompanies as $employer)
-                                    <tr style="border-top:1px solid #f1f5f9;">
-                                        <td style="padding:6px 8px; font-weight:600; color:#0E0F3B;">{{ $employer->employer_company_name }}</td>
-                                        <td style="padding:6px 8px;">{{ $employer->industry->industry_name ?? 'N/A' }}</td>
-                                        <td style="padding:6px 8px;">{{ $employer->user->user_email ?? 'N/A' }}</td>
-                                    </tr>
-                                    @empty
-                                    <tr><td colspan="3" style="padding:16px; text-align:center; color:#9ca3af;">None pending.</td></tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
                     </div>
                 </div>
 
@@ -857,8 +598,8 @@
                      <!-- Networking Activity -->
                     <div class="chart-card">
                         <div class="card-title">Alumni <span>Networking Activity</span></div>
-                        <div class="card-sub">Monthly connections & messages — Jan to Jun 2025</div>
-                        <div style="margin-top:10px; height:130px;">
+                        <div class="card-sub">New conversations & messages — last 6 months</div>
+                        <div class="chart-clickable" style="margin-top:10px; height:130px;" onclick="goToReport('{{ route('reports.networking') }}')">
                             <canvas id="chartNetworking"></canvas>
                         </div>
                     </div>
@@ -870,19 +611,21 @@
                             <div>
                                 <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px;">Alumni ID
                                     Status</div>
-                                <div style="height:130px;"><canvas id="chartAlumniID"></canvas></div>
+                                <div class="chart-clickable" style="height:130px;" onclick="window.location.href='{{ route('reports.alumniid') }}'"><canvas id="chartAlumniID"></canvas></div>
                                 <div style="font-size:9.5px;color:#6b7280;margin-top:8px;line-height:1.7;">
-                                    Registered for ID: <strong>6,842 (80%)</strong><br>
-                                    IDs Distributed: <strong>5,973 (69%)</strong>
+                                    @php $alumniIdRegistered = $alumniIdCounts->sum(); @endphp
+                                    Registered for ID: <strong>{{ number_format($alumniIdRegistered) }} ({{ $alumniIdTotal > 0 ? round($alumniIdRegistered / $alumniIdTotal * 100) : 0 }}%)</strong><br>
+                                    IDs Claimed: <strong>{{ number_format($alumniIdCounts['claimed']) }} ({{ $alumniIdTotal > 0 ? round($alumniIdCounts['claimed'] / $alumniIdTotal * 100) : 0 }}%)</strong>
                                 </div>
                             </div>
                             <div>
                                 <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px;">Yearbook
                                     Distribution</div>
-                                <div style="height:130px;"><canvas id="chartYearbook"></canvas></div>
+                                <div class="chart-clickable" style="height:130px;" onclick="window.location.href='{{ route('reports.alumniid') }}'"><canvas id="chartYearbook"></canvas></div>
                                 <div style="font-size:9.5px;color:#6b7280;margin-top:8px;line-height:1.7;">
-                                    Distributed: 53.4% &nbsp;<strong>1,247 (54.8%)</strong><br>
-                                    Pending: 14.6% &nbsp;&nbsp;&nbsp;<strong>7,295 (15.4%)</strong>
+                                    @php $yearbookPending = $yearbookCounts['pending'] + $yearbookCounts['ready_to_claim']; @endphp
+                                    Claimed: <strong>{{ number_format($yearbookCounts['claimed']) }} ({{ $alumniIdTotal > 0 ? round($yearbookCounts['claimed'] / $alumniIdTotal * 100) : 0 }}%)</strong><br>
+                                    Pending: <strong>{{ number_format($yearbookPending) }} ({{ $alumniIdTotal > 0 ? round($yearbookPending / $alumniIdTotal * 100) : 0 }}%)</strong>
                                 </div>
                             </div>
                         </div>
@@ -892,24 +635,30 @@
                     <div class="chart-card">
                         <div class="card-title">Recent Activity & Updates</div>
                         <div class="activity-section-label">Latest Event Posted:</div>
+                        @if ($latestEvent)
                         <div class="activity-row">
-                            <span>PLV 23rd Founding Anniversary 2025</span>
+                            <span>{{ $latestEvent->title }}</span>
                             <div class="flex items-center gap-3">
-                                <span style="font-size:11px;color:#6b7280;">12-02-2025</span>
-                                <button class="btn-edit">Edit</button>
+                                <span style="font-size:11px;color:#6b7280;">{{ $latestEvent->event_datetime->format('m-d-Y') }}</span>
+                                <a href="{{ route('notices.management') }}?notice={{ $latestEvent->id }}" class="btn-edit" style="display:inline-block;text-decoration:none;">Edit</a>
                             </div>
                         </div>
+                        @else
+                        <div class="activity-row" style="color:#9ca3af;font-style:italic;font-size:11px;">
+                            <span>No events posted yet</span>
+                        </div>
+                        @endif
                         <div class="activity-section-label">Recent Directory Updates:</div>
+                        @forelse ($recentProfileUpdates as $updatedAlumnus)
                         <div class="activity-row">
-                            <span>John M. Santos (Profile Updated)</span>
+                            <span>{{ trim($updatedAlumnus->user->user_first_name . ' ' . $updatedAlumnus->user->user_last_name) }} (Profile Updated)</span>
                         </div>
-                        <div class="activity-row">
-                            <span>Mark Garcia (Profile Updated)</span>
-                        </div>
+                        @empty
                         <div class="activity-row"
                             style="color:#9ca3af;font-style:italic;font-size:11px;border-top:1px solid #f1f5f9;">
-                            <span>No more recent updates</span>
+                            <span>No recent updates</span>
                         </div>
+                        @endforelse
                     </div>
 
                 </div>
@@ -923,6 +672,75 @@
 
     <script>
     lucide.createIcons();
+
+    // Every chart on this dashboard that drills into a Reports page requires
+    // the 'reports' admin permission — an admin who only has Dashboard
+    // access (every admin does, by default) would otherwise get a raw 403
+    // on click. goToReport() is the only way any chart navigates there, so
+    // gating it here covers all of them; the DOMContentLoaded block below
+    // also strips the clickable styling itself so it doesn't even look
+    // interactive for someone who can't use it.
+    const CAN_VIEW_REPORTS = @json(Auth::user()->canAccessAdminFeature('reports'));
+    function goToReport(url) {
+        if (CAN_VIEW_REPORTS) window.location.href = url;
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!CAN_VIEW_REPORTS) {
+            document.querySelectorAll('.chart-clickable').forEach(function (el) {
+                el.classList.remove('chart-clickable');
+            });
+        }
+    });
+
+    // ── Item 18: EXPORT PDF now captures every real Chart.js canvas as a
+    // PNG and POSTs it alongside the currently-applied filters, so the PDF
+    // shows actual graphs instead of re-deriving everything as tables.
+    // chartNetworking/chartAlumniID/chartYearbook are real data now (see
+    // buildNetworkingReport()/buildAlumniIdYearbookReport()) but aren't part
+    // of this export — they get their own dedicated exportable report pages
+    // instead (reports.networking / reports.alumniid), reached by clicking
+    // either chart. ──
+    const EXPORTABLE_CHART_IDS = ['chartStatus', 'chartPlacement', 'chartAlignment', 'chartGender', 'chartInterval', 'chartJobBeforeGrad', 'chartEmploymentByMonth', 'chartHires'];
+
+    function exportPdfWithCharts() {
+        const charts = {};
+        EXPORTABLE_CHART_IDS.forEach(id => {
+            const canvas = document.getElementById(id);
+            if (canvas) {
+                try { charts[id] = canvas.toDataURL('image/png'); } catch (e) { /* tainted/unsupported canvas — falls back to a table for this one */ }
+            }
+        });
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = {!! json_encode(route('superAdmin.dashboard.exportPdf.post')) !!};
+        form.style.display = 'none';
+
+        const addField = (name, value) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = value;
+            form.appendChild(input);
+        };
+
+        addField('_token', '{{ csrf_token() }}');
+        addField('charts', JSON.stringify(charts));
+        addField('hire_months', document.getElementById('hiresRangeSelect')?.value || '{{ $hireMonths }}');
+        addField('top_companies', document.getElementById('topCompaniesSelect')?.value || '{{ $topCompaniesLimit }}');
+
+        // Every currently-APPLIED filter (already reflected in the URL after
+        // the last "Apply Filters" submit) — not any unsaved, still-staged
+        // checkbox state — matching how the rest of the page's filters work.
+        const params = new URLSearchParams(window.location.search);
+        ['batch', 'program_id', 'employment_status', 'college', 'year'].forEach(key => {
+            params.getAll(key + '[]').forEach(v => addField(key + '[]', v));
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+        form.remove();
+    }
 
     // Preserves whatever's already in the URL (batch/program_id/employment_status)
     // and just swaps hire_months, so changing the range never clears the
@@ -944,15 +762,19 @@
     Chart.defaults.font = fontDef;
     Chart.defaults.color = '#6b7280';
 
-    // 1. Networking Activity — dual line
+    // 1. Networking Activity — dual line, real Conversation/Message counts
+    // (see DashboardReportService::buildNetworkingReport()), trailing 6
+    // months to match this widget's fixed (non-selectable) window.
+    const networkingConversations = @json($networkingReport['monthlyConversations']);
+    const networkingMessages = @json($networkingReport['monthlyMessages']);
     new Chart(document.getElementById('chartNetworking'), {
         type: 'line',
         data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            labels: Object.keys(networkingConversations),
             datasets: [
                 {
                     label: 'Connections',
-                    data: [120, 180, 160, 230, 290, 340],
+                    data: Object.values(networkingConversations),
                     borderColor: '#e05c00',
                     backgroundColor: 'rgba(224,92,0,.08)',
                     borderWidth: 2,
@@ -962,7 +784,7 @@
                 },
                 {
                     label: 'Messages',
-                    data: [200, 250, 220, 300, 380, 450],
+                    data: Object.values(networkingMessages),
                     borderColor: '#1a3a6e',
                     backgroundColor: 'rgba(26,58,110,.08)',
                     borderWidth: 2,
@@ -1130,6 +952,32 @@
         }
     });
 
+    // 4c-1. Job Before Graduation & Internships — pie (4 mutually-exclusive buckets, see DashboardReportService::buildEmploymentReports())
+    const jobBeforeGradPie = @json($jobBeforeGradPie);
+    new Chart(document.getElementById('chartJobBeforeGrad'), {
+        type: 'pie',
+        data: {
+            labels: Object.keys(jobBeforeGradPie),
+            datasets: [{
+                data: Object.values(jobBeforeGradPie),
+                backgroundColor: ['#C73D1A', '#1a3a6e', '#e05c00', '#cbd5e1'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: { font: { family: 'Montserrat', size: 8 }, boxWidth: 8 }
+                }
+            }
+        }
+    });
+
     // 4c-2. Employment by Month — bar (Jan-Dec, alumnus_employment_date, all years pooled)
     const employmentByMonth = @json($employmentByMonth);
     new Chart(document.getElementById('chartEmploymentByMonth'), {
@@ -1182,26 +1030,13 @@
         }
     });
 
-    // ── Employed Alumni report search ──
-    function filterEmployedAlumniRows() {
-        const query = document.getElementById('employedAlumniSearch').value.trim().toLowerCase();
-        const rows = document.querySelectorAll('#employedAlumniTbody tr[data-search]');
-        let visibleCount = 0;
-        rows.forEach(row => {
-            const match = row.dataset.search.includes(query);
-            row.style.display = match ? '' : 'none';
-            if (match) visibleCount++;
-        });
-        document.getElementById('employedAlumniNoResults').classList.toggle('hidden', visibleCount !== 0 || rows.length === 0);
-    }
-
     // 5. Alumni ID Status — doughnut (pie)
     new Chart(document.getElementById('chartAlumniID'), {
         type: 'doughnut',
         data: {
-            labels: ['Not Yet Claimed', 'Pending', 'Claimed'],
+            labels: ['Pending', 'Ready to Claim', 'Claimed'],
             datasets: [{
-                data: [1500, 5973, 6842],
+                data: {!! json_encode([$alumniIdCounts['pending'], $alumniIdCounts['ready_to_claim'], $alumniIdCounts['claimed']]) !!},
                 backgroundColor: ['#dc2626', '#e05c00', '#16a34a'],
                 borderWidth: 2,
                 borderColor: '#fff'
@@ -1228,10 +1063,10 @@
     new Chart(document.getElementById('chartYearbook'), {
         type: 'doughnut',
         data: {
-            labels: ['Claimed', 'Pending', 'Not Claimed'],
+            labels: ['Pending', 'Ready to Claim', 'Claimed'],
             datasets: [{
-                data: [53.4, 14.6, 32],
-                backgroundColor: ['#16a34a', '#e05c00', '#dc2626'],
+                data: {!! json_encode([$yearbookCounts['pending'], $yearbookCounts['ready_to_claim'], $yearbookCounts['claimed']]) !!},
+                backgroundColor: ['#dc2626', '#e05c00', '#16a34a'],
                 borderWidth: 2,
                 borderColor: '#fff'
             }]
@@ -1253,6 +1088,9 @@
         }
     });
 </script>
+
+@include('partials.staged-multiselect')
+@include('partials.report-college-cascade')
 
 </body>
 

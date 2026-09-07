@@ -24,13 +24,17 @@ class AlumniId extends Model
      * source of truth so the controller, the view's status buttons, and the
      * badge colors can't drift out of sync with each other.
      */
-    public const STATUSES = ['pending', 'under_review', 'ready_to_claim', 'claimed'];
+    /**
+     * "Under Review" was removed as a status entirely (see migration
+     * 2026_09_06_000000_remove_intermediate_statuses_from_alumni_id_and_yearbook)
+     * — any record that was sitting there fell back to 'pending'.
+     */
+    public const STATUSES = ['pending', 'ready_to_claim', 'claimed'];
 
     public static function statusLabels(): array
     {
         return [
             'pending' => 'Pending',
-            'under_review' => 'Under Review',
             'ready_to_claim' => 'Ready to Claim',
             'claimed' => 'Claimed',
         ];
@@ -40,7 +44,6 @@ class AlumniId extends Model
     {
         return [
             'pending' => 'bg-amber-100 text-amber-700',
-            'under_review' => 'bg-blue-100 text-blue-700',
             'ready_to_claim' => 'bg-purple-100 text-purple-700',
             'claimed' => 'bg-green-100 text-green-700',
         ];
@@ -51,7 +54,6 @@ class AlumniId extends Model
     {
         return [
             'pending' => 'bg-amber-500 hover:bg-amber-600',
-            'under_review' => 'bg-blue-500 hover:bg-blue-600',
             'ready_to_claim' => 'bg-purple-500 hover:bg-purple-600',
             'claimed' => 'bg-green-600 hover:bg-green-700',
         ];
@@ -65,7 +67,6 @@ class AlumniId extends Model
     public static function markShortLabels(): array
     {
         return [
-            'under_review' => 'Reviewed',
             'ready_to_claim' => 'Ready',
             'claimed' => 'Claimed',
         ];
@@ -101,7 +102,7 @@ class AlumniId extends Model
         return self::STATUSES[$index + 1] ?? null;
     }
 
-    /** Advances exactly one stage, e.g. pending -> under_review. */
+    /** Advances exactly one stage, e.g. pending -> ready_to_claim. */
     public function markNext(): void
     {
         $next = $this->nextStatus();

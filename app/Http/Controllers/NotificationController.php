@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UserNotification;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
@@ -17,12 +19,39 @@ class NotificationController extends Controller
         ]);
     }
 
-    /** Fired when the dropdown is opened — matches "seen it" the moment a user looks, not per-item. */
-    public function markAllRead()
+    /**
+     * Fired only by the explicit "Mark all as read" action (dropdown button
+     * or the "all" page) — no longer auto-triggered by opening the
+     * dropdown, so unread state persists until the user actually dismisses
+     * it. Dropdown calls this via fetch() with an Accept: application/json
+     * header; the "all" page's plain <form> POST doesn't send one, so a
+     * normal redirect-back is what that request actually needs.
+     */
+    public function markAllRead(Request $request)
     {
         Auth::user()->userNotifications()->unread()->update(['read_at' => now()]);
 
-        return response()->json(['success' => true]);
+        return $request->wantsJson()
+            ? response()->json(['success' => true])
+            : back();
+    }
+
+    /**
+     * Single entry point for "click a notification": marks just that one
+     * read, then sends the user to whatever it's about (targetUrl()), or
+     * back to the notifications list for types with no specific
+     * destination. Used by both the dropdown and the full "all" page so
+     * there's exactly one place individual mark-as-read + navigate lives.
+     */
+    public function open(UserNotification $notification)
+    {
+        abort_unless($notification->user_id === Auth::id(), 403);
+
+        if ($notification->read_at === null) {
+            $notification->update(['read_at' => now()]);
+        }
+
+        return redirect($notification->targetUrl() ?? route('notifications.all'));
     }
 
     /**
@@ -31,24 +60,26 @@ class NotificationController extends Controller
      * shows the latest 20 with no pagination. Two view families like the
      * rest of the app: admin/super_admin get the sidebar-layout view,
      * alumni/employer get the top-nav one.
+     *
+     * No longer marks everything read as a side effect of viewing this
+     * page — read state now only changes via an explicit click (open()
+     * above) or "Mark all as read", so the "Unread" tab stays meaningful.
      */
-    public function all()
+    public function all(Request $request)
     {
-        $notifications = Auth::user()->userNotifications()
-            ->latest()
-            ->paginate(20);
+        $activeTab = $request->query('tab') === 'unread' ? 'unread' : 'all';
 
-        // Read here, before the bulk update below — the paginator's models
-        // are already loaded into memory with their original read_at, so
-        // the page still renders "what was unread when you opened this"
-        // even though the DB is updated to all-read immediately after.
-        Auth::user()->userNotifications()->unread()->update(['read_at' => now()]);
+        $notifications = Auth::user()->userNotifications()
+            ->when($activeTab === 'unread', fn ($q) => $q->unread())
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
 
         $user = Auth::user();
         $view = in_array($user->user_role, ['admin', 'super_admin'], true)
             ? 'superAdmin.notifications'
             : 'notifications.index';
 
-        return view($view, compact('notifications', 'user'));
+        return view($view, compact('notifications', 'user', 'activeTab'));
     }
 }

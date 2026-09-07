@@ -17,6 +17,11 @@ class JobApplication extends Model
         'hired_at',
         'application_score',
         'is_read',
+        'resume_source',
+        'resume_path',
+        'cover_letter_source',
+        'cover_letter_path',
+        'builder_resume_snapshot',
     ];
 
     protected $casts = [
@@ -24,6 +29,7 @@ class JobApplication extends Model
         'hired_at' => 'datetime',
         'application_score' => 'decimal:2',
         'is_read' => 'boolean',
+        'builder_resume_snapshot' => 'array',
     ];
 
     public function job()

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\DeactEmployerMail;
 use App\Models\Employer;
+use App\Models\JobApplication;
 use App\Models\JobPosting;
 use App\Models\Notice;
 use App\Models\User;
@@ -30,6 +31,17 @@ class EmployerController extends Controller
         $employer = $user->employer;
         $employerId = $user->user_id;
 
+        // One grouped query for the whole applicant-status breakdown
+        // (pending/shortlisted/hired/declined) instead of four separate
+        // COUNT queries — the dashboard's stat tiles and the "total
+        // applicants" figure both read off this same result.
+        $applicationsByStatus = DB::table('job_applications')
+            ->join('job_postings', 'job_postings.job_posting_id', '=', 'job_applications.job_id')
+            ->where('job_postings.user_id', $employerId)
+            ->selectRaw('application_status, COUNT(*) as total')
+            ->groupBy('application_status')
+            ->pluck('total', 'application_status');
+
         $stats = [
             'activePostings' => JobPosting::where('user_id', $employerId)->approved()->open()->count(),
             // Mirrors the same $job->applicants->where('pivot.is_read', false)
@@ -42,6 +54,10 @@ class EmployerController extends Controller
             'expiringSoon' => JobPosting::where('user_id', $employerId)->approved()->open()
                 ->whereBetween('job_closing_date', [now()->toDateString(), now()->addDays(self::EXPIRING_SOON_DAYS)->toDateString()])
                 ->count(),
+            'totalApplicants' => $applicationsByStatus->sum(),
+            'pending' => $applicationsByStatus->get('pending', 0),
+            'shortlisted' => $applicationsByStatus->get('shortlisted', 0),
+            'hired' => $applicationsByStatus->get('hired', 0),
         ];
 
         // Active (approved + not yet closed) postings first, then ranked by
@@ -56,13 +72,30 @@ class EmployerController extends Controller
             ->orderByDesc('applications_count')
             ->get();
 
+        // Highest applicant count among their postings — the "traffic by
+        // posting" widget scales each bar against this so the busiest post
+        // reads as a full bar, not an arbitrary fixed max.
+        $maxApplicantsPerPosting = max(1, (int) $jobPostings->max('applications_count'));
+
+        // Newest applicants across every posting, for the "jump straight to
+        // whoever just applied" widget — same is_read flag the unreadApplicants
+        // stat and My Job Postings page already use.
+        $recentApplicants = JobApplication::with(['alumnus.user', 'job'])
+            ->whereHas('job', fn ($q) => $q->where('user_id', $employerId))
+            ->latest('application_date')
+            ->take(6)
+            ->get();
+
         $recentAnnouncements = Notice::category('announcement')
             ->visibleToEmployer()
             ->orderByDesc('event_datetime')
             ->take(3)
             ->get();
 
-        return view('employer.dashboard', compact('employer', 'stats', 'jobPostings', 'recentAnnouncements'));
+        return view('employer.dashboard', compact(
+            'employer', 'stats', 'jobPostings', 'maxApplicantsPerPosting',
+            'recentApplicants', 'recentAnnouncements'
+        ));
     }
 
     /**
@@ -123,6 +156,12 @@ class EmployerController extends Controller
 
     public function updateEmployerProfile(Request $request, $employer)
     {
+        // Self-service only — same missing-ownership-check bug already found
+        // and fixed once for AlumnusController::updateAlumniProfile(). Only
+        // employer/edit-profile.blade.php posts here, always with the
+        // logged-in employer's own id.
+        abort_unless(Auth::check() && Auth::id() == $employer, 403);
+
         $user = User::where('user_id', $employer)->firstOrFail();
         // Validate the incoming request data
         $validated = $request->validate([
@@ -139,6 +178,9 @@ class EmployerController extends Controller
             'employer_year_established' => 'nullable|date_format:Y',
             'employer_company_size' => 'nullable|string',
             'employer_website_url' => 'nullable|url',
+            'industry_id' => 'nullable|exists:industries,industry_id',
+            'addresses' => ['nullable', 'array'],
+            'addresses.*' => ['nullable', 'string', 'max:255'],
         ]);
 
         // Update the user's profile information
@@ -170,6 +212,7 @@ class EmployerController extends Controller
                     'employer_year_established' => $validated['employer_year_established'] ?? $employer->employer_year_established,
                     'employer_company_size' => $validated['employer_company_size'] ?? $employer->employer_company_size,
                     'employer_website_url' => $validated['employer_website_url'] ?? $employer->employer_website_url,
+                    'industry_id' => $validated['industry_id'] ?? $employer->industry_id,
                 ]);
 
 
@@ -192,6 +235,23 @@ class EmployerController extends Controller
                     $employer->update([
                         'employer_company_logo' => $companyLogo,
                     ]);
+                }
+
+                // Company addresses — replaced wholesale, same pattern as the
+                // resume builder's experience/certification rows. Safe here
+                // since job postings store the address as a plain string at
+                // posting time (not a foreign key), so deleting/recreating
+                // these rows never orphans anything.
+                if (array_key_exists('addresses', $validated)) {
+                    $employer->addresses()->delete();
+                    $addresses = collect($validated['addresses'])
+                        ->map(fn ($a) => trim((string) $a))
+                        ->filter()
+                        ->unique()
+                        ->values();
+                    foreach ($addresses as $address) {
+                        $employer->addresses()->create(['address' => $address]);
+                    }
                 }
             });
         } catch (\Exception $e) {

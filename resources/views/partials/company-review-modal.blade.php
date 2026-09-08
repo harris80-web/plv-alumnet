@@ -51,6 +51,7 @@
 
     function castCompanyVote(btn) {
         const employerId = btn.dataset.employerId;
+        const jobId = btn.dataset.jobId;
         const voteType = btn.dataset.voteType;
         btn.disabled = true;
 
@@ -61,7 +62,7 @@
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': companyVoteCsrfToken(),
             },
-            body: 'vote=' + encodeURIComponent(voteType),
+            body: 'vote=' + encodeURIComponent(voteType) + '&job_posting_id=' + encodeURIComponent(jobId),
         })
             .then(function (res) { return res.json(); })
             .then(function (data) {
@@ -69,7 +70,7 @@
                 // counts in place. It no longer pops the review-message
                 // modal; that's only reachable via the star-rating picker
                 // now, so voting itself stays a one-click, no-prompt action.
-                updateCompanyVoteUI(employerId, data);
+                updateCompanyVoteUI(employerId, data, jobId);
             })
             .finally(function () { btn.disabled = false; });
     }
@@ -99,12 +100,24 @@
         openCompanyReviewModal(employerId, 'rating', rating, wrap.dataset.reviewBody || '');
     }
 
-    function updateCompanyVoteUI(employerId, data) {
+    function updateCompanyVoteUI(employerId, data, jobId) {
+        // Aggregate up/down counts belong to the COMPANY, so every card for
+        // this employer shows the same totals. Which button is highlighted
+        // as "mine" is per JOB POSTING though (see JobPostingVote) — only
+        // update the active state on cards for the specific posting just
+        // voted on; other postings from the same company keep whatever
+        // their own vote state already was.
         document.querySelectorAll('.vote-btn[data-employer-id="' + employerId + '"]').forEach(function (b) {
             const type = b.dataset.voteType;
-            const isActive = data.myVote === type;
-
             b.querySelector('.vote-count').textContent = type === 'upvote' ? data.upvotes : data.downvotes;
+
+            // No jobId means this update came from a rating-only commit
+            // (see commitCompanyReview) which never touches any vote — skip
+            // re-deriving "active" from data.myVote there, since that field
+            // is meaningless (always null) on a rating-only response.
+            if (jobId === undefined || b.dataset.jobId !== jobId) return;
+
+            const isActive = data.myVote === type;
 
             const activeClasses = type === 'upvote'
                 ? ['bg-green-600', 'text-white', 'border-green-600']

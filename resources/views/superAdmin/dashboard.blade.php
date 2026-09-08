@@ -303,12 +303,9 @@
                 ])
 
                 <!-- System Overview Heading -->
-                <div class="mb-2 ml-1 flex items-center justify-between">
+                <div class="mb-2 ml-1 flex items-center">
                     <span
                         class="section-heading bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Overview</span>
-                    <a href="{{ route('reports.employment') }}" class="text-xs font-normal text-[#C73D1A] border border-[#C73D1A] rounded-lg px-3 py-1 flex items-center gap-1 transition-colors duration-200 hover:bg-[#C73D1A] hover:text-white">
-                        View Detailed Report <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-                    </a>
                 </div>
 
                 <!-- Stat Cards -->
@@ -405,7 +402,7 @@
                     <div class="chart-card">
                         <div class="card-title">Employment Status Breakdown</div>
                         <div class="card-sub">Overall distribution of all alumni and their employment status</div>
-                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.employment') }}')">
+                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.show', 'employment-status') }}')">
                             <canvas id="chartStatus"></canvas>
                         </div>
                     </div>
@@ -414,7 +411,7 @@
                     <div class="chart-card">
                         <div class="card-title">Industry Distribution of <span>Employed Alumni</span></div>
                         <div class="card-sub">Sectors where PLV alumni are currently employed</div>
-                        <div class="ind-bar-wrap">
+                        <div class="ind-bar-wrap chart-clickable" onclick="goToReport('{{ route('reports.show', 'industry-distribution') }}')">
                             @forelse ($industryDistribution as $industryName => $count)
                             @php $pct = $employedCount > 0 ? round($count / $employedCount * 100) : 0; @endphp
                             <div class="ind-row"><span class="ind-label">{{ $industryName }}</span>
@@ -436,7 +433,7 @@
                     <div class="chart-card">
                         <div class="card-title">Employment Rate by Batch/Year</div>
                         <div class="card-sub">Employed vs. unemployed counts across graduation batches</div>
-                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.employment') }}')">
+                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.show', 'employment-by-batch') }}')">
                             <canvas id="chartPlacement"></canvas>
                         </div>
                     </div>
@@ -446,7 +443,7 @@
                     <div class="chart-card">
                         <div class="card-title">Job-to-Degree Alignment by Program/Course</div>
                         <div class="card-sub">% of employed alumni whose job matches their degree field ({{ $alignmentRate }}% overall) &mdash; every program</div>
-                        <div class="chart-clickable" style="margin-top:10px; height:220px; overflow-y:auto;" onclick="goToReport('{{ route('reports.employment') }}')">
+                        <div class="chart-clickable" style="margin-top:10px; height:220px; overflow-y:auto;" onclick="goToReport('{{ route('reports.show', 'job-alignment') }}')">
                             <div style="height:{{ max(160, $programAlignment->count() * 26) }}px;">
                                 <canvas id="chartAlignment"></canvas>
                             </div>
@@ -462,7 +459,7 @@
                     <div class="chart-card">
                         <div class="card-title">Employment Rate by Gender</div>
                         <div class="card-sub">Employed vs. total alumni per gender</div>
-                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.employment') }}')">
+                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.show', 'employment-by-gender') }}')">
                             <canvas id="chartGender"></canvas>
                         </div>
                     </div>
@@ -471,7 +468,7 @@
                     <div class="chart-card">
                         <div class="card-title">Employment Interval</div>
                         <div class="card-sub">Time from graduation to first job (alumni with a recorded first-job date)</div>
-                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.employment') }}')">
+                        <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.show', 'employment-interval') }}')">
                             <canvas id="chartInterval"></canvas>
                         </div>
                     </div>
@@ -483,7 +480,7 @@
                     <div class="card-title">Job Before Graduation &amp; Internships</div>
                     <div class="card-sub">Of alumni with a recorded first job</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 items-center">
-                        <div class="chart-clickable" style="height:180px;" onclick="goToReport('{{ route('reports.employment') }}')">
+                        <div class="chart-clickable" style="height:180px;" onclick="goToReport('{{ route('reports.show', 'job-before-grad') }}')">
                             <canvas id="chartJobBeforeGrad"></canvas>
                         </div>
                         <div class="space-y-2">
@@ -517,19 +514,16 @@
                             &middot; {{ $selectedProgramNames->implode(', ') }}
                         @endif
                         &mdash; includes employment recorded from a system hire and employment alumni added themselves on their profile</div>
-                    <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.employment') }}')">
+                    <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.show', 'employment-by-month') }}')">
                         <canvas id="chartEmploymentByMonth"></canvas>
                     </div>
                 </div>
 
                 <!-- System Overview Heading -->
-                <div class="mb-2 ml-1 mt-6 flex items-center justify-between">
+                <div class="mb-2 ml-1 mt-6 flex items-center">
                     <span
                         class="section-heading bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Job
                         Placement &amp; Hiring</span>
-                    <a href="{{ route('reports.placement') }}" class="text-xs font-normal text-[#C73D1A] border border-[#C73D1A] rounded-lg px-3 py-1 flex items-center gap-1 transition-colors duration-200 hover:bg-[#C73D1A] hover:text-white">
-                        View Detailed Report <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-                    </a>
                 </div>
 
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
@@ -559,7 +553,7 @@
                                 <option value="20" {{ $topCompaniesLimit === 20 ? 'selected' : '' }}>Top 20</option>
                             </select>
                         </div>
-                        <div class="ind-bar-wrap">
+                        <div class="ind-bar-wrap chart-clickable" onclick="goToReport('{{ route('reports.show', 'top-hiring-companies') }}')">
                             @forelse ($topHiringCompanies as $row)
                             @php $maxHires = $topHiringCompanies->max('hires') ?: 1; @endphp
                             <div class="ind-row"><span class="ind-label">{{ $row->job_posting_company }}</span>
@@ -588,7 +582,7 @@
                             <option value="24" {{ $hireMonths === 24 ? 'selected' : '' }}>Last 24 months</option>
                         </select>
                     </div>
-                    <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.placement') }}')">
+                    <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.show', 'hires-per-month') }}')">
                         <canvas id="chartHires"></canvas>
                     </div>
                 </div>
@@ -611,7 +605,7 @@
                             <div>
                                 <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px;">Alumni ID
                                     Status</div>
-                                <div class="chart-clickable" style="height:130px;" onclick="window.location.href='{{ route('reports.alumniid') }}'"><canvas id="chartAlumniID"></canvas></div>
+                                <div class="chart-clickable" style="height:130px;" onclick="window.location.href='{{ route('reports.show', 'alumni-id-status') }}'"><canvas id="chartAlumniID"></canvas></div>
                                 <div style="font-size:9.5px;color:#6b7280;margin-top:8px;line-height:1.7;">
                                     @php $alumniIdRegistered = $alumniIdCounts->sum(); @endphp
                                     Registered for ID: <strong>{{ number_format($alumniIdRegistered) }} ({{ $alumniIdTotal > 0 ? round($alumniIdRegistered / $alumniIdTotal * 100) : 0 }}%)</strong><br>
@@ -621,7 +615,7 @@
                             <div>
                                 <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px;">Yearbook
                                     Distribution</div>
-                                <div class="chart-clickable" style="height:130px;" onclick="window.location.href='{{ route('reports.alumniid') }}'"><canvas id="chartYearbook"></canvas></div>
+                                <div class="chart-clickable" style="height:130px;" onclick="window.location.href='{{ route('reports.show', 'yearbook-status') }}'"><canvas id="chartYearbook"></canvas></div>
                                 <div style="font-size:9.5px;color:#6b7280;margin-top:8px;line-height:1.7;">
                                     @php $yearbookPending = $yearbookCounts['pending'] + $yearbookCounts['ready_to_claim']; @endphp
                                     Claimed: <strong>{{ number_format($yearbookCounts['claimed']) }} ({{ $alumniIdTotal > 0 ? round($yearbookCounts['claimed'] / $alumniIdTotal * 100) : 0 }}%)</strong><br>

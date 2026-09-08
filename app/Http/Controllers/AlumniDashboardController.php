@@ -56,7 +56,7 @@ class AlumniDashboardController extends Controller
             // build its own much smaller data-* payload from scratch.
             $jobMatches = JobMatch::with([
                 'jobPosting.programs', 'jobPosting.industry', 'jobPosting.skills',
-                'jobPosting.user', 'jobPosting.employer.reviews', 'jobPosting.employer.user',
+                'jobPosting.user', 'jobPosting.employer.reviews', 'jobPosting.employer.votes', 'jobPosting.employer.user',
             ])
                 ->where('alumnus_id', $alumnus->user_id)
                 ->whereHas('jobPosting', fn ($q) => $q->approved()->open())

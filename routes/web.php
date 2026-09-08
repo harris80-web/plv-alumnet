@@ -147,6 +147,15 @@ Route::get('/superAdmin/reports/{group}/export-csv', [ReportController::class, '
 Route::get('/superAdmin/reports/{group}/export-pdf', [ReportController::class, 'exportPdf'])->whereIn('group', ['employment', 'placement', 'companies', 'alumniid', 'networking'])->name('reports.exportPdf')->middleware(['auth', 'feature:reports']);
 Route::post('/superAdmin/reports/{group}/export-pdf', [ReportController::class, 'exportPdf'])->whereIn('group', ['employment', 'placement', 'companies', 'alumniid', 'networking'])->name('reports.exportPdf.post')->middleware(['auth', 'feature:reports']);
 
+// One report, one page — each dashboard chart links to its own single-report
+// page (chart + its raw underlying records, pre-sorted by that chart's own
+// dimension), replacing the grouped pages above as the dashboard's actual
+// click targets (see ReportController::SINGLE_REPORTS for the full list).
+Route::get('/superAdmin/reports/view/{report}', [ReportController::class, 'show'])->name('reports.show')->middleware(['auth', 'feature:reports']);
+Route::get('/superAdmin/reports/view/{report}/export-csv', [ReportController::class, 'showExportCsv'])->name('reports.show.exportCsv')->middleware(['auth', 'feature:reports']);
+Route::get('/superAdmin/reports/view/{report}/export-pdf', [ReportController::class, 'showExportPdf'])->name('reports.show.exportPdf')->middleware(['auth', 'feature:reports']);
+Route::post('/superAdmin/reports/view/{report}/export-pdf', [ReportController::class, 'showExportPdf'])->name('reports.show.exportPdf.post')->middleware(['auth', 'feature:reports']);
+
 
 Route::get('/admin/dashboard', function () {
     return view('admin.dashboard');

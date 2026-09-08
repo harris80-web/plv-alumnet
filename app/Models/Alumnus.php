@@ -156,6 +156,24 @@ class Alumnus extends Model
         return $this->hasMany(JobApplication::class, 'alumnus_id', 'user_id');
     }
 
+    /**
+     * True once this alumnus has actually been hired for a job posted by
+     * the given employer — company vote/star-rating is restricted to
+     * alumni who were really hired there (see
+     * EmployerReviewController::vote() and job-post-card.blade.php's
+     * vote/star buttons), so a company can't be rated by someone who never
+     * worked for it. "Hired" here means any of their applications to that
+     * employer's postings ever reached application_status = 'hired',
+     * regardless of which specific posting or whether they're still there.
+     */
+    public function wasHiredByEmployer(int $employerId): bool
+    {
+        return $this->jobApplications()
+            ->where('application_status', 'hired')
+            ->whereHas('job', fn ($q) => $q->where('user_id', $employerId))
+            ->exists();
+    }
+
     public function jobMatches()
     {
         return $this->hasMany(JobMatch::class, 'alumnus_id', 'user_id');

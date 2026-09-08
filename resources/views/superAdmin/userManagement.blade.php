@@ -569,7 +569,7 @@ $current_page = 'user_management';
                         </table>
                       </div>
                       <div class="px-4 pb-4">
-                        @include('partials.table-pagination-bar', ['id' => 'alumniTable', 'mode' => 'reload', 'paginator' => $alumni, 'perPageParam' => 'alumni_per_page'])
+                        @include('partials.table-pagination-bar', ['id' => 'alumniTable', 'mode' => 'reload', 'paginator' => $alumni, 'perPageParam' => 'alumni_per_page', 'perPageOptions' => [5, 10, 15, 20, 50]])
                       </div>
                     </div>
                 </div>

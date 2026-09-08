@@ -23,6 +23,10 @@
         .chart-card { background: #fff; border-radius: 10px; padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
         .card-title { font-size: 13px; font-weight: 700; background: linear-gradient(to right, #0E0F3B, #C73D1A, #ED7A07); -webkit-background-clip: text; background-clip: text; color: transparent; display: inline-block; }
         .card-sub { font-size: 10.5px; color: #000; margin-top: 2px; }
+        table.report-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+        table.report-table th, table.report-table td { border-bottom: 1px solid #f1f5f9; padding: 6px 8px; text-align: left; }
+        table.report-table th { color: #0E0F3B; font-weight: 700; background: #f8fafc; }
+        .report-table-scroll { max-height: 220px; overflow-y: auto; }
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -96,6 +100,16 @@
                         <p style="font-size:11px;color:#9ca3af;">No hires recorded yet for the current filters.</p>
                         @endforelse
                     </div>
+                    <div class="report-table-scroll">
+                        <table class="report-table">
+                            <tr><th>Company</th><th>Hires</th></tr>
+                            @forelse ($r['topHiringCompanies'] as $row)
+                            <tr><td>{{ $row->job_posting_company }}</td><td>{{ $row->hires }}</td></tr>
+                            @empty
+                            <tr><td colspan="2" style="color:#9ca3af;">No records for the current filters.</td></tr>
+                            @endforelse
+                        </table>
+                    </div>
                 </div>
 
                 <div class="chart-card mb-4">
@@ -113,6 +127,70 @@
                         </select>
                     </div>
                     <div style="margin-top:10px; height:220px;"><canvas id="chartHires"></canvas></div>
+                    <div class="report-table-scroll">
+                        <table class="report-table">
+                            <tr><th>Month</th><th>Hires</th></tr>
+                            @forelse ($r['hiresPerMonth'] as $month => $count)
+                            <tr><td>{{ $month }}</td><td>{{ $count }}</td></tr>
+                            @empty
+                            <tr><td colspan="2" style="color:#9ca3af;">No records for the current filters.</td></tr>
+                            @endforelse
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Raw, one-row-per-application listing — the actual records
+                     both charts above were computed from. Landing here from a
+                     specific dashboard chart (see dashboard.blade.php's
+                     goToReport() calls) pre-sorts this by that chart's own
+                     dimension via ?sort=; the admin can still re-sort by any
+                     column or search by applicant name afterward. --}}
+                <div class="chart-card mb-4">
+                    <div class="flex items-center justify-between gap-3 flex-wrap">
+                        <div>
+                            <div class="card-title">Applications Report</div>
+                            <div class="card-sub">Every application in the current filters &mdash; click a column to sort, or search by applicant</div>
+                        </div>
+                        <div class="relative">
+                            <i data-lucide="search" style="width:12px;height:12px;position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#9ca3af;"></i>
+                            <input type="text" id="applicationTableSearch" placeholder="Search by applicant..." oninput="filterApplicationReportTable()"
+                                style="border:1px solid #d1d5db; border-radius:6px; padding:5px 10px 5px 26px; font-size:11px; font-family:'Montserrat',sans-serif;">
+                        </div>
+                    </div>
+                    <div class="report-table-scroll" style="max-height:400px;">
+                        <table class="report-table" id="applicationReportTable">
+                            <thead>
+                                <tr>
+                                    <th data-sort data-sort-key="applicant">Applicant <i data-lucide="chevron-down" class="sort-icon" style="width:9px;height:9px;display:inline-block;"></i></th>
+                                    <th data-sort data-sort-key="company">Company <i data-lucide="chevron-down" class="sort-icon" style="width:9px;height:9px;display:inline-block;"></i></th>
+                                    <th data-sort data-sort-key="position">Position <i data-lucide="chevron-down" class="sort-icon" style="width:9px;height:9px;display:inline-block;"></i></th>
+                                    <th data-sort data-sort-key="applied_date">Applied Date <i data-lucide="chevron-down" class="sort-icon" style="width:9px;height:9px;display:inline-block;"></i></th>
+                                    <th data-sort data-sort-key="status">Status <i data-lucide="chevron-down" class="sort-icon" style="width:9px;height:9px;display:inline-block;"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody id="applicationReportTbody">
+                                @forelse ($r['applicationsTable'] as $row)
+                                <tr data-name="{{ strtolower($row->applicant_name) }}">
+                                    <td>{{ $row->applicant_name }}</td>
+                                    <td>{{ $row->company }}</td>
+                                    <td>{{ $row->position }}</td>
+                                    <td data-sort-value="{{ $row->applied_date }}">{{ \Carbon\Carbon::parse($row->applied_date)->format('M d, Y') }}</td>
+                                    <td>{{ ucfirst($row->status) }}</td>
+                                </tr>
+                                @empty
+                                <tr><td colspan="5" style="color:#9ca3af;">No applications match the current filters.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-2">
+                        @include('partials.table-pagination-bar', [
+                            'id' => 'applicationReportTable',
+                            'mode' => 'client',
+                            'rowSelector' => '#applicationReportTbody tr[data-name]',
+                            'totalItems' => $r['applicationsTable']->count(),
+                        ])
+                    </div>
                 </div>
 
             </div>
@@ -132,6 +210,33 @@
             data: { labels: Object.keys(hiresPerMonth), datasets: [{ label: 'Hires', data: Object.values(hiresPerMonth), borderColor: '#e05c00', backgroundColor: 'rgba(224,92,0,.08)', borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxRotation: 60, autoSkip: true, maxTicksLimit: 12 } }, y: { ticks: { precision: 0 } } } }
         });
+
+        // Applications Report table — applicant-name search (combines with
+        // whatever column sort table-sort.blade.php's click handler already
+        // applied; that script only ever reorders <tr>s, it never hides
+        // them, so this is free to layer visibility on top independently).
+        function filterApplicationReportTable() {
+            const q = document.getElementById('applicationTableSearch').value.trim().toLowerCase();
+            document.querySelectorAll('#applicationReportTbody tr[data-name]').forEach(row => {
+                row.style.display = (!q || row.dataset.name.includes(q)) ? '' : 'none';
+            });
+            document.dispatchEvent(new CustomEvent('pv:filtered'));
+        }
+
+        // Auto-sorts the Applications Report table to match whichever
+        // dashboard chart was clicked to land here — e.g. ?sort=company
+        // (from "Top Hiring Companies") or ?sort=status,applied_date (from
+        // "Hires per Month"). Same stable-sort-composition trick as the
+        // Employment report's Alumni Report table: simulate clicks on each
+        // requested key in reverse order.
+        (function () {
+            const sortParam = new URLSearchParams(window.location.search).get('sort');
+            if (!sortParam) return;
+            const keys = sortParam.split(',').reverse();
+            keys.forEach(key => {
+                document.querySelector('#applicationReportTable th[data-sort-key="' + key.trim() + '"]')?.click();
+            });
+        })();
 
         function updateHiresRange(months) {
             const url = new URL(window.location.href);

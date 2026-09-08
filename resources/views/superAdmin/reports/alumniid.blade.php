@@ -25,6 +25,7 @@
         table.report-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
         table.report-table th, table.report-table td { border-bottom: 1px solid #f1f5f9; padding: 6px 8px; text-align: left; }
         table.report-table th { color: #0E0F3B; font-weight: 700; background: #f8fafc; }
+        .report-table-scroll { max-height: 400px; overflow-y: auto; }
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -189,6 +190,59 @@
                         </table>
                     </div>
                 </div>
+
+                {{-- Raw, one-row-per-alumnus listing — the actual records the
+                     status charts/breakdowns above were computed from.
+                     Landing here from a specific dashboard chart (see
+                     dashboard.blade.php's goToReport() calls) pre-sorts this
+                     by that chart's own status column via ?sort=; the admin
+                     can still re-sort by any column or search by name after. --}}
+                <div class="chart-card mb-4">
+                    <div class="flex items-center justify-between gap-3 flex-wrap">
+                        <div>
+                            <div class="card-title">Alumni Report</div>
+                            <div class="card-sub">Every alumnus in the current filters &mdash; click a column to sort, or search by name</div>
+                        </div>
+                        <div class="relative">
+                            <i data-lucide="search" style="width:12px;height:12px;position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#9ca3af;"></i>
+                            <input type="text" id="alumniTableSearch" placeholder="Search by name..." oninput="filterAlumniReportTable()"
+                                style="border:1px solid #d1d5db; border-radius:6px; padding:5px 10px 5px 26px; font-size:11px; font-family:'Montserrat',sans-serif;">
+                        </div>
+                    </div>
+                    <div class="report-table-scroll">
+                        <table class="report-table" id="alumniReportTable">
+                            <thead>
+                                <tr>
+                                    <th data-sort data-sort-key="name">Name <i data-lucide="chevron-down" class="sort-icon" style="width:9px;height:9px;display:inline-block;"></i></th>
+                                    <th data-sort data-sort-key="batch">Batch <i data-lucide="chevron-down" class="sort-icon" style="width:9px;height:9px;display:inline-block;"></i></th>
+                                    <th data-sort data-sort-key="id_status">Alumni ID Status <i data-lucide="chevron-down" class="sort-icon" style="width:9px;height:9px;display:inline-block;"></i></th>
+                                    <th data-sort data-sort-key="yearbook_status">Yearbook Status <i data-lucide="chevron-down" class="sort-icon" style="width:9px;height:9px;display:inline-block;"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody id="alumniReportTbody">
+                                @forelse ($r['allAlumniWithClaimStatus'] as $a)
+                                @php $alumName = trim(($a->user->user_first_name ?? '') . ' ' . ($a->user->user_last_name ?? '')); @endphp
+                                <tr data-name="{{ strtolower($alumName) }}">
+                                    <td>{{ $alumName }}</td>
+                                    <td>{{ optional($a->alumnus_batch)->format('Y') }}</td>
+                                    <td>{{ $a->alumniId ? ucwords(str_replace('_', ' ', $a->alumniId->status)) : 'Not Registered' }}</td>
+                                    <td>{{ $a->yearbook ? ucwords(str_replace('_', ' ', $a->yearbook->claiming_status)) : 'Not Registered' }}</td>
+                                </tr>
+                                @empty
+                                <tr><td colspan="4" style="color:#9ca3af;">No alumni match the current filters.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-2">
+                        @include('partials.table-pagination-bar', [
+                            'id' => 'alumniReportTable',
+                            'mode' => 'client',
+                            'rowSelector' => '#alumniReportTbody tr[data-name]',
+                            'totalItems' => $r['allAlumniWithClaimStatus']->count(),
+                        ])
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -233,6 +287,32 @@
             },
             options: doughnutOptions,
         });
+
+        // Alumni Report table — name search (combines with whatever column
+        // sort table-sort.blade.php's click handler already applied; that
+        // script only ever reorders <tr>s, it never hides them, so this is
+        // free to layer visibility on top independently).
+        function filterAlumniReportTable() {
+            const q = document.getElementById('alumniTableSearch').value.trim().toLowerCase();
+            document.querySelectorAll('#alumniReportTbody tr[data-name]').forEach(row => {
+                row.style.display = (!q || row.dataset.name.includes(q)) ? '' : 'none';
+            });
+            document.dispatchEvent(new CustomEvent('pv:filtered'));
+        }
+
+        // Auto-sorts the Alumni Report table to match whichever dashboard
+        // chart was clicked to land here — e.g. ?sort=id_status (from
+        // "Alumni ID Status") or ?sort=yearbook_status (from "Yearbook
+        // Claiming Status"). Same stable-sort-composition trick as the
+        // Employment report's Alumni Report table.
+        (function () {
+            const sortParam = new URLSearchParams(window.location.search).get('sort');
+            if (!sortParam) return;
+            const keys = sortParam.split(',').reverse();
+            keys.forEach(key => {
+                document.querySelector('#alumniReportTable th[data-sort-key="' + key.trim() + '"]')?.click();
+            });
+        })();
 
         const EXPORTABLE_CHART_IDS = ['chartAlumniID', 'chartYearbook'];
         function exportPdfWithCharts() {

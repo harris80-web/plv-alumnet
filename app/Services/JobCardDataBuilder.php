@@ -45,20 +45,38 @@ class JobCardDataBuilder
         $isRecommended = $isAlumni && isset($job->match_score) && $job->match_score !== null
             && (float) $job->match_score >= $recommendedThreshold;
 
-        // Company up/down votes — see App\Models\EmployerReview. Deliberately
+        // Company up/down votes — see App\Models\JobPostingVote. Deliberately
         // NOT shown to admin/employer roles (only the alumni-facing vote
         // buttons are gated; the "Reviews" link below stays visible to
         // everyone).
         $employer = $job->employer;
         $companyUpvotes = $employer?->upvoteCount() ?? 0;
         $companyDownvotes = $employer?->downvoteCount() ?? 0;
-        // The "Reviews (N)" link/page is rating-driven now (see
+        // The "Reviews (N)" link/page is rating-driven (see
         // company-review-modal.blade.php's castCompanyRating()) — a bare vote
         // isn't a listed "review", so this counts actual star ratings, not votes.
         $companyRatingCount = $employer?->ratingCount() ?? 0;
         $companyAverageRating = $employer?->averageRating();
-        $myCompanyVote = $isAlumni && $employer ? $employer->reviews->firstWhere('alumnus_id', $user->user_id) : null;
+        // A vote is per THIS job posting (any alumnus, any hire status — see
+        // EmployerReviewController::vote()), while a rating/review is per
+        // company (App\Models\EmployerReview), so they come from two
+        // different rows now. Filtered out of the already-loaded $employer->votes
+        // collection (eager-loaded alongside employer.reviews by callers —
+        // see JobPostingController/AlumniDashboardController) rather than a
+        // fresh query per card.
+        $myCompanyVote = $isAlumni && $employer
+            ? $employer->votes->first(fn ($v) => (int) $v->job_posting_id === (int) $job->job_posting_id && (int) $v->alumnus_id === (int) $user->user_id)
+            : null;
+        $myCompanyRating = $isAlumni && $employer ? $employer->reviews->firstWhere('alumnus_id', $user->user_id) : null;
         $isEmployer = $user && $user->user_role === 'employer';
+
+        // Rating a company is restricted to alumni this company actually
+        // hired (see Alumnus::wasHiredByEmployer() and
+        // EmployerReviewController::vote()) — everyone else still sees the
+        // star button (so they know the feature exists and why it's off)
+        // but disabled. Up/downvoting has no such restriction — any alumnus
+        // can vote on any job posting.
+        $canRateCompany = $isAlumni && $employer && $user->alumnus->wasHiredByEmployer($employer->user_id);
 
         $cardData = [
             'job-id' => $job->job_posting_id,
@@ -83,9 +101,10 @@ class JobCardDataBuilder
             'rating-count' => $companyRatingCount,
             'average-rating' => $companyAverageRating ?? '',
             'my-vote' => $myCompanyVote->vote ?? '',
-            'my-rating' => $myCompanyVote->rating ?? '',
-            'my-review-body' => $myCompanyVote->review_body ?? '',
+            'my-rating' => $myCompanyRating->rating ?? '',
+            'my-review-body' => $myCompanyRating->review_body ?? '',
             'vote-visible' => ($employer && $isAlumni) ? '1' : '0',
+            'can-rate-company' => $canRateCompany ? '1' : '0',
             'is-alumni' => $isAlumni ? '1' : '0',
             'is-guest' => (!$user) ? '1' : '0',
             'is-bookmarked' => $isBookmarked ? '1' : '0',
@@ -101,7 +120,7 @@ class JobCardDataBuilder
         return compact(
             'isAlumni', 'hasApplied', 'isBookmarked', 'isRecommended',
             'employer', 'companyUpvotes', 'companyDownvotes', 'companyRatingCount',
-            'companyAverageRating', 'myCompanyVote', 'isEmployer', 'cardData'
+            'companyAverageRating', 'myCompanyVote', 'myCompanyRating', 'isEmployer', 'canRateCompany', 'cardData'
         );
     }
 }

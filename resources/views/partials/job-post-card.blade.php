@@ -193,25 +193,32 @@
             <div class="flex items-center gap-3">
                 @if ($employer && $isAlumni)
                 <div class="flex items-center gap-2">
+                    {{-- Up/downvote — per THIS job posting (see JobPostingVote),
+                         open to any alumnus regardless of hire status, so the
+                         same alumnus can vote on more than one posting from
+                         the same company. --}}
                     <button type="button" class="vote-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors {{ $myCompanyVote?->vote === 'upvote' ? 'bg-green-600 text-white border-green-600' : 'border-gray-300 text-gray-500 hover:border-green-500 hover:text-green-600' }}"
-                        data-employer-id="{{ $employer->user_id }}" data-vote-type="upvote"
+                        data-employer-id="{{ $employer->user_id }}" data-job-id="{{ $job->job_posting_id }}" data-vote-type="upvote"
                         onclick="castCompanyVote(this)">
                         <i class="fas fa-thumbs-up"></i> <span class="vote-count">{{ $companyUpvotes }}</span>
                     </button>
                     <button type="button" class="vote-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors {{ $myCompanyVote?->vote === 'downvote' ? 'bg-red-600 text-white border-red-600' : 'border-gray-300 text-gray-500 hover:border-red-500 hover:text-red-600' }}"
-                        data-employer-id="{{ $employer->user_id }}" data-vote-type="downvote"
+                        data-employer-id="{{ $employer->user_id }}" data-job-id="{{ $job->job_posting_id }}" data-vote-type="downvote"
                         onclick="castCompanyVote(this)">
                         <i class="fas fa-thumbs-down"></i> <span class="vote-count">{{ $companyDownvotes }}</span>
                     </button>
 
-                    {{-- 5-star rating — independent of the thumbs vote above
-                         (same row, separate column; see EmployerReview).
-                         Picking a star opens the review modal so the
-                         alumnus can optionally explain the rating. --}}
-                    <div class="star-rating flex items-center gap-0.5 border border-gray-300 rounded-full px-2 py-1.5" data-employer-id="{{ $employer->user_id }}" data-my-rating="{{ $myCompanyVote?->rating ?? 0 }}" data-review-body="{{ $myCompanyVote?->review_body ?? '' }}">
+                    {{-- 5-star rating — a separate, per-COMPANY row (see
+                         EmployerReview). Picking a star opens the review
+                         modal so the alumnus can optionally explain the
+                         rating. Only alumni this company actually hired can
+                         rate it — see Alumnus::wasHiredByEmployer();
+                         everyone else sees the same control, just disabled,
+                         rather than it disappearing with no explanation. --}}
+                    <div class="star-rating flex items-center gap-0.5 border rounded-full px-2 py-1.5 {{ $canRateCompany ? 'border-gray-300' : 'border-gray-200 opacity-50' }}" data-employer-id="{{ $employer->user_id }}" data-my-rating="{{ $myCompanyRating?->rating ?? 0 }}" data-review-body="{{ $myCompanyRating?->review_body ?? '' }}" @unless($canRateCompany) title="Only alumni this company has hired can rate it" @endunless>
                         @for ($i = 1; $i <= 5; $i++)
-                        <button type="button" class="star-btn text-xs {{ ($myCompanyVote?->rating ?? 0) >= $i ? 'text-[#ED7A07]' : 'text-gray-300' }} hover:text-[#ED7A07] transition-colors"
-                            data-star="{{ $i }}" onclick="castCompanyRating(this)">
+                        <button type="button" class="star-btn text-xs {{ ($myCompanyRating?->rating ?? 0) >= $i ? 'text-[#ED7A07]' : 'text-gray-300' }} {{ $canRateCompany ? 'hover:text-[#ED7A07] transition-colors' : 'cursor-not-allowed' }}"
+                            data-star="{{ $i }}" @if ($canRateCompany) onclick="castCompanyRating(this)" @else disabled @endif>
                             <i class="fas fa-star"></i>
                         </button>
                         @endfor

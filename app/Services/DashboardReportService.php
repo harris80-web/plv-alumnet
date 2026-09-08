@@ -278,9 +278,13 @@ class DashboardReportService
         }
 
         // Employment interval — months from batch graduation date to first job date.
-        $employmentInterval = ['Before Graduation' => 0, 'Within 6 months' => 0, '6–12 months' => 0, '1–2 years' => 0, 'Over 2 years' => 0];
+        // "Unknown" (no recorded first-job-date and/or batch) is a real,
+        // explicit bucket at the end — these alumni used to be silently
+        // skipped out of the chart entirely instead of being accounted for.
+        $employmentInterval = ['Before Graduation' => 0, 'Within 6 months' => 0, '6–12 months' => 0, '1–2 years' => 0, 'Over 2 years' => 0, 'Unknown' => 0];
         foreach ($allAlumni as $a) {
             if (!$a->alumnus_first_job_date || !$a->alumnus_batch) {
+                $employmentInterval['Unknown']++;
                 continue;
             }
             if ($a->wasEmployedBeforeGraduation()) {
@@ -381,7 +385,44 @@ class DashboardReportService
             ->select('job_postings.job_posting_company', DB::raw('count(*) as hires'))
             ->groupBy('job_postings.job_posting_company')
             ->orderByDesc('hires')
+            // A tie in hire count has no inherent order — without a
+            // deterministic secondary sort, MySQL is free to break ties
+            // differently between this LIMITed query and companyHireCounts'
+            // identical-but-unlimited one below, so the company sitting
+            // right at the LIMIT boundary could differ between the two.
+            ->orderBy('job_postings.job_posting_company')
             ->limit($topCompaniesLimit)
+            ->get();
+
+        // Same ranking as topHiringCompanies, but every company (not just
+        // the top N shown on the chart) — the "Applications Report" raw
+        // table's own Company sort key uses this so a company's rows land
+        // in the same hires-first order the chart ranks them in, rather
+        // than plain alphabetical.
+        $companyHireCounts = $hiringBase()
+            ->where('job_applications.application_status', 'hired')
+            ->select('job_postings.job_posting_company', DB::raw('count(*) as hires'))
+            ->groupBy('job_postings.job_posting_company')
+            ->orderByDesc('hires')
+            ->orderBy('job_postings.job_posting_company')
+            ->pluck('hires', 'job_posting_company');
+
+        // Raw, one-row-per-application listing behind the report's
+        // "Applications Report" table — every application in the same
+        // cohort as topHiringCompanies/hiresPerMonth above (any status, not
+        // just hired), so the admin can see the actual records those
+        // charts' numbers were computed from.
+        $applicationsTable = $hiringBase()
+            ->join('users', 'users.user_id', '=', 'job_applications.alumnus_id')
+            ->select(
+                DB::raw("CONCAT(users.user_first_name, ' ', users.user_last_name) as applicant_name"),
+                'job_postings.job_posting_company as company',
+                'job_postings.job_posting_title as position',
+                DB::raw('COALESCE(job_applications.application_date, job_applications.created_at) as applied_date'),
+                'job_applications.application_status as status',
+                'job_applications.hired_at'
+            )
+            ->orderByDesc(DB::raw('COALESCE(job_applications.application_date, job_applications.created_at)'))
             ->get();
 
         // Registered vs pending/unregistered companies — Year-scoped by
@@ -399,8 +440,15 @@ class DashboardReportService
             'totalAlumni', 'employedCount', 'employmentRate', 'unemploymentRate', 'employmentByBatch', 'employmentByMonth', 'industryDistribution',
             'genderEmployment', 'programAlignment', 'alignmentRate', 'employmentInterval',
             'beforeGraduationCount', 'beforeGraduationRate', 'internshipCount', 'internshipRate', 'beforeGraduationInternshipCount', 'jobBeforeGradPie',
-            'employedAlumniTable', 'totalApplications', 'totalHired', 'hiresPerMonth', 'topHiringCompanies',
-            'registeredCompanies', 'pendingCompanies'
+            'employedAlumniTable', 'totalApplications', 'totalHired', 'hiresPerMonth', 'topHiringCompanies', 'applicationsTable', 'companyHireCounts',
+            'registeredCompanies', 'pendingCompanies',
+            // Raw, one-row-per-alumnus listing behind the Employment &
+            // Alignment report's "Alumni Report" table — every alumnus in
+            // the current cohort filters (both employed and unemployed,
+            // unlike employedAlumniTable above), so the admin can see the
+            // actual records a chart's numbers were computed from, not just
+            // the aggregate. Already carries user/program/industry.
+            'allAlumni'
         );
     }
 
@@ -439,7 +487,13 @@ class DashboardReportService
         if (!empty($colleges)) {
             $alumniQuery->whereHas('program', fn ($q) => $q->whereIn('college', $colleges));
         }
-        $alumniIdTotal = $alumniQuery->count();
+        $alumniIdTotal = (clone $alumniQuery)->count();
+
+        // Raw, one-row-per-alumnus listing behind the report's "Alumni
+        // Report" table — Name/Batch/ID Status/Yearbook Status straight off
+        // each alumnus's own (at most one each) AlumniId/AlumniYearbook
+        // record, "Not Registered" when they haven't started either yet.
+        $allAlumniWithClaimStatus = (clone $alumniQuery)->with(['user', 'program', 'alumniId', 'yearbook'])->get();
 
         $alumniIds = $applyAlumnusFilters(AlumniId::with(['alumnus.program']))->get();
         $alumniIdStatusCounts = $alumniIds->groupBy('status')->map->count();
@@ -476,7 +530,8 @@ class DashboardReportService
 
         return compact(
             'alumniIdTotal', 'alumniIdCounts', 'yearbookCounts',
-            'alumniIdByBatch', 'yearbookByBatch', 'alumniIdByProgram', 'yearbookByProgram'
+            'alumniIdByBatch', 'yearbookByBatch', 'alumniIdByProgram', 'yearbookByProgram',
+            'allAlumniWithClaimStatus'
         );
     }
 

@@ -225,18 +225,24 @@
             reviewsLink.classList.add('hidden');
         }
 
-        // Company vote buttons
+        // Company vote buttons — per THIS job posting (see JobPostingVote),
+        // open to any alumnus regardless of hire status. The 5-star rating
+        // below stays hire-gated; voting no longer is.
+        const canRate = d.canRateCompany === '1';
         const voteSection = document.getElementById('modal-vote-section');
         if (d.voteVisible === '1' && d.employerId) {
+            voteSection.title = '';
             voteSection.querySelectorAll('.vote-btn').forEach(function (btnEl) {
                 const type = btnEl.dataset.voteType;
                 btnEl.dataset.employerId = d.employerId;
+                btnEl.dataset.jobId = d.jobId;
                 btnEl.querySelector('.vote-count').textContent = type === 'upvote' ? (d.upvotes || 0) : (d.downvotes || 0);
+                btnEl.disabled = false;
 
                 const isActive = d.myVote === type;
                 btnEl.classList.remove('bg-green-600', 'bg-red-600', 'text-white', 'border-green-600', 'border-red-600',
                     'border-gray-300', 'text-gray-500', 'hover:border-green-500', 'hover:text-green-600',
-                    'hover:border-red-500', 'hover:text-red-600');
+                    'hover:border-red-500', 'hover:text-red-600', 'opacity-50', 'cursor-not-allowed', 'border-gray-200', 'text-gray-400');
                 if (isActive) {
                     btnEl.classList.add(...(type === 'upvote' ? ['bg-green-600', 'text-white', 'border-green-600'] : ['bg-red-600', 'text-white', 'border-red-600']));
                 } else {
@@ -248,17 +254,21 @@
             voteSection.classList.add('hidden');
         }
 
-        // 5-star rating widget — item 4: alumni can rate the company right from the details modal, not just the compact card.
+        // 5-star rating widget — hire-gated (see Alumnus::wasHiredByEmployer()) — item 4: alumni can rate the company right from the details modal, not just the compact card.
         const starRating = document.getElementById('modal-star-rating');
         if (d.voteVisible === '1' && d.employerId) {
             const myRating = Number(d.myRating || 0);
             starRating.dataset.employerId = d.employerId;
             starRating.dataset.myRating = myRating;
             starRating.dataset.reviewBody = d.myReviewBody || '';
+            starRating.title = canRate ? '' : 'Only alumni this company has hired can rate it';
+            starRating.classList.toggle('opacity-50', !canRate);
             starRating.querySelectorAll('.star-btn').forEach(function (starBtn) {
                 const filled = Number(starBtn.dataset.star) <= myRating;
                 starBtn.classList.toggle('text-[#ED7A07]', filled);
                 starBtn.classList.toggle('text-gray-300', !filled);
+                starBtn.classList.toggle('cursor-not-allowed', !canRate);
+                starBtn.disabled = !canRate;
             });
             const avgLabel = document.getElementById('modal-star-avg-label');
             avgLabel.textContent = Number(d.ratingCount || 0) > 0 ? d.averageRating : '';

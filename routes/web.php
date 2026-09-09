@@ -53,7 +53,7 @@ Route::get('/', function () {
     // guest never sees an alumni- or employer-only notice on the homepage.
     $campusEvents = Notice::category('event')->visibleToGuest()->upcoming()
         ->orderBy('event_datetime')
-        ->take(3)
+        ->take(9)
         ->get();
 
     return view('general.home', compact('testimonials', 'campusEvents'));
@@ -152,6 +152,15 @@ Route::get('/superAdmin/reports/networking', [ReportController::class, 'networki
 Route::get('/superAdmin/reports/{group}/export-csv', [ReportController::class, 'exportCsv'])->whereIn('group', ['employment', 'placement', 'companies', 'alumniid', 'networking'])->name('reports.exportCsv')->middleware(['auth', 'feature:reports']);
 Route::get('/superAdmin/reports/{group}/export-pdf', [ReportController::class, 'exportPdf'])->whereIn('group', ['employment', 'placement', 'companies', 'alumniid', 'networking'])->name('reports.exportPdf')->middleware(['auth', 'feature:reports']);
 Route::post('/superAdmin/reports/{group}/export-pdf', [ReportController::class, 'exportPdf'])->whereIn('group', ['employment', 'placement', 'companies', 'alumniid', 'networking'])->name('reports.exportPdf.post')->middleware(['auth', 'feature:reports']);
+
+// One report, one page — each dashboard chart links to its own single-report
+// page (chart + its raw underlying records, pre-sorted by that chart's own
+// dimension), replacing the grouped pages above as the dashboard's actual
+// click targets (see ReportController::SINGLE_REPORTS for the full list).
+Route::get('/superAdmin/reports/view/{report}', [ReportController::class, 'show'])->name('reports.show')->middleware(['auth', 'feature:reports']);
+Route::get('/superAdmin/reports/view/{report}/export-csv', [ReportController::class, 'showExportCsv'])->name('reports.show.exportCsv')->middleware(['auth', 'feature:reports']);
+Route::get('/superAdmin/reports/view/{report}/export-pdf', [ReportController::class, 'showExportPdf'])->name('reports.show.exportPdf')->middleware(['auth', 'feature:reports']);
+Route::post('/superAdmin/reports/view/{report}/export-pdf', [ReportController::class, 'showExportPdf'])->name('reports.show.exportPdf.post')->middleware(['auth', 'feature:reports']);
 
 
 Route::get('/admin/dashboard', function () {
@@ -321,6 +330,8 @@ Route::get('/myJobPosts/{id}', [JobPostingController::class, 'showMyJobPosts'])-
 Route::post('/editJobPost/{id}', [JobPostingController::class, 'editJobPost'])->name('jobPosting.editJobPost')->middleware('auth');
 Route::get('/jobManagement', [JobPostingController::class, 'showJobManagement'])->name('jobPosting.jobManagement')->middleware(['auth', 'feature:job_management']);
 Route::get('/jobManagement/page', [JobPostingController::class, 'jobManagementFragment'])->name('jobPosting.jobManagementFragment')->middleware(['auth', 'feature:job_management']);
+Route::get('/jobManagement/applicantJobs', [JobPostingController::class, 'jobApplicantsPickerFragment'])->name('jobPosting.jobApplicantsPickerFragment')->middleware(['auth', 'feature:job_management']);
+Route::get('/jobManagement/applicants/{jobPostingId}', [JobPostingController::class, 'jobApplicantsFragment'])->name('jobPosting.jobApplicantsFragment')->middleware(['auth', 'feature:job_management']);
 Route::post('/approveJobPost/{id}', [JobPostingController::class, 'approveJobPost'])->name('jobPosting.approve')->middleware(['auth', 'feature:job_management']);
 Route::post('/declineJobPost/{id}', [JobPostingController::class, 'declineJobPost'])->name('jobPosting.decline')->middleware(['auth', 'feature:job_management']);
 Route::delete('/deleteJobPost/{id}', [JobPostingController::class, 'deleteJobPost'])->name('jobPosting.delete')->middleware(['auth', 'feature:job_management']);

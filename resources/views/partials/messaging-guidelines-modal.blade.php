@@ -10,7 +10,7 @@
     to carry. Uses the shared open/close animation from
     partials/ui-animations.blade.php (already loaded by header-alumni).
 --}}
-<div id="messagingGuidelinesModal" class="fixed inset-0 z-[300] hidden opacity-0 transition-opacity duration-200 bg-black bg-opacity-50 flex items-center justify-center p-4">
+<div id="messagingGuidelinesModal" class="fixed inset-0 z-[300] hidden opacity-0 transition-opacity duration-200 bg-black/50 flex items-center justify-center p-4">
     <div id="messagingGuidelinesModalPanel" class="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full relative text-center opacity-0 scale-95 transition-all duration-200">
         <button type="button" onclick="closeMessagingGuidelinesModal()" class="absolute top-4 right-4 text-gray-300 hover:text-gray-500 transition-colors">
             <i class="fa-solid fa-circle-xmark text-2xl"></i>

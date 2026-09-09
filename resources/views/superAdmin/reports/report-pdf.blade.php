@@ -53,41 +53,38 @@
         <h2>Employment Status Breakdown</h2>
         @if (!empty($charts['chartStatus']))
             <img class="chart-img" src="{{ $charts['chartStatus'] }}">
-        @else
-            <table>
-                <tr><th>Status</th><th>Count</th></tr>
-                <tr><td>Employed</td><td>{{ $r['employedCount'] }}</td></tr>
-                <tr><td>Unemployed</td><td>{{ $r['totalAlumni'] - $r['employedCount'] }}</td></tr>
-            </table>
         @endif
+        <table>
+            <tr><th>Status</th><th>Count</th></tr>
+            <tr><td>Employed</td><td>{{ $r['employedCount'] }}</td></tr>
+            <tr><td>Unemployed</td><td>{{ $r['totalAlumni'] - $r['employedCount'] }}</td></tr>
+        </table>
     </div>
 
     <div class="section">
         <h2>Employment Rate by Batch/Year</h2>
         @if (!empty($charts['chartPlacement']))
             <img class="chart-img" src="{{ $charts['chartPlacement'] }}">
-        @else
+        @endif
         <table>
             <tr><th>Batch</th><th>Total</th><th>Employed</th><th>Rate</th></tr>
             @foreach ($r['employmentByBatch'] as $batchYear => $row)
                 <tr><td>{{ $batchYear }}</td><td>{{ $row['total'] }}</td><td>{{ $row['employed'] }}</td><td>{{ $row['rate'] }}%</td></tr>
             @endforeach
         </table>
-        @endif
     </div>
 
     <div class="section">
         <h2>Employment by Month</h2>
         @if (!empty($charts['chartEmploymentByMonth']))
             <img class="chart-img" src="{{ $charts['chartEmploymentByMonth'] }}">
-        @else
+        @endif
         <table>
             <tr><th>Month</th><th>Alumni Employed</th></tr>
             @foreach ($r['employmentByMonth'] as $month => $count)
                 <tr><td>{{ $month }}</td><td>{{ $count }}</td></tr>
             @endforeach
         </table>
-        @endif
     </div>
 
     <div class="section">
@@ -104,55 +101,51 @@
         <h2>Employment Rate by Gender</h2>
         @if (!empty($charts['chartGender']))
             <img class="chart-img" src="{{ $charts['chartGender'] }}">
-        @else
+        @endif
         <table>
             <tr><th>Gender</th><th>Total</th><th>Employed</th><th>Rate</th></tr>
             @foreach ($r['genderEmployment'] as $row)
                 <tr><td>{{ $row['label'] }}</td><td>{{ $row['total'] }}</td><td>{{ $row['employed'] }}</td><td>{{ $row['rate'] }}%</td></tr>
             @endforeach
         </table>
-        @endif
     </div>
 
     <div class="section">
         <h2>Job-to-Degree Alignment by Program (Overall: {{ $r['alignmentRate'] }}%)</h2>
         @if (!empty($charts['chartAlignment']))
             <img class="chart-img" src="{{ $charts['chartAlignment'] }}">
-        @else
+        @endif
         <table>
             <tr><th>Program</th><th>Employed</th><th>Aligned</th><th>Rate</th></tr>
             @foreach ($r['programAlignment'] as $program => $row)
                 <tr><td>{{ $program }}</td><td>{{ $row['total'] }}</td><td>{{ $row['aligned'] }}</td><td>{{ $row['rate'] }}%</td></tr>
             @endforeach
         </table>
-        @endif
     </div>
 
     <div class="section">
         <h2>Employment Interval (Graduation to First Job)</h2>
         @if (!empty($charts['chartInterval']))
             <img class="chart-img" src="{{ $charts['chartInterval'] }}">
-        @else
+        @endif
         <table>
             <tr><th>Interval</th><th>Alumni</th></tr>
             @foreach ($r['employmentInterval'] as $bucket => $count)
                 <tr><td>{{ $bucket }}</td><td>{{ $count }}</td></tr>
             @endforeach
         </table>
-        @endif
     </div>
 
     <div class="section">
         <h2>Job Before Graduation &amp; Internships</h2>
         @if (!empty($charts['chartJobBeforeGrad']))
             <img class="chart-img" src="{{ $charts['chartJobBeforeGrad'] }}">
-        @else
+        @endif
         <table class="stat-table">
             <tr><td>Employed Before Graduation</td><td>{{ $r['beforeGraduationCount'] }} ({{ $r['beforeGraduationRate'] }}%)</td></tr>
             <tr><td>First Job Was an Internship</td><td>{{ $r['internshipCount'] }} ({{ $r['internshipRate'] }}%)</td></tr>
             <tr><td>Before Graduation AND an Internship</td><td>{{ $r['beforeGraduationInternshipCount'] }}</td></tr>
         </table>
-        @endif
     </div>
     @endif
 
@@ -180,14 +173,13 @@
         <h2>Hires per Month {{ $yearLabel !== 'All' ? '(' . $yearLabel . ')' : '(last ' . $hireMonths . ' months)' }}</h2>
         @if (!empty($charts['chartHires']))
             <img class="chart-img" src="{{ $charts['chartHires'] }}">
-        @else
+        @endif
         <table>
             <tr><th>Month</th><th>Hires</th></tr>
             @foreach ($r['hiresPerMonth'] as $month => $count)
                 <tr><td>{{ $month }}</td><td>{{ $count }}</td></tr>
             @endforeach
         </table>
-        @endif
     </div>
     @endif
 

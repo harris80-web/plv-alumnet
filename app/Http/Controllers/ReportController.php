@@ -62,6 +62,477 @@ class ReportController extends Controller
         ];
     }
 
+    /**
+     * One report, one page (per the user's explicit correction — the
+     * grouped pages above bundle several charts onto one page; every
+     * dashboard chart now instead links here to ITS OWN page: the chart
+     * itself, then a raw one-row-per-record table of exactly what that
+     * chart was computed from, pre-sorted by that chart's own dimension via
+     * $defaultSort (primary key first — the view reverses it before
+     * simulating clicks, since the shared column-sorter is a stable
+     * single-column sort and two stable sorts compose into a multi-level
+     * one). Filters/search/export all still work same as the grouped pages.
+     */
+    private const SINGLE_REPORTS = [
+        'employment-status', 'employment-by-batch', 'employment-by-gender', 'employment-interval',
+        'job-alignment', 'employment-by-month', 'industry-distribution', 'job-before-grad',
+        'hires-per-month', 'top-hiring-companies',
+        'alumni-id-status', 'yearbook-status',
+    ];
+
+    private const ALUMNI_FAMILY_REPORTS = [
+        'employment-status', 'employment-by-batch', 'employment-by-gender', 'employment-interval',
+        'job-alignment', 'employment-by-month', 'industry-distribution', 'job-before-grad',
+    ];
+
+    private const APPLICATION_FAMILY_REPORTS = ['hires-per-month', 'top-hiring-companies'];
+
+    public function show(string $report, DashboardReportService $reportService)
+    {
+        $this->authorizeReports();
+        abort_unless(in_array($report, self::SINGLE_REPORTS, true), 404);
+
+        return view('superAdmin.reports.single', $this->buildSingleReport($report, $reportService));
+    }
+
+    /** Generic CSV export — works for any single report since $def's shape (chart + tableColumns/tableRows) is the same regardless of family. */
+    public function showExportCsv(string $report, DashboardReportService $reportService)
+    {
+        $this->authorizeReports();
+        abort_unless(in_array($report, self::SINGLE_REPORTS, true), 404);
+        $def = $this->buildSingleReport($report, $reportService);
+
+        $callback = function () use ($def) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['PLV-AlumNet — ' . $def['title']]);
+            fputcsv($out, ['Generated', now()->format('M d, Y h:i A')]);
+            fputcsv($out, []);
+
+            fputcsv($out, ['CHART DATA']);
+            $datasetLabels = collect($def['chart']['datasets'])->map(fn ($ds, $i) => $ds['label'] ?? ('Value ' . ($i + 1)))->all();
+            fputcsv($out, array_merge(['Label'], $datasetLabels));
+            foreach ($def['chart']['labels'] as $i => $label) {
+                $row = [$label];
+                foreach ($def['chart']['datasets'] as $ds) {
+                    $row[] = $ds['data'][$i] ?? '';
+                }
+                fputcsv($out, $row);
+            }
+            fputcsv($out, []);
+
+            fputcsv($out, ['RAW DATA']);
+            fputcsv($out, collect($def['tableColumns'])->pluck('label')->all());
+            foreach ($def['tableRows'] as $row) {
+                fputcsv($out, collect($def['tableColumns'])->map(fn ($c) => $row[$c['key']] ?? '')->all());
+            }
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $report . '_' . now()->format('Y-m-d') . '.csv"',
+        ]);
+    }
+
+    /** Generic PDF export — the raw table only (no chart image; see single.blade.php). */
+    public function showExportPdf(string $report, DashboardReportService $reportService)
+    {
+        $this->authorizeReports();
+        abort_unless(in_array($report, self::SINGLE_REPORTS, true), 404);
+        $def = $this->buildSingleReport($report, $reportService);
+
+        $pdf = Pdf::loadView('superAdmin.reports.single-pdf', $def)->setPaper('a4', 'portrait');
+
+        return $pdf->download($report . '_' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    private function buildSingleReport(string $report, DashboardReportService $reportService): array
+    {
+        if (in_array($report, self::ALUMNI_FAMILY_REPORTS, true)) {
+            $def = $this->buildAlumniFamilyReport($report, $reportService);
+        } elseif (in_array($report, self::APPLICATION_FAMILY_REPORTS, true)) {
+            $def = $this->buildApplicationFamilyReport($report, $reportService);
+        } else {
+            $def = $this->buildClaimFamilyReport($report, $reportService);
+        }
+
+        // The single.blade.php page ALSO re-sorts client-side (simulating
+        // clicks on the matching <th data-sort>) so re-sorting by hand still
+        // works after load, but that's JS-only — CSV/PDF export (and the
+        // very first HTML paint, before that script runs) read $tableRows
+        // in whatever order the query returned them, which was never
+        // actually sorted to match the chart. Sorting it here once, in PHP,
+        // makes every output — page, CSV, PDF — agree from the start.
+        $def['tableRows'] = $this->sortRowsBy($def['tableRows'], $def['defaultSort']);
+
+        return $def;
+    }
+
+    /**
+     * Multi-level sort matching the client-side click-simulation's own
+     * composition rule: $sortKeys lists the primary key first, so this
+     * applies them in REVERSE (least significant first) — PHP's usort() is
+     * stable (guaranteed since PHP 8.0), so each later pass's ties preserve
+     * the previous pass's order, and the LAST pass (the first key in
+     * $sortKeys) ends up as the actual primary sort.
+     */
+    /** A key prefixed with "-" (e.g. "-hired_date") sorts that pass descending — everything else stays ascending. */
+    private function sortRowsBy(array $rows, array $sortKeys): array
+    {
+        foreach (array_reverse($sortKeys) as $rawKey) {
+            $descending = str_starts_with($rawKey, '-');
+            $key = $descending ? substr($rawKey, 1) : $rawKey;
+
+            usort($rows, function ($a, $b) use ($key, $descending) {
+                $av = $a[$key . '_sort'] ?? $a[$key] ?? '';
+                $bv = $b[$key . '_sort'] ?? $b[$key] ?? '';
+                $cmp = (is_numeric($av) && is_numeric($bv)) ? ($av <=> $bv) : strcasecmp((string) $av, (string) $bv);
+
+                return $descending ? -$cmp : $cmp;
+            });
+        }
+
+        return array_values($rows);
+    }
+
+    private function buildAlumniFamilyReport(string $report, DashboardReportService $reportService): array
+    {
+        [$batches, $programIds, $employmentStatuses, $colleges, $years] = $this->resolveFilters($reportService);
+        $dashboardFilters = ['batch' => $batches, 'program_id' => $programIds, 'employment_status' => $employmentStatuses, 'college' => $colleges, 'year' => $years];
+        $r = $reportService->buildEmploymentReports($batches, $programIds, $employmentStatuses, $colleges, $years);
+
+        $titles = [
+            'employment-status' => 'Employment Status Breakdown',
+            'employment-by-batch' => 'Employment Rate by Batch/Year',
+            'employment-by-gender' => 'Employment Rate by Gender',
+            'employment-interval' => 'Employment Interval',
+            'job-alignment' => 'Job-to-Degree Alignment by Program',
+            'employment-by-month' => 'Employment by Month',
+            'industry-distribution' => 'Industry Distribution of Employed Alumni',
+            'job-before-grad' => 'Job Before Graduation & Internships',
+        ];
+
+        $chart = match ($report) {
+            'employment-status' => [
+                'type' => 'doughnut',
+                'labels' => ['Employed', 'Unemployed'],
+                'datasets' => [['label' => 'Alumni', 'data' => [$r['employedCount'], $r['totalAlumni'] - $r['employedCount']], 'backgroundColor' => ['#1a3a6e', '#94a3b8'], 'borderWidth' => 2, 'borderColor' => '#fff']],
+            ],
+            'employment-by-batch' => [
+                'type' => 'bar',
+                'labels' => $r['employmentByBatch']->keys()->values()->all(),
+                'datasets' => [
+                    ['label' => 'Unemployed', 'data' => $r['employmentByBatch']->map(fn ($b) => $b['total'] - $b['employed'])->values()->all(), 'backgroundColor' => '#e05c00'],
+                    ['label' => 'Employed', 'data' => $r['employmentByBatch']->pluck('employed')->values()->all(), 'backgroundColor' => '#1a3a6e'],
+                ],
+                'stacked' => true,
+            ],
+            'employment-by-gender' => [
+                'type' => 'bar',
+                'labels' => collect($r['genderEmployment'])->pluck('label')->all(),
+                'datasets' => [['label' => 'Employment Rate', 'data' => collect($r['genderEmployment'])->pluck('rate')->all(), 'backgroundColor' => ['#e05c00', '#1a3a6e', '#94a3b8']]],
+                'percent' => true,
+            ],
+            'employment-interval' => [
+                'type' => 'bar',
+                'labels' => array_keys($r['employmentInterval']),
+                'datasets' => [['label' => 'Alumni', 'data' => array_values($r['employmentInterval']), 'backgroundColor' => '#1a3a6e']],
+            ],
+            'job-alignment' => [
+                'type' => 'bar',
+                'labels' => $r['programAlignment']->keys()->values()->all(),
+                'datasets' => [['label' => 'Alignment %', 'data' => $r['programAlignment']->map(fn ($p) => $p['rate'])->values()->all(), 'backgroundColor' => '#e05c00']],
+                'horizontal' => true,
+                'percent' => true,
+            ],
+            'employment-by-month' => [
+                'type' => 'bar',
+                'labels' => $r['employmentByMonth']->keys()->values()->all(),
+                'datasets' => [['label' => 'Alumni Employed', 'data' => $r['employmentByMonth']->values()->all(), 'backgroundColor' => '#0e7c66']],
+            ],
+            'industry-distribution' => [
+                'type' => 'bar',
+                'labels' => $r['industryDistribution']->keys()->values()->all(),
+                'datasets' => [['label' => 'Employed', 'data' => $r['industryDistribution']->values()->all(), 'backgroundColor' => '#e05c00']],
+                'horizontal' => true,
+            ],
+            'job-before-grad' => [
+                'type' => 'pie',
+                'labels' => array_keys($r['jobBeforeGradPie']),
+                'datasets' => [['label' => 'Alumni', 'data' => array_values($r['jobBeforeGradPie']), 'backgroundColor' => ['#C73D1A', '#1a3a6e', '#e05c00', '#cbd5e1'], 'borderWidth' => 2, 'borderColor' => '#fff']],
+            ],
+        };
+
+        // Primary sort key first — buildAlumniTable()'s companion view
+        // reverses this before simulating clicks (see the class doc comment
+        // above SINGLE_REPORTS).
+        $defaultSort = match ($report) {
+            'employment-status' => ['employment_status'],
+            'employment-by-batch' => ['employment_status', 'batch'],
+            'employment-by-gender' => ['gender'],
+            'employment-interval' => ['interval'],
+            'job-alignment' => ['program'],
+            'employment-by-month' => ['employment_month'],
+            'industry-distribution' => ['industry'],
+            'job-before-grad' => ['first_job_timing'],
+        };
+
+        $extraColumn = match ($report) {
+            'employment-by-gender' => 'gender',
+            'employment-interval' => 'interval',
+            'job-alignment' => 'aligned',
+            'employment-by-month' => 'employment_month',
+            'industry-distribution' => 'industry',
+            'job-before-grad' => 'first_job_timing',
+            default => null,
+        };
+        [$tableColumns, $tableRows] = $this->buildAlumniTable($r['allAlumni'], $extraColumn);
+
+        return array_merge([
+            'report' => $report,
+            'title' => $titles[$report],
+            'chart' => $chart,
+            'tableColumns' => $tableColumns,
+            'tableRows' => $tableRows,
+            'defaultSort' => $defaultSort,
+            'dashboardFilters' => $dashboardFilters,
+            'filterSet' => 'full',
+            'hireMonths' => null,
+            'topCompaniesLimit' => null,
+        ], $this->filterOptions($reportService));
+    }
+
+    /** Name/Batch/College/Program/Employment Status — the same raw alumni table shape for every report in ALUMNI_FAMILY_REPORTS, plus one report-specific extra column when the chart's own dimension isn't already one of those five. */
+    private function buildAlumniTable($allAlumni, ?string $extraColumn): array
+    {
+        $columns = [
+            ['key' => 'name', 'label' => 'Name'],
+            ['key' => 'batch', 'label' => 'Batch'],
+            ['key' => 'college', 'label' => 'College'],
+            ['key' => 'program', 'label' => 'Program'],
+            ['key' => 'employment_status', 'label' => 'Employment Status'],
+        ];
+        $extraLabels = [
+            'gender' => 'Gender',
+            'interval' => 'Employment Interval',
+            'aligned' => 'Aligned',
+            'employment_month' => 'Employment Month',
+            'industry' => 'Industry',
+            'first_job_timing' => 'First Job Timing',
+        ];
+        if ($extraColumn) {
+            $columns[] = ['key' => $extraColumn, 'label' => $extraLabels[$extraColumn]];
+        }
+
+        $genderLabels = Alumnus::genderLabels();
+        $monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        $rows = $allAlumni->map(function ($a) use ($extraColumn, $genderLabels, $monthNames) {
+            $row = [
+                'name' => trim(($a->user->user_first_name ?? '') . ' ' . ($a->user->user_last_name ?? '')),
+                'batch' => optional($a->alumnus_batch)->format('Y') ?: '',
+                'college' => $a->program?->collegeName() ?? 'N/A',
+                'program' => $a->program->program_name ?? 'N/A',
+                'employment_status' => $a->alumnus_employment_status ? 'Employed' : 'Unemployed',
+            ];
+
+            switch ($extraColumn) {
+                case 'gender':
+                    $row['gender'] = $genderLabels[$a->alumnus_gender] ?? 'Unspecified';
+                    break;
+                case 'interval':
+                    $row['interval'] = $this->intervalBucketFor($a);
+                    // Plain alphabetical sort on the label text scrambles
+                    // the intended chronological order ("1–2 years" and
+                    // "6–12 months" would sort before "Before Graduation",
+                    // "Unknown" before "Within 6 months", etc.) — this
+                    // numeric key (see buildSingleReport()'s _sort
+                    // convention) is what the table actually sorts by.
+                    $row['interval_sort'] = array_search($row['interval'], [
+                        'Before Graduation', 'Within 6 months', '6–12 months', '1–2 years', 'Over 2 years', 'Unknown',
+                    ], true);
+                    break;
+                case 'aligned':
+                    $row['aligned'] = $a->alumnus_employment_status ? ($a->hasCourseAlignedJob() ? 'Yes' : 'No') : 'N/A';
+                    break;
+                case 'employment_month':
+                    $row['employment_month'] = $a->alumnus_employment_date ? $monthNames[$a->alumnus_employment_date->month - 1] : 'N/A';
+                    // Numeric sort key — plain alphabetical "Apr" < "Aug" <
+                    // "Dec" < "Feb" isn't chronological, so the generic
+                    // table view uses this (see single.blade.php's <td
+                    // data-sort-value>) instead of the display text.
+                    $row['employment_month_sort'] = $a->alumnus_employment_date ? $a->alumnus_employment_date->month : 0;
+                    break;
+                case 'industry':
+                    $row['industry'] = $a->industry->industry_name ?? 'N/A';
+                    break;
+                case 'first_job_timing':
+                    $row['first_job_timing'] = !$a->alumnus_first_job_date ? 'Unknown' : ($a->wasEmployedBeforeGraduation() ? 'Before Graduation' : 'After Graduation');
+                    break;
+            }
+
+            return $row;
+        })->values()->all();
+
+        return [$columns, $rows];
+    }
+
+    private function intervalBucketFor($a): string
+    {
+        if (!$a->alumnus_first_job_date || !$a->alumnus_batch) {
+            return 'Unknown';
+        }
+        if ($a->wasEmployedBeforeGraduation()) {
+            return 'Before Graduation';
+        }
+        $months = max(0, \Carbon\Carbon::parse($a->alumnus_batch)->diffInMonths($a->alumnus_first_job_date, false));
+
+        return match (true) {
+            $months <= 6 => 'Within 6 months',
+            $months <= 12 => '6–12 months',
+            $months <= 24 => '1–2 years',
+            default => 'Over 2 years',
+        };
+    }
+
+    private function buildApplicationFamilyReport(string $report, DashboardReportService $reportService): array
+    {
+        [$batches, $programIds, $employmentStatuses, $colleges, $years] = $this->resolveFilters($reportService);
+        $dashboardFilters = ['batch' => $batches, 'program_id' => $programIds, 'employment_status' => $employmentStatuses, 'college' => $colleges, 'year' => $years];
+        $hireMonths = $reportService->resolveHireMonths(request()->input('hire_months'));
+        $topCompaniesLimit = $reportService->resolveTopCompaniesLimit(request()->input('top_companies'));
+        $r = $reportService->buildEmploymentReports($batches, $programIds, $employmentStatuses, $colleges, $years, $hireMonths, $topCompaniesLimit);
+
+        $titles = ['hires-per-month' => 'Hires per Month', 'top-hiring-companies' => 'Top Hiring Companies'];
+
+        $chart = match ($report) {
+            'hires-per-month' => [
+                'type' => 'line',
+                'labels' => $r['hiresPerMonth']->keys()->values()->all(),
+                'datasets' => [['label' => 'Hires', 'data' => $r['hiresPerMonth']->values()->all(), 'borderColor' => '#e05c00', 'backgroundColor' => 'rgba(224,92,0,.08)', 'fill' => true]],
+            ],
+            'top-hiring-companies' => [
+                'type' => 'bar',
+                'labels' => $r['topHiringCompanies']->pluck('job_posting_company')->values()->all(),
+                'datasets' => [['label' => 'Hires', 'data' => $r['topHiringCompanies']->pluck('hires')->values()->all(), 'backgroundColor' => '#e05c00']],
+                'horizontal' => true,
+            ],
+        };
+
+        $defaultSort = match ($report) {
+            // Latest hired first — the "-" prefix means descending (see
+            // sortRowsBy()). This report is specifically about hires, so
+            // its raw table is filtered to hired applications only below,
+            // where hired_date is always present.
+            'hires-per-month' => ['-hired_date'],
+            'top-hiring-companies' => ['company'],
+        };
+
+        $tableColumns = [
+            ['key' => 'applicant', 'label' => 'Applicant'],
+            ['key' => 'company', 'label' => 'Company'],
+            ['key' => 'position', 'label' => 'Position'],
+            ['key' => 'applied_date', 'label' => 'Applied Date'],
+            ['key' => 'hired_date', 'label' => 'Hired Date'],
+            ['key' => 'status', 'label' => 'Status'],
+        ];
+
+        // "Hires per Month" only ever counts hired applications (see
+        // hiresPerMonth's own query) — showing pending/declined/shortlisted
+        // rows in its raw table would be records that chart never actually
+        // reflects, and none of them have a hired_date to sort by anyway.
+        $applications = $report === 'hires-per-month'
+            ? $r['applicationsTable']->where('status', 'hired')
+            : $r['applicationsTable'];
+
+        $tableRows = $applications->map(fn ($row) => [
+            'applicant' => $row->applicant_name,
+            'company' => $row->company,
+            // Ranks by hire count, most hires first (same ranking
+            // topHiringCompanies uses), tie-broken alphabetically by company
+            // — plain alphabetical alone would ignore hires entirely and
+            // not match what "Top Hiring Companies" actually ranks by. Zero-
+            // padded so this sorts correctly as a STRING (sortRowsBy()/the
+            // client-side sorter both compare non-numeric values as
+            // strings) — "-5" vs "-3" would otherwise compare character by
+            // character ('3' < '5') and rank backwards from the real
+            // hire-count order.
+            'company_sort' => sprintf('%06d_%s', 999999 - ($r['companyHireCounts'][$row->company] ?? 0), $row->company),
+            'position' => $row->position,
+            'applied_date' => \Carbon\Carbon::parse($row->applied_date)->format('M d, Y'),
+            'applied_date_sort' => $row->applied_date,
+            'hired_date' => $row->hired_at ? \Carbon\Carbon::parse($row->hired_at)->format('M d, Y') : '—',
+            'hired_date_sort' => $row->hired_at ?? '',
+            'status' => ucfirst($row->status),
+        ])->values()->all();
+
+        return array_merge([
+            'report' => $report,
+            'title' => $titles[$report],
+            'chart' => $chart,
+            'tableColumns' => $tableColumns,
+            'tableRows' => $tableRows,
+            'defaultSort' => $defaultSort,
+            'dashboardFilters' => $dashboardFilters,
+            'filterSet' => 'full',
+            'hireMonths' => $hireMonths,
+            'topCompaniesLimit' => $topCompaniesLimit,
+        ], $this->filterOptions($reportService));
+    }
+
+    private function buildClaimFamilyReport(string $report, DashboardReportService $reportService): array
+    {
+        [$batches, $programIds, $colleges] = $this->alumniIdFilters($reportService);
+        $dashboardFilters = ['batch' => $batches, 'program_id' => $programIds, 'college' => $colleges];
+        $r = $reportService->buildAlumniIdYearbookReport($batches, $programIds, $colleges);
+
+        $titles = ['alumni-id-status' => 'Alumni ID Status', 'yearbook-status' => 'Yearbook Claiming Status'];
+
+        $chart = match ($report) {
+            'alumni-id-status' => [
+                'type' => 'doughnut',
+                'labels' => ['Pending', 'Ready to Claim', 'Claimed'],
+                'datasets' => [['label' => 'Alumni', 'data' => array_values($r['alumniIdCounts']->all()), 'backgroundColor' => ['#dc2626', '#e05c00', '#16a34a'], 'borderWidth' => 2, 'borderColor' => '#fff']],
+            ],
+            'yearbook-status' => [
+                'type' => 'doughnut',
+                'labels' => ['Pending', 'Ready to Claim', 'Claimed'],
+                'datasets' => [['label' => 'Alumni', 'data' => array_values($r['yearbookCounts']->all()), 'backgroundColor' => ['#dc2626', '#e05c00', '#16a34a'], 'borderWidth' => 2, 'borderColor' => '#fff']],
+            ],
+        };
+
+        $defaultSort = match ($report) {
+            'alumni-id-status' => ['id_status'],
+            'yearbook-status' => ['yearbook_status'],
+        };
+
+        $tableColumns = [
+            ['key' => 'name', 'label' => 'Name'],
+            ['key' => 'batch', 'label' => 'Batch'],
+            ['key' => 'id_status', 'label' => 'Alumni ID Status'],
+            ['key' => 'yearbook_status', 'label' => 'Yearbook Status'],
+        ];
+        $tableRows = $r['allAlumniWithClaimStatus']->map(fn ($a) => [
+            'name' => trim(($a->user->user_first_name ?? '') . ' ' . ($a->user->user_last_name ?? '')),
+            'batch' => optional($a->alumnus_batch)->format('Y') ?: '',
+            'id_status' => $a->alumniId ? ucwords(str_replace('_', ' ', $a->alumniId->status)) : 'Not Registered',
+            'yearbook_status' => $a->yearbook ? ucwords(str_replace('_', ' ', $a->yearbook->claiming_status)) : 'Not Registered',
+        ])->values()->all();
+
+        return array_merge([
+            'report' => $report,
+            'title' => $titles[$report],
+            'chart' => $chart,
+            'tableColumns' => $tableColumns,
+            'tableRows' => $tableRows,
+            'defaultSort' => $defaultSort,
+            'dashboardFilters' => $dashboardFilters,
+            'filterSet' => 'basic',
+            'hireMonths' => null,
+            'topCompaniesLimit' => null,
+        ], $this->filterOptions($reportService));
+    }
+
     public function employment(DashboardReportService $reportService)
     {
         $this->authorizeReports();

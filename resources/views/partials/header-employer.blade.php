@@ -69,7 +69,8 @@
     </script>
 
     @include('partials.chatbot-widget')
-    @include('partials.back-to-top')
+    @include('partials.back-to-top', ['nearChatWidget' => true])
+    @include('partials.alert-modal')
 </body>
 
 </html>

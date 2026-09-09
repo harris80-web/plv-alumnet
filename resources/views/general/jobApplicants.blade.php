@@ -70,7 +70,7 @@
 
 <style>
     .HeroSection {
-        background: url("{{ asset('assets/heroSectionBackground.png') }}");
+        background: url("{{ asset('assets/heroSection.svg') }}");
         background-size: cover;
         background-position: center;
     }
@@ -307,6 +307,12 @@
                     <span class="{{ $remainingSlots > 0 ? 'text-[#C73D1A]' : 'text-red-500' }}">{{ $remainingSlots }}</span>
                 </div>
 
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                    <input type="text" id="applicantSearchInput" placeholder="Search by name..." oninput="applyApplicantFilters()"
+                        class="pl-8 pr-3 py-1.5 border border-slate-200 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-[#1D46A4] focus:border-[#1D46A4] w-48 bg-white">
+                </div>
+
                 <div class="flex items-center gap-2">
                     <span class="text-xs font-semibold text-gray-500"><span id="selectedCount">0</span> selected</span>
 
@@ -366,7 +372,6 @@
                             <th data-sort class="px-6 py-3 text-center font-semibold">Program <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                             <th data-sort class="px-6 py-3 text-center font-semibold">College <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                             <th data-sort class="px-6 py-3 text-center font-semibold">Compatibility <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                            <th class="px-6 py-3 text-center font-semibold">Cover Letter</th>
                             <th class="px-6 py-3 text-center font-semibold">Actions</th>
                         </tr>
                     </thead>
@@ -382,13 +387,15 @@
                                 default       => 'badge-pending',
                             };
                         @endphp
-                        <tr data-id="{{ $index + 1 }}" data-status="{{ $status }}" data-application-id="{{ $applicant->pivot->application_id }}">
+                        @php $isBulkEligible = in_array(strtolower($status), ['pending', 'shortlisted']); @endphp
+                        <tr data-id="{{ $index + 1 }}" data-status="{{ $status }}" data-application-id="{{ $applicant->pivot->application_id }}"
+                            data-name="{{ strtolower(trim($applicant->user->user_first_name . ' ' . $applicant->user->user_last_name)) }}">
                             <td class="px-4 py-4 text-center">
-                                @if(in_array(strtolower($status), ['pending', 'shortlisted']))
-                                <input type="checkbox" class="applicant-checkbox w-4 h-4 accent-[#1D264F] cursor-pointer"
+                                <input type="checkbox" class="applicant-checkbox w-4 h-4 accent-[#1D264F] cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                                     value="{{ $applicant->pivot->application_id }}"
+                                    {{ $isBulkEligible ? '' : 'disabled' }}
+                                    title="{{ $isBulkEligible ? '' : 'Already ' . strtolower($status) . ' — no bulk action left to take' }}"
                                     onchange="updateBulkActionUI()">
-                                @endif
                             </td>
                             <td class="px-6 py-4 text-center text-gray-400 font-semibold">{{ $index + 1 }}</td>
 
@@ -505,17 +512,6 @@
                             </td>
 
                             <td class="px-6 py-4 text-center">
-                                @if ($coverLetterUrl)
-                                <a href="{{ $coverLetterUrl }}" target="_blank"
-                                    class="bg-[#1D264F] hover:bg-[#0E0F3B] text-white text-xs font-bold px-4 py-1.5 rounded-md transition-colors inline-block">
-                                    View Cover Letter
-                                </a>
-                                @else
-                                <span class="text-gray-400 text-xs">N/A</span>
-                                @endif
-                            </td>
-
-                            <td class="px-6 py-4 text-center">
                                 <div class="relative inline-block">
                                     <button onclick="toggleDropdown(this)"
                                         class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
@@ -552,7 +548,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="10" class="py-16 text-center text-gray-400">
+                            <td colspan="9" class="py-16 text-center text-gray-400">
                                 <i class="fas fa-inbox text-5xl mb-3 block"></i>
                                 <p class="font-semibold">No applicants yet.</p>
                             </td>
@@ -827,17 +823,28 @@
         const allCheckboxes = document.querySelectorAll('.applicant-checkbox');
         allCheckboxes.forEach(cb => cb.closest('tr')?.classList.toggle('bg-blue-50', cb.checked));
 
+        // Only count checkboxes toggleSelectAll() actually controls — not
+        // disabled (already hired/declined; can never become checked) and
+        // not hidden by the current status/search filter. Comparing against
+        // EVERY checkbox (including permanently-unchecked disabled ones)
+        // meant "select all" could never show as fully checked, which broke
+        // its own toggle: clicking it while it wrongly showed unchecked
+        // just re-checked everything again instead of clearing the selection.
+        const eligibleCheckboxes = [...document.querySelectorAll('.applicant-checkbox:not(:disabled)')]
+            .filter(cb => cb.closest('tr')?.style.display !== 'none');
+        const eligibleCheckedCount = eligibleCheckboxes.filter(cb => cb.checked).length;
+
         const selectAll = document.getElementById('selectAllCheckbox');
         if (selectAll) {
-            selectAll.checked = allCheckboxes.length > 0 && count === allCheckboxes.length;
+            selectAll.checked = eligibleCheckboxes.length > 0 && eligibleCheckedCount === eligibleCheckboxes.length;
         }
     }
 
     function toggleSelectAll(source) {
         document.querySelectorAll('tbody tr[data-status]').forEach(row => {
-            if (row.style.display === 'none') return; // respect the current status filter
+            if (row.style.display === 'none') return; // respect the current status/search filter
             const cb = row.querySelector('.applicant-checkbox');
-            if (cb) cb.checked = source.checked;
+            if (cb && !cb.disabled) cb.checked = source.checked; // disabled = already hired/declined, not bulk-eligible
         });
         updateBulkActionUI();
     }
@@ -894,54 +901,103 @@
         if (event.target === modal) closeJobViewModal();
     });
 
+    // Positioned with fixed coords computed from the BUTTON's own on-screen
+    // rect, same escape trick as toggleStatusFilter() below — the dropdown
+    // otherwise inherits .action-dropdown's plain `position: absolute`,
+    // which gets clipped by this table's own overflow-x-auto scroll
+    // container instead of floating over it, especially for a row near the
+    // bottom of the (possibly long, paginated) table.
     function toggleDropdown(btn) {
         const dropdown = btn.nextElementSibling;
         const isOpen = dropdown.classList.contains('open');
-        document.querySelectorAll('.action-dropdown.open').forEach(d => d.classList.remove('open'));
-        if (!isOpen) {
-            dropdown.classList.add('open');
-            const rect = dropdown.getBoundingClientRect();
-            if (rect.bottom > window.innerHeight) {
-                dropdown.classList.add('drop-up');
-            } else {
-                dropdown.classList.remove('drop-up');
-            }
+        document.querySelectorAll('.action-dropdown.open').forEach(d => {
+            d.classList.remove('open', 'drop-up');
+            d.style.position = '';
+            d.style.top = '';
+            d.style.left = '';
+        });
+        if (isOpen) return;
+
+        const rect = btn.getBoundingClientRect();
+        dropdown.style.position = 'fixed';
+        dropdown.style.right = 'auto';
+        dropdown.style.left = (rect.right - 160) + 'px';
+        dropdown.style.top = (rect.bottom + 4) + 'px';
+        dropdown.classList.add('open');
+
+        // Now that it's actually rendered (display:block via .open), measure
+        // it for real and flip above the button if it would overflow the
+        // bottom of the viewport.
+        const ddRect = dropdown.getBoundingClientRect();
+        if (ddRect.bottom > window.innerHeight) {
+            dropdown.style.top = (rect.top - ddRect.height - 4) + 'px';
+            dropdown.classList.add('drop-up');
         }
     }
 
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.relative')) {
-            document.querySelectorAll('.action-dropdown.open').forEach(d => d.classList.remove('open'));
+            document.querySelectorAll('.action-dropdown.open').forEach(d => {
+                d.classList.remove('open');
+                d.style.position = '';
+                d.style.top = '';
+                d.style.left = '';
+            });
         }
     });
 
+    // Positioned with fixed coords computed from the button's own on-screen
+    // rect — the dropdown otherwise inherits .action-dropdown's plain
+    // `position: absolute`, which gets clipped by the table's own
+    // overflow-x-auto scroll container instead of floating over it (same
+    // fix as Job Posting Management's applicants panel on the admin side).
     function toggleStatusFilter(btn) {
         const dropdown = document.getElementById('statusFilterDropdown');
         const isOpen = dropdown.classList.contains('open');
-        document.querySelectorAll('.action-dropdown.open').forEach(d => d.classList.remove('open'));
-        if (!isOpen) dropdown.classList.add('open');
+        document.querySelectorAll('.action-dropdown.open').forEach(d => {
+            d.classList.remove('open');
+            d.style.position = '';
+            d.style.top = '';
+            d.style.left = '';
+        });
+        if (isOpen) return;
+
+        const rect = btn.getBoundingClientRect();
+        dropdown.style.position = 'fixed';
+        dropdown.style.top = (rect.bottom + 6) + 'px';
+        dropdown.style.left = (rect.left + rect.width / 2) + 'px';
+        dropdown.classList.add('open');
     }
 
-    function filterStatus(status) {
-        const rows = document.querySelectorAll('tbody tr[data-status]');
-        rows.forEach(row => {
-            if (status === 'All' || row.dataset.status === status) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-        document.getElementById('statusFilterDropdown').classList.remove('open');
+    // Status dropdown + name search combine (AND) into one row visibility
+    // pass — each used to set row.style.display independently, so picking a
+    // status filter clobbered whatever the search box had just done (and
+    // vice versa). currentStatusFilter tracks the dropdown's last pick;
+    // the search box re-runs this same pass on every keystroke.
+    let currentStatusFilter = 'All';
 
-        const visibleRows = [...rows].filter(r => r.style.display !== 'none');
-        const emptyState = document.getElementById('emptyState');
-        if (emptyState) {
-            if (visibleRows.length === 0) {
-                emptyState.classList.remove('hidden');
-            } else {
-                emptyState.classList.add('hidden');
-            }
-        }
+    function filterStatus(status) {
+        currentStatusFilter = status;
+        document.getElementById('statusFilterDropdown').classList.remove('open');
+        applyApplicantFilters();
+    }
+
+    function applyApplicantFilters() {
+        const query = (document.getElementById('applicantSearchInput')?.value || '').trim().toLowerCase();
+        const rows = document.querySelectorAll('tbody tr[data-status]');
+
+        rows.forEach(row => {
+            // .toLowerCase() on both sides — data-status holds the raw DB
+            // value (lowercase: "pending", "hired", ...) while the dropdown
+            // buttons pass a capitalized label ("Pending", "Hired", ...);
+            // comparing them case-sensitively meant every filter but "All"
+            // matched nothing.
+            const statusMatches = currentStatusFilter === 'All'
+                || (row.dataset.status || '').toLowerCase() === currentStatusFilter.toLowerCase();
+            const nameMatches = !query || (row.dataset.name || '').includes(query);
+            row.style.display = (statusMatches && nameMatches) ? '' : 'none';
+        });
+
         document.dispatchEvent(new CustomEvent('pv:filtered'));
     }
 

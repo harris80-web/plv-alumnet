@@ -228,6 +228,16 @@
                 const itemsText = root.querySelector('[data-pv-items-text]');
                 if (itemsText) itemsText.textContent = eligible.length.toLocaleString() + (eligible.length === 1 ? ' item' : ' items');
                 updateNavUI(root, page, lastPage);
+
+                // The click handler below reads these two attributes to
+                // compute where First/Prev/Next/Last go — they were only
+                // ever set once at initial render (both stuck at "1"/its
+                // starting last-page) and never updated here, so a second
+                // Next/Prev click recomputed the exact same target as the
+                // first and looked like the buttons had stopped working
+                // past page 2.
+                root.dataset.pvCurrentPage = page;
+                root.dataset.pvLastPage = lastPage;
             }
 
             function initClientBar(root) {

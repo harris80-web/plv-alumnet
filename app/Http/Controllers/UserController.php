@@ -373,7 +373,7 @@ class UserController extends Controller
             ->when(request('alumni_status'), fn ($q, $status) => $q->whereHas('user', fn ($q2) => $q2->where('user_active', $status === 'Active')))
             ->when(request('alumni_new_this_month'), fn ($q) => $q->whereHas('user', fn ($q2) => $q2->whereYear('created_at', now()->year)->whereMonth('created_at', now()->month)))
             ->orderBy('user_id')
-            ->paginate($this->resolvePerPage(15, 'alumni_per_page'), ['*'], 'alumniPage')
+            ->paginate($this->resolvePerPage(15, 'alumni_per_page', [5, 10, 15, 20, 50]), ['*'], 'alumniPage')
             ->withQueryString();
 
         // Same two-table split the view already renders (awaiting approval

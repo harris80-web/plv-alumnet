@@ -18,7 +18,7 @@
 </head>
 <style>
     .HeroSection {
-        background: url("{{ asset('assets/heroSectionBackground.png') }}");
+        background: url("{{ asset('assets/heroSection.svg') }}");
         background-size: cover;
         background-position: center;
     }
@@ -490,7 +490,7 @@
                             <div id="editCourseInputContainer-{{ $job->job_posting_id }}" class="space-y-2">
                                 @foreach($job->programs as $index => $jobProgram)
                                 <div class="flex items-center gap-3 course-row ">
-                                    <select name="program[]"
+                                    <select name="program[]" onchange="preventDuplicateCourseSelection(this)"
                                         class="flex-1 border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white w-full">
                                         <option value="" selected disabled>Select Undergraduate Program</option>
                                         @foreach($programs as $program)

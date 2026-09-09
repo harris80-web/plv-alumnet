@@ -54,19 +54,24 @@
 
 {{-- ===== "Interested" confirmation — shown instantly after either the card-grid
      or this modal's own Interested button is clicked, no page reload needed.
-     Styled after partials/job-apply-modal.blade.php's #jobApplySuccessModal
-     (navy icon circle, gradient title/body, single action button). ===== --}}
-<div id="interestConfirmModal" class="fixed inset-0 z-[80] hidden opacity-0 transition-opacity duration-200 bg-black bg-opacity-50 flex items-center justify-center p-4">
+     Styled after partials/post-job-modal.blade.php's #pendingModal (close X,
+     large icon circle, gradient title/body, single full-width action
+     button). ===== --}}
+<div id="interestConfirmModal" class="fixed inset-0 z-[80] hidden opacity-0 transition-opacity duration-200 bg-black/50 flex items-center justify-center p-4">
     <div id="interestConfirmModalPanel" class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full relative text-center opacity-0 scale-95 transition-all duration-200">
+        <button type="button" onclick="closeInterestConfirmModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
         <div class="flex justify-center mb-6">
             <div class="bg-[#0E0F3B] rounded-full p-4">
-                <i id="interestConfirmIconGlyph" class="fa-solid text-2xl text-white"></i>
+                <i id="interestConfirmIconGlyph" class="fa-solid text-4xl text-white"></i>
             </div>
         </div>
         <h2 id="interestConfirmTitle" class="text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent mb-2"></h2>
         <p id="interestConfirmText" class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-sm mb-8 leading-relaxed"></p>
-        <button type="button"
-            onclick="closeAnimatedModal(document.getElementById('interestConfirmModal'), document.getElementById('interestConfirmModalPanel'))"
+        <button type="button" onclick="closeInterestConfirmModal()"
             class="w-full bg-[#0E0F3B] text-white py-3 rounded-md font-bold hover:bg-blue-900 transition-colors uppercase tracking-wider">
             Done
         </button>
@@ -99,7 +104,7 @@
 
     function showInterestConfirmation(isInterested, title) {
         const glyph = document.getElementById('interestConfirmIconGlyph');
-        glyph.className = 'fa-solid text-2xl text-white ' + (isInterested ? 'fa-circle-check' : 'fa-circle-xmark');
+        glyph.className = 'fa-solid text-4xl text-white ' + (isInterested ? 'fa-circle-check' : 'fa-circle-xmark');
 
         document.getElementById('interestConfirmTitle').textContent = isInterested ? "You're Interested!" : 'Interest Removed';
 
@@ -116,10 +121,12 @@
             textEl.append('You are no longer marked as interested in ', strong, '.');
         }
 
-        const confirmOverlay = document.getElementById('interestConfirmModal');
-        const confirmPanel = document.getElementById('interestConfirmModalPanel');
-        openAnimatedModal(confirmOverlay, confirmPanel);
-        setTimeout(function () { closeAnimatedModal(confirmOverlay, confirmPanel); }, 2500);
+        openAnimatedModal(document.getElementById('interestConfirmModal'), document.getElementById('interestConfirmModalPanel'));
+        setTimeout(closeInterestConfirmModal, 2500);
+    }
+
+    function closeInterestConfirmModal() {
+        closeAnimatedModal(document.getElementById('interestConfirmModal'), document.getElementById('interestConfirmModalPanel'));
     }
 
     function submitInterestToggle(form, sourceCard) {

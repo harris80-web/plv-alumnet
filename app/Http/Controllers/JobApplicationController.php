@@ -126,13 +126,28 @@ class JobApplicationController extends Controller
             'builder_resume_snapshot.certifications.*.certification_date' => ['nullable', 'date'],
         ]);
 
+        // The apply modal now submits this via fetch() with an
+        // Accept: application/json header (see job-apply-modal.blade.php's
+        // handleApplySubmit()) so it can show a success/failure modal that
+        // actually reflects what happened, instead of showing "Successfully
+        // Applied!" optimistically before the real submit even ran. A
+        // non-AJAX form post (JS disabled, or a direct hit) still gets the
+        // original redirect-based behavior.
+        $wantsJson = $request->wantsJson();
+
         // Belt-and-suspenders — the apply modal only ever offers each
         // resume option when the corresponding hasXResume() check is true,
         // but the server can't trust that a request actually came from it.
         if ($validated['resume_source'] === 'profile' && ! $alumni->hasUploadedResumeFile()) {
+            if ($wantsJson) {
+                return response()->json(['success' => false, 'message' => "You don't have a resume on file yet."], 422);
+            }
             return redirect()->back()->with('noResume', 'flex');
         }
         if ($validated['resume_source'] === 'builder' && ! $alumni->hasBuilderResume()) {
+            if ($wantsJson) {
+                return response()->json(['success' => false, 'message' => "You don't have a Resume Builder profile yet."], 422);
+            }
             return redirect()->back()->with('noResume', 'flex');
         }
 
@@ -149,6 +164,9 @@ class JobApplicationController extends Controller
             ->first();
 
         if ($existingApplication) {
+            if ($wantsJson) {
+                return response()->json(['success' => true, 'alreadyApplied' => true, 'message' => 'You have already applied to this job.']);
+            }
             return redirect()->route('jobPosting.jobBoard')->with('success', 'You have already applied to this job.');
         }
 
@@ -181,7 +199,39 @@ class JobApplicationController extends Controller
         ]);
         Mail::to($job->user->user_email)->queue(new ApplyJobMail($job, $alumni));
 
+        if ($wantsJson) {
+            return response()->json(['success' => true, 'matchScore' => $match->score]);
+        }
         return redirect()->route('jobPosting.jobBoard')->with('matchScore', $match->score);
+    }
+
+    /**
+     * Staff (admin/super_admin) get sent back to Job Posting Management's
+     * own Applicants tab after an action, not the employer-styled page —
+     * they're always acting on a job they themselves posted (see
+     * JobPostingController::addJobPost(), which attributes the posting to
+     * Auth::id() regardless of role), so this is purely a "which chrome do
+     * they belong in" choice, not an authorization one.
+     */
+    private function isStaff(): bool
+    {
+        return Auth::check() && in_array(Auth::user()->user_role, ['admin', 'super_admin'], true);
+    }
+
+    /**
+     * Where a hire/decline/shortlist action sends the actor back to. An
+     * employer lands on their own styled applicants page as before; staff
+     * acting from Job Posting Management's Applicants tab instead go back
+     * to that tab (?tab=applicants&applicantsJob=) so the action doesn't
+     * drop them onto a page without their admin sidebar/header.
+     */
+    private function applicantsRedirectTarget($jobId)
+    {
+        if ($this->isStaff()) {
+            return redirect()->route('jobPosting.jobManagement', ['tab' => 'applicants', 'applicantsJob' => $jobId]);
+        }
+
+        return redirect()->route('jobApplication.showApplications', ['jobPostingId' => $jobId]);
     }
 
     public function showApplications($jobPostingId)
@@ -197,10 +247,11 @@ class JobApplicationController extends Controller
     }
 
     /**
-     * Looks up the application and confirms the acting employer actually
-     * owns the job it belongs to before handing back to the caller — used
-     * by hire/decline/shortlist below so one employer can't act on another
-     * employer's applicants by guessing an application id.
+     * Looks up the application and confirms the acting user actually owns
+     * the job it belongs to (staff included — an admin's own job posts are
+     * owned by their own user id the same as an employer's) before handing
+     * back to the caller — used by hire/decline/shortlist below so nobody
+     * can act on someone else's applicant by guessing an application id.
      */
     private function authorizedApplication($applicationId): JobApplication
     {
@@ -334,7 +385,7 @@ class JobApplicationController extends Controller
     {
         $name = trim($application->alumnus->user->user_first_name . ' ' . $application->alumnus->user->user_last_name);
 
-        return redirect()->route('jobApplication.showApplications', ['jobPostingId' => $application->job_id])
+        return $this->applicantsRedirectTarget($application->job_id)
             ->with('success', "{$name}'s application has been marked as " . ucfirst($status) . '.')
             ->with('updatedApplicationIds', [$application->application_id]);
     }
@@ -344,7 +395,10 @@ class JobApplicationController extends Controller
      * (with ownership check) and the subset of the requested application
      * ids that actually belong to it and aren't already in an excluded
      * status, so e.g. an already-hired or already-declined row silently
-     * drops out of a batch instead of erroring the whole request.
+     * drops out of a batch instead of erroring the whole request. Hired/
+     * declined are excluded from every bulk action (not just hire) —
+     * re-running hireApplication()/declineApplication() on one would
+     * re-send its "you're hired"/"not selected" email a second time.
      */
     private function resolveBulkTargets(Request $request, $jobPostingId, array $excludedStatuses): array
     {
@@ -388,7 +442,7 @@ class JobApplicationController extends Controller
             $this->hireApplication($application);
         }
 
-        return redirect()->route('jobApplication.showApplications', ['jobPostingId' => $jobPost->job_posting_id])
+        return $this->applicantsRedirectTarget($jobPost->job_posting_id)
             ->with('success', $applications->count() . ' applicant(s) hired successfully.')
             ->with('updatedApplicationIds', $applications->pluck('application_id')->values()->all());
     }
@@ -406,7 +460,7 @@ class JobApplicationController extends Controller
             $this->declineApplication($application);
         }
 
-        return redirect()->route('jobApplication.showApplications', ['jobPostingId' => $jobPost->job_posting_id])
+        return $this->applicantsRedirectTarget($jobPost->job_posting_id)
             ->with('success', $applications->count() . ' applicant(s) declined.')
             ->with('updatedApplicationIds', $applications->pluck('application_id')->values()->all());
     }
@@ -424,7 +478,7 @@ class JobApplicationController extends Controller
             $this->shortlistApplication($application);
         }
 
-        return redirect()->route('jobApplication.showApplications', ['jobPostingId' => $jobPost->job_posting_id])
+        return $this->applicantsRedirectTarget($jobPost->job_posting_id)
             ->with('success', $applications->count() . ' applicant(s) shortlisted.')
             ->with('updatedApplicationIds', $applications->pluck('application_id')->values()->all());
     }

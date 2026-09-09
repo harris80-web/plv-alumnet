@@ -136,7 +136,7 @@ class JobPostingController extends Controller
         $user = Auth::user();
         abort_unless($user && $user->user_role === 'alumni', 403);
 
-        $query = JobPosting::with(['skills', 'programs', 'industry', 'user', 'employer.reviews', 'employer.user'])
+        $query = JobPosting::with(['skills', 'programs', 'industry', 'user', 'employer.reviews', 'employer.votes', 'employer.user'])
             ->whereHas('applications', fn ($q) => $q->where('alumnus_id', $user->user_id))
             ->addSelect(['applied_at' => JobApplication::selectRaw('application_date')
                 ->whereColumn('job_applications.job_id', 'job_postings.job_posting_id')
@@ -164,7 +164,7 @@ class JobPostingController extends Controller
      */
     private function filteredJobPostingsQuery(Request $request, ?\App\Models\User $user = null)
     {
-        $query = JobPosting::active()->approved()->with(['skills', 'programs', 'industry', 'user', 'employer.reviews', 'employer.user']);
+        $query = JobPosting::active()->approved()->with(['skills', 'programs', 'industry', 'user', 'employer.reviews', 'employer.votes', 'employer.user']);
 
         if ($user && $user->user_role === 'alumni' && $user->alumnus) {
             $query->addSelect(['match_score' => \App\Models\JobMatch::selectRaw('COALESCE(score * 0.7 + ai_score * 0.3, score)')
@@ -578,9 +578,18 @@ class JobPostingController extends Controller
 
         $filters = ['status' => $status];
 
+        // Initial page of the Applicants tab's job picker — loaded up front
+        // (not lazily by JS) so a `?applicantsJob=` deep link (see
+        // JobApplicationController::applicantsRedirectTarget()) can find its
+        // row and auto-open that job's panel without a second round trip.
+        $applicantJobs = $this->applicantJobsBaseQuery()
+            ->orderByDesc('applications_count')
+            ->paginate($this->resolvePerPage(10, 'job_applicants_per_page'))
+            ->withQueryString();
+
         return view('superAdmin.jobManagement', compact(
             'jobs', 'totalJobs', 'pendingCount', 'approvedCount', 'declinedCount',
-            'programs', 'industries', 'users', 'filters'
+            'programs', 'industries', 'users', 'filters', 'applicantJobs'
         ));
     }
 
@@ -600,6 +609,59 @@ class JobPostingController extends Controller
             ->withQueryString();
 
         return view('partials.job-management.jobs-table', compact('jobs'));
+    }
+
+    /**
+     * The My Job Postings tab lists the acting admin's OWN job posts, any
+     * status — same scope as the employer-facing My Job Postings page
+     * (JobPostingController::showMyJobPosts(): just where('user_id', ...),
+     * no status filter), just reached from Job Posting Management instead.
+     * Each row can be viewed regardless of status; "View Applicants" only
+     * actually opens for an approved one — a pending/declined post can
+     * never have applicants (see JobApplicationController::applyJob()),
+     * and jobApplicantsFragment() below enforces that server-side too.
+     */
+    private function applicantJobsBaseQuery()
+    {
+        return JobPosting::query()->where('user_id', Auth::id())
+            ->withCount('applications')
+            ->with(['user', 'programs', 'industry']);
+    }
+
+    /**
+     * AJAX pagination endpoint for the Applicants tab's job picker — same
+     * swap-just-this-wrapper pattern as jobManagementFragment() above.
+     */
+    public function jobApplicantsPickerFragment(Request $request)
+    {
+        $this->authorizeStaff();
+        $applicantJobs = $this->applicantJobsBaseQuery()
+            ->orderByDesc('applications_count')
+            ->paginate($this->resolvePerPage(10, 'job_applicants_per_page'))
+            ->withQueryString();
+
+        return view('partials.job-management.applicant-jobs-table', compact('applicantJobs'));
+    }
+
+    /**
+     * AJAX fragment for the Applicants tab's applicant panel — view/hire/
+     * decline/shortlist applicants for one of the acting admin's OWN job
+     * posts, reusing the exact same hire/decline/shortlist routes and mail/
+     * notification side effects the employer-facing page uses. Ownership
+     * check mirrors JobApplicationController::showApplications() — an
+     * admin's own postings are owned by their own user id same as an
+     * employer's, so this is the same self-service boundary, not a
+     * staff-wide bypass.
+     */
+    public function jobApplicantsFragment($jobPostingId)
+    {
+        $this->authorizeStaff();
+        $jobPost = JobPosting::with(['applicants.user', 'applicants.program', 'industry'])
+            ->approved()
+            ->findOrFail($jobPostingId);
+        abort_unless($jobPost->user_id === Auth::id(), 403);
+
+        return view('partials.job-management.applicants-panel', compact('jobPost'));
     }
 
     public function approveJobPost($id)

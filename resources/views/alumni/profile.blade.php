@@ -22,7 +22,7 @@
 <style>
     .HeroSection {
         background:
-            url('assets/heroSectionBackground.png');
+            url('assets/heroSection.svg');
         background-size: cover;
         background-position: center;
     }

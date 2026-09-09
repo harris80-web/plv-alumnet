@@ -1,13 +1,18 @@
 {{--
-    "Post a New Job" modal — shared by the Job Board (general/jobBoard.blade.php)
-    and My Job Postings (general/jobPostings.blade.php) pages so the two can
-    never drift apart again (they used to be two hand-copied forms; one was
-    missing the required hiring_limit field entirely, so posting from the Job
-    Board page always failed server validation with no way to fix it).
+    "Post a New Job" modal — shared by the Job Board (general/jobBoard.blade.php),
+    My Job Postings (general/jobPostings.blade.php), and admin/super_admin's
+    Job Posting Management (superAdmin/jobManagement.blade.php) pages so all
+    three can never drift apart again (they used to be hand-copied forms; one
+    was missing the required hiring_limit field entirely, so posting from the
+    Job Board page always failed server validation with no way to fix it).
 
-    Params: $jobPoster (the employer/alumni User posting the job — matches
-    addJobPost()'s validation against $programs/$industries, both already
-    loaded by both pages' controllers).
+    Params: $jobPoster (the employer/alumni/staff User posting the job —
+    matches addJobPost()'s validation against $programs/$industries, both
+    already loaded by all three pages' controllers). Company Name/Address
+    auto-fill (readonly) for an employer/alumni poster, who's always posting
+    under their own one company profile; staff instead get a free-text
+    Company Name/Address, since an admin posts on behalf of whichever
+    business asked, not a fixed profile of their own.
 
     Bundles its own JS (image preview, add/remove program row, client-side
     validation, and the confirm → pending-approval submit flow) and the two
@@ -68,8 +73,20 @@
 
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-[#1D264F] uppercase">Company Name <span class="text-red-500">*</span></label>
-                            <input type="text" name="job_posting_company" value="@if ($jobPoster->user_role == 'alumni'){{ $jobPoster->employer_company_name }}@else{{ $jobPoster->employer->employer_company_name }}@endif" readonly
+                            @if ($jobPoster->user_role === 'alumni')
+                            <input type="text" name="job_posting_company" value="{{ $jobPoster->employer_company_name }}" readonly
                                 class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:border-[#C73D1A]">
+                            @elseif ($jobPoster->user_role === 'employer')
+                            <input type="text" name="job_posting_company" value="{{ optional($jobPoster->employer)->employer_company_name }}" readonly
+                                class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:border-[#C73D1A]">
+                            @else
+                            {{-- Staff (admin/super_admin) aren't tied to one company profile — they
+                                 post on behalf of whichever business asked, so this stays free text
+                                 instead of auto-filled/readonly (see JobPostingController::addJobPost(),
+                                 which accepts job_posting_company as plain input either way). --}}
+                            <input type="text" name="job_posting_company" placeholder="Enter the registered business name"
+                                class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
+                            @endif
                         </div>
                     </div>
 
@@ -88,7 +105,12 @@
                         @else
                         <input type="text" name="job_posting_address" placeholder="Enter company address"
                             class="w-full border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A]">
+                        {{-- Saved-address tip only makes sense for a poster who actually has an
+                             employer profile to save one on — staff post on behalf of a different
+                             business each time, so there's nothing to "save for next time". --}}
+                        @if (in_array($jobPoster->user_role, ['alumni', 'employer'], true))
                         <p class="text-[10px] text-gray-400">Tip: save addresses in <a href="{{ route('users.editProfile') }}" class="underline text-[#1D46A4]">Edit Profile</a> to pick them here next time.</p>
+                        @endif
                         @endif
                     </div>
 
@@ -122,7 +144,7 @@
 
                         <div id="course-input-container" class="space-y-2">
                             <div class="flex items-center gap-3 course-row">
-                                <select name="program[]"
+                                <select name="program[]" onchange="preventDuplicateCourseSelection(this)"
                                     class="w-full flex-1 border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white">
                                     <option selected disabled>Select Undergraduate Program</option>
                                     @foreach ($programs as $program)
@@ -239,7 +261,7 @@
 </div>
 
 <!-- JOB POST PENDING APPROVAL MODAL -->
-<div id="pendingModal" class="fixed inset-0 z-[200] flex items-center justify-center bg-black bg-opacity-50 hidden">
+<div id="pendingModal" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 hidden">
     <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full relative text-center">
         <button onclick="closePendingModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -357,6 +379,24 @@
     function removeCourseField(button, msgId = 'course-limit-msg') {
         button.closest('.course-row').remove();
         document.getElementById(msgId)?.classList.add('hidden');
+    }
+
+    // Blocks picking the same program in two different course rows — each
+    // cloned row shares this same onchange (cloneNode(true) in
+    // addCourseField() copies it automatically), so this covers every row
+    // without needing to re-wire anything when a row is added.
+    function preventDuplicateCourseSelection(select) {
+        // .course-row's parent is always the specific course-input-container
+        // this row belongs to (Create vs Edit each have their own), so this
+        // only ever compares against sibling rows in the SAME form.
+        const container = select.closest('.course-row')?.parentElement;
+        const allSelects = (container || document).querySelectorAll('select[name="program[]"]');
+        const duplicate = Array.from(allSelects).some(other => other !== select && other.value === select.value);
+
+        if (select.value && duplicate) {
+            alert('That program is already selected in another row — pick a different one.');
+            select.selectedIndex = 0;
+        }
     }
 
     // CLIENT-SIDE VALIDATION — mirrors addJobPost()'s server rules so a

@@ -14,12 +14,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
         rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/PLV-AlumNet LOGO.png') }}">
-    <link rel="preload" as="image" href="{{ asset('assets/heroSectionBackground.png') }}">
+    <link rel="preload" as="image" href="{{ asset('assets/heroSection.svg') }}">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <style>
     .HeroSection {
-        background: url("{{ asset('assets/heroSectionBackground.png') }}");
+        background: url("{{ asset('assets/heroSection.svg') }}");
         background-size: cover;
         background-position: center;
     }

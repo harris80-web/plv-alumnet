@@ -52,9 +52,28 @@ class Employer extends Model
         return $this->hasMany(JobPosting::class, 'user_id', 'user_id');
     }
 
+    /** Star ratings/written reviews only now — up/downvotes live on JobPostingVote instead (see votes() below). */
     public function reviews()
     {
         return $this->hasMany(EmployerReview::class, 'employer_id', 'user_id');
+    }
+
+    /**
+     * Every up/downvote cast on ANY of this employer's job postings — a
+     * vote is per-posting now (JobPostingVote, unique per posting+alumnus),
+     * not per-company, so the same alumnus can vote on more than one of
+     * this employer's postings and each counts separately here.
+     */
+    public function votes()
+    {
+        return $this->hasManyThrough(
+            JobPostingVote::class,
+            JobPosting::class,
+            'user_id',        // FK on job_postings referencing employers.user_id
+            'job_posting_id',  // FK on job_posting_votes referencing job_postings.job_posting_id
+            'user_id',         // local key on employers
+            'job_posting_id'   // local key on job_postings
+        );
     }
 
     /** Saved company addresses — picked from a dropdown when posting a job instead of retyping. */
@@ -64,24 +83,24 @@ class Employer extends Model
     }
 
     /**
-     * Uses the already-loaded `reviews` collection when eager-loaded (see
+     * Uses the already-loaded `votes` collection when eager-loaded (see
      * JobPostingController::filteredJobPostingsQuery()), so listing job
      * cards doesn't run 2 extra count queries per card — falls back to a
-     * real query only when reviews weren't eager-loaded (e.g. the reviews
+     * real query only when votes weren't eager-loaded (e.g. the reviews
      * page itself, one employer at a time).
      */
     public function upvoteCount(): int
     {
-        return $this->relationLoaded('reviews')
-            ? $this->reviews->where('vote', 'upvote')->count()
-            : $this->reviews()->where('vote', 'upvote')->count();
+        return $this->relationLoaded('votes')
+            ? $this->votes->where('vote', 'upvote')->count()
+            : $this->votes()->where('vote', 'upvote')->count();
     }
 
     public function downvoteCount(): int
     {
-        return $this->relationLoaded('reviews')
-            ? $this->reviews->where('vote', 'downvote')->count()
-            : $this->reviews()->where('vote', 'downvote')->count();
+        return $this->relationLoaded('votes')
+            ? $this->votes->where('vote', 'downvote')->count()
+            : $this->votes()->where('vote', 'downvote')->count();
     }
 
     /** Count of alumni who've left a 5-star rating (independent of vote) on this company. */

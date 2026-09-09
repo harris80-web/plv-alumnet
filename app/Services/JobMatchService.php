@@ -14,15 +14,25 @@ use App\Models\JobPosting;
  *
  * Weights (skills 45 / experience 25 / program 20 / certifications 10)
  * follow the relative ordering already hinted at in JobMatch's own
- * score_breakdown docblock example, rounded to a clean 100.
+ * score_breakdown docblock example, rounded to a clean 100. On top of that
+ * 100, the employer's alumni-submitted reputation (upvotes/downvotes AND
+ * star ratings — see App\Models\EmployerReview) can each nudge the final
+ * score by up to ±5 points (±10 combined), never enough to substitute for
+ * actual fit.
  */
 class JobMatchService
 {
     /** Net-vote ratio needs at least this many total votes before it affects ranking — one or two votes shouldn't swing anything. */
     private const MIN_VOTES_FOR_REPUTATION = 3;
 
-    /** Max points a company's reputation can add or subtract — small on purpose, see scoreCompanyReputation(). */
-    private const REPUTATION_MAX_POINTS = 5;
+    /** Average star rating needs at least this many ratings before it affects ranking — same reasoning as MIN_VOTES_FOR_REPUTATION. */
+    private const MIN_RATINGS_FOR_REPUTATION = 3;
+
+    /** Max points the vote net-ratio can add or subtract — small on purpose, see scoreCompanyVoteReputation(). */
+    private const VOTE_REPUTATION_MAX_POINTS = 5;
+
+    /** Max points the average star rating can add or subtract — independent of, and on top of, the vote-based nudge above. */
+    private const RATING_REPUTATION_MAX_POINTS = 5;
 
     public function scoreFor(JobPosting $job, Alumnus $alumnus): JobMatch
     {
@@ -31,15 +41,17 @@ class JobMatchService
             'experience' => $this->scoreExperience($alumnus),
             'program' => $this->scoreProgram($job, $alumnus),
             'certifications' => $this->scoreCertifications($alumnus),
-            'company_reputation' => $this->scoreCompanyReputation($job),
+            'company_vote_reputation' => $this->scoreCompanyVoteReputation($job),
+            'company_rating_reputation' => $this->scoreCompanyRatingReputation($job),
         ];
 
         // The 4 fit components already sum to 100 on their own — reputation
-        // is a small nudge on top, not a 5th criterion, and is clamped so it
-        // can never push a genuinely poor fit above a genuinely good one
-        // (a job already at 100 on fit alone gets no further benefit from a
-        // good reputation; it can only help a job that isn't already
-        // maxed out — see App\Models\EmployerReview).
+        // (votes + star rating, ±5 each, ±10 combined) is a small nudge on
+        // top, not a 5th/6th criterion, and is clamped so it can never push
+        // a genuinely poor fit above a genuinely good one (a job already at
+        // 100 on fit alone gets no further benefit from a good reputation;
+        // it can only help a job that isn't already maxed out — see
+        // App\Models\EmployerReview).
         $score = round(min(100, max(0, array_sum($breakdown))), 2);
 
         return JobMatch::updateOrCreate(
@@ -58,7 +70,7 @@ class JobMatchService
      * MIN_VOTES_FOR_REPUTATION votes, so a single early vote can't swing
      * anything.
      */
-    private function scoreCompanyReputation(JobPosting $job): float
+    private function scoreCompanyVoteReputation(JobPosting $job): float
     {
         $employer = $job->employer;
         if (!$employer) {
@@ -75,7 +87,39 @@ class JobMatchService
 
         $netRatio = ($upvotes - $downvotes) / $total; // -1 (all down) .. 1 (all up)
 
-        return round($netRatio * self::REPUTATION_MAX_POINTS, 2);
+        return round($netRatio * self::VOTE_REPUTATION_MAX_POINTS, 2);
+    }
+
+    /**
+     * Same idea as scoreCompanyVoteReputation(), but from the employer's
+     * average 1-5 star rating (see App\Models\EmployerReview::rating,
+     * independent of and additional to the plain up/downvote) instead of
+     * the vote net-ratio. 3 stars is treated as neutral (0 point swing) —
+     * below 3 nudges the score down, above 3 nudges it up, scaled linearly
+     * so a perfect 5-star average earns the full +5 and a rock-bottom
+     * 1-star average costs the full -5. Neutral (0) until a company has at
+     * least MIN_RATINGS_FOR_REPUTATION ratings, so a single early review
+     * can't swing anything.
+     */
+    private function scoreCompanyRatingReputation(JobPosting $job): float
+    {
+        $employer = $job->employer;
+        if (!$employer) {
+            return 0.0;
+        }
+
+        if ($employer->ratingCount() < self::MIN_RATINGS_FOR_REPUTATION) {
+            return 0.0;
+        }
+
+        $averageRating = $employer->averageRating();
+        if ($averageRating === null) {
+            return 0.0;
+        }
+
+        $normalized = ($averageRating - 3) / 2; // -1 (1 star) .. 0 (3 star) .. 1 (5 star)
+
+        return round($normalized * self::RATING_REPUTATION_MAX_POINTS, 2);
     }
 
     /**

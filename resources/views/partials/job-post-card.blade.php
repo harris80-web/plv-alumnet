@@ -24,12 +24,13 @@
         @if ($job->job_posting_image)
         <img src="{{ asset('storage/'.$job->job_posting_image) }}"
             class="object-cover w-full h-full opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-300">
-        @else
-        <div class="w-full h-full bg-gradient-to-br from-[#0E0F3B] to-[#1D264F] flex items-center justify-center">
-            <i class="fas fa-building text-white/30 text-5xl"></i>
-        </div>
-        @endif
         <div class="absolute inset-0 bg-[#0E0F3B]/60"></div>
+        @else
+        @php $overlay = $job->defaultThumbnailOverlay(); @endphp
+        <img src="{{ $job->thumbnailUrl() }}" style="opacity:{{ $overlay['imageOpacity'] }}"
+            class="object-cover w-full h-full group-hover:scale-105 transition-all duration-300">
+        <div class="absolute inset-0" style="background-color:{{ $overlay['color'] }}; opacity:{{ $overlay['overlayOpacity'] }}"></div>
+        @endif
         @if ($isRecommended)
         <span class="absolute top-2 left-2 z-10 bg-[#ED7A07] text-white text-[10px] font-bold uppercase px-3 py-1 rounded-full shadow-md">
             <i class="fas fa-star mr-1"></i> Recommended

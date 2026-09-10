@@ -165,7 +165,11 @@
                 <div class="md:w-1/4 h-48 md:h-auto relative overflow-hidden rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none group cursor-pointer"
                     role="button" tabindex="0" aria-label="View job details"
                     data-job-id="{{ $job->job_posting_id }}"
-                    data-image="{{ asset('storage/' . $job->job_posting_image) }}"
+                    data-image="{{ $job->thumbnailUrl() }}"
+                    data-uses-default-image="{{ $job->usesDefaultThumbnail() ? '1' : '0' }}"
+                    data-image-overlay-color="{{ $job->defaultThumbnailOverlay()['color'] }}"
+                    data-image-overlay-opacity="{{ $job->defaultThumbnailOverlay()['overlayOpacity'] }}"
+                    data-image-opacity="{{ $job->defaultThumbnailOverlay()['imageOpacity'] }}"
                     data-title="{{ $job->job_posting_title }}"
                     data-company="{{ $job->job_posting_company }}"
                     data-posted="{{ $job->created_at->diffForHumans() }}"
@@ -179,9 +183,16 @@
                     data-approved="{{ $job->job_approved ? '1' : '0' }}"
                     onclick="openMyJobViewModal(this)"
                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMyJobViewModal(this);}">
-                    <img src="{{ asset('storage/' . $job->job_posting_image) }}"
+                    @if ($job->job_posting_image)
+                    <img src="{{ $job->thumbnailUrl() }}"
                         class="object-cover w-full h-full opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-300">
                     <div class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>
+                    @else
+                    @php $overlay = $job->defaultThumbnailOverlay(); @endphp
+                    <img src="{{ $job->thumbnailUrl() }}" style="opacity:{{ $overlay['imageOpacity'] }}"
+                        class="object-cover w-full h-full group-hover:scale-105 transition-all duration-300">
+                    <div class="absolute inset-0" style="background-color:{{ $overlay['color'] }}; opacity:{{ $overlay['overlayOpacity'] }}"></div>
+                    @endif
                     <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <span class="bg-white/90 text-[#1D264F] text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
                             <i class="fas fa-eye mr-1"></i> VIEW DETAILS
@@ -325,9 +336,9 @@
 
             <div class="h-48 w-full relative rounded-t-3xl overflow-hidden">
                 <img id="myjob-modal-img" src="" class="w-full h-full object-cover">
-                <div class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>
+                <div id="myjob-modal-img-overlay" class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>
 
-                <button onclick="toggleModal()" class="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 transition-colors">
+                <button onclick="toggleModal()" class="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors">
                     <i class="fas fa-times-circle text-2xl"></i>
                 </button>
             </div>
@@ -702,7 +713,20 @@
     // job's real data (read off the element's own data-* attributes) —
     // a quick, read-only way to see the full post without opening Edit.
     function openMyJobViewModal(el) {
-        document.getElementById('myjob-modal-img').src = el.dataset.image;
+        const myJobImg = document.getElementById('myjob-modal-img');
+        const myJobImgOverlay = document.getElementById('myjob-modal-img-overlay');
+        myJobImg.src = el.dataset.image;
+        if (el.dataset.usesDefaultImage === '1') {
+            myJobImg.style.opacity = el.dataset.imageOpacity;
+            myJobImgOverlay.className = 'absolute inset-0';
+            myJobImgOverlay.style.backgroundColor = el.dataset.imageOverlayColor;
+            myJobImgOverlay.style.opacity = el.dataset.imageOverlayOpacity;
+        } else {
+            myJobImg.style.opacity = '';
+            myJobImgOverlay.className = 'absolute inset-0 bg-blue-900/40 mix-blend-multiply';
+            myJobImgOverlay.style.backgroundColor = '';
+            myJobImgOverlay.style.opacity = '';
+        }
         document.getElementById('myjob-title').textContent = el.dataset.title;
         document.getElementById('myjob-company').textContent = el.dataset.company;
         document.getElementById('myjob-posted').textContent = el.dataset.posted;

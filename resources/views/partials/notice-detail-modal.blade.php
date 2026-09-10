@@ -13,10 +13,10 @@
     <div id="noticeDetailModalPanel" class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden mx-4 max-h-[95vh] md:max-h-[92vh] overflow-y-auto opacity-0 scale-95 transition-all duration-200">
         <div class="relative h-64 md:h-80 w-full">
             <img id="ndm-thumbnail" src="" class="w-full h-full object-cover">
-            <div class="absolute inset-0 bg-[#0E0F3B]/30"></div>
+            <div id="ndm-thumbnail-overlay" class="absolute inset-0 bg-[#0E0F3B]/30"></div>
             <span id="ndm-category" class="absolute top-4 left-4 text-[10px] font-bold uppercase px-3 py-1 rounded-full"></span>
             <button type="button" onclick="closeNoticeDetailModal()"
-                class="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 transition-colors">
+                class="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors">
                 <i class="fas fa-times-circle text-2xl"></i>
             </button>
         </div>
@@ -47,6 +47,13 @@
                         class="w-full text-sm font-bold uppercase py-2.5 rounded-lg transition-colors">
                     </button>
                 </form>
+            </div>
+
+            <div id="ndm-login-row" class="hidden pt-4 border-t border-gray-100">
+                <a href="{{ route('auth.login') }}"
+                    class="w-full flex items-center justify-center gap-2 text-sm font-bold uppercase py-2.5 rounded-lg transition-colors bg-[#1D264F] hover:bg-[#0E0F3B] text-white">
+                    <i class="fa-solid fa-lock"></i> Login for Full Details
+                </a>
             </div>
         </div>
     </div>
@@ -154,7 +161,22 @@
         currentNoticeCard = card;
         const data = card.dataset;
 
-        document.getElementById('ndm-thumbnail').src = data.thumbnail;
+        const thumbnailImg = document.getElementById('ndm-thumbnail');
+        const thumbnailOverlay = document.getElementById('ndm-thumbnail-overlay');
+        thumbnailImg.src = data.thumbnail;
+        if (data.usesDefault === '1') {
+            // Stock per-category artwork — tint it with the category's own
+            // color/opacity instead of the generic navy wash real uploads get.
+            thumbnailImg.style.opacity = data.imageOpacity;
+            thumbnailOverlay.className = 'absolute inset-0';
+            thumbnailOverlay.style.backgroundColor = data.overlayColor;
+            thumbnailOverlay.style.opacity = data.overlayOpacity;
+        } else {
+            thumbnailImg.style.opacity = '';
+            thumbnailOverlay.className = 'absolute inset-0 bg-[#0E0F3B]/30';
+            thumbnailOverlay.style.backgroundColor = '';
+            thumbnailOverlay.style.opacity = '';
+        }
 
         const categoryBadge = document.getElementById('ndm-category');
         categoryBadge.textContent = noticeCategoryLabels[data.category] ?? data.category;
@@ -181,11 +203,19 @@
         }
 
         const interestRow = document.getElementById('ndm-interest-row');
-        if (data.toggleUrl) {
+        const loginRow = document.getElementById('ndm-login-row');
+        if (data.guest === '1') {
+            // Not logged in at all — can't mark interest either way, so
+            // the CTA here is to log in rather than a disabled/hidden row.
+            loginRow.classList.remove('hidden');
+            interestRow.classList.add('hidden');
+        } else if (data.toggleUrl) {
+            loginRow.classList.add('hidden');
             interestRow.classList.remove('hidden');
             document.getElementById('ndm-interest-form').action = data.toggleUrl;
             toggleInterestState(document.getElementById('ndm-interest-btn'), data.interested === '1');
         } else {
+            loginRow.classList.add('hidden');
             interestRow.classList.add('hidden');
         }
 

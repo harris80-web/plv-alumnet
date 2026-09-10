@@ -106,20 +106,6 @@
     @include('partials.success')
 
     <main class="max-w-5xl mx-auto p-6">
-        <div class="w-full text-center mb-8">
-            <h1 class="inline-block text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
-                @if($activeTab === 'bookmarks')
-                MY BOOKMARKS
-                @elseif($activeTab === 'applications')
-                MY APPLICATIONS
-                @elseif($user && $user->user_role === 'alumni')
-                ALUMNI CAREER HUB
-                @else
-                JOB BOARD
-                @endif
-            </h1>
-        </div>
-
         <!-- SEARCH & FILTER -->
         <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-5 mb-8">
             <form method="GET" action="{{ $activeTabRoute }}">

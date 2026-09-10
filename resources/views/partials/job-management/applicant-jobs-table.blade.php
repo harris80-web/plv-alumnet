@@ -43,6 +43,11 @@
                 'declineReason' => null,
                 'approveUrl' => route('jobPosting.approve', $j->job_posting_id),
                 'deleteUrl' => route('jobPosting.delete', $j->job_posting_id),
+                'image' => $j->thumbnailUrl(),
+                'usesDefaultImage' => $j->usesDefaultThumbnail(),
+                'imageOverlayColor' => $j->defaultThumbnailOverlay()['color'],
+                'imageOverlayOpacity' => $j->defaultThumbnailOverlay()['overlayOpacity'],
+                'imageOpacity' => $j->defaultThumbnailOverlay()['imageOpacity'],
                 // Tells openViewModal() this is the acting staff member's own
                 // post — self-approval is never allowed, so a pending row
                 // here renders view-only instead of showing Approve/Decline

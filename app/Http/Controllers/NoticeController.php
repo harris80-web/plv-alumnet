@@ -120,7 +120,7 @@ class NoticeController extends Controller
             $this->notifyAllAlumni($notice);
         }
 
-        return back()->with('success', 'Notice added successfully.');
+        return back()->with('success', (Notice::categoryLabels()[$notice->category] ?? 'Notice') . ' posted successfully.');
     }
 
     /**

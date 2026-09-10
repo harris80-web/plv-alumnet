@@ -172,14 +172,19 @@
 
                     @forelse ($jobPostings as $job)
                     @php
-                        $cardImage = $job->job_posting_image
-                            ? asset('storage/' . $job->job_posting_image)
-                            : 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=600q=80';
+                        $cardImage = $job->thumbnailUrl();
+                        $usesDefaultImage = $job->usesDefaultThumbnail();
+                        $imgOverlay = $job->defaultThumbnailOverlay();
                     @endphp
                     <div class="min-w-full md:min-w-[calc(50%-12px)] lg:min-w-[calc(33.333%-16px)] snap-center">
                         <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 flex flex-col transition-transform hover:scale-[1.02]">
-                            <div class="relative h-48 bg-cover bg-center" style="background-image:url('{{ $cardImage }}');">
+                            <div class="relative h-48">
+                                <div class="absolute inset-0 bg-cover bg-center" style="background-image:url('{{ $cardImage }}'); @if ($usesDefaultImage) opacity:{{ $imgOverlay['imageOpacity'] }}; @endif"></div>
+                                @if ($usesDefaultImage)
+                                <div class="absolute inset-0" style="background-color:{{ $imgOverlay['color'] }}; opacity:{{ $imgOverlay['overlayOpacity'] }}"></div>
+                                @else
                                 <div class="absolute inset-0 bg-[#0E0F3B]/50 mix-blend-multiply"></div>
+                                @endif
                                 @unless ($job->job_approved)
                                 <span class="absolute top-3 left-3 bg-amber-500 text-white text-[9px] font-bold uppercase px-2 py-1 rounded-full">Pending Approval</span>
                                 @endunless

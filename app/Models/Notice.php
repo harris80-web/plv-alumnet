@@ -26,6 +26,24 @@ class Notice extends Model
     public const CATEGORIES = ['event', 'seminar', 'announcement'];
     public const RECIPIENTS = ['alumni', 'employer', 'everyone'];
 
+    /** Stock image shown when an admin doesn't upload a thumbnail — one per category. */
+    private const DEFAULT_THUMBNAILS = [
+        'event' => 'assets/default images/event_default.svg',
+        'seminar' => 'assets/default images/seminar_default.svg',
+        'announcement' => 'assets/default images/announcement_default.svg',
+    ];
+
+    /**
+     * Tint applied over the default thumbnail only (a real uploaded photo is
+     * never tinted) — two independent opacities: the color wash on top, and
+     * how visible the stock artwork stays underneath it.
+     */
+    private const DEFAULT_THUMBNAIL_OVERLAYS = [
+        'event' => ['color' => '#C73D1A', 'overlayOpacity' => 0.8, 'imageOpacity' => 1.0],
+        'seminar' => ['color' => '#1D46A4', 'overlayOpacity' => 0.7, 'imageOpacity' => 0.8],
+        'announcement' => ['color' => '#ED7A07', 'overlayOpacity' => 0.7, 'imageOpacity' => 0.5],
+    ];
+
     public static function categoryLabels(): array
     {
         return [
@@ -87,7 +105,25 @@ class Notice extends Model
             return asset('storage/' . $this->thumbnail);
         }
 
-        return asset('assets/Landing Page/Event.png');
+        // Same str_replace(' ', '%20', ...) workaround mails/layout.blade.php
+        // already uses — the folder name has a literal space, and unlike a
+        // plain HTML src="..." attribute (which browsers auto-encode), the
+        // notice-detail modal assigns this to img.src via JS, where an
+        // unencoded space isn't reliably normalized the same way.
+        $path = self::DEFAULT_THUMBNAILS[$this->category] ?? self::DEFAULT_THUMBNAILS['event'];
+        return str_replace(' ', '%20', asset($path));
+    }
+
+    /** True when thumbnailUrl() is serving the stock per-category image, not an admin upload. */
+    public function usesDefaultThumbnail(): bool
+    {
+        return !$this->thumbnail;
+    }
+
+    /** {color, overlayOpacity, imageOpacity} for the current category — only meaningful when usesDefaultThumbnail() is true. */
+    public function defaultThumbnailOverlay(): array
+    {
+        return self::DEFAULT_THUMBNAIL_OVERLAYS[$this->category] ?? self::DEFAULT_THUMBNAIL_OVERLAYS['event'];
     }
 
     public function scopeCategory($query, string $category)

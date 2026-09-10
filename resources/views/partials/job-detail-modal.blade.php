@@ -17,13 +17,13 @@
                 <div id="modal-img-fallback" class="hidden w-full h-full bg-gradient-to-br from-[#0E0F3B] to-[#1D264F] items-center justify-center">
                     <i class="fas fa-building text-white/30 text-7xl"></i>
                 </div>
-                <div class="absolute inset-0 bg-[#0E0F3B]/60"></div>
+                <div id="modal-img-overlay" class="absolute inset-0 bg-[#0E0F3B]/60"></div>
 
                 <span id="modal-recommended-badge" class="hidden absolute top-4 left-4 z-10 bg-[#ED7A07] text-white text-[10px] font-bold uppercase px-3 py-1 rounded-full shadow-md">
                     <i class="fas fa-star mr-1"></i> Recommended
                 </span>
 
-                <button onclick="toggleModal()" class="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 transition-colors">
+                <button onclick="toggleModal()" class="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors">
                     <i class="fas fa-times-circle text-2xl"></i>
                 </button>
             </div>
@@ -174,11 +174,25 @@
 
         const img = document.getElementById('modal-img');
         const fallback = document.getElementById('modal-img-fallback');
+        const imgOverlay = document.getElementById('modal-img-overlay');
         if (d.image) {
             img.src = d.image;
             img.classList.remove('hidden');
             fallback.classList.add('hidden');
             fallback.classList.remove('flex');
+            if (d.usesDefaultImage === '1') {
+                // Stock job-post artwork — tint it with its own
+                // color/opacity instead of the generic navy wash real uploads get.
+                img.style.opacity = d.imageOpacity;
+                imgOverlay.className = 'absolute inset-0';
+                imgOverlay.style.backgroundColor = d.imageOverlayColor;
+                imgOverlay.style.opacity = d.imageOverlayOpacity;
+            } else {
+                img.style.opacity = '';
+                imgOverlay.className = 'absolute inset-0 bg-[#0E0F3B]/60';
+                imgOverlay.style.backgroundColor = '';
+                imgOverlay.style.opacity = '';
+            }
         } else {
             img.classList.add('hidden');
             fallback.classList.remove('hidden');

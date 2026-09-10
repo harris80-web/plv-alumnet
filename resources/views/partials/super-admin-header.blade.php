@@ -18,7 +18,24 @@ $pageTitles = [
     'notices.blade.php'                 => 'Notices & Events',
     'chatbotMessaging.blade.php'         => 'Chatbot & Messaging',
     'testimonialManagement.blade.php'    => 'Testimonial Management',
-    'faqManagement.blade.php'            => 'Manage FAQs'
+    'faqManagement.blade.php'            => 'Manage FAQs',
+    
+    //FULL DETAILED REPORTS PAGES - When charts/graphs are clicked
+    'employment-status.blade.php'   => 'Full Detailed Report',
+    'industry-distribution.blade.php'   => 'Full Detailed Report',
+    'employment-by-batch.blade.php'   => 'Full Detailed Report',
+    'job-alignment.blade.php'   => 'Full Detailed Report',
+    'employment-by-gender.blade.php'   => 'Full Detailed Report',
+    'employment-interval.blade.php'   => 'Full Detailed Report',
+    'job-before-grad.blade.php'   => 'Full Detailed Report',
+    'employment-by-month.blade.php'   => 'Full Detailed Report',
+    'hires-per-month.blade.php'   => 'Full Detailed Report',
+
+    'networking.blade.php'   => 'Full Detailed Report',
+    'alumni-id-status.blade.php'   => 'Full Detailed Report',
+    'yearbook-status.blade.php'   => 'Full Detailed Report'
+
+
 ];
 
 // notifications.all's URL (/notifications/all) doesn't fit the single-segment

@@ -100,8 +100,7 @@
         @else
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach ($notices as $notice)
-            <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 flex flex-col h-full transition-transform hover:scale-[1.01] {{ $user ? 'cursor-pointer' : '' }}"
-                @if ($user)
+            <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 flex flex-col h-full transition-transform hover:scale-[1.01] cursor-pointer"
                 onclick="openNoticeDetailModal(this)"
                 data-notice-id="{{ $notice->id }}"
                 data-category="{{ $notice->category }}"
@@ -110,9 +109,21 @@
                 data-datetime="{{ $notice->event_datetime->format('M d, Y - h:i A') }}"
                 data-location="{{ $notice->location }}"
                 data-description="{{ $notice->description }}"
+                data-guest="{{ $user ? '0' : '1' }}"
+                @if ($notice->usesDefaultThumbnail())
+                @php $overlay = $notice->defaultThumbnailOverlay(); @endphp
+                data-uses-default="1"
+                data-overlay-color="{{ $overlay['color'] }}"
+                data-overlay-opacity="{{ $overlay['overlayOpacity'] }}"
+                data-image-opacity="{{ $overlay['imageOpacity'] }}"
                 @endif>
-                <div class="relative h-40 bg-cover bg-center shrink-0" style="background-image:url('{{ $notice->thumbnailUrl() }}')">
+                <div class="relative h-40 shrink-0">
+                    <div class="absolute inset-0 bg-cover bg-center" style="background-image:url('{{ $notice->thumbnailUrl() }}'); @if ($notice->usesDefaultThumbnail()) opacity:{{ $overlay['imageOpacity'] }}; @endif"></div>
+                    @if ($notice->usesDefaultThumbnail())
+                    <div class="absolute inset-0" style="background-color:{{ $overlay['color'] }}; opacity:{{ $overlay['overlayOpacity'] }}"></div>
+                    @else
                     <div class="absolute inset-0 bg-[#0E0F3B]/25"></div>
+                    @endif
                     <span class="absolute top-3 left-3 text-[9px] font-bold uppercase px-2 py-1 rounded-full {{ $notice->categoryBadgeClass() }}">
                         {{ $notice->categoryLabel() }}
                     </span>
@@ -151,7 +162,6 @@
 
     </main>
 
-    @if ($user)
     @include('partials.notice-detail-modal')
 
     <script>
@@ -168,7 +178,6 @@
             }
         });
     </script>
-    @endif
 
     @include(!$user ? 'partials.footer' : ($user->user_role === 'employer' ? 'partials.footer-employer' : 'partials.footer-alumni'))
 </body>

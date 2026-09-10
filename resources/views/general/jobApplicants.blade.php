@@ -216,7 +216,11 @@
             <!-- Image -->
             <div class="md:w-1/4 h-48 md:h-auto relative overflow-hidden rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none group cursor-pointer"
                 role="button" tabindex="0" aria-label="View job details"
-                data-image="{{ asset('storage/' . $jobPost->job_posting_image) }}"
+                data-image="{{ $jobPost->thumbnailUrl() }}"
+                data-uses-default-image="{{ $jobPost->usesDefaultThumbnail() ? '1' : '0' }}"
+                data-image-overlay-color="{{ $jobPost->defaultThumbnailOverlay()['color'] }}"
+                data-image-overlay-opacity="{{ $jobPost->defaultThumbnailOverlay()['overlayOpacity'] }}"
+                data-image-opacity="{{ $jobPost->defaultThumbnailOverlay()['imageOpacity'] }}"
                 data-title="{{ $jobPost->job_posting_title }}"
                 data-company="{{ $jobPost->job_posting_company }}"
                 data-posted="{{ $jobPost->created_at->diffForHumans() }}"
@@ -229,9 +233,16 @@
                 data-industry="{{ $jobPost->industry->industry_name ?? 'Not specified' }}"
                 onclick="openJobViewModal(this)"
                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openJobViewModal(this);}">
-                <img src="{{ asset('storage/' . $jobPost->job_posting_image) }}"
+                @if ($jobPost->job_posting_image)
+                <img src="{{ $jobPost->thumbnailUrl() }}"
                     class="object-cover w-full h-full opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-300">
                 <div class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>
+                @else
+                @php $overlay = $jobPost->defaultThumbnailOverlay(); @endphp
+                <img src="{{ $jobPost->thumbnailUrl() }}" style="opacity:{{ $overlay['imageOpacity'] }}"
+                    class="object-cover w-full h-full group-hover:scale-105 transition-all duration-300">
+                <div class="absolute inset-0" style="background-color:{{ $overlay['color'] }}; opacity:{{ $overlay['overlayOpacity'] }}"></div>
+                @endif
                 <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <span class="bg-white/90 text-[#1D264F] text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
                         <i class="fas fa-eye mr-1"></i> VIEW FULL POST
@@ -577,9 +588,9 @@
 
             <div class="h-48 w-full relative rounded-t-3xl overflow-hidden">
                 <img id="jvm-image" src="" class="w-full h-full object-cover">
-                <div class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>
+                <div id="jvm-image-overlay" class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>
 
-                <button onclick="closeJobViewModal()" class="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 transition-colors">
+                <button onclick="closeJobViewModal()" class="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors">
                     <i class="fas fa-times-circle text-2xl"></i>
                 </button>
             </div>
@@ -875,7 +886,20 @@
     }
 
     function openJobViewModal(el) {
-        document.getElementById('jvm-image').src = el.dataset.image;
+        const jvmImg = document.getElementById('jvm-image');
+        const jvmImgOverlay = document.getElementById('jvm-image-overlay');
+        jvmImg.src = el.dataset.image;
+        if (el.dataset.usesDefaultImage === '1') {
+            jvmImg.style.opacity = el.dataset.imageOpacity;
+            jvmImgOverlay.className = 'absolute inset-0';
+            jvmImgOverlay.style.backgroundColor = el.dataset.imageOverlayColor;
+            jvmImgOverlay.style.opacity = el.dataset.imageOverlayOpacity;
+        } else {
+            jvmImg.style.opacity = '';
+            jvmImgOverlay.className = 'absolute inset-0 bg-blue-900/40 mix-blend-multiply';
+            jvmImgOverlay.style.backgroundColor = '';
+            jvmImgOverlay.style.opacity = '';
+        }
         document.getElementById('jvm-title').textContent = el.dataset.title;
         document.getElementById('jvm-company').textContent = el.dataset.company;
         document.getElementById('jvm-posted').textContent = el.dataset.posted;

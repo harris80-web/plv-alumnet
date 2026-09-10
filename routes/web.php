@@ -51,12 +51,20 @@ Route::get('/', function () {
     // "Campus Events" preview strip — only notices explicitly marked for
     // "everyone" (same rule as the public Events & Seminars page), so a
     // guest never sees an alumni- or employer-only notice on the homepage.
-    $campusEvents = Notice::category('event')->visibleToGuest()->upcoming()
+    // Events + seminars combined, same grouping alumni/dashboard.blade.php's
+    // own "Campus Events" preview uses.
+    $campusEvents = Notice::whereIn('category', ['event', 'seminar'])->visibleToGuest()->upcoming()
         ->orderBy('event_datetime')
         ->take(9)
         ->get();
 
-    return view('general.home', compact('testimonials', 'campusEvents'));
+    // Same "everyone"-only rule for the Announcements preview.
+    $campusAnnouncements = Notice::category('announcement')->visibleToGuest()
+        ->orderByDesc('event_datetime')
+        ->take(3)
+        ->get();
+
+    return view('general.home', compact('testimonials', 'campusEvents', 'campusAnnouncements'));
 })->name('general.home');
 
 Route::get('/about', function () {

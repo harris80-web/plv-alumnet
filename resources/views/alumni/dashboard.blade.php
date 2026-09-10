@@ -39,9 +39,10 @@
     }
 
     .Experience {
-        background: url("{{ asset('assets/Landing Page/ShareExperience.png') }}");
+        background: url("{{ asset('assets/alumni_testimonial.jpg') }}");
         background-size: cover;
         background-position: center;
+        background-attachment: fixed;
         background-repeat: no-repeat;
     }
 
@@ -143,7 +144,7 @@
                         Yearbook Claiming Status
                     </h4>
                 </div>
-                <div class="relative h-64 bg-[url('https://images.unsplash.com/photo-1544822688-c6f14d6986bb?auto=format&fit=crop&w=800q=80')] bg-cover bg-center">
+                <div class="relative h-64 bg-[url('https://images.unsplash.com/photo-1528569937393-ee892b976859?auto=format&fit=crop&w=800&q=80')] bg-cover bg-center">
                     <div class="absolute inset-0 flex flex-col items-center justify-center text-white p-6 text-center"
                         style="background-image: linear-gradient(180deg, rgba(32,113,201,0.7) 60%, rgba(29,70,164,0.7) 80%, rgba(14,15,59,0.7) 95%);">
                         <h3 class="text-xl font-bold uppercase tracking-widest mb-4">{{ $yearbookCard['title'] }}</h3>
@@ -330,9 +331,9 @@
                 @foreach ($jobMatches as $match)
                 @php
                     $job = $match->jobPosting;
-                    $cardImage = $job->job_posting_image
-                        ? asset('storage/' . $job->job_posting_image)
-                        : 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=600q=80';
+                    $cardImage = $job->thumbnailUrl();
+                    $usesDefaultImage = $job->usesDefaultThumbnail();
+                    $imgOverlay = $job->defaultThumbnailOverlay();
                     // Same builder partials/job-post-card.blade.php uses — see
                     // App\Services\JobCardDataBuilder's own doc comment for why
                     // this is extract() and not a shared Blade partial include
@@ -349,15 +350,20 @@
                              (shared modal: partials.job-detail-modal) so clicking a
                              recommended job here opens the identical "View Details"
                              modal used on the job board. --}}
-                        <div class="relative h-48 bg-cover bg-center group cursor-pointer" style="background-image:url('{{ $cardImage }}');"
+                        <div class="relative h-48 group cursor-pointer"
                             role="button" tabindex="0" aria-label="View job details"
                             @foreach ($cardData as $attr => $value)
                             data-{{ $attr }}="{{ $value }}"
                             @endforeach
                             onclick="openJobModal(this)"
                             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openJobModal(this);}">
+                            <div class="absolute inset-0 bg-cover bg-center" style="background-image:url('{{ $cardImage }}'); @if ($usesDefaultImage) opacity:{{ $imgOverlay['imageOpacity'] }}; @endif"></div>
+                            @if ($usesDefaultImage)
+                            <div class="absolute inset-0" style="background-color:{{ $imgOverlay['color'] }}; opacity:{{ $imgOverlay['overlayOpacity'] }}"></div>
+                            @else
                             <div class="absolute inset-0 bg-[#0E0F3B]/50 mix-blend-multiply"></div>
                             <div class="absolute inset-0 bg-blue-600/20"></div>
+                            @endif
                             <span class="absolute top-3 right-3 bg-white/90 text-[#C73D1A] text-[10px] font-bold uppercase px-2 py-1 rounded-full">
                                 {{ round($match->blendedScore()) }}% Match
                             </span>
@@ -542,8 +548,14 @@
                 <div class="snap-start shrink-0 w-full md:w-[calc(33.333%-1rem)]">
                     <a href="{{ route('notices.eventsSeminars', ['tab' => $notice->category === 'seminar' ? 'seminar' : 'events', 'notice' => $notice->id]) }}"
                         class="block bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition-shadow h-full">
-                        <div class="h-40">
-                            <img src="{{ $notice->thumbnailUrl() }}" class="w-full h-full object-cover mix-blend-multiply">
+                        <div class="h-40 relative">
+                            <img src="{{ $notice->thumbnailUrl() }}" class="w-full h-full object-cover mix-blend-multiply"
+                                @if ($notice->usesDefaultThumbnail())
+                                style="opacity:{{ $notice->defaultThumbnailOverlay()['imageOpacity'] }}"
+                                @endif>
+                            @if ($notice->usesDefaultThumbnail())
+                            <div class="absolute inset-0" style="background-color:{{ $notice->defaultThumbnailOverlay()['color'] }}; opacity:{{ $notice->defaultThumbnailOverlay()['overlayOpacity'] }}"></div>
+                            @endif
                         </div>
 
                         <div class="p-4 flex gap-4 items-start relative">
@@ -558,7 +570,7 @@
                                     {{ \Illuminate\Support\Str::limit(strip_tags($notice->description ?? ''), 80) ?: 'No description provided.' }}
                                 </p>
                             </div>
-                            <div class="flex-shrink-0 absolute right-0 bg-orange-700 text-white p-2 text-center w-16 rounded-sm shadow-sm">
+                            <div class="flex-shrink-0 absolute right-0 text-white p-2 text-center w-16 rounded-sm shadow-sm" style="background-color:{{ $notice->defaultThumbnailOverlay()['color'] }}">
                                 <span class="block text-xl font-bold leading-none tracking-tighter">{{ $notice->event_datetime->format('d') }}</span>
                                 <span class="text-[10px] uppercase font-semibold">{{ $notice->event_datetime->format('M') }}</span>
                             </div>

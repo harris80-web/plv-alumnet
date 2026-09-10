@@ -35,7 +35,7 @@
 
     .AlumniTestimonial {
         background:
-            url('assets/alumniTestimonial.jpg');
+            url('assets/alumni_testimonial.jpg');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -163,9 +163,33 @@
             <div id="eventsCarouselTrack" class="carousel-track flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-6 pb-2">
                 @foreach ($campusEvents as $event)
                 <div class="snap-start shrink-0 w-full md:w-[calc(33.333%-1rem)]">
-                    <div class="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100 flex flex-col h-full">
-                        <div class="h-40">
-                            <img src="{{ $event->thumbnailUrl() }}" class="w-full h-full object-cover mix-blend-multiply">
+                    <div class="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100 flex flex-col h-full cursor-pointer"
+                        onclick="openNoticeDetailModal(this)"
+                        data-notice-id="{{ $event->id }}"
+                        data-category="{{ $event->category }}"
+                        data-title="{{ $event->title }}"
+                        data-thumbnail="{{ $event->thumbnailUrl() }}"
+                        data-datetime="{{ $event->event_datetime->format('M d, Y - h:i A') }}"
+                        data-location="{{ $event->location }}"
+                        data-speaker-name="{{ $event->speaker_name }}"
+                        data-speaker-topic="{{ $event->speaker_topic }}"
+                        data-description="{{ $event->description }}"
+                        data-guest="1"
+                        @if ($event->usesDefaultThumbnail())
+                        @php $overlay = $event->defaultThumbnailOverlay(); @endphp
+                        data-uses-default="1"
+                        data-overlay-color="{{ $overlay['color'] }}"
+                        data-overlay-opacity="{{ $overlay['overlayOpacity'] }}"
+                        data-image-opacity="{{ $overlay['imageOpacity'] }}"
+                        @endif>
+                        <div class="h-40 relative">
+                            <img src="{{ $event->thumbnailUrl() }}" class="w-full h-full object-cover mix-blend-multiply"
+                                @if ($event->usesDefaultThumbnail())
+                                style="opacity:{{ $overlay['imageOpacity'] }}"
+                                @endif>
+                            @if ($event->usesDefaultThumbnail())
+                            <div class="absolute inset-0" style="background-color:{{ $overlay['color'] }}; opacity:{{ $overlay['overlayOpacity'] }}"></div>
+                            @endif
                         </div>
 
                         <div class="p-4 flex gap-4 items-start relative flex-grow">
@@ -180,14 +204,14 @@
                                     {{ \Illuminate\Support\Str::limit(strip_tags($event->description ?? ''), 90) ?: 'No description provided.' }}
                                 </p>
                             </div>
-                            <div class="flex-shrink-0 absolute right-0 bg-orange-700 text-white p-2 text-center w-16 rounded-sm shadow-sm">
+                            <div class="flex-shrink-0 absolute right-0 text-white p-2 text-center w-16 rounded-sm shadow-sm" style="background-color:{{ $event->defaultThumbnailOverlay()['color'] }}">
                                 <span class="block text-xl font-bold leading-none tracking-tighter">{{ $event->event_datetime->format('d') }}</span>
                                 <span class="text-[10px] uppercase font-semibold">{{ $event->event_datetime->format('M') }}</span>
                             </div>
                         </div>
 
                         <div class="px-4 pb-4">
-                            <a href="{{ route('auth.login') }}" class="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase py-2 rounded-md bg-[#1D264F] hover:bg-[#0E0F3B] text-white transition-colors">
+                            <a href="{{ route('auth.login') }}" onclick="event.stopPropagation()" class="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase py-2 rounded-md bg-[#1D264F] hover:bg-[#0E0F3B] text-white transition-colors">
                                 <i class="fa-solid fa-lock"></i> Log In to View Full Details
                             </a>
                         </div>
@@ -219,6 +243,55 @@
         });
     </script>
 
+    <section class="py-4 px-6 max-w-6xl mx-auto relative pb-4">
+        <div class="flex justify-between items-end mb-8 pl-4">
+            <span class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent
+            text-4xl font-bold text-blue-900 uppercase tracking-tighter"> | Announcements</span>
+            <a href="{{ route('notices.guestAnnouncements') }}" class="font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent uppercase text-xs hover:border-b-2 border-[#C73D1A]">Go to Announcements ></a>
+        </div>
+
+        @if ($campusAnnouncements->isEmpty())
+        <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-10 text-center text-gray-500">
+            <i class="fa-solid fa-bullhorn text-3xl mb-3 block text-gray-300"></i>
+            <p>No announcements right now.</p>
+        </div>
+        @else
+        <div class="space-y-4">
+            @foreach ($campusAnnouncements as $notice)
+            <div class="flex items-center gap-4 bg-white shadow-md rounded-lg border border-gray-100 p-4 cursor-pointer"
+                onclick="openNoticeDetailModal(this)"
+                data-notice-id="{{ $notice->id }}"
+                data-category="{{ $notice->category }}"
+                data-title="{{ $notice->title }}"
+                data-thumbnail="{{ $notice->thumbnailUrl() }}"
+                data-datetime="{{ $notice->event_datetime->format('M d, Y - h:i A') }}"
+                data-location="{{ $notice->location }}"
+                data-description="{{ $notice->description }}"
+                data-guest="1"
+                @if ($notice->usesDefaultThumbnail())
+                @php $overlay = $notice->defaultThumbnailOverlay(); @endphp
+                data-uses-default="1"
+                data-overlay-color="{{ $overlay['color'] }}"
+                data-overlay-opacity="{{ $overlay['overlayOpacity'] }}"
+                data-image-opacity="{{ $overlay['imageOpacity'] }}"
+                @endif>
+                <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-bullhorn text-amber-600"></i>
+                </div>
+                <div class="flex-grow min-w-0">
+                    <h3 class="font-bold text-blue-900 text-sm truncate">{{ $notice->title }}</h3>
+                    <p class="text-xs text-gray-500 truncate">{{ \Illuminate\Support\Str::limit(strip_tags($notice->description ?? ''), 100) }}</p>
+                </div>
+                <p class="text-[10px] text-gray-400 shrink-0 whitespace-nowrap">{{ $notice->event_datetime->format('M d, Y') }}</p>
+                <a href="{{ route('auth.login') }}" onclick="event.stopPropagation()" class="shrink-0 flex items-center gap-1.5 text-[10px] font-bold uppercase py-2 px-3 rounded-md bg-[#1D264F] hover:bg-[#0E0F3B] text-white transition-colors whitespace-nowrap">
+                    <i class="fa-solid fa-lock"></i> Log In
+                </a>
+            </div>
+            @endforeach
+        </div>
+        @endif
+    </section>
+
     <section id="alumni-testimonials" class="AlumniTestimonial py-20 px-6 text-white text-center mb-10">
         <h2 class="text-3xl font-bold uppercase mb-12 tracking-widest">Alumni Testimonials</h2>
 
@@ -227,6 +300,8 @@
         </div>
     </section>
     @include('partials.testimonial-cards-script')
+
+    @include('partials.notice-detail-modal')
 
     @include('partials.footer')
 

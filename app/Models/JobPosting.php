@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 
 class JobPosting extends Model
@@ -36,6 +37,42 @@ class JobPosting extends Model
     protected $casts = [
         'hiring_limit' => 'integer',
     ];
+
+    /** Stock image shown when an employer/admin doesn't upload a job post photo. */
+    private const DEFAULT_THUMBNAIL = 'assets/default images/jobPost_default.svg';
+
+    /** Tint applied over the default thumbnail only — a real uploaded photo is never tinted. */
+    private const DEFAULT_THUMBNAIL_OVERLAY = ['color' => '#0E0F3B', 'overlayOpacity' => 0.7, 'imageOpacity' => 1.0];
+
+    /** Falls back to a stock image so job cards never show a broken image. */
+    public function thumbnailUrl(): string
+    {
+        if (!$this->usesDefaultThumbnail()) {
+            return asset('storage/' . $this->job_posting_image);
+        }
+
+        // Same ' ' -> '%20' workaround Notice::thumbnailUrl() uses — the
+        // "default images" folder name has a literal space, which isn't
+        // reliably handled once JS assigns this to img.src.
+        return str_replace(' ', '%20', asset(self::DEFAULT_THUMBNAIL));
+    }
+
+    /**
+     * True when thumbnailUrl() is serving the stock image, not a real upload
+     * — also true when job_posting_image points at a file that no longer
+     * exists on disk (an orphaned/corrupted path), so a broken reference
+     * never renders as a dead image icon instead of the stock artwork.
+     */
+    public function usesDefaultThumbnail(): bool
+    {
+        return !$this->job_posting_image || !Storage::disk('public')->exists($this->job_posting_image);
+    }
+
+    /** {color, overlayOpacity, imageOpacity} — only meaningful when usesDefaultThumbnail() is true. */
+    public function defaultThumbnailOverlay(): array
+    {
+        return self::DEFAULT_THUMBNAIL_OVERLAY;
+    }
 
     public function scopeActive($query)
     {

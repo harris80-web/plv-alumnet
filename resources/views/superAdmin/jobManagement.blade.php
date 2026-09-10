@@ -255,8 +255,8 @@
         class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/60  backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
             <div class="relative h-32 bg-slate-800 flex items-end p-6 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=80"
-                    class="absolute inset-0 w-full h-full object-cover opacity-40" alt="Background">
+                <img id="viewJobModalImg" src="" class="absolute inset-0 w-full h-full object-cover" alt="Job post image">
+                <div id="viewJobModalImgOverlay" class="absolute inset-0 bg-slate-900/60"></div>
                 <h2 class="relative text-2xl font-bold text-white">View Job Details</h2>
                 <button onclick="closeViewModal()"
                     class="absolute top-4 right-4 text-white/80 hover:text-white transition-colors">
@@ -995,6 +995,24 @@
 
         function openViewModal(jobId, data) {
             if (!data) return;
+
+            const viewImg = document.getElementById('viewJobModalImg');
+            const viewImgOverlay = document.getElementById('viewJobModalImgOverlay');
+            viewImg.src = data.image || '';
+            if (data.usesDefaultImage) {
+                // Stock job-post artwork — tint it with its own color/opacity
+                // instead of the generic dark wash real uploads get.
+                viewImg.style.opacity = data.imageOpacity;
+                viewImgOverlay.className = 'absolute inset-0';
+                viewImgOverlay.style.backgroundColor = data.imageOverlayColor;
+                viewImgOverlay.style.opacity = data.imageOverlayOpacity;
+            } else {
+                viewImg.style.opacity = '';
+                viewImgOverlay.className = 'absolute inset-0 bg-slate-900/60';
+                viewImgOverlay.style.backgroundColor = '';
+                viewImgOverlay.style.opacity = '';
+            }
+
             const statusClass = {
                 'Approved': 'bg-green-100 text-green-600 border-green-200',
                 'Declined': 'bg-red-100 text-red-600 border-red-200',

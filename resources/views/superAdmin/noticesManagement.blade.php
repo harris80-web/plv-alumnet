@@ -178,6 +178,8 @@
                                         'category' => $notice->category,
                                         'title' => $notice->title,
                                         'thumbnailUrl' => $notice->thumbnailUrl(),
+                                        'usesDefaultThumbnail' => $notice->usesDefaultThumbnail(),
+                                        'thumbnailOverlay' => $notice->defaultThumbnailOverlay(),
                                         'dateTimeDisplay' => $notice->event_datetime->format('M d, Y - h:i A'),
                                         'location' => $notice->location,
                                         'speakerName' => $notice->speaker_name,
@@ -434,7 +436,10 @@
             </div>
 
             <div class="p-6 space-y-4 text-sm text-[#0E0F3B]">
-                <img id="nm-view-thumbnail" src="" class="w-full h-40 object-cover rounded-lg border border-slate-200">
+                <div class="relative w-full h-40 rounded-lg overflow-hidden border border-slate-200">
+                    <img id="nm-view-thumbnail" src="" class="w-full h-full object-cover">
+                    <div id="nm-view-thumbnail-overlay" class="absolute inset-0 hidden"></div>
+                </div>
 
                 <div>
                     <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Category</p>
@@ -759,7 +764,18 @@
             document.querySelectorAll('.action-dropdown').forEach(d => d.classList.add('hidden'));
             currentViewNoticeId = data.id;
 
-            document.getElementById('nm-view-thumbnail').src = data.thumbnailUrl;
+            const nmThumbnail = document.getElementById('nm-view-thumbnail');
+            const nmThumbnailOverlay = document.getElementById('nm-view-thumbnail-overlay');
+            nmThumbnail.src = data.thumbnailUrl;
+            if (data.usesDefaultThumbnail) {
+                nmThumbnail.style.opacity = data.thumbnailOverlay.imageOpacity;
+                nmThumbnailOverlay.style.backgroundColor = data.thumbnailOverlay.color;
+                nmThumbnailOverlay.style.opacity = data.thumbnailOverlay.overlayOpacity;
+                nmThumbnailOverlay.classList.remove('hidden');
+            } else {
+                nmThumbnail.style.opacity = '';
+                nmThumbnailOverlay.classList.add('hidden');
+            }
 
             const catBadge = document.getElementById('nm-view-category');
             catBadge.textContent = categoryLabels[data.category] ?? data.category;

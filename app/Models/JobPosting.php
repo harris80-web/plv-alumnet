@@ -83,7 +83,7 @@ class JobPosting extends Model
 
     public function scopeExpired($query)
     {
-        return $query->where('closing_date', '<', Carbon::today());
+        return $query->where('job_closing_date', '<', Carbon::today());
     }
 
     public function employer()

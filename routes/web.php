@@ -76,7 +76,13 @@ Route::get('/register', function () {
 })->name('auth.register');
 
 Route::get('/login', function () {
-    return view('/auth.login');
+    // Without this, the browser can serve a stale bfcache/back-button copy
+    // of this page — one embedding the CSRF token from a session that
+    // logout() already invalidated — causing an intermittent 419 on the
+    // next login attempt.
+    return response(view('/auth.login'))
+        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        ->header('Pragma', 'no-cache');
 })->name('auth.login');
 
 Route::get('/waitForApproval', [UserController::class, 'goToWaitForApproval'])->name('general.waitForApproval');

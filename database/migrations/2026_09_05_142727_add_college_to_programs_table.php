@@ -16,7 +16,8 @@ return new class extends Migration
      */
     private const PROGRAM_COLLEGES = [
         'Bachelor of Arts in Communication' => 'CAS',
-        'Bachelor of Early Childhood Education' => 'CAS',
+        'Bachelor of Science in Psychology' => 'CAS',
+        
         'Bachelor of Science in Accountancy' => 'CABA',
         'Bachelor of Science in Business Administration Major in Financial Management' => 'CABA',
         'Bachelor of Science in Business Administration Major in Human Resource Management' => 'CABA',
@@ -24,14 +25,14 @@ return new class extends Migration
         'Bachelor of Science in Civil Engineering' => 'CEIT',
         'Bachelor of Science in Electrical Engineering' => 'CEIT',
         'Bachelor of Science in Information Technology' => 'CEIT',
-        'Bachelor of Science in Psychology' => 'CAS',
         'Bachelor of Public Administration' => 'CPAG',
         'Bachelor of Science in Social Work' => 'CPAG',
-        'Bachelor of Secondary Education Major in English' => 'CAS',
-        'Bachelor of Secondary Education Major in Filipino' => 'CAS',
-        'Bachelor of Secondary Education Major in Mathematics' => 'CAS',
-        'Bachelor of Secondary Education Major in Science' => 'CAS',
-        'Bachelor of Secondary Education Major in Social Studies' => 'CAS',
+        'Bachelor of Early Childhood Education' => 'COED',
+        'Bachelor of Secondary Education Major in English' => 'COED',
+        'Bachelor of Secondary Education Major in Filipino' => 'COED',
+        'Bachelor of Secondary Education Major in Mathematics' => 'COED',
+        'Bachelor of Secondary Education Major in Science' => 'COED',
+        'Bachelor of Secondary Education Major in Social Studies' => 'COED'
     ];
 
     /**
@@ -40,7 +41,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('programs', function (Blueprint $table) {
-            $table->enum('college', ['CABA', 'CEIT', 'CAS', 'CPAG'])->nullable()->after('program_name');
+            $table->enum('college', ['COED', 'CABA', 'CEIT', 'CAS', 'CPAG'])->nullable()->after('program_name');
         });
 
         foreach (self::PROGRAM_COLLEGES as $programName => $college) {

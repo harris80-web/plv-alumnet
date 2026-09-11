@@ -24,7 +24,7 @@ class ProgramSeeder extends Seeder
         // in this app's 4-college list, and CAS is the closest fit.
         $programColleges = [
             'Bachelor of Arts in Communication' => 'CAS',
-            'Bachelor of Early Childhood Education' => 'CAS',
+            'Bachelor of Early Childhood Education' => 'COED',
             'Bachelor of Science in Accountancy' => 'CABA',
             'Bachelor of Science in Business Administration Major in Financial Management' => 'CABA',
             'Bachelor of Science in Business Administration Major in Human Resource Management' => 'CABA',
@@ -35,11 +35,11 @@ class ProgramSeeder extends Seeder
             'Bachelor of Science in Psychology' => 'CAS',
             'Bachelor of Public Administration' => 'CPAG',
             'Bachelor of Science in Social Work' => 'CPAG',
-            'Bachelor of Secondary Education Major in English' => 'CAS',
-            'Bachelor of Secondary Education Major in Filipino' => 'CAS',
-            'Bachelor of Secondary Education Major in Mathematics' => 'CAS',
-            'Bachelor of Secondary Education Major in Science' => 'CAS',
-            'Bachelor of Secondary Education Major in Social Studies' => 'CAS',
+            'Bachelor of Secondary Education Major in English' => 'COED',
+            'Bachelor of Secondary Education Major in Filipino' => 'COED',
+            'Bachelor of Secondary Education Major in Mathematics' => 'COED',
+            'Bachelor of Secondary Education Major in Science' => 'COED',
+            'Bachelor of Secondary Education Major in Social Studies' => 'COED',
         ];
 
         // updateOrInsert keyed on program_name so re-running this seeder

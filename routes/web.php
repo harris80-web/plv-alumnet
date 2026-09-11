@@ -422,15 +422,28 @@ Route::get('/resume/view/{alumnusId}', [ResumeBuilderController::class, 'viewApp
 if (app()->environment('local')) {
     Route::get('/dev/mail-preview', function () {
         $templates = [
-            'resetPassword', 'alumniCreated', 'activateAlumni', 'deactAlumni',
-            'deactEmployer', 'rejectEmployer', 'deleteAdmin', 'applyJob',
-            'approveJob', 'declineJob', 'deleteJob', 'hireApplicant',
-            'shortlistApplicant', 'declineApplication',
+            'alumniCreated' => 'Alumni Account Created (Welcome)',
+            'resetPassword' => 'Reset Password',
+            'activateAlumni' => 'Activate Alumni Account',
+            'deactAlumni' => 'Deactivate Alumni Account',
+            'deactEmployer' => 'Deactivate Employer Account',
+            'rejectEmployer' => 'Reject Employer Registration',
+            'deleteAdmin' => 'Delete Admin Account',
+            'applyJob' => 'Job Application Received',
+            'approveJob' => 'Job Post Approved',
+            'declineJob' => 'Job Post Declined',
+            'deleteJob' => 'Job Post Removed',
+            'hireApplicant' => 'Applicant Hired',
+            'shortlistApplicant' => 'Applicant Shortlisted',
+            'declineApplication' => 'Application Declined',
         ];
-        $links = collect($templates)
-            ->map(fn ($t) => "<li><a href=\"/dev/mail-preview/{$t}\" target=\"_blank\">{$t}</a></li>")
+        $items = collect($templates)
+            ->map(function ($label, $key) {
+                $url = route('dev.mailPreview', $key);
+                return "<li style='margin-bottom:10px;'><a href='{$url}' target='_blank' style='color:#0E0F3B; font-weight:600; text-decoration:none; font-size:15px; border-bottom:1px solid #C73D1A;'>{$label}</a> <span style='color:#888; font-size:12px;'>({$key})</span></li>";
+            })
             ->implode('');
-        return "<h1 style=\"font-family:sans-serif\">Mail Previews</h1><ul style=\"font-family:sans-serif; line-height:2\">{$links}</ul>";
+        return "<!DOCTYPE html><html><head><title>PLV-AlumNet Mail Previews</title><link href='https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Inter:wght@400;600&display=swap' rel='stylesheet'></head><body style='margin:0; padding:40px 20px; background:#F4F5F8; font-family:Inter, Arial, sans-serif;'><div style='max-width:600px; margin:0 auto; background:#ffffff; border-radius:12px; padding:32px; box-shadow:0 4px 20px rgba(14,15,59,0.08);'><h1 style=\"font-family:Montserrat, sans-serif; color:#0E0F3B; margin-top:0; font-size:22px;\">PLV-AlumNet Email Previews</h1><p style='color:#666; font-size:14px; margin-bottom:24px;'>Click any template below to preview its rendered layout in a new tab:</p><ul style='line-height:1.8; padding-left:20px; margin:0;'>{$items}</ul></div></body></html>";
     })->name('dev.mailPreviewIndex');
 
     Route::get('/dev/mail-preview/{template}', function (string $template) {
@@ -439,6 +452,7 @@ if (app()->environment('local')) {
             'user_last_name' => 'Dela Cruz',
             'user_email' => 'juan.delacruz@example.com',
             'email' => 'juan.delacruz@example.com',
+            'user_role' => 'alumni',
         ];
         $employer = (object) ['user' => $user, 'employer_company_name' => 'Sample Company Inc.'];
         $job = (object) [

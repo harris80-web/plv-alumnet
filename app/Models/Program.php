@@ -16,6 +16,7 @@ class Program extends Model
 
     /** Full display name per college code — mirrors the ALIGNED_INDUSTRIES pattern below. */
     public const COLLEGES = [
+        'COED' => 'College of Education',
         'CABA' => 'College of Accountancy and Business Administration',
         'CEIT' => 'College of Engineering and Information Technology',
         'CAS' => 'College of Arts and Sciences',

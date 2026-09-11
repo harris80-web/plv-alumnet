@@ -57,12 +57,12 @@
         <span class="text-slate-500">Rows per page:</span>
         <div class="relative">
             <select data-pv-per-page
-                class="pl-4 pr-8 py-1.5 border border-slate-200 rounded-full bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A] text-[#0E0F3B] font-medium">
+                class="pl-4 pr-10 py-1.5 border border-slate-200 rounded-lg bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A] text-[#0E0F3B] font-medium">
                 @foreach ($pvPerPageOptions as $opt)
                     <option value="{{ $opt }}" {{ (int) $pvCurrentPerPage === (int) $opt ? 'selected' : '' }}>{{ $opt }}</option>
                 @endforeach
             </select>
-            <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 pointer-events-none">
+            <span class="absolute inset-y-0 right-2 pr-3 flex items-center text-slate-400 pointer-events-none">
                 <i class="fas fa-chevron-down text-[10px]"></i>
             </span>
         </div>

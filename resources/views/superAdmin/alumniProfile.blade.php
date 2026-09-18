@@ -39,6 +39,7 @@
             <div class="flex-1 overflow-y-auto p-8">
                 @include('partials.success')
 
+                @include('partials.error')
                 <a href="{{ route('superAdmin.userManagement') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-[#0E0F3B] mb-6 transition-colors">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i>
                     Back to User Management

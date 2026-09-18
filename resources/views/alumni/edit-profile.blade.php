@@ -42,23 +42,27 @@
             <h2 class="w-fit mx-auto text-center text-3xl font-bold mb-10 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
                 EDIT PROFILE
             </h2>
-            @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul>
-                    @if ($errors->any())
-                    <div class="bg-red-50 border border-red-300 border-l-4 border-l-red-600 rounded-md px-4 py-3 mb-4">
-                        <ul class="list-disc list-inside text-red-700 text-sm space-y-1">
-                            @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    @endif
-                </ul>
+            @include('partials.error-toast')
+
+            {{-- Client-side-only validation failures (e.g. Industry left
+                 unset while Employed is selected) — see the form's submit
+                 listener below, which toggles this. Fixed to the top of the
+                 viewport (not inline in the form) since Save sits at the
+                 bottom of a long page — an inline message up here would be
+                 scrolled out of view exactly when it's needed. --}}
+            <div id="clientValidationError" class="hidden fixed inset-x-0 top-0 z-[300] flex justify-center pt-6 px-4 pointer-events-none">
+                <div class="pointer-events-auto flex items-center gap-3 bg-red-50 border border-red-300 text-red-700 rounded-xl px-5 py-4 shadow-lg max-w-md w-full">
+                    <i class="fa-solid fa-circle-exclamation text-red-500 text-base shrink-0"></i>
+                    <p class="text-sm font-semibold flex-1"><span id="clientValidationErrorText"></span></p>
+                    <button type="button" onclick="document.getElementById('clientValidationError').classList.add('hidden')" class="text-red-400 hover:text-red-600 shrink-0">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </div>
             </div>
-            @endif
             @include('partials.success')
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+
+            @include('partials.error')
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
                 <div class="md:col-span-3 flex justify-center md:justify-start">
                     <div class="relative w-40 h-40">
 
@@ -167,7 +171,15 @@
                 <div id="employment-fields" class="grid grid-cols-1 md:grid-cols-2 gap-4 {{ $user->alumnus->alumnus_employment_status ? '' : 'hidden' }}">
                     <div>
                         <label for="industry_id" class="text-xs font-bold text-orange-600 uppercase block mb-1">Industry / Sector</label>
-                        <select name="industry_id" id="industry_id" required class="w-full py-1.5 px-2 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
+                        {{-- Not a native `required` attribute — a required-but-hidden-by-default
+                             field like this is exactly the case where the
+                             browser's own validation bubble can silently fail
+                             to appear (wrong scroll position, a hidden
+                             ancestor at some point in the toggle, etc.), which
+                             is what made Save look like it did nothing. The
+                             submit listener below enforces this explicitly
+                             and always shows a visible reason instead. --}}
+                        <select name="industry_id" id="industry_id" class="w-full py-1.5 px-2 border border-[#0E0F3B] rounded-md p-2 focus:outline-none focus:border-[#C73D1A] transition">
                             <option value="" disabled {{ $user->alumnus->industry_id ? '' : 'selected' }}>Select Industry / Sector</option>
                             @foreach($industries as $industry)
                             <option value="{{ $industry->industry_id }}" {{ $user->alumnus->industry_id == $industry->industry_id ? 'selected' : '' }}>
@@ -514,6 +526,46 @@
     if (new URLSearchParams(window.location.search).get('openResume') === '1') {
         document.getElementById('openResumeEditorBtn')?.click();
     }
+
+    // industry_id is the only `required` field on this form, and it's
+    // required only while Employed is selected (see toggleEmploymentFields()
+    // above). The browser's own native "please fill this in" bubble should
+    // block submission on its own, but it gives no cue at all once the
+    // click just silently does nothing — a scroll position, a focus quirk,
+    // anything, and there's zero feedback. Backstop it with an explicit,
+    // impossible-to-miss check instead of trusting that native UI alone.
+    (function () {
+        var profileForm = document.querySelector('form[action*="alumni"]');
+        var industrySelect = document.getElementById('industry_id');
+        var errorBox = document.getElementById('clientValidationError');
+        var errorText = document.getElementById('clientValidationErrorText');
+        if (!profileForm || !industrySelect || !errorBox) return;
+
+        function industryIsRequiredAndEmpty() {
+            var visible = !document.getElementById('employment-fields').classList.contains('hidden');
+            return visible && !industrySelect.value;
+        }
+
+        profileForm.addEventListener('submit', function (e) {
+            if (!industryIsRequiredAndEmpty()) {
+                errorBox.classList.add('hidden');
+                return;
+            }
+
+            e.preventDefault();
+            errorText.textContent = 'Please select your Industry / Sector before saving — it\'s required while your employment status is set to Employed.';
+            errorBox.classList.remove('hidden');
+            // The banner itself is fixed to the top of the viewport (always
+            // visible, scroll position doesn't matter) — this scroll is for
+            // the field itself, so the user lands right on what to fix.
+            industrySelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            industrySelect.focus();
+        });
+
+        industrySelect.addEventListener('change', function () {
+            if (!industryIsRequiredAndEmpty()) errorBox.classList.add('hidden');
+        });
+    })();
 </script>
 
 </html>

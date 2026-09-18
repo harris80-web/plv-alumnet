@@ -101,7 +101,9 @@
             @include('partials.super-admin-header')
             <div class="flex-1 overflow-y-auto p-8">
                 @include('partials.success')
-                <!-- Stat Cards -->
+
+                @include('partials.error')
+    <!-- Stat Cards -->
                 <div class="grid grid-cols-4 gap-4 mb-6">
                     <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
                         <p class="text-2xl font-bold text-slate-800">{{ $total_testimonials }}</p>

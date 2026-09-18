@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Session\TokenMismatchException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\AlumniMiddleware;
@@ -44,5 +46,26 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // A page left open past SESSION_LIFETIME (120 min) has a stale CSRF
+        // token — the next POST from it (very often Logout, since that's
+        // often the first thing clicked after a long idle) fails the CSRF
+        // check and would otherwise show Laravel's raw "419 | Page Expired"
+        // page. Redirect to login with a friendly message instead — the
+        // login page's toast script already renders $errors, so no view
+        // change is needed.
         //
+        // Handler::prepareException() (see vendor/.../Foundation/Exceptions/
+        // Handler.php) converts TokenMismatchException into a generic
+        // HttpException(419, ...) BEFORE any renderable() callback runs, so
+        // a callback type-hinted on TokenMismatchException itself would
+        // never match — it has to catch the wrapping HttpException and
+        // check the status code instead (the original TokenMismatchException
+        // is still available via getPrevious(), checked here for precision
+        // since a 419 is otherwise unused elsewhere in this app).
+        $exceptions->render(function (HttpException $e, $request) {
+            if ($e->getStatusCode() === 419 && $e->getPrevious() instanceof TokenMismatchException) {
+                return redirect()->route('auth.login')
+                    ->withErrors(['message' => 'Your session expired. Please log in again.']);
+            }
+        });
     })->create();

@@ -509,11 +509,24 @@
         })
         .then(function (res) {
             return res.text().then(function (text) {
+                var data = null;
+                try { data = text ? JSON.parse(text) : null; } catch (parseErr) { /* non-JSON body, e.g. a raw 500 page — data stays null */ }
+
                 if (!res.ok) {
                     console.error('Status:', res.status, 'Body:', text);
-                    throw new Error('Save failed with status ' + res.status);
+                    // 422 = validation failure — a real, specific reason the
+                    // server rejected the data (e.g. a required field left
+                    // blank), not a dropped connection. Surface it instead
+                    // of a generic message that was wrong every time this
+                    // path actually fired.
+                    var reason = data && data.errors
+                        ? Object.values(data.errors).flat().join(' ')
+                        : (data && data.message) || ('Save failed (status ' + res.status + ').');
+                    var err = new Error(reason);
+                    err.isServerError = true;
+                    throw err;
                 }
-                return JSON.parse(text);
+                return data;
             });
         })
         .then(function () {
@@ -526,7 +539,12 @@
         .catch(function (err) {
             console.error(err);
             statusEl.textContent = '';
-            alert('Could not save your resume. Please check your connection and try again.');
+            // A network-level failure (fetch() itself rejecting — offline,
+            // DNS, CORS, etc.) has no `isServerError` flag; the request
+            // genuinely never got a response, so "check your connection" is
+            // actually true there. Anything the server responded to (even
+            // with an error status) gets its real reason shown instead.
+            alert(err.isServerError ? err.message : 'Could not save your resume. Please check your connection and try again.');
         });
     });
 
@@ -556,7 +574,14 @@
     function addCertRowWithData(cert) {
         addRow('editorCertRowTemplate', 'editorCertList', 'certifications');
         var row = document.getElementById('editorCertList').lastElementChild;
-        row.querySelector('input[value="' + cert.certification_type + '"]').checked = true;
+        // Defensive: an imported PDF's parsed type might not be exactly one
+        // of certification/seminar/training (a stray quote in the value
+        // would also break this as a CSS selector) — silently leaving the
+        // radio unchecked used to fail server-side validation ("field is
+        // required") in a way this modal's save handler couldn't previously
+        // explain, since it always blamed "your connection" instead.
+        var typeRadio = row.querySelector('input[value="' + String(cert.certification_type || '').replace(/"/g, '') + '"]');
+        if (typeRadio) typeRadio.checked = true;
         row.querySelector('[name$="[certification_name]"]').value = cert.certification_name || '';
         row.querySelector('[name$="[certification_from]"]').value = cert.certification_from || '';
         row.querySelector('[name$="[certification_date]"]').value = cert.certification_date || '';

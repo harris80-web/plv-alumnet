@@ -101,7 +101,9 @@ $current_page = 'user_management';
 
             @include('partials.super-admin-header')
             @include('partials.success')
-            @php $isSuperAdmin = Auth::user()->user_role == 'super_admin'; @endphp
+
+            @include('partials.error')
+    @php $isSuperAdmin = Auth::user()->user_role == 'super_admin'; @endphp
             <!-- Tabs -->
             <div class="bg-white px-8 flex gap-8 border-b border-slate-200 shrink-0 shadow-md">
                 @if ($isSuperAdmin)

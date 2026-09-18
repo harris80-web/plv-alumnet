@@ -41,6 +41,7 @@
 
     @include('partials.success')
 
+    @include('partials.error')
     @include('partials.messaging-guidelines-modal')
     @include('partials.message-violation-modal')
 

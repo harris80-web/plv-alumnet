@@ -56,7 +56,9 @@
             @endif
 
             @include('partials.success')
-            <form class="space-y-6" method="POST" action="{{ route('users.changePassword') }}">
+
+            @include('partials.error')
+    <form class="space-y-6" method="POST" action="{{ route('users.changePassword') }}">
                 @csrf
                 @method('PUT')
                 <div class="w-full">

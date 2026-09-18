@@ -176,7 +176,12 @@ class EmployerController extends Controller
             'employer_company_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10048',
             'employer_company_name' => 'nullable|string',
             'employer_year_established' => 'nullable|date_format:Y',
-            'employer_company_size' => 'nullable|string',
+            // employer_company_size is an unsignedBigInteger column — a
+            // non-numeric value (e.g. a typed range like "50-100") used to
+            // pass this as a bare 'string' rule, then fail at the DB layer
+            // with a raw "Data truncated for column" SQL error instead of a
+            // normal validation message.
+            'employer_company_size' => 'nullable|integer|min:1',
             'employer_website_url' => 'nullable|url',
             'industry_id' => 'nullable|exists:industries,industry_id',
             'addresses' => ['nullable', 'array'],
@@ -255,11 +260,6 @@ class EmployerController extends Controller
                 }
             });
         } catch (\Exception $e) {
-            dd([
-                'Message' => $e->getMessage(),
-                'File' => $e->getFile(),
-                'Line' => $e->getLine()
-            ]);
             if ($profilePicture) {
                 Storage::disk('public')->delete($profilePicture);
             }
@@ -267,7 +267,13 @@ class EmployerController extends Controller
                 Storage::disk('public')->delete($companyLogo);
             }
 
-            return redirect()->route('user.profile')->with('error', 'An error occurred while uploading the resume: ' . $e->getMessage());
+            // Never surface $e->getMessage() here — it's a raw driver/SQL
+            // string (see the company-size bug this replaced: an out-of-range
+            // value used to reach the DB and come back as a bare "Data
+            // truncated for column..." dump). Validation above should catch
+            // bad input before it gets this far; anything that still lands
+            // here is unexpected, so keep the user-facing message generic.
+            return redirect()->route('user.profile')->with('error', 'Could not save your profile changes. Please try again, and contact support if this keeps happening.');
         }
 
         return redirect()->route('user.profile')->with('success', 'Profile updated successfully.');

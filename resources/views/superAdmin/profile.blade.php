@@ -163,6 +163,7 @@
                 @endif
                 @include('partials.success')
 
+                @include('partials.error')
                 <!-- FORM WRAPPER START -->
                 <form id="profileForm" action="{{ route('offices.updateProfile', $user->user_id) }}" method="POST"
                     enctype="multipart/form-data" class="max-w-6xl mx-auto space-y-6">

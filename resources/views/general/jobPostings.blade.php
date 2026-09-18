@@ -46,6 +46,8 @@
     @endphp
     @include('partials.header-employer')
     @include('partials.success')
+
+    @include('partials.error')
     <section class="HeroSection h-[200px] flex items-end text-white shadow-lg">
         <div class="max-w-6xl  w-full my-7 ml-10">
             <h1 class="text-5xl font-bold mb-2">Welcome to PLV-AlumNet!</h1>

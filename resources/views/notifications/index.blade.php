@@ -46,6 +46,7 @@
 
     @include('partials.success')
 
+    @include('partials.error')
     <main class="max-w-3xl mx-auto p-6 w-full flex-1">
         <div class="flex items-center justify-between border-b border-gray-200 mb-6 mt-4">
             <div class="flex text-sm font-bold">

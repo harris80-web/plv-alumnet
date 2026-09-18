@@ -70,6 +70,7 @@
 
                 @include('partials.success')
 
+                @include('partials.error')
                 <form method="POST" action="{{ route('passReset.updatePassword') }}"
                     class="space-y-4 w-full max-w-md mx-auto h-auto">
                     @csrf

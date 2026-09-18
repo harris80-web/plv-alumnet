@@ -55,7 +55,9 @@
                 </div>
             @endif
             @include('partials.success')
-            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+
+            @include('partials.error')
+    <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                 <div
                     class="w-28 h-28 bg-slate-900 rounded-full flex items-center justify-center border-4 border-white shadow-lg overflow-hidden shrink-0">
                     @if ($user->user_profile_picture)

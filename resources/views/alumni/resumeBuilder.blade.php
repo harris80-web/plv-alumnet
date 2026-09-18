@@ -286,13 +286,39 @@
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             body: formData,
         })
-        .then(function (res) { if (!res.ok) throw new Error('Save failed'); return res.json(); })
+        .then(function (res) {
+            return res.text().then(function (text) {
+                var data = null;
+                try { data = text ? JSON.parse(text) : null; } catch (parseErr) { /* non-JSON body, e.g. a raw 500 page — data stays null */ }
+
+                if (!res.ok) {
+                    console.error('Status:', res.status, 'Body:', text);
+                    // 422 = validation failure — a real, specific reason the
+                    // server rejected the data, not a dropped connection.
+                    var reason = data && data.errors
+                        ? Object.values(data.errors).flat().join(' ')
+                        : (data && data.message) || ('Save failed (status ' + res.status + ').');
+                    var err = new Error(reason);
+                    err.isServerError = true;
+                    throw err;
+                }
+                return data;
+            });
+        })
         .then(function (data) {
             document.getElementById('completeness-label').textContent = data.resume_completeness;
             document.getElementById('completeness-bar').style.width = data.resume_completeness + '%';
             if (isFinal) window.location.href = '{{ route('resume.build') }}?saved=1';
         })
-        .catch(function () { alert('Could not save your resume. Please check your connection and try again.'); });
+        .catch(function (err) {
+            console.error(err);
+            // A network-level failure (fetch() itself rejecting) has no
+            // isServerError flag — the request never got a response, so
+            // "check your connection" is actually true there. Anything the
+            // server responded to (even with an error status) shows its
+            // real reason instead.
+            alert(err.isServerError ? err.message : 'Could not save your resume. Please check your connection and try again.');
+        });
     }
 
     recalculate();

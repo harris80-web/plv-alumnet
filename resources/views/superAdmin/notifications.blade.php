@@ -52,6 +52,7 @@
             @include('partials.super-admin-header')
             @include('partials.success')
 
+            @include('partials.error')
             <div class="flex-1 overflow-y-auto p-8">
                 <div class="max-w-3xl mx-auto">
 

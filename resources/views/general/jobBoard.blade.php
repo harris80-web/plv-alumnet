@@ -105,6 +105,7 @@
 
     @include('partials.success')
 
+    @include('partials.error')
     <main class="max-w-5xl mx-auto p-6">
         <!-- SEARCH & FILTER -->
         <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-5 mb-8">

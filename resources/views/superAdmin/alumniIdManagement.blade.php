@@ -126,6 +126,7 @@
 
                 @include('partials.success')
 
+                @include('partials.error')
                 <!-- ══════════════════════ ALUMNI ID TAB ══════════════════════ -->
                 <div id="pageTab-id">
 

@@ -97,7 +97,9 @@
             <div class="flex-1 overflow-y-auto p-6">
 
                 @include('partials.success')
-                @if ($errors->any())
+
+                @include('partials.error')
+    @if ($errors->any())
                 <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-4 text-xs">
                     @foreach ($errors->all() as $error)
                     <p>{{ $error }}</p>

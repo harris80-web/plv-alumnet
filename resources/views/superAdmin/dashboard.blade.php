@@ -291,7 +291,9 @@
 
             <!-- ════════════ DASHBOARD CONTENT ════════════ -->
             @include('partials.success')
-            <div class="dash-scroll">
+
+            @include('partials.error')
+    <div class="dash-scroll">
                 <!-- Filter Section Container -->
                 @include('partials.report-filters-form', [
                     'formAction' => route('superAdmin.dashboard'),

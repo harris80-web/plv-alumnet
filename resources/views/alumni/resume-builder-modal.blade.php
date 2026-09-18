@@ -235,7 +235,11 @@
             </section>
 
             {{-- Resume completeness — a different thing from the wizard step
-                 above; only updates after a real save (Save draft/Submit/Import). --}}
+                 above. The number/checkmarks below track the form LIVE as you
+                 type (see updateCompletenessLive()); a real save still
+                 re-derives the actual saved value from the server afterward,
+                 so this is a preview of what a save would record, not a
+                 substitute for one. --}}
             <div class="mt-6 pt-4 border-t border-gray-200">
                 <div class="flex items-center justify-between mb-2">
                     <span class="font-[Inter] text-xs font-bold text-[#0E0F3B] uppercase tracking-wide">Resume Completeness</span>
@@ -448,14 +452,49 @@
         counters[counterKey]++;
     }
 
-    document.getElementById('add-experience').addEventListener('click', function () { addRow('experience-row-template', 'experience-list', 'experiences'); });
-    document.getElementById('add-cert').addEventListener('click', function () { addRow('cert-row-template', 'cert-list', 'certifications'); });
+    document.getElementById('add-experience').addEventListener('click', function () { addRow('experience-row-template', 'experience-list', 'experiences'); updateCompletenessLive(); });
+    document.getElementById('add-cert').addEventListener('click', function () { addRow('cert-row-template', 'cert-list', 'certifications'); updateCompletenessLive(); });
 
     form.addEventListener('click', function (e) {
         if (e.target.classList.contains('remove-row')) {
             e.target.closest('.skill-chip, .experience-row, .cert-row').remove();
+            updateCompletenessLive();
         }
     });
+
+    /**
+     * Mirrors Alumnus::completenessBreakdown() exactly (same 5 rules/point
+     * values) so the "X% Saved" label and its checklist move the instant a
+     * requirement is met, instead of sitting frozen until the next real
+     * save. Presence-based like the server rule, not a raw DOM-node count —
+     * an experience/cert row only counts once it actually has a title/name
+     * (an empty just-added row shouldn't look "done"), matching what
+     * submitForm() itself prunes before sending.
+     */
+    function updateCompletenessLive() {
+        var breakdown = [
+            { key: 'summary', points: 15, done: document.getElementById('resume_summary').value.length > 40 },
+            { key: 'linkedin', points: 10, done: !!(form.querySelector('[name="linkedin_url"]').value || '').trim() },
+            { key: 'skills', points: 25, done: Array.from(document.querySelectorAll('#skills-list .skill-name-display')).some(function (el) { return el.textContent.trim(); }) },
+            { key: 'experiences', points: 30, done: Array.from(document.querySelectorAll('#experience-list .experience-row [name*="[job_title]"]')).some(function (el) { return el.value.trim(); }) },
+            { key: 'certifications', points: 20, done: Array.from(document.querySelectorAll('#cert-list .cert-row [name*="[certification_name]"]')).some(function (el) { return el.value.trim(); }) },
+        ];
+
+        var score = Math.min(100, breakdown.reduce(function (sum, item) { return sum + (item.done ? item.points : 0); }, 0));
+        document.getElementById('completeness-label').textContent = score;
+
+        breakdown.forEach(function (item) {
+            var li = document.querySelector('#completeness-breakdown li[data-key="' + item.key + '"]');
+            if (!li) return;
+            li.querySelector('i').className = 'fa-solid ' + (item.done ? 'fa-circle-check text-green-600' : 'fa-circle text-gray-300');
+        });
+    }
+
+    // Delegated so every current AND future summary/linkedin/job-title/
+    // certification-name field is covered with one listener — typing in any
+    // of them re-derives the live score immediately.
+    form.addEventListener('input', updateCompletenessLive);
+    form.addEventListener('change', updateCompletenessLive);
 
     // Item 21 — "I'm currently doing this" disables & clears the End date
     // field for that row rather than just leaving it editable-but-ignored,
@@ -597,6 +636,7 @@
         chip.appendChild(hiddenCategory);
         chip.appendChild(btn);
         document.getElementById('skills-list').appendChild(chip);
+        updateCompletenessLive();
     }
 
     document.addEventListener('click', function (e) {
@@ -636,11 +676,21 @@
         })
         .then(function (res) {
             return res.text().then(function (text) {
+                var data = null;
+                try { data = text ? JSON.parse(text) : null; } catch (parseErr) { /* non-JSON body, e.g. a raw 500 page — data stays null */ }
+
                 if (!res.ok) {
                     console.error('Status:', res.status, 'Body:', text);
-                    throw new Error('Save failed with status ' + res.status);
+                    // 422 = validation failure — a real, specific reason the
+                    // server rejected the data, not a dropped connection.
+                    var reason = data && data.errors
+                        ? Object.values(data.errors).flat().join(' ')
+                        : (data && data.message) || ('Save failed (status ' + res.status + ').');
+                    var err = new Error(reason);
+                    err.isServerError = true;
+                    throw err;
                 }
-                return JSON.parse(text);
+                return data;
             });
         })
         .then(function (data) {
@@ -675,7 +725,12 @@
                 btnDraft.disabled = false;
             }
             console.error(err);
-            alert('Could not save your resume. Please check your connection and try again.');
+            // A network-level failure (fetch() itself rejecting) has no
+            // isServerError flag — the request never got a response, so
+            // "check your connection" is actually true there. Anything the
+            // server responded to (even with an error status) shows its
+            // real reason instead.
+            alert(err.isServerError ? err.message : 'Could not save your resume. Please check your connection and try again.');
         });
     }
 
@@ -811,5 +866,6 @@
     });
 
     showStep(0);
+    updateCompletenessLive();
 })();
 </script>

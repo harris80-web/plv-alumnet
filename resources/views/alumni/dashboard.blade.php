@@ -74,6 +74,8 @@
         </div>
     </section>
     @include('partials.success')
+
+    @include('partials.error')
     @include('partials.error-toast')
     <section id="status-section" class="py-12 px-6 max-w-6xl mx-auto">
         <h2 class="text-4xl font-bold mb-10">

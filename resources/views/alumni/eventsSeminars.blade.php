@@ -68,6 +68,7 @@
 
     @include('partials.success')
 
+    @include('partials.error')
     <main class="max-w-6xl mx-auto p-6 pb-16">
 
         <!-- SEARCH & FILTER -->

@@ -77,7 +77,9 @@
 
 
                 @include('partials.success')
-                <form action="{{ route('users.login') }}" method="POST"
+
+                @include('partials.error')
+    <form action="{{ route('users.login') }}" method="POST"
                     class="space-y-4 w-full max-w-md mx-auto h-auto ">
                     @csrf
 

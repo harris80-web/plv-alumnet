@@ -77,7 +77,10 @@ class Message extends Model
             'attachmentUrl' => $this->attachmentUrl(),
             'attachmentName' => $this->attachment_original_name,
             'createdAt' => $this->created_at->toIso8601String(),
-            'timeLabel' => $this->created_at->format('h:i A'),
+            // Stored/read in UTC (config('app.timezone')) — converted here
+            // since every user of this messaging feature is in the
+            // Philippines and a raw UTC clock time reads 8 hours off.
+            'timeLabel' => $this->created_at->setTimezone('Asia/Manila')->format('h:i A'),
         ];
     }
 }

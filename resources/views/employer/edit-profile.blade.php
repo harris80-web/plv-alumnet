@@ -36,17 +36,11 @@
     </section>
 
     <main class="main-content-wrapper min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
-        @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-        @endif
+        @include('partials.error-toast')
         @include('partials.success')
-        <form action="{{ route('employers.updateProfile', $user->user_id) }}" method="post" enctype="multipart/form-data">
+
+        @include('partials.error')
+    <form action="{{ route('employers.updateProfile', $user->user_id) }}" method="post" enctype="multipart/form-data">
 
             <div class="w-full max-w-6xl mx-auto space-y-10 font-['Montserrat']">
 
@@ -184,7 +178,7 @@
                                     <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mt-1">Business Name</p>
                                 </div>
                                 <div>
-                                    <input type="text" name="employer_company_size" value="{{ old('employer_company_size', optional($user->employer)->employer_company_size) }}" placeholder="e.g. 50-100" class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-gray-800 text-md font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400">
+                                    <input type="number" name="employer_company_size" min="1" step="1" inputmode="numeric" value="{{ old('employer_company_size', optional($user->employer)->employer_company_size) }}" placeholder="e.g. 50" class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-gray-800 text-md font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400">
                                     <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mt-1">Company/Business Size</p>
                                 </div>
                                 <div>

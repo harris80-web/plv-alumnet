@@ -31,7 +31,9 @@ class ChatTicketMessage extends Model
             'senderType' => $this->sender_type,
             'senderName' => $this->sender_type === 'agent' ? trim(($this->sender->user_first_name ?? '') . ' ' . ($this->sender->user_last_name ?? '')) : null,
             'message' => $this->message,
-            'timeLabel' => $this->created_at->format('h:i A'),
+            // Stored/read in UTC (config('app.timezone')) — converted since
+            // every user is in the Philippines (see Message::toChatArray()).
+            'timeLabel' => $this->created_at->setTimezone('Asia/Manila')->format('h:i A'),
         ];
     }
 }

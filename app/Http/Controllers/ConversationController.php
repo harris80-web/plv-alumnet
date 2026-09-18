@@ -57,7 +57,9 @@ class ConversationController extends Controller
                     'name' => trim($other->user_first_name . ' ' . $other->user_last_name),
                     'photo' => $other->user_profile_picture ? asset('storage/' . $other->user_profile_picture) : null,
                     'preview' => $preview,
-                    'time' => $last ? $last->created_at->format('h:i A') : '',
+                    // Stored/read in UTC (config('app.timezone')) — converted
+                    // since every user is in the Philippines (see Message::toChatArray()).
+                    'time' => $last ? $last->created_at->setTimezone('Asia/Manila')->format('h:i A') : '',
                     'unread' => $conversation->unreadCountFor($userId),
                 ];
             })

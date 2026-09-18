@@ -8,16 +8,10 @@
     @vite('resources/js/app.js')
 </head>
 <body>
-    @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
+    @include('partials.error-toast')
             @include('partials.success')
+
+            @include('partials.error')
     <form action="{{ route('offices.updateProfile', $user->user_id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')

@@ -82,6 +82,7 @@
 
                 @include('partials.success')
 
+                @include('partials.error')
                 <form action="{{ route('users.storeEmployer') }}" method="POST" enctype="multipart/form-data"
                     class="space-y-4 w-full max-w-md mx-auto h-auto ">
                     @csrf

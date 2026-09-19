@@ -15,60 +15,12 @@ use Illuminate\Support\Facades\Storage;
 class OfficeController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * The empty index/create/store/show/edit/update/destroy scaffold stubs
+     * that used to sit here backed Route::resource('offices', ...), which was
+     * registered with no middleware at all. Both the route and the stubs are
+     * gone; the real office actions are the named methods below, each routed
+     * individually with its own auth/super_admin gate.
      */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Office $office)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Office $office)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Office $office)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Office $office)
-    {
-        //
-    }
     public function updateOfficeProfile(Request $request, $id)
     {
         // Self-service only — same missing-ownership-check bug already found

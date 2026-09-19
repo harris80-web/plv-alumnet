@@ -35,7 +35,6 @@ class Alumnus extends Model
         'alumnus_resume_completeness',
         'alumnus_batch',
         'alumnus_is_public',
-        'alumnus_change_password',
         'alumnus_show_skills',
         'alumnus_show_email',
         'alumnus_show_linkedin',
@@ -43,7 +42,6 @@ class Alumnus extends Model
 
     protected $casts = [
         'alumnus_is_public' => 'boolean',
-        'alumnus_change_password' => 'boolean',
         'alumnus_workplace_undisclosed' => 'boolean',
         'alumnus_resume_completeness' => 'integer',
         'alumnus_batch' => 'date',
@@ -127,11 +125,6 @@ class Alumnus extends Model
         return $this->alumnus_first_job_date
             && $this->alumnus_batch
             && $this->alumnus_first_job_date->lt($this->alumnus_batch);
-    }
-
-    public function educations()
-    {
-        return $this->hasMany(Education::class, 'user_id', 'user_id');
     }
 
      public function experiences()
@@ -222,9 +215,9 @@ class Alumnus extends Model
      * >40 chars" ends up silently withholding points with no way for the
      * alumnus to see why they're stuck below 100%.
      *
-     * Weighted, not equal-split — there's no builder step for `educations`
-     * (EducationController is an unwired stub), so that section is left out
-     * entirely rather than being a factor no one can ever satisfy.
+     * Weighted, not equal-split — there's no education-history builder step,
+     * so that section is left out entirely rather than being a factor no
+     * one can ever satisfy.
      */
     public function completenessBreakdown(): array
     {

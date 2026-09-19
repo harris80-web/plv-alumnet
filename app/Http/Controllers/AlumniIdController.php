@@ -100,7 +100,7 @@ class AlumniIdController extends Controller
         $count = AlumniId::whereIn('id', $validated['ids'])->update([
             'status' => $validated['status'],
             'status_updated_at' => now(),
-            'updated_by' => Auth::id(),
+            'updated_by' => Auth::user()->staffActorId(),
         ]);
 
         $label = AlumniId::statusLabels()[$validated['status']];

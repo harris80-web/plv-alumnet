@@ -115,7 +115,7 @@ class AlumniId extends Model
     {
         $this->status = $status;
         $this->status_updated_at = now();
-        $this->updated_by = Auth::id();
+        $this->updated_by = Auth::user()?->staffActorId();
         $this->save();
     }
 }

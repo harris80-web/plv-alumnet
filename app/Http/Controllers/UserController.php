@@ -601,7 +601,7 @@ class UserController extends Controller
             $alumnus->alumniId()->create([
                 'status' => 'pending',
                 'status_updated_at' => now(),
-                'updated_by' => Auth::id(),
+                'updated_by' => Auth::user()?->staffActorId(),
             ]);
 
             $alumnus->yearbook()->create([
@@ -925,8 +925,9 @@ class UserController extends Controller
             return view('admin.profile', compact('user'));
         } else if ($user->user_role == 'super_admin') {
             return view('superAdmin.profile', compact('user'));
-        } else if ($user->user_role == 'registrar') {
-            return view('registrar.profile', compact('user'));
+        // No 'registrar' branch: it pointed at registrar/profile.blade.php,
+        // which doesn't exist, and no user holds that role. The else below
+        // handles it safely if one is ever added.
         } else if ($user->user_role == 'employer') {
             return view('employer.profile', compact('user'));
         } else if ($user->user_role == 'alumni') {
@@ -944,12 +945,15 @@ class UserController extends Controller
     {
         $user = Auth::user();
         $industries = Industry::all();
-        if ($user->user_role == 'admin') {
-            return view('admin.edit-profile', compact('user'));
-        } else if ($user->user_role == 'super_admin') {
+        // admin and super_admin share this page: it's a standalone form that
+        // only needs $user and posts to offices.updateProfile, which backs
+        // both roles. There is no admin/edit-profile.blade.php — pointing at
+        // one 500'd every admin who opened Edit Profile.
+        // ('registrar' used to be handled here too, pointing at another view
+        //  that doesn't exist; no user holds that role, so the branch is gone
+        //  and the else below catches it if one ever appears.)
+        if ($user->user_role == 'admin' || $user->user_role == 'super_admin') {
             return view('superAdmin.edit-profile', compact('user'));
-        } else if ($user->user_role == 'registrar') {
-            return view('registrar.edit-profile', compact('user'));
         } else if ($user->user_role == 'employer') {
             return view('employer.edit-profile', compact('user', 'industries'));
         } else if ($user->user_role == 'alumni') {

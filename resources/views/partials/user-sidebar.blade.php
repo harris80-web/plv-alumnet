@@ -82,8 +82,15 @@
                 <p class="text-xs text-gray-400 truncate">
                     @if(auth()->user()->user_role === 'employer')
                         {{ auth()->user()->employer->employer_company_name ?? 'Company' }}
+                    @elseif(auth()->user()->user_role === 'alumni')
+                        {{-- alumnus?-> matters: the ?->format() call below breaks the
+                             ?? isset-chain, so an unguarded ->alumnus_batch on a null
+                             alumnus throws instead of falling through to the default. --}}
+                        Alumni Batch {{ auth()->user()->alumnus?->alumnus_batch?->format('Y') ?? '—' }}
                     @else
-                        Alumni Batch {{ auth()->user()->alumnus->alumnus_batch?->format('Y') ?? '—' }}
+                        {{-- admin / super_admin have no alumnus row: show the role
+                             rather than a meaningless "Alumni Batch —". --}}
+                        {{ ucwords(str_replace('_', ' ', auth()->user()->user_role)) }}
                     @endif
                 </p>
             </div>

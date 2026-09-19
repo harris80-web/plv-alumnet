@@ -1,18 +1,27 @@
 <?php
-function active_class($page_name, $current_page)
-{
-    if ($page_name === $current_page) {
-        return 'bg-white/10 border-l-4 border-orange-500 pl-4';
+// Guarded: a Blade @include re-executes this file every time it renders, so
+// declaring these bare would fatal with "Cannot redeclare active_class()" the
+// second time the sidebar renders inside one PHP process. A normal web request
+// only renders it once, but anything that renders two admin pages in a single
+// process (feature tests, tinker, a queued job) would otherwise hard-fail.
+if (! function_exists('active_class')) {
+    function active_class($page_name, $current_page)
+    {
+        if ($page_name === $current_page) {
+            return 'bg-white/10 border-l-4 border-orange-500 pl-4';
+        }
+        return 'hover:bg-white/10 px-5 group';
     }
-    return 'hover:bg-white/10 px-5 group';
 }
 
-function icon_class($page_name, $current_page)
-{
-    if ($page_name === $current_page) {
-        return 'text-orange-500';
+if (! function_exists('icon_class')) {
+    function icon_class($page_name, $current_page)
+    {
+        if ($page_name === $current_page) {
+            return 'text-orange-500';
+        }
+        return 'text-slate-400 group-hover:text-orange-500';
     }
-    return 'text-slate-400 group-hover:text-orange-500';
 }
 ?>
 

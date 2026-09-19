@@ -93,6 +93,23 @@ class User extends Authenticatable
         return $this->hasOne(Office::class, 'user_id', 'user_id');
     }
 
+    /**
+     * The id to stamp into a staff-action column — alumni_ids/alumni_yearbooks
+     * .updated_by, faqs/notices.created_by, message_flags.reviewed_by. Those
+     * foreign-key to offices.user_id (staff = admin/super_admin, both of which
+     * have an office row), so make sure the row exists before it's referenced:
+     * a staff account created without one (tinker, a future flow) would
+     * otherwise fail its first save with an FK error. Same self-healing
+     * firstOrCreate the chat-claim code already uses. withTrashed keeps a
+     * soft-deleted office from colliding with the unique user_id.
+     */
+    public function staffActorId(): int
+    {
+        Office::withTrashed()->firstOrCreate(['user_id' => $this->user_id], ['office_address' => '']);
+
+        return $this->user_id;
+    }
+
     public function sentMessages()
     {
         return $this->hasMany(Message::class, 'sender_id', 'user_id');

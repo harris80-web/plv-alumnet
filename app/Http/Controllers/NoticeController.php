@@ -107,7 +107,7 @@ class NoticeController extends Controller
         try {
             $notice = Notice::create($this->preparedData($validated) + [
                 'thumbnail' => $thumbnailPath,
-                'created_by' => Auth::id(),
+                'created_by' => Auth::user()->staffActorId(),
             ]);
         } catch (\Exception $e) {
             if ($thumbnailPath) {

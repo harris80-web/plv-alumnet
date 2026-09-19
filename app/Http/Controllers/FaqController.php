@@ -45,7 +45,7 @@ class FaqController extends Controller
 
         $validated = $request->validate($this->validationRules());
 
-        Faq::create($validated + ['created_by' => Auth::id()]);
+        Faq::create($validated + ['created_by' => Auth::user()->staffActorId()]);
 
         return back()->with('success', 'FAQ added successfully.');
     }

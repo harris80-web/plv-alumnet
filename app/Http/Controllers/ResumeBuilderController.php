@@ -132,7 +132,7 @@ class ResumeBuilderController extends Controller
 
         $industries = Industry::orderBy('industry_name')->get(['industry_id', 'industry_name']);
 
-        return view('resume.builder', compact('resumeData', 'industries'));
+        return view('alumni.resumeBuilder', compact('resumeData', 'industries'));
     }
 
     /**

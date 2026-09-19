@@ -295,7 +295,7 @@ class ChatTicketController extends Controller
 
         $messageFlag->update([
             'status' => $validated['action'],
-            'reviewed_by' => Auth::id(),
+            'reviewed_by' => Auth::user()->staffActorId(),
             'reviewed_at' => now(),
         ]);
 

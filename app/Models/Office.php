@@ -8,9 +8,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Office extends Model
 {
     use SoftDeletes; // <-- Use this trait
-    protected $primaryKey = 'user_id';
-    public $incrementing = false;
-    protected $keyType = 'int';
+    // The table's real primary key is the auto-increment office_id; user_id
+    // is a unique foreign key (one office row per account). The model used to
+    // declare user_id + non-incrementing, which left office_id NULL on a
+    // freshly created model (e.g. Office::firstOrCreate() feeding
+    // ChatTicket::claimBy(), which reads $office->office_id).
+    protected $primaryKey = 'office_id';
     protected $dates = ['deleted_at'];
     //
 
@@ -49,16 +52,12 @@ class Office extends Model
     protected $fillable = [
         'user_id',
         'office_address',
-        'office_created_at',
         'office_birth_date',
-        'office_last_log',
         'permissions',
     ];
 
     protected $casts = [
-        'office_created_at' => 'datetime',
         'office_birth_date' => 'date',
-        'office_last_log' => 'datetime',
         'permissions' => 'array',
     ];
 

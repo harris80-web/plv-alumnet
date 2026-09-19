@@ -38,7 +38,7 @@ class AlumniYearbookController extends Controller
 
         $validated = $request->validate($this->validationRules());
         $yearbook = AlumniYearbook::findOrFail($id);
-        $yearbook->applyUpdate($validated, Auth::id());
+        $yearbook->applyUpdate($validated, Auth::user()->staffActorId());
 
         if (array_key_exists('claiming_status', $validated) && $validated['claiming_status'] !== null) {
             $this->notifyClaimingStatusChange($yearbook);
@@ -70,7 +70,7 @@ class AlumniYearbookController extends Controller
 
         $yearbooks = AlumniYearbook::whereIn('id', $validated['ids'])->get();
         foreach ($yearbooks as $yearbook) {
-            $yearbook->applyUpdate($fields, Auth::id());
+            $yearbook->applyUpdate($fields, Auth::user()->staffActorId());
 
             if (array_key_exists('claiming_status', $fields)) {
                 $this->notifyClaimingStatusChange($yearbook);

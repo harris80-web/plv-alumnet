@@ -10,7 +10,6 @@ use App\Http\Controllers\ChatTicketController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\EmployerController;
 use App\Http\Controllers\EmployerReviewController;
-use App\Http\Controllers\EventController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\JobApplicationController;
@@ -25,7 +24,6 @@ use App\Http\Controllers\PasswordResetTokenController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SectionController;
-use App\Http\Controllers\SeminarController;
 use App\Http\Controllers\TestimonialController;
 use App\Http\Controllers\UserController;
 use App\Models\Testimonial;
@@ -104,46 +102,55 @@ Route::get('/general/faqs', [FaqController::class, 'generalFaqs'])->name('genera
 Route::get('/events-seminars', [NoticeController::class, 'guestEventsAndSeminars'])->name('notices.guestEventsSeminars');
 Route::get('/announcements', [NoticeController::class, 'guestAnnouncements'])->name('notices.guestAnnouncements');
 
-//alumni
+// alumni — signed-in variants of the public /about, /general/tou and
+// /general/privacy-policy pages. They render the alumni chrome
+// (partials/user-sidebar.blade.php reads Auth::user()->user_first_name),
+// so without ->middleware('auth') a logged-out visitor got a 500 instead
+// of a login redirect — same issue already noted for showChangePassword().
 Route::get('/alumni/about', function () {
     return view('alumni.about');
-})->name('alumni.about');
+})->name('alumni.about')->middleware('auth');
 
 Route::get('/alumni/privacy-policy', function () {
     return view('alumni.privacy-policy');
-})->name('alumni.privacy-policy');
+})->name('alumni.privacy-policy')->middleware('auth');
 
 Route::get('/alumni/tou', function () {
     return view('alumni.tou');
-})->name('alumni.tou');
+})->name('alumni.tou')->middleware('auth');
 
-Route::get('/alumni/faqs', [FaqController::class, 'alumniFaqs'])->name('alumni.faqs');
+Route::get('/alumni/faqs', [FaqController::class, 'alumniFaqs'])->name('alumni.faqs')->middleware('auth');
 
-//employer
+// employer — same signed-in-chrome reasoning as the alumni block above
+// (partials/header-employer.blade.php builds links from auth()->id()).
 Route::get('/employer/about', function () {
     return view('employer.about');
-})->name('employer.about');
+})->name('employer.about')->middleware('auth');
 
 Route::get('/employer/privacy-policy', function () {
     return view('employer.privacy-policy');
-})->name('employer.privacy-policy');
+})->name('employer.privacy-policy')->middleware('auth');
 
 Route::get('/employer/tou', function () {
     return view('employer.tou');
-})->name('employer.tou');
+})->name('employer.tou')->middleware('auth');
 
-Route::get('/employer/faqs', [FaqController::class, 'employerFaqs'])->name('employer.faqs');
+Route::get('/employer/faqs', [FaqController::class, 'employerFaqs'])->name('employer.faqs')->middleware('auth');
 
 //in session routes
-Route::get('/profile', [UserController::class, 'showProfile'])->name('user.profile');
+Route::get('/profile', [UserController::class, 'showProfile'])->name('user.profile')->middleware('auth');
 Route::post('/user/logout', [UserController::class, 'logout'])->name('user.logout');
 Route::post('/admin/heartbeat', [UserController::class, 'heartbeat'])->name('admin.heartbeat')->middleware('auth');
 
-Route::get('/profile/edit', [UserController::class, 'editProfile'])->name('users.editProfile');
+Route::get('/profile/edit', [UserController::class, 'editProfile'])->name('users.editProfile')->middleware('auth');
 
+// Kept as a redirect rather than its own page: it used to render a view
+// named "alumni_change_password" that doesn't exist (500 for everyone who
+// hit it), and nothing links here. users.showChangePassword already serves
+// the real general.changePassword page for every role.
 Route::get('/alumni/change-password', function () {
-    return view('alumni_change_password');
-})->name('alumni.changePassword');
+    return redirect()->route('users.showChangePassword');
+})->name('alumni.changePassword')->middleware('auth');
 
 Route::get('/superAdmin/dashboard', [UserController::class, 'showDashboard'])->name('superAdmin.dashboard')->middleware('auth');
 Route::get('/superAdmin/dashboard/export-csv', [UserController::class, 'exportDashboardReport'])->name('superAdmin.dashboard.exportCsv')->middleware('auth');
@@ -298,8 +305,6 @@ Route::put('/employers/updateProfile/{employer}', [EmployerController::class, 'u
 Route::put('/employer/deactivate/{id}', [EmployerController::class, 'deactivateEmployer'])->name('employers.deactivateEmployer')->middleware(['auth', 'feature:user_management']);
 Route::put('/users/employer/bulk-deactivate', [EmployerController::class, 'bulkDeactivateEmployer'])->name('employers.bulkDeactivateEmployer')->middleware(['auth', 'feature:user_management']);
 
-Route::resource('events', EventController::class);
-
 Route::resource('industries', IndustryController::class);
 
 Route::resource('job-applications', JobApplicationController::class);
@@ -344,8 +349,12 @@ Route::post('/approveJobPost/{id}', [JobPostingController::class, 'approveJobPos
 Route::post('/declineJobPost/{id}', [JobPostingController::class, 'declineJobPost'])->name('jobPosting.decline')->middleware(['auth', 'feature:job_management']);
 Route::delete('/deleteJobPost/{id}', [JobPostingController::class, 'deleteJobPost'])->name('jobPosting.delete')->middleware(['auth', 'feature:job_management']);
 
-Route::resource('offices', OfficeController::class);
-// Was missing ->middleware('auth') entirely, and updateOfficeProfile()
+// Same story as password-reset-tokens above: Route::resource('offices', ...)
+// published 7 routes with no middleware at all, backed by empty scaffold
+// stubs. Nothing referenced them, and the four office routes that are really
+// used are declared individually below, each with its own auth/super_admin
+// gate. Removed rather than left as a stub to fill in later.
+// updateOfficeProfile() itself
 // itself had no ownership check — any unauthenticated request could rewrite
 // any admin/office's profile by id (see the abort_unless now in that method).
 Route::put('/offices/updateProfile/{office}', [OfficeController::class, 'updateOfficeProfile'])->name('offices.updateProfile')->middleware('auth');
@@ -357,7 +366,11 @@ Route::delete('/admin/delete/{id}', [OfficeController::class, 'deleteAdmin'])->n
 Route::put('/admin/{id}/permissions', [OfficeController::class, 'updatePermissions'])->name('offices.updatePermissions')->middleware(['auth', 'super_admin']);
 Route::put('/admin/permissions/bulk', [OfficeController::class, 'bulkUpdatePermissions'])->name('offices.bulkUpdatePermissions')->middleware(['auth', 'super_admin']);
 
-Route::resource('password-reset-tokens', PasswordResetTokenController::class);
+// No Route::resource here on purpose: it published 7 unauthenticated routes
+// (index/create/store/show/edit/update/destroy) over the password-reset-tokens
+// table, backed by empty scaffold stubs. Nothing linked to them, and filling
+// any stub in later would have silently exposed reset tokens to the public.
+// Only the forgot-password form is actually needed, and it's routed below.
 Route::get('/forgotPasswordForm', [PasswordResetTokenController::class, 'index'])->name('passReset.forgotPassword');
 Route::post('/forgotPassword', [PasswordResetTokenController::class, 'forgetPassword'])->name('passReset.forgetPasswordPost');
 Route::get('/resetPassword/{token}', [PasswordResetTokenController::class, 'resetPassword'])->name('passReset.resetPassword');
@@ -366,8 +379,6 @@ Route::post('/resetPassword', [PasswordResetTokenController::class, 'updatePassw
 Route::resource('programs', ProgramController::class);
 
 Route::resource('sections', SectionController::class);
-
-Route::resource('seminars', SeminarController::class);
 
 // Was missing ->middleware('auth') entirely, and submitTestimonial() itself
 // had no ownership check — any request could submit a testimonial

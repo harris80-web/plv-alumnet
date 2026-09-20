@@ -112,6 +112,17 @@ class UserController extends Controller
             // 'employer_company_id_picture' => 'required|file|mimes:jpg,png,pdf|max:20000',
             // 'employer_company_id_picture_selfie' => 'required|file|mimes:jpg,png,pdf|max:20000',
             'user_password' => 'required|string|min:8'
+        ], [], [
+            // Without these, a missing field reads as "The user first name
+            // field is required." — the raw attribute name leaking through
+            // instead of the label actually shown next to that input.
+            'employer_company_name' => 'Company Name',
+            'employer_website_url' => 'Company Website',
+            'user_first_name' => 'First Name',
+            'user_last_name' => 'Last Name',
+            'user_email' => 'Email',
+            'employer_company_document' => 'Company Document',
+            'user_password' => 'Password',
         ]);
 
         $companyDocumentPath = null;
@@ -230,6 +241,9 @@ class UserController extends Controller
         $validated = $request->validate([
             'user_email' => 'required|email|max:255|',
             'user_password' => 'required|string|min:8'
+        ], [], [
+            'user_email' => 'Email',
+            'user_password' => 'Password',
         ]);
 
         if (Auth::attempt(['user_email' => $validated['user_email'], 'password' => $validated['user_password']], true)) {
@@ -279,7 +293,14 @@ class UserController extends Controller
             // }
             return redirect()->route('users.dashboardRedirect');
         } else {
-            return back()->withErrors(['user_password' => 'invalid password'])->onlyInput('user_email');
+            // Was 'invalid password' on the password field regardless of
+            // which one was actually wrong — misleading when the email
+            // itself doesn't match any account (e.g. a typo), not just when
+            // the password does. Attached to user_email (not user_password)
+            // and phrased generically, same as Laravel's own default
+            // auth.failed message, so this can't be used to enumerate which
+            // emails have an account.
+            return back()->withErrors(['user_email' => 'These credentials do not match our records.'])->onlyInput('user_email');
         }
     }
 

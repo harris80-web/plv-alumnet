@@ -43,6 +43,21 @@ class Experience extends Model
         $end = $this->experience_end_date ? $this->experience_end_date->format('M Y') : 'Present';
         return $this->experience_start_date->format('M Y') . ' – ' . $end;
     }
+
+    /**
+     * The resume builder's duties/responsibilities inputs are joined with
+     * "\n" into experience_job_description as one field (no schema change
+     * needed) — this splits it back into lines for display as a bulleted
+     * list. Also handles legacy rows saved from the old single-textarea
+     * form, whether that was one line or several.
+     */
+    public function jobDuties(): array
+    {
+        return array_values(array_filter(array_map(
+            'trim',
+            preg_split('/\r\n|\r|\n/', (string) $this->experience_job_description)
+        ), fn ($line) => $line !== ''));
+    }
  
     public function alumnus()
     {

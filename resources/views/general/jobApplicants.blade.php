@@ -664,6 +664,29 @@
         </div>
     </div>
 
+    {{-- Bulk action confirm — replaces the native confirm() for Shortlist/
+         Decline/Hire with the rest of this page's own modal language
+         (rounded-3xl white card over a blurred black/60 overlay). Same
+         message text as before, just no longer a browser-chrome dialog. --}}
+    <div id="bulkActionConfirmModal" class="fixed inset-0 z-[120] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-8 text-center">
+            <div id="bulkActionConfirmIconWrap" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i id="bulkActionConfirmIcon" class="fas text-2xl"></i>
+            </div>
+            <h3 id="bulkActionConfirmTitle" class="text-[#1D264F] text-lg font-bold mb-2"></h3>
+            <p id="bulkActionConfirmMessage" class="text-sm text-gray-500 leading-relaxed mb-6"></p>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeBulkActionConfirmModal()"
+                    class="flex-1 py-2.5 border-2 border-gray-200 text-gray-500 rounded-lg text-xs font-bold hover:bg-gray-50 transition-colors uppercase">
+                    Cancel
+                </button>
+                <button type="button" id="bulkActionConfirmBtn"
+                    class="flex-1 py-2.5 text-white rounded-lg text-xs font-bold transition-colors uppercase">
+                </button>
+            </div>
+        </div>
+    </div>
+
     @include('partials.table-scroll-fix')
     @include('partials.footer-employer')
 
@@ -836,6 +859,13 @@
         updateBulkActionUI();
     }
 
+    const BULK_ACTION_STYLE = {
+        shortlist: { icon: 'fa-star', iconWrapBg: 'bg-yellow-100', iconColor: 'text-yellow-500', btnBg: 'bg-yellow-500 hover:bg-yellow-600', title: 'Shortlist Applicants' },
+        decline: { icon: 'fa-user-times', iconWrapBg: 'bg-red-100', iconColor: 'text-red-500', btnBg: 'bg-red-500 hover:bg-red-600', title: 'Decline Applicants' },
+        hire: { icon: 'fa-user-check', iconWrapBg: 'bg-green-100', iconColor: 'text-green-600', btnBg: 'bg-green-600 hover:bg-green-700', title: 'Hire Applicants' },
+    };
+    let pendingBulkAction = null;
+
     function submitBulkAction(action) {
         const ids = getCheckedApplicationIds();
         if (ids.length === 0) return;
@@ -845,9 +875,32 @@
             return;
         }
 
-        if (!confirm('Are you sure you want to ' + BULK_ACTION_VERBS[action] + ' ' + ids.length + ' selected applicant(s)?')) {
-            return;
-        }
+        pendingBulkAction = action;
+        const style = BULK_ACTION_STYLE[action];
+
+        document.getElementById('bulkActionConfirmIconWrap').className = 'w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ' + style.iconWrapBg;
+        document.getElementById('bulkActionConfirmIcon').className = 'fas ' + style.icon + ' text-2xl ' + style.iconColor;
+        document.getElementById('bulkActionConfirmTitle').textContent = style.title;
+        document.getElementById('bulkActionConfirmMessage').textContent =
+            'Are you sure you want to ' + BULK_ACTION_VERBS[action] + ' ' + ids.length + ' selected applicant(s)?';
+
+        const confirmBtn = document.getElementById('bulkActionConfirmBtn');
+        confirmBtn.className = 'flex-1 py-2.5 text-white rounded-lg text-xs font-bold transition-colors uppercase ' + style.btnBg;
+        confirmBtn.textContent = 'Yes, ' + action.charAt(0).toUpperCase() + action.slice(1);
+
+        document.getElementById('bulkActionConfirmModal').classList.remove('hidden');
+    }
+
+    function closeBulkActionConfirmModal() {
+        document.getElementById('bulkActionConfirmModal').classList.add('hidden');
+        pendingBulkAction = null;
+    }
+
+    document.getElementById('bulkActionConfirmBtn').addEventListener('click', function () {
+        if (!pendingBulkAction) return;
+        const action = pendingBulkAction;
+        const ids = getCheckedApplicationIds();
+        closeBulkActionConfirmModal();
 
         const form = document.getElementById(BULK_ACTION_FORMS[action]);
         form.querySelectorAll('input[name="application_ids[]"]').forEach(el => el.remove());
@@ -859,7 +912,7 @@
             form.appendChild(input);
         });
         form.submit();
-    }
+    });
 
     function openJobViewModal(el) {
         const jvmImg = document.getElementById('jvm-image');

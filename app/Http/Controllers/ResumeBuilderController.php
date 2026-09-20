@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Alumnus;
 use App\Models\Certification;
 use App\Models\Experience;
-use App\Models\Industry;
 use App\Models\JobApplication;
 use App\Models\Skill;
 use App\Models\User;
@@ -120,19 +119,17 @@ class ResumeBuilderController extends Controller
     }
 
     /**
-     * Show the resume builder, prefilled with whatever the alumnus has
-     * already saved.
+     * The standalone wizard (resources/views/alumni/resumeBuilder.blade.php)
+     * is a stale duplicate of resource-builder-modal.blade.php — it never
+     * got the date-range/live-completeness/skill-search fixes the modal did,
+     * which is what produced the "completeness stuck at 0%" and "resume
+     * builder not submitting" reports. Rather than maintain two diverging
+     * copies of the same wizard, this route just hands off to Edit Profile,
+     * where the maintained modal version lives.
      */
     public function edit()
     {
-        $alumnus = Alumnus::with(['skills', 'experiences', 'certifications'])
-            ->findOrFail(Auth::id());
-
-        $resumeData = $alumnus->toResumeFormArray();
-
-        $industries = Industry::orderBy('industry_name')->get(['industry_id', 'industry_name']);
-
-        return view('alumni.resumeBuilder', compact('resumeData', 'industries'));
+        return redirect()->route('users.editProfile');
     }
 
     /**

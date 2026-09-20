@@ -318,7 +318,11 @@
         <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-10 text-center text-gray-500">
             <i class="fa-solid fa-magnifying-glass text-3xl mb-3 block text-gray-300"></i>
             <p class="mb-4">No job matches yet. Complete your resume so we can start recommending jobs for you.</p>
-            <a href="{{ route('resume.build') }}" class="inline-block px-6 py-2 rounded-md bg-[#0E0F3B] text-white text-sm font-bold uppercase hover:bg-[#1D264F] transition-colors">
+            {{-- Routed through Edit Profile (the maintained resume-builder-modal), not the
+                 old standalone /resume/build wizard — that page duplicates this flow with
+                 stale scoring/markup and was the source of the "completeness stuck at 0%"
+                 and "resume not submitting" reports. --}}
+            <a href="{{ route('users.editProfile') }}" class="inline-block px-6 py-2 rounded-md bg-[#0E0F3B] text-white text-sm font-bold uppercase hover:bg-[#1D264F] transition-colors">
                 Build Your Resume
             </a>
         </div>

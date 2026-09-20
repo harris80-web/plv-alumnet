@@ -183,6 +183,22 @@ class AlumnusController extends Controller
             'alumnus_show_skills' => 'nullable|boolean',
             'alumnus_show_email' => 'nullable|boolean',
             'alumnus_show_linkedin' => 'nullable|boolean',
+        ], [], [
+            // Without these, a missing/invalid field reads as "The industry
+            // id field is required." — the raw attribute name instead of
+            // the label actually shown next to that input.
+            'user_profile_picture' => 'Profile Picture',
+            'alumnus_resume_file' => 'Resume / CV',
+            'alumnus_resume_backup_file' => 'Backup Resume / CV',
+            'alumnus_cover_letter_file' => 'Cover Letter',
+            'alumnus_employment_status' => 'Employment Status',
+            'industry_id' => 'Industry / Sector',
+            'alumnus_workplace' => 'Workplace',
+            'alumnus_job_position' => 'Job Position',
+            'alumnus_employment_date' => 'Employment Date',
+            'alumnus_first_job_date' => 'First Job Date',
+            'user_email' => 'Email',
+            'user_number' => 'Phone Number',
         ]);
 
         $oldProfilePicture = $user->user_profile_picture ?? null;
@@ -196,35 +212,65 @@ class AlumnusController extends Controller
 
         $alumniForUploads = Alumnus::where('user_id', $alumnus)->firstOrFail();
 
+        // A "Remove" click (see edit-profile.blade.php) flags the slot via
+        // a hidden remove_* input instead of deleting anything itself —
+        // same "staged until Save" pattern as every other field on this
+        // form, so Remove can still be undone before saving. A new file in
+        // the same slot always wins over a stale remove flag (belt-and-
+        // suspenders; the UI already clears the flag on file select).
         $oldResumeFile = $alumniForUploads->alumnus_resume_file_path;
         $resumeFile = null;
+        $removeResumeFile = false;
         if ($request->hasFile('alumnus_resume_file')) {
             if ($oldResumeFile && Storage::disk('public')->exists($oldResumeFile)) {
                 Storage::disk('public')->delete($oldResumeFile);
             }
             $resumeFile = $request->file('alumnus_resume_file')->store('alumniDocuments/resumes', 'public');
+        } elseif ($request->boolean('remove_alumnus_resume_file') && $oldResumeFile) {
+            if (Storage::disk('public')->exists($oldResumeFile)) {
+                Storage::disk('public')->delete($oldResumeFile);
+            }
+            $removeResumeFile = true;
         }
 
         $oldResumeBackupFile = $alumniForUploads->alumnus_resume_backup_file_path;
         $resumeBackupFile = null;
+        $removeResumeBackupFile = false;
         if ($request->hasFile('alumnus_resume_backup_file')) {
             if ($oldResumeBackupFile && Storage::disk('public')->exists($oldResumeBackupFile)) {
                 Storage::disk('public')->delete($oldResumeBackupFile);
             }
             $resumeBackupFile = $request->file('alumnus_resume_backup_file')->store('alumniDocuments/resumes', 'public');
+        } elseif ($request->boolean('remove_alumnus_resume_backup_file') && $oldResumeBackupFile) {
+            if (Storage::disk('public')->exists($oldResumeBackupFile)) {
+                Storage::disk('public')->delete($oldResumeBackupFile);
+            }
+            $removeResumeBackupFile = true;
         }
 
         $oldCoverLetterFile = $alumniForUploads->alumnus_cover_letter_file_path;
         $coverLetterFile = null;
+        $removeCoverLetterFile = false;
         if ($request->hasFile('alumnus_cover_letter_file')) {
             if ($oldCoverLetterFile && Storage::disk('public')->exists($oldCoverLetterFile)) {
                 Storage::disk('public')->delete($oldCoverLetterFile);
             }
             $coverLetterFile = $request->file('alumnus_cover_letter_file')->store('alumniDocuments/coverLetters', 'public');
+        } elseif ($request->boolean('remove_alumnus_cover_letter_file') && $oldCoverLetterFile) {
+            if (Storage::disk('public')->exists($oldCoverLetterFile)) {
+                Storage::disk('public')->delete($oldCoverLetterFile);
+            }
+            $removeCoverLetterFile = true;
         }
 
         try {
-            DB::transaction(function () use ($validated, $alumnus, $profilePicture, $resumeFile, $resumeBackupFile, $coverLetterFile, $request) {
+            DB::transaction(function () use (
+                $validated, $alumnus, $profilePicture,
+                $resumeFile, $removeResumeFile,
+                $resumeBackupFile, $removeResumeBackupFile,
+                $coverLetterFile, $removeCoverLetterFile,
+                $request
+            ) {
                 $alumni = Alumnus::where('user_id', $alumnus)->firstOrFail();
 
                 $employed = (bool) ($validated['alumnus_employment_status'] ?? $alumni->alumnus_employment_status);
@@ -292,14 +338,20 @@ class AlumnusController extends Controller
 
                 if ($resumeFile != null) {
                     $alumni->update(['alumnus_resume_file_path' => $resumeFile]);
+                } elseif ($removeResumeFile) {
+                    $alumni->update(['alumnus_resume_file_path' => null]);
                 }
 
                 if ($resumeBackupFile != null) {
                     $alumni->update(['alumnus_resume_backup_file_path' => $resumeBackupFile]);
+                } elseif ($removeResumeBackupFile) {
+                    $alumni->update(['alumnus_resume_backup_file_path' => null]);
                 }
 
                 if ($coverLetterFile != null) {
                     $alumni->update(['alumnus_cover_letter_file_path' => $coverLetterFile]);
+                } elseif ($removeCoverLetterFile) {
+                    $alumni->update(['alumnus_cover_letter_file_path' => null]);
                 }
             });
         } catch (\Exception $e) {

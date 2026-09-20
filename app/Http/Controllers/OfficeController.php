@@ -39,6 +39,19 @@ class OfficeController extends Controller
             'office_address'     => 'nullable|string|max:255',
             'office_birth_date'  => 'nullable|date',
             'user_profile_picture' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ], [], [
+            // Without these, a missing field reads as "The user first name
+            // field is required." — the raw attribute name instead of the
+            // label actually shown next to that input.
+            'user_first_name' => 'First Name',
+            'user_middle_name' => 'Middle Name',
+            'user_last_name' => 'Last Name',
+            'user_suffix' => 'Suffix',
+            'user_email' => 'Email',
+            'user_number' => 'Phone Number',
+            'office_address' => 'Address',
+            'office_birth_date' => 'Birth Date',
+            'user_profile_picture' => 'Profile Picture',
         ]);
 
         $user = User::findOrFail($id);

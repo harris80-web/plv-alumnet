@@ -682,6 +682,29 @@
         </div>
     </div>
 
+    <!-- ══════════════════════ TAKE OVER CONFIRM (replaces the native confirm() on both "Take Over" buttons — queue list and the thread modal itself; same message text as before) ══════════════════════ -->
+    <div id="takeOverConfirmModal" class="fixed inset-0 z-[60] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center">
+            <div class="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="user-round-check" class="w-8 h-8 text-amber-500"></i>
+            </div>
+            <h3 class="text-[#0E0F3B] text-lg font-bold mb-2">Take Over Ticket</h3>
+            <p class="text-slate-500 text-sm leading-relaxed mb-6">
+                This ticket is currently assigned to another agent. Take it over so you can handle and resolve it yourself?
+            </p>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeTakeOverConfirmModal()"
+                    class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-colors uppercase">
+                    Cancel
+                </button>
+                <button type="button" id="takeOverConfirmBtn"
+                    class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition-colors uppercase">
+                    Take Over
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             if (window.lucide) lucide.createIcons();
@@ -887,16 +910,45 @@
             if (queueListPollTimer) { clearInterval(queueListPollTimer); queueListPollTimer = null; }
         }
 
+        // ── Take Over confirm modal — shared by the queue list's "Take Over"
+        // button (claimTicket) and the thread modal's "Take Over This
+        // Ticket" button (takeOverQueueTicket), which each pass their own
+        // follow-up as onConfirm since a take-over from the list opens a
+        // fresh thread while one from inside the thread just refreshes it.
+        let takeOverConfirmCallback = null;
+
+        function openTakeOverConfirmModal(onConfirm) {
+            takeOverConfirmCallback = onConfirm;
+            document.getElementById('takeOverConfirmModal').classList.remove('hidden');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function closeTakeOverConfirmModal() {
+            document.getElementById('takeOverConfirmModal').classList.add('hidden');
+            takeOverConfirmCallback = null;
+        }
+
+        document.getElementById('takeOverConfirmBtn').addEventListener('click', function () {
+            const callback = takeOverConfirmCallback;
+            closeTakeOverConfirmModal();
+            if (callback) callback();
+        });
+
         /**
          * Claim is AJAX now — no page reload — and jumps straight into the
          * thread on success. isTakeover=true is the "Take Over" button on an
          * already-with_agent ticket assigned to someone else — confirmed
          * first since it reassigns the ticket away from that other agent.
          */
-        async function claimTicket(ticketId, isTakeover) {
-            if (isTakeover && !confirm('This ticket is currently assigned to another agent. Take it over so you can handle and resolve it yourself?')) {
+        function claimTicket(ticketId, isTakeover) {
+            if (isTakeover) {
+                openTakeOverConfirmModal(() => claimTicketConfirmed(ticketId));
                 return;
             }
+            claimTicketConfirmed(ticketId);
+        }
+
+        async function claimTicketConfirmed(ticketId) {
             try {
                 const res = await fetch(`{{ url('/chatbotMessaging') }}/${ticketId}/claim`, {
                     method: 'POST',
@@ -968,9 +1020,12 @@
         }
 
         /** "Take Over This Ticket" button inside the thread modal itself — same claim() endpoint, just re-fetches the thread afterward instead of leaving/reopening it. */
-        async function takeOverQueueTicket() {
-            if (!queueThreadTicketId || !confirm('This ticket is currently assigned to another agent. Take it over so you can handle and resolve it yourself?')) return;
+        function takeOverQueueTicket() {
+            if (!queueThreadTicketId) return;
+            openTakeOverConfirmModal(() => takeOverQueueTicketConfirmed());
+        }
 
+        async function takeOverQueueTicketConfirmed() {
             try {
                 const res = await fetch(`{{ url('/chatbotMessaging') }}/${queueThreadTicketId}/claim`, {
                     method: 'POST',

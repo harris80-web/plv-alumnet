@@ -186,6 +186,24 @@ class EmployerController extends Controller
             'industry_id' => 'nullable|exists:industries,industry_id',
             'addresses' => ['nullable', 'array'],
             'addresses.*' => ['nullable', 'string', 'max:255'],
+        ], [], [
+            // Without these, an invalid field reads as "The employer
+            // company size field must be an integer." — the raw attribute
+            // name instead of the label actually shown next to that input.
+            'user_profile_picture' => 'Profile Picture',
+            'user_first_name' => 'First Name',
+            'user_last_name' => 'Last Name',
+            'user_middle_name' => 'Middle Name',
+            'user_suffix' => 'Suffix',
+            'employer_position' => 'Position',
+            'user_email' => 'Email',
+            'user_number' => 'Phone Number',
+            'employer_company_logo' => 'Company Logo',
+            'employer_company_name' => 'Company Name',
+            'employer_year_established' => 'Year Established',
+            'employer_company_size' => 'Company Size',
+            'employer_website_url' => 'Company Website',
+            'industry_id' => 'Industry / Sector',
         ]);
 
         // Update the user's profile information

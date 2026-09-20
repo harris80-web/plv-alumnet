@@ -317,22 +317,37 @@
                                 <div class="flex items-center gap-3 min-w-0">
                                     <i class="fas fa-file-lines text-[#C73D1A] text-xl shrink-0"></i>
                                     <div class="min-w-0">
-                                        @if ($user->alumnus->alumnus_resume_file_path)
-                                        <a href="{{ asset('storage/' . $user->alumnus->alumnus_resume_file_path) }}" target="_blank" class="text-sm font-semibold text-[#1D46A4] hover:underline truncate block">
-                                            {{ basename($user->alumnus->alumnus_resume_file_path) }}
-                                        </a>
-                                        @else
-                                        <p class="text-sm text-gray-400">No resume uploaded yet</p>
-                                        @endif
+                                        <div id="resumeFileCurrent">
+                                            @if ($user->alumnus->alumnus_resume_file_path)
+                                            <a href="{{ asset('storage/' . $user->alumnus->alumnus_resume_file_path) }}" target="_blank" class="text-sm font-semibold text-[#1D46A4] hover:underline truncate block">
+                                                {{ basename($user->alumnus->alumnus_resume_file_path) }}
+                                            </a>
+                                            @else
+                                            <p class="text-sm text-gray-400">No resume uploaded yet</p>
+                                            @endif
+                                        </div>
+                                        <div id="resumeFileRemoveNotice" class="hidden items-center gap-2">
+                                            <p class="text-sm text-red-600 font-semibold">Will be removed when you save</p>
+                                            <button type="button" onclick="undoDocumentRemoval('resume')" class="text-[10px] font-bold text-[#1D46A4] hover:underline">Undo</button>
+                                        </div>
                                         <p id="resumeFileSelected" class="text-[10px] text-gray-500 font-semibold"></p>
                                     </div>
                                 </div>
-                                <button type="button" onclick="document.getElementById('alumnusResumeFileInput').click()"
-                                    class="shrink-0 bg-[#1D264F] text-white text-[10px] font-bold px-4 py-2 rounded-full uppercase hover:bg-[#0E0F3B] transition-colors">
-                                    {{ $user->alumnus->alumnus_resume_file_path ? 'Replace' : 'Upload' }}
-                                </button>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <button type="button" onclick="document.getElementById('alumnusResumeFileInput').click()"
+                                        class="shrink-0 bg-[#1D264F] text-white text-[10px] font-bold px-4 py-2 rounded-full uppercase hover:bg-[#0E0F3B] transition-colors">
+                                        {{ $user->alumnus->alumnus_resume_file_path ? 'Replace' : 'Upload' }}
+                                    </button>
+                                    @if ($user->alumnus->alumnus_resume_file_path)
+                                    <button type="button" id="removeResumeFileBtn" onclick="stageDocumentRemoval('resume')"
+                                        class="shrink-0 border border-red-300 text-red-600 text-[10px] font-bold px-4 py-2 rounded-full uppercase hover:bg-red-50 transition-colors">
+                                        Remove
+                                    </button>
+                                    @endif
+                                </div>
                             </div>
-                            <input type="file" name="alumnus_resume_file" id="alumnusResumeFileInput" accept=".pdf,.doc,.docx" class="hidden" onchange="previewDocumentName(this, 'resumeFileSelected')">
+                            <input type="hidden" name="remove_alumnus_resume_file" id="removeAlumnusResumeFileFlag" value="0">
+                            <input type="file" name="alumnus_resume_file" id="alumnusResumeFileInput" accept=".pdf,.doc,.docx" class="hidden" onchange="previewDocumentName(this, 'resumeFileSelected', 'resume')">
                             <p class="text-[10px] text-gray-400 mt-1">PDF, DOC, or DOCX — up to 5MB.</p>
                         </div>
 
@@ -342,22 +357,37 @@
                                 <div class="flex items-center gap-3 min-w-0">
                                     <i class="fas fa-file-shield text-[#C73D1A] text-xl shrink-0"></i>
                                     <div class="min-w-0">
-                                        @if ($user->alumnus->alumnus_resume_backup_file_path)
-                                        <a href="{{ asset('storage/' . $user->alumnus->alumnus_resume_backup_file_path) }}" target="_blank" class="text-sm font-semibold text-[#1D46A4] hover:underline truncate block">
-                                            {{ basename($user->alumnus->alumnus_resume_backup_file_path) }}
-                                        </a>
-                                        @else
-                                        <p class="text-sm text-gray-400">No backup resume uploaded yet</p>
-                                        @endif
+                                        <div id="resumeBackupFileCurrent">
+                                            @if ($user->alumnus->alumnus_resume_backup_file_path)
+                                            <a href="{{ asset('storage/' . $user->alumnus->alumnus_resume_backup_file_path) }}" target="_blank" class="text-sm font-semibold text-[#1D46A4] hover:underline truncate block">
+                                                {{ basename($user->alumnus->alumnus_resume_backup_file_path) }}
+                                            </a>
+                                            @else
+                                            <p class="text-sm text-gray-400">No backup resume uploaded yet</p>
+                                            @endif
+                                        </div>
+                                        <div id="resumeBackupFileRemoveNotice" class="hidden items-center gap-2">
+                                            <p class="text-sm text-red-600 font-semibold">Will be removed when you save</p>
+                                            <button type="button" onclick="undoDocumentRemoval('resumeBackup')" class="text-[10px] font-bold text-[#1D46A4] hover:underline">Undo</button>
+                                        </div>
                                         <p id="resumeBackupFileSelected" class="text-[10px] text-gray-500 font-semibold"></p>
                                     </div>
                                 </div>
-                                <button type="button" onclick="document.getElementById('alumnusResumeBackupFileInput').click()"
-                                    class="shrink-0 bg-[#1D264F] text-white text-[10px] font-bold px-4 py-2 rounded-full uppercase hover:bg-[#0E0F3B] transition-colors">
-                                    {{ $user->alumnus->alumnus_resume_backup_file_path ? 'Replace' : 'Upload' }}
-                                </button>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <button type="button" onclick="document.getElementById('alumnusResumeBackupFileInput').click()"
+                                        class="shrink-0 bg-[#1D264F] text-white text-[10px] font-bold px-4 py-2 rounded-full uppercase hover:bg-[#0E0F3B] transition-colors">
+                                        {{ $user->alumnus->alumnus_resume_backup_file_path ? 'Replace' : 'Upload' }}
+                                    </button>
+                                    @if ($user->alumnus->alumnus_resume_backup_file_path)
+                                    <button type="button" id="removeResumeBackupFileBtn" onclick="stageDocumentRemoval('resumeBackup')"
+                                        class="shrink-0 border border-red-300 text-red-600 text-[10px] font-bold px-4 py-2 rounded-full uppercase hover:bg-red-50 transition-colors">
+                                        Remove
+                                    </button>
+                                    @endif
+                                </div>
                             </div>
-                            <input type="file" name="alumnus_resume_backup_file" id="alumnusResumeBackupFileInput" accept=".pdf,.doc,.docx" class="hidden" onchange="previewDocumentName(this, 'resumeBackupFileSelected')">
+                            <input type="hidden" name="remove_alumnus_resume_backup_file" id="removeAlumnusResumeBackupFileFlag" value="0">
+                            <input type="file" name="alumnus_resume_backup_file" id="alumnusResumeBackupFileInput" accept=".pdf,.doc,.docx" class="hidden" onchange="previewDocumentName(this, 'resumeBackupFileSelected', 'resumeBackup')">
                             <p class="text-[10px] text-gray-400 mt-1">A spare copy in case your primary resume is unavailable — PDF, DOC, or DOCX, up to 5MB.</p>
                         </div>
 
@@ -367,22 +397,37 @@
                                 <div class="flex items-center gap-3 min-w-0">
                                     <i class="fas fa-envelope-open-text text-[#C73D1A] text-xl shrink-0"></i>
                                     <div class="min-w-0">
-                                        @if ($user->alumnus->alumnus_cover_letter_file_path)
-                                        <a href="{{ asset('storage/' . $user->alumnus->alumnus_cover_letter_file_path) }}" target="_blank" class="text-sm font-semibold text-[#1D46A4] hover:underline truncate block">
-                                            {{ basename($user->alumnus->alumnus_cover_letter_file_path) }}
-                                        </a>
-                                        @else
-                                        <p class="text-sm text-gray-400">No cover letter uploaded yet</p>
-                                        @endif
+                                        <div id="coverLetterFileCurrent">
+                                            @if ($user->alumnus->alumnus_cover_letter_file_path)
+                                            <a href="{{ asset('storage/' . $user->alumnus->alumnus_cover_letter_file_path) }}" target="_blank" class="text-sm font-semibold text-[#1D46A4] hover:underline truncate block">
+                                                {{ basename($user->alumnus->alumnus_cover_letter_file_path) }}
+                                            </a>
+                                            @else
+                                            <p class="text-sm text-gray-400">No cover letter uploaded yet</p>
+                                            @endif
+                                        </div>
+                                        <div id="coverLetterFileRemoveNotice" class="hidden items-center gap-2">
+                                            <p class="text-sm text-red-600 font-semibold">Will be removed when you save</p>
+                                            <button type="button" onclick="undoDocumentRemoval('coverLetter')" class="text-[10px] font-bold text-[#1D46A4] hover:underline">Undo</button>
+                                        </div>
                                         <p id="coverLetterFileSelected" class="text-[10px] text-gray-500 font-semibold"></p>
                                     </div>
                                 </div>
-                                <button type="button" onclick="document.getElementById('alumnusCoverLetterFileInput').click()"
-                                    class="shrink-0 bg-[#1D264F] text-white text-[10px] font-bold px-4 py-2 rounded-full uppercase hover:bg-[#0E0F3B] transition-colors">
-                                    {{ $user->alumnus->alumnus_cover_letter_file_path ? 'Replace' : 'Upload' }}
-                                </button>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <button type="button" onclick="document.getElementById('alumnusCoverLetterFileInput').click()"
+                                        class="shrink-0 bg-[#1D264F] text-white text-[10px] font-bold px-4 py-2 rounded-full uppercase hover:bg-[#0E0F3B] transition-colors">
+                                        {{ $user->alumnus->alumnus_cover_letter_file_path ? 'Replace' : 'Upload' }}
+                                    </button>
+                                    @if ($user->alumnus->alumnus_cover_letter_file_path)
+                                    <button type="button" id="removeCoverLetterFileBtn" onclick="stageDocumentRemoval('coverLetter')"
+                                        class="shrink-0 border border-red-300 text-red-600 text-[10px] font-bold px-4 py-2 rounded-full uppercase hover:bg-red-50 transition-colors">
+                                        Remove
+                                    </button>
+                                    @endif
+                                </div>
                             </div>
-                            <input type="file" name="alumnus_cover_letter_file" id="alumnusCoverLetterFileInput" accept=".pdf,.doc,.docx" class="hidden" onchange="previewDocumentName(this, 'coverLetterFileSelected')">
+                            <input type="hidden" name="remove_alumnus_cover_letter_file" id="removeAlumnusCoverLetterFileFlag" value="0">
+                            <input type="file" name="alumnus_cover_letter_file" id="alumnusCoverLetterFileInput" accept=".pdf,.doc,.docx" class="hidden" onchange="previewDocumentName(this, 'coverLetterFileSelected', 'coverLetter')">
                             <p class="text-[10px] text-gray-400 mt-1">PDF, DOC, or DOCX — up to 5MB.</p>
                         </div>
                     </div>
@@ -511,12 +556,70 @@
         }
     });
 
-    // Documents (Resume/CV, Cover Letter) — shows the newly-picked filename
-    // right under the current one so it's clear a replacement is staged,
-    // without waiting for the form to actually submit.
-    function previewDocumentName(input, targetId) {
+    // Document "Remove"/"Replace"/"Upload" — all staged-until-Save, same as
+    // everything else on this form (an industry change, etc.): nothing
+    // actually uploads or deletes until the whole form is submitted. See
+    // AlumnusController::updateAlumniProfile() for the remove_alumnus_*_file
+    // flags stageDocumentRemoval() sets.
+    const DOCUMENT_SLOTS = {
+        resume: { flag: 'removeAlumnusResumeFileFlag', current: 'resumeFileCurrent', notice: 'resumeFileRemoveNotice', removeBtn: 'removeResumeFileBtn' },
+        resumeBackup: { flag: 'removeAlumnusResumeBackupFileFlag', current: 'resumeBackupFileCurrent', notice: 'resumeBackupFileRemoveNotice', removeBtn: 'removeResumeBackupFileBtn' },
+        coverLetter: { flag: 'removeAlumnusCoverLetterFileFlag', current: 'coverLetterFileCurrent', notice: 'coverLetterFileRemoveNotice', removeBtn: 'removeCoverLetterFileBtn' },
+    };
+
+    // Clears a staged "Remove" (flag + its notice banner + Remove button
+    // visibility) WITHOUT touching slot.current's visibility — that's the
+    // caller's call, since undoDocumentRemoval() and previewDocumentName()
+    // each want a different outcome for it (see both below).
+    function clearRemovalNotice(kind) {
+        const slot = DOCUMENT_SLOTS[kind];
+        document.getElementById(slot.flag).value = '0';
+        document.getElementById(slot.notice).classList.add('hidden');
+        document.getElementById(slot.notice).classList.remove('flex');
+        document.getElementById(slot.removeBtn)?.classList.remove('hidden');
+    }
+
+    // Was just a small "Selected: x.pdf" line added BELOW the untouched
+    // "No resume uploaded yet" / existing-file text — so right after
+    // picking a file it looked like nothing had happened, since the stale
+    // placeholder was still the most prominent thing on screen. Now hides
+    // that current-state block entirely and shows the picked file as the
+    // clear, singular state instead, same treatment as the Remove notice.
+    //
+    // Bug fixed here: this used to call undoDocumentRemoval(kind) to clear
+    // a pending Remove, but that function also unconditionally re-shows
+    // slot.current — undoing the .toggle('hidden', true) two lines above
+    // in the same tick, so "No resume uploaded yet" and "Selected: ..."
+    // both stayed visible together. clearRemovalNotice() does the same
+    // flag/notice cleanup without touching slot.current's visibility,
+    // which is decided by `file` right below instead.
+    function previewDocumentName(input, targetId, kind) {
         const target = document.getElementById(targetId);
-        target.textContent = input.files && input.files[0] ? 'Selected: ' + input.files[0].name : '';
+        const slot = DOCUMENT_SLOTS[kind];
+        const file = input.files && input.files[0];
+
+        // Picking a new file always wins over a pending "Remove" on the
+        // same slot — same priority the server applies.
+        clearRemovalNotice(kind);
+
+        document.getElementById(slot.current).classList.toggle('hidden', !!file);
+        target.textContent = file ? 'Selected: ' + file.name + ' — will be saved when you click Save' : '';
+        target.classList.toggle('text-[#1D46A4]', !!file);
+        target.classList.toggle('text-gray-500', !file);
+    }
+
+    function stageDocumentRemoval(kind) {
+        const slot = DOCUMENT_SLOTS[kind];
+        document.getElementById(slot.flag).value = '1';
+        document.getElementById(slot.current).classList.add('hidden');
+        document.getElementById(slot.notice).classList.remove('hidden');
+        document.getElementById(slot.notice).classList.add('flex');
+        document.getElementById(slot.removeBtn)?.classList.add('hidden');
+    }
+
+    function undoDocumentRemoval(kind) {
+        clearRemovalNotice(kind);
+        document.getElementById(DOCUMENT_SLOTS[kind].current).classList.remove('hidden');
     }
 
     // Landing here with ?openResume=1 (e.g. from the job apply modal's

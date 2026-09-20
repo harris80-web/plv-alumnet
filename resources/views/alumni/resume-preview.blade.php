@@ -107,8 +107,12 @@
                         @if($exp->industry)
                             <p class="text-xs text-gray-500 italic mb-1">{{ $exp->industry->industry_name }}</p>
                         @endif
-                        @if($exp->experience_job_description)
-                            <p class="text-sm text-gray-700 leading-relaxed">{{ $exp->experience_job_description }}</p>
+                        @if($exp->jobDuties())
+                            <ul class="text-sm text-gray-700 leading-relaxed list-disc list-outside ml-4 space-y-0.5">
+                                @foreach($exp->jobDuties() as $duty)
+                                    <li>{{ $duty }}</li>
+                                @endforeach
+                            </ul>
                         @endif
                     </div>
                 @endforeach
@@ -136,8 +140,12 @@
                                 <p class="text-xs text-gray-500">{{ \App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months) }}</p>
                             @endif
                         </div>
-                        @if($exp->experience_job_description)
-                            <p class="text-sm text-gray-700 leading-relaxed">{{ $exp->experience_job_description }}</p>
+                        @if($exp->jobDuties())
+                            <ul class="text-sm text-gray-700 leading-relaxed list-disc list-outside ml-4 space-y-0.5">
+                                @foreach($exp->jobDuties() as $duty)
+                                    <li>{{ $duty }}</li>
+                                @endforeach
+                            </ul>
                         @endif
                     </div>
                 @endforeach

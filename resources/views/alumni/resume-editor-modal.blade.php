@@ -144,9 +144,27 @@
                                         <option value="{{ $industry->industry_id }}" @selected(($exp['industry_id'] ?? null) == $industry->industry_id)>{{ $industry->industry_name }}</option>
                                     @endforeach
                                 </select>
-                                <textarea name="experiences[{{ $i }}][job_description]" rows="2" placeholder="What did you do?"
-                                    class="w-full text-sm text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">{{ $exp['job_description'] }}</textarea>
-                                <button type="button" class="remove-row text-xs text-red-700 mt-1">Remove</button>
+                                <div class="job-duties-list mb-1">
+                                    @php
+                                        $duties = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', (string) $exp['job_description']))));
+                                    @endphp
+                                    @forelse($duties as $duty)
+                                        <div class="duty-row flex items-center gap-1.5 mb-1">
+                                            <span class="text-gray-400 text-xs">&bull;</span>
+                                            <input type="text" class="duty-input flex-1 text-sm text-gray-700 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]" placeholder="e.g. Developed and maintained REST APIs" value="{{ $duty }}">
+                                            <button type="button" class="remove-duty text-red-700 px-1">&times;</button>
+                                        </div>
+                                    @empty
+                                        <div class="duty-row flex items-center gap-1.5 mb-1">
+                                            <span class="text-gray-400 text-xs">&bull;</span>
+                                            <input type="text" class="duty-input flex-1 text-sm text-gray-700 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]" placeholder="e.g. Developed and maintained REST APIs" value="">
+                                            <button type="button" class="remove-duty text-red-700 px-1">&times;</button>
+                                        </div>
+                                    @endforelse
+                                </div>
+                                <button type="button" class="add-duty text-xs font-medium text-[#1D46A4] hover:underline">+ Add duty/responsibility</button>
+                                <textarea name="experiences[{{ $i }}][job_description]" class="job-description-hidden hidden">{{ $exp['job_description'] }}</textarea>
+                                <button type="button" class="remove-row text-xs text-red-700 mt-1 block">Remove</button>
                             </div>
                         @endif
                     @endforeach
@@ -181,9 +199,27 @@
                                 </div>
                                 <input type="hidden" name="experiences[{{ $i }}][duration_months]" value="{{ $exp['duration_months'] }}">
                                 <input type="hidden" name="experiences[{{ $i }}][industry_id]" value="">
-                                <textarea name="experiences[{{ $i }}][job_description]" rows="2" placeholder="What was this project?"
-                                    class="w-full text-sm text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]">{{ $exp['job_description'] }}</textarea>
-                                <button type="button" class="remove-row text-xs text-red-700 mt-1">Remove</button>
+                                <div class="job-duties-list mb-1">
+                                    @php
+                                        $duties = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', (string) $exp['job_description']))));
+                                    @endphp
+                                    @forelse($duties as $duty)
+                                        <div class="duty-row flex items-center gap-1.5 mb-1">
+                                            <span class="text-gray-400 text-xs">&bull;</span>
+                                            <input type="text" class="duty-input flex-1 text-sm text-gray-700 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]" placeholder="e.g. Built the front end with React" value="{{ $duty }}">
+                                            <button type="button" class="remove-duty text-red-700 px-1">&times;</button>
+                                        </div>
+                                    @empty
+                                        <div class="duty-row flex items-center gap-1.5 mb-1">
+                                            <span class="text-gray-400 text-xs">&bull;</span>
+                                            <input type="text" class="duty-input flex-1 text-sm text-gray-700 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]" placeholder="e.g. Built the front end with React" value="">
+                                            <button type="button" class="remove-duty text-red-700 px-1">&times;</button>
+                                        </div>
+                                    @endforelse
+                                </div>
+                                <button type="button" class="add-duty text-xs font-medium text-[#1D46A4] hover:underline">+ Add duty/responsibility</button>
+                                <textarea name="experiences[{{ $i }}][job_description]" class="job-description-hidden hidden">{{ $exp['job_description'] }}</textarea>
+                                <button type="button" class="remove-row text-xs text-red-700 mt-1 block">Remove</button>
                             </div>
                         @endif
                     @endforeach
@@ -255,8 +291,16 @@
                 <option value="{{ $industry->industry_id }}">{{ $industry->industry_name }}</option>
             @endforeach
         </select>
-        <textarea name="experiences[__INDEX__][job_description]" rows="2" placeholder="What did you do?" class="w-full text-sm text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]"></textarea>
-        <button type="button" class="remove-row text-xs text-red-700 mt-1">Remove</button>
+        <div class="job-duties-list mb-1">
+            <div class="duty-row flex items-center gap-1.5 mb-1">
+                <span class="text-gray-400 text-xs">&bull;</span>
+                <input type="text" class="duty-input flex-1 text-sm text-gray-700 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]" placeholder="e.g. Developed and maintained REST APIs">
+                <button type="button" class="remove-duty text-red-700 px-1">&times;</button>
+            </div>
+        </div>
+        <button type="button" class="add-duty text-xs font-medium text-[#1D46A4] hover:underline">+ Add duty/responsibility</button>
+        <textarea name="experiences[__INDEX__][job_description]" class="job-description-hidden hidden"></textarea>
+        <button type="button" class="remove-row text-xs text-red-700 mt-1 block">Remove</button>
     </div>
 </template>
 
@@ -274,8 +318,16 @@
         </div>
         <input type="hidden" name="experiences[__INDEX__][duration_months]" value="">
         <input type="hidden" name="experiences[__INDEX__][industry_id]" value="">
-        <textarea name="experiences[__INDEX__][job_description]" rows="2" placeholder="What was this project?" class="w-full text-sm text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]"></textarea>
-        <button type="button" class="remove-row text-xs text-red-700 mt-1">Remove</button>
+        <div class="job-duties-list mb-1">
+            <div class="duty-row flex items-center gap-1.5 mb-1">
+                <span class="text-gray-400 text-xs">&bull;</span>
+                <input type="text" class="duty-input flex-1 text-sm text-gray-700 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]" placeholder="e.g. Built the front end with React">
+                <button type="button" class="remove-duty text-red-700 px-1">&times;</button>
+            </div>
+        </div>
+        <button type="button" class="add-duty text-xs font-medium text-[#1D46A4] hover:underline">+ Add duty/responsibility</button>
+        <textarea name="experiences[__INDEX__][job_description]" class="job-description-hidden hidden"></textarea>
+        <button type="button" class="remove-row text-xs text-red-700 mt-1 block">Remove</button>
     </div>
 </template>
 
@@ -342,8 +394,56 @@
     form.addEventListener('click', function (e) {
         if (e.target.classList.contains('remove-row')) {
             e.target.closest('.skill-chip, .experience-row, .cert-row').remove();
+        } else if (e.target.classList.contains('add-duty')) {
+            var expRow = e.target.closest('.experience-row');
+            addDutyRow(expRow.querySelector('.job-duties-list'), '');
+            syncJobDescription(expRow);
+        } else if (e.target.classList.contains('remove-duty')) {
+            var dutyExpRow = e.target.closest('.experience-row');
+            e.target.closest('.duty-row').remove();
+            syncJobDescription(dutyExpRow);
         }
     });
+
+    form.addEventListener('input', function (e) {
+        if (e.target.classList.contains('duty-input')) {
+            syncJobDescription(e.target.closest('.experience-row'));
+        }
+    });
+
+    /** Appends one duty/responsibility line-input to an experience row's bullet list. */
+    function addDutyRow(list, value) {
+        var row = document.createElement('div');
+        row.className = 'duty-row flex items-center gap-1.5 mb-1';
+        row.innerHTML = '<span class="text-gray-400 text-xs">&bull;</span>'
+            + '<input type="text" class="duty-input flex-1 text-sm text-gray-700 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1D46A4]" placeholder="e.g. Developed and maintained REST APIs">'
+            + '<button type="button" class="remove-duty text-red-700 px-1">&times;</button>';
+        row.querySelector('.duty-input').value = value || '';
+        list.appendChild(row);
+        return row;
+    }
+
+    /**
+     * Duties are entered as separate line-inputs but stored as one field
+     * (experience_job_description, "\n"-joined) — no schema change needed.
+     * This is the only place that writes to .job-description-hidden, so
+     * it's always what the save handler actually sends for this row.
+     */
+    function syncJobDescription(experienceRow) {
+        var duties = Array.from(experienceRow.querySelectorAll('.duty-input'))
+            .map(function (el) { return el.value.trim(); })
+            .filter(function (v) { return v; });
+        experienceRow.querySelector('.job-description-hidden').value = duties.join('\n');
+    }
+
+    /** Rebuilds an experience row's duty-line inputs from a "\n"-joined description — used by the PDF import. */
+    function populateDutyRows(experienceRow, description) {
+        var list = experienceRow.querySelector('.job-duties-list');
+        list.innerHTML = '';
+        var lines = (description || '').split(/\r\n|\r|\n/).map(function (l) { return l.trim(); }).filter(function (l) { return l; });
+        (lines.length ? lines : ['']).forEach(function (line) { addDutyRow(list, line); });
+        syncJobDescription(experienceRow);
+    }
 
     // Item 21 — "Ongoing" disables & clears the End date field for that row.
     form.addEventListener('change', function (e) {
@@ -492,6 +592,11 @@
             if (!display || !display.textContent.trim()) chip.remove();
         });
         document.querySelectorAll('.experience-row').forEach(function (row) {
+            // Belt-and-suspenders: .duty-input's own 'input' listener keeps
+            // .job-description-hidden in sync as you type, but re-deriving
+            // it here too means a stray unsynced edit can never reach the
+            // server stale.
+            syncJobDescription(row);
             var title = row.querySelector('input[name*="[job_title]"]');
             if (!title.value.trim()) row.remove();
         });
@@ -555,7 +660,7 @@
         var list = document.getElementById(isWork ? 'editorWorkList' : 'editorProjectList');
         var row = list.lastElementChild;
         row.querySelector('[name$="[job_title]"]').value = exp.job_title || '';
-        row.querySelector('[name$="[job_description]"]').value = exp.job_description || '';
+        populateDutyRows(row, exp.job_description || '');
         if (isWork && exp.industry_id) row.querySelector('[name$="[industry_id]"]').value = exp.industry_id;
 
         // Item 21 — the PDF parser only ever extracts a duration in months,

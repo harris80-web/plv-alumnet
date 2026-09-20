@@ -670,16 +670,16 @@ $current_page = 'user_management';
                                     </a>
                                     @endif
                                 </div>
-                                <div class="flex gap-2">
+                                <div class="flex gap-2 flex-wrap">
                                     <!-- Bulk Deactivate -->
                                     <button type="button" id="bulkDeactivateEmployerBtn" onclick="openBulkDeactivateEmployerModal()"
-                                        class="hidden bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg text-sm font-semibold items-center gap-2 shadow-sm transition-all">
-                                        <i data-lucide="user-minus" class="w-4 h-4"></i>
+                                        class="hidden bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold items-center gap-1.5 shadow-sm transition-all">
+                                        <i data-lucide="user-minus" class="w-3.5 h-3.5"></i>
                                         DEACTIVATE SELECTED (<span id="bulkDeactivateEmployerCount">0</span>)
                                     </button>
                                     <button onclick="exportEmployersToCSV()"
-                                        class="bg-[#C73D1A] hover:bg-[#a83215] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all">
-                                        <i data-lucide="download" class="w-4 h-4"></i>
+                                        class="bg-[#C73D1A] hover:bg-[#a83215] text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all">
+                                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
                                         EXPORT CSV
                                     </button>
                                 </div>

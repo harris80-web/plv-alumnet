@@ -50,6 +50,9 @@
 
         p { margin: 4px 0 0; line-height: 1.4; }
 
+        ul.duties { margin: 4px 0 0; padding-left: 14px; line-height: 1.4; }
+        ul.duties li { margin: 0 0 2px; }
+
         .skill {
             display: inline-block;
             background: #f0f0f0;
@@ -143,8 +146,12 @@
                     @if($exp->industry)
                         <p class="item-sub">{{ $exp->industry->industry_name }}</p>
                     @endif
-                    @if($exp->experience_job_description)
-                        <p>{{ $exp->experience_job_description }}</p>
+                    @if($exp->jobDuties())
+                        <ul class="duties">
+                            @foreach($exp->jobDuties() as $duty)
+                                <li>{{ $duty }}</li>
+                            @endforeach
+                        </ul>
                     @endif
                 </div>
             @endforeach
@@ -164,8 +171,12 @@
                             <span class="item-date">{{ \App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months) }}</span>
                         @endif
                     </div>
-                    @if($exp->experience_job_description)
-                        <p>{{ $exp->experience_job_description }}</p>
+                    @if($exp->jobDuties())
+                        <ul class="duties">
+                            @foreach($exp->jobDuties() as $duty)
+                                <li>{{ $duty }}</li>
+                            @endforeach
+                        </ul>
                     @endif
                 </div>
             @endforeach

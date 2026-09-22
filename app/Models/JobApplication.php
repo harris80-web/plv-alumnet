@@ -32,6 +32,21 @@ class JobApplication extends Model
         'builder_resume_snapshot' => 'array',
     ];
 
+    /**
+     * Stamp application_date when a caller doesn't supply one (applyJob and
+     * JobApplicationSeeder don't). The column is NOT NULL, and whether the
+     * database fills it in by itself depends on the server: XAMPP's MariaDB
+     * does, Hostinger's doesn't and rejects the insert with error 1364. The
+     * 2026_09_22 migration also gives the column an explicit default; this
+     * keeps inserts working even on a database that hasn't run it yet.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (JobApplication $application) {
+            $application->application_date ??= now();
+        });
+    }
+
     public function job()
     {
         // "I belong to one user (the employer)"

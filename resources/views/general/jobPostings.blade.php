@@ -185,7 +185,7 @@
                     data-approved="{{ $job->job_approved ? '1' : '0' }}"
                     onclick="openMyJobViewModal(this)"
                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMyJobViewModal(this);}">
-                    @if ($job->job_posting_image)
+                    @if (!$job->usesDefaultThumbnail())
                     <img src="{{ $job->thumbnailUrl() }}"
                         class="object-cover w-full h-full opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-300">
                     <div class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>
@@ -424,9 +424,9 @@
                                 class="relative w-full h-48 rounded-lg overflow-hidden border-2 border-dashed border-[#0E0F3B] bg-slate-100 flex items-center justify-center transition-colors"
                                 ondragover="handleDropzoneDragOver(event)" ondragleave="handleDropzoneDragLeave(event)" ondrop="handleDropzoneDrop(event, 'editJobImageInput-{{ $job->job_posting_id }}')">
 
-                                <img id="editJobImagePreview-{{ $job->job_posting_id }}" src="{{ $job->job_posting_image ? asset('storage/' . $job->job_posting_image) : '' }}" class="w-full h-full object-cover {{ $job->job_posting_image ? '' : 'hidden' }}" />
+                                <img id="editJobImagePreview-{{ $job->job_posting_id }}" src="{{ !$job->usesDefaultThumbnail() ? $job->thumbnailUrl() : '' }}" class="w-full h-full object-cover {{ !$job->usesDefaultThumbnail() ? '' : 'hidden' }}" />
 
-                                <div id="editUploadPlaceholder-{{ $job->job_posting_id }}" class="text-slate-400 text-xs flex flex-col items-center gap-1 pointer-events-none {{ $job->job_posting_image ? 'hidden' : '' }}">
+                                <div id="editUploadPlaceholder-{{ $job->job_posting_id }}" class="text-slate-400 text-xs flex flex-col items-center gap-1 pointer-events-none {{ !$job->usesDefaultThumbnail() ? 'hidden' : '' }}">
                                     <i class="fas fa-cloud-arrow-up text-2xl text-[#C73D1A]"></i>
                                     <span>Drag & drop a thumbnail, or click Upload</span>
                                 </div>

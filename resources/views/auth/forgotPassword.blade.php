@@ -85,7 +85,7 @@
 
     @include('partials.error')
     <div class="absolute inset-0 z-0">
-        <img src="assets/loginBackground.svg" alt="PLV Building" class="w-full h-full object-cover">
+        <img src="{{ asset('assets/loginBackground.svg') }}" alt="PLV Building" class="w-full h-full object-cover">
     </div>
 
     <div class="relative z-10 container mx-auto px-6 lg:px-5 flex flex-col lg:flex-row items-center justify-evenly">
@@ -96,13 +96,13 @@
                     <img src="{{ asset('assets/PLV-Logo-2.svg') }}" alt="" class="h-[90px] w-auto">
                 </div>
                 <div class="flex flex-col items-center h-auto w-auto">
-                    <img src="assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png" alt="" class="h-auto w-auto ">
+                    <img src="{{ asset('assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png') }}" alt="" class="h-auto w-auto ">
                     <p class="font-[Montserrat] font-regular text-xs tracking-widest uppercase text-center">Pamantasan
                         ng Lungsod ng Valenzuela</p>
                     <p class="text-xs text-center opacity-80 uppercase">Alumni Connect</p>
                 </div>
                 <div class="flex items-center justify-center">
-                    <img src="assets/PLV-AlumNet LOGOMARK_WHITE.svg" alt="" class="h-[90px] w-auto">
+                    <img src="{{ asset('assets/PLV-AlumNet LOGOMARK_WHITE.svg') }}" alt="" class="h-[90px] w-auto">
                 </div>
             </div>
             <h2 class=" font-light text-center">Honoring the Past. Shaping the Future.</h2>

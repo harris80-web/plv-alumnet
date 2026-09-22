@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Notice extends Model
 {
@@ -101,7 +102,7 @@ class Notice extends Model
     /** Falls back to a stock image per category so cards never show a broken image. */
     public function thumbnailUrl(): string
     {
-        if ($this->thumbnail) {
+        if (!$this->usesDefaultThumbnail()) {
             return asset('storage/' . $this->thumbnail);
         }
 
@@ -117,7 +118,10 @@ class Notice extends Model
     /** True when thumbnailUrl() is serving the stock per-category image, not an admin upload. */
     public function usesDefaultThumbnail(): bool
     {
-        return !$this->thumbnail;
+        // A path pointing at a file that no longer exists (sample data, a
+        // deleted upload) falls back to the stock artwork too, rather than
+        // rendering as a broken image — same rule as JobPosting.
+        return !$this->thumbnail || !Storage::disk('public')->exists($this->thumbnail);
     }
 
     /** {color, overlayOpacity, imageOpacity} for the current category — only meaningful when usesDefaultThumbnail() is true. */

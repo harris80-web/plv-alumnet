@@ -21,7 +21,7 @@
             <p>{{ $program->program_name }}</p>
         @endforeach
         
-        <img src="{{ asset("storage/" . $jobPost->job_posting_image) }}" alt="" class="w-[100px] h-[100px] object-cover">
+        <img src="{{ $jobPost->thumbnailUrl() }}" alt="" class="w-[100px] h-[100px] object-cover">
     </div>
 
     <div>
@@ -209,7 +209,7 @@
                 data-industry="{{ $jobPost->industry->industry_name ?? 'Not specified' }}"
                 onclick="openJobViewModal(this)"
                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openJobViewModal(this);}">
-                @if ($jobPost->job_posting_image)
+                @if (!$jobPost->usesDefaultThumbnail())
                 <img src="{{ $jobPost->thumbnailUrl() }}"
                     class="object-cover w-full h-full opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-300">
                 <div class="absolute inset-0 bg-blue-900/40 mix-blend-multiply"></div>

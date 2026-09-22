@@ -21,8 +21,8 @@
         @endforeach
         onclick="openJobModal(this)"
         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openJobModal(this);}">
-        @if ($job->job_posting_image)
-        <img src="{{ asset('storage/'.$job->job_posting_image) }}"
+        @if (!$job->usesDefaultThumbnail())
+        <img src="{{ $job->thumbnailUrl() }}"
             class="object-cover w-full h-full opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-300">
         <div class="absolute inset-0 bg-[#0E0F3B]/60"></div>
         @else

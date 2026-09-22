@@ -75,7 +75,7 @@
 
     <section class="py-16 px-6 max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center justify-items-center">
         <div class="rounded-lg overflow-hidden shadow-xl w-full">
-            <img src="assets/Landing Page/graduationImage.png" alt="Graduation" class="w-full h-full object-cover">
+            <img src="{{ asset('assets/Landing Page/graduationImage.png') }}" alt="Graduation" class="w-full h-full object-cover">
         </div>
 
         <div class="flex flex-col items-center text-center">

@@ -509,9 +509,9 @@
                     <div>
                         <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Thumbnail</label>
                         <div class="relative w-full h-36 rounded-lg overflow-hidden border-2 border-[#0E0F3B] bg-slate-100 flex items-center justify-center">
-                            <img id="edit-{{ $notice->id }}-thumb-preview" src="{{ $notice->thumbnail ? asset('storage/' . $notice->thumbnail) : '' }}"
-                                class="w-full h-full object-cover {{ $notice->thumbnail ? '' : 'hidden' }}">
-                            <span id="edit-{{ $notice->id }}-thumb-placeholder" class="text-slate-400 text-xs flex flex-col items-center gap-1 {{ $notice->thumbnail ? 'hidden' : '' }}">
+                            <img id="edit-{{ $notice->id }}-thumb-preview" src="{{ !$notice->usesDefaultThumbnail() ? $notice->thumbnailUrl() : '' }}"
+                                class="w-full h-full object-cover {{ !$notice->usesDefaultThumbnail() ? '' : 'hidden' }}">
+                            <span id="edit-{{ $notice->id }}-thumb-placeholder" class="text-slate-400 text-xs flex flex-col items-center gap-1 {{ !$notice->usesDefaultThumbnail() ? 'hidden' : '' }}">
                                 <i data-lucide="image" class="w-6 h-6"></i> No thumbnail selected
                             </span>
                             <button type="button" onclick="document.getElementById('edit-{{ $notice->id }}-thumb-input').click()"

@@ -57,6 +57,8 @@
         href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
         rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="assets/PLV-AlumNet LOGO.png">
+    {{-- Central responsive stylesheet + nav script (general/alumni/employer only). See RESPONSIVE-GUIDE.md. --}}
+    @include('partials.responsive-assets', ['rpRole' => 'general'])
 </head>
 
 <style>

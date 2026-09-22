@@ -1,0 +1,1567 @@
+/* ==========================================================================
+   PLV-AlumNet — RESPONSIVE LAYER for the GENERAL, ALUMNI and EMPLOYER views
+   File: public/assets/css/responsive-public.css        (the ONLY place media
+   queries for these views live — see RESPONSIVE-GUIDE.md in the project root)
+
+   SCOPE / SAFETY
+   - Loaded ONLY by partials/responsive-assets.blade.php, which is included
+     by the general/alumni/employer headers + auth pages. Super-admin / admin
+     views never load this file.
+   - Every rule is ALSO scoped under `html.rp-scope` (added by that partial),
+     so even if a shared partial is rendered in an admin page nothing here
+     can match there. Role-only rules use html.role-general / .role-alumni /
+     .role-employer.
+   - Selectors are prefixed with `html.rp-scope` on purpose: that lifts their
+     specificity above Tailwind's single-class utilities (px-[4em], w-80, ...)
+     so no `!important` is needed to override them. Any `!important` below
+     carries a comment explaining why.
+
+   BREAKPOINTS (max-width, mobile-first ordering inside every section:
+   Desktop → Tablet → Mobile → Small mobile)
+     Desktop ....... >= 1024px   design UNCHANGED (except the 2 sidebar rules)
+     Tablet ........ 768–1023px  @media (max-width: 1023px)
+     Mobile ........ <= 767px    @media (max-width: 767px)
+     Small mobile .. <= 480px    @media (max-width: 480px)
+   The header collapses into the hamburger at <= 1023px (the desktop nav does
+   not fit below ~1040px). If you change that number, change COMPACT_QUERY in
+   public/assets/js/responsive-nav.js too.
+
+   TABLE OF CONTENTS — search for the [SECTION] banner to jump to it
+   (D = desktop rules, T = tablet <=1023px, M = mobile <=767px, S = small mobile <=480px)
+     [ROOT VARIABLES]              sizes you can tweak in one place ........ D T M S
+     [BASE / GLOBAL]               box-sizing, media, long-text wrapping ..... D T M
+     [HEADER / NAVBAR]             top bar, hamburger button, logo, bell popup  D T M S
+     [HAMBURGER SIDEBAR / MENU]    slide-in panel: ALL-CAPS switch, clickable
+                                   profile container, merged nav, scroll lock  D T S
+     [FOOTER]                      2-column tablet / stacked mobile footer .... T M S
+     [LANDING / GENERAL PAGES]     hero banners, fixed backgrounds, About,
+                                   home sections ............................. T M
+     [CARDS & LISTINGS]            job cards, job-board tabs, directory table,
+                                   12px minimum text ......................... T M
+     [FORMS]                       16px inputs, stacked field grids ......... M S
+     [TABLES]                      sideways-scroll wrappers .................. T
+     [CHARTS]                      .rp-chart wrapper (no charts exist today)  D T M
+     [MODALS]                      every modal: z-order, fit, scroll, taps .. T M
+     [MESSAGES / TOASTS / ALERTS]  success / error toasts ................... T
+     [MESSAGING PAGE]              alumni chat: list <-> thread on phones ... T M
+     [TYPOGRAPHY & SPACING SCALE]  heading + card-padding scaling ........... T M S
+     [JOB APPLICANTS]              employer applicants toolbar .............. M
+     [PAGINATION]                  prev / current / next only on phones ..... M
+     [LOGIN & REGISTRATION]        auth pages ............................... M
+     [MISC]                        tabs, avatars, hover-only tooltips ....... M
+
+   HOW TO EDIT — e.g. "make the mobile header taller": search [ROOT VARIABLES]
+   and change --rp-header-h inside the "Mobile <=767px" block; "change sidebar
+   casing": search [HAMBURGER SIDEBAR / MENU] -> "ALL-CAPS". Companion files:
+     public/assets/js/responsive-nav.js   hamburger / sidebar / dropdown / toast-stack behaviour
+     resources/views/partials/responsive-assets.blade.php   loads this CSS + JS (in-scope pages only)
+     RESPONSIVE-GUIDE.md                  "where to find everything" table
+   ========================================================================== */
+
+
+/* ==========================================================
+   [ROOT VARIABLES] — tweak sizes here (redefined per breakpoint)
+   ========================================================== */
+html.rp-scope {
+    /* Type scale — the size each Tailwind heading class ("text-4xl", ...) gets on compact
+       screens. Desktop values are the Tailwind defaults and are informational only:
+       desktop headings are not touched (see [TYPOGRAPHY & SPACING SCALE]). */
+    --rp-fs-display: 4.5rem;         /* text-7xl / text-6xl */
+    --rp-fs-title-lg: 3rem;          /* text-5xl */
+    --rp-fs-title: 2.25rem;          /* text-4xl  (page titles) */
+    --rp-fs-heading: 1.875rem;       /* text-3xl  (section headings) */
+    --rp-fs-subheading: 1.5rem;      /* text-2xl */
+    --rp-fs-lead: 1.25rem;           /* text-xl */
+    --rp-body-size: 0.875rem;        /* body / table text 14px (never < 12px) */
+
+    /* Spacing */
+    --rp-page-pad: 2rem;             /* page / container side padding 32px */
+    --rp-card-pad: 1.5rem;           /* card padding 24px */
+    --rp-gap: 1.5rem;                /* gap between the blocks of a landing / About section (24px) */
+    --rp-section-gap: 6.25rem;       /* top / bottom padding of the big landing sections (was py-[100px]) */
+
+    /* Controls */
+    --rp-tap: 2.75rem;               /* minimum touch target 44px */
+    --rp-btn-h: 2.5rem;              /* button height 40px */
+
+    /* Header (desktop values are informational — desktop header is untouched) */
+    --rp-header-h: 5rem;
+    --rp-header-px: 1.5rem;
+    --rp-logo-mark: 3rem;
+    --rp-logo-word: 2rem;
+
+    /* Sidebar panel */
+    --rp-sidebar-w: 20rem;           /* 320px = the original w-80 */
+
+    /* Hero banners (the 200px blue/orange strip under the header) */
+    --rp-hero-title: 3rem;           /* h1 48px (text-5xl) */
+    --rp-hero-sub: 1.25rem;          /* subtitle 20px */
+    --rp-hero-min-h: 200px;
+
+    /* Charts */
+    --rp-chart-h: 320px;
+}
+
+/* Tablet ≤1023px */
+@media (max-width: 1023px) {
+    html.rp-scope {
+        --rp-fs-display: 3rem;       /* 48px */
+        --rp-fs-title-lg: 2.5rem;    /* 40px */
+        --rp-fs-title: 2rem;         /* 32px */
+        --rp-fs-heading: 1.75rem;    /* 28px */
+        --rp-body-size: 0.8125rem;   /* 13px */
+        --rp-page-pad: 1.5rem;       /* 24px */
+        --rp-card-pad: 1.25rem;      /* 20px */
+        --rp-section-gap: 3rem;      /* 48px */
+        --rp-header-h: 4.25rem;      /* 68px */
+        --rp-header-px: 1.5rem;
+        --rp-logo-mark: 2.5rem;
+        --rp-logo-word: 1.5rem;
+        --rp-sidebar-w: min(20rem, 88vw);
+        --rp-hero-title: 2.25rem;    /* 36px */
+        --rp-hero-sub: 1.125rem;
+        --rp-hero-min-h: 10rem;
+        --rp-chart-h: 280px;
+    }
+}
+
+/* Mobile ≤767px */
+@media (max-width: 767px) {
+    html.rp-scope {
+        --rp-fs-display: 2.25rem;    /* 36px */
+        --rp-fs-title-lg: 2rem;      /* 32px */
+        --rp-fs-title: 1.75rem;      /* 28px */
+        --rp-fs-heading: 1.5rem;     /* 24px */
+        --rp-fs-subheading: 1.25rem; /* 20px */
+        --rp-fs-lead: 1.125rem;      /* 18px */
+        --rp-page-pad: 1rem;         /* 16px */
+        --rp-card-pad: 1rem;         /* 16px */
+        --rp-header-h: 3.75rem;      /* 60px */
+        --rp-header-px: 1rem;
+        --rp-logo-mark: 2.25rem;
+        --rp-logo-word: 1.375rem;
+        --rp-hero-title: 1.75rem;    /* 28px */
+        --rp-hero-sub: 1rem;
+        --rp-hero-min-h: 8.5rem;
+        --rp-chart-h: 240px;
+    }
+}
+
+/* Small mobile ≤480px */
+@media (max-width: 480px) {
+    html.rp-scope {
+        --rp-page-pad: 0.75rem;      /* 12px */
+        --rp-card-pad: 0.875rem;     /* 14px */
+        --rp-fs-title: 1.5rem;       /* 24px */
+        --rp-fs-heading: 1.375rem;   /* 22px */
+        --rp-header-px: 0.75rem;
+        --rp-hero-title: 1.5rem;     /* 24px */
+        --rp-hero-sub: 0.9375rem;
+    }
+}
+
+
+/* ==========================================================
+   [BASE / GLOBAL] — used on: general, alumni, employer
+   ========================================================== */
+html.rp-scope *,
+html.rp-scope *::before,
+html.rp-scope *::after {
+    box-sizing: border-box;
+}
+
+html.rp-scope img,
+html.rp-scope svg,
+html.rp-scope canvas,
+html.rp-scope video {
+    max-width: 100%;
+}
+/* `height:auto` only where nothing sets a height already — a blanket rule would
+   override Tailwind's fixed-size logos/avatars (h-12, w-16 h-16 object-cover, ...)
+   and squash them. Canvas is left alone: Chart.js sizes it from its wrapper. */
+html.rp-scope img:not([class*="h-"]):not([class*="size-"]):not([height]),
+html.rp-scope video {
+    height: auto;
+}
+
+/* --- Tablet ≤1023px --- */
+@media (max-width: 1023px) {
+    html.rp-scope,
+    html.rp-scope body {
+        max-width: 100%;
+    }
+    /* Long emails / names / URLs never push a layout wider than the screen.
+       `break-word` (not `anywhere`): anywhere also shrinks min-content widths, which
+       made flex text like "Government" snap mid-word. Compact screens only. */
+    html.rp-scope body {
+        overflow-wrap: break-word;
+    }
+}
+
+/* --- Mobile ≤767px --- */
+@media (max-width: 767px) {
+    html.rp-scope body {
+        font-size: var(--rp-body-size);
+    }
+}
+
+
+/* ==========================================================
+   [HEADER / NAVBAR] — used on: general, alumni, employer (partials/header-*.blade.php)
+   Desktop header is the original markup/utilities, untouched.
+   ========================================================== */
+
+/* --- Desktop ≥1024px: the hamburger does not exist --- */
+html.rp-scope .rp-hamburger {
+    display: none;
+}
+
+/* --- Tablet ≤1023px (also applies to mobile) — header collapses to logo + icons + hamburger --- */
+@media (max-width: 1023px) {
+    html.rp-scope header.rp-header {
+        height: var(--rp-header-h);
+        padding: 0 var(--rp-header-px);          /* overrides px-[4em] py-[1em] */
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    html.rp-scope .rp-header .rp-header-logo {
+        margin-left: 0;                           /* overrides ml-10 */
+        gap: 0.5rem;
+        flex-shrink: 0;
+        min-width: 0;
+    }
+    html.rp-scope .rp-header .rp-header-logo img:first-child {
+        height: var(--rp-logo-mark);
+        width: var(--rp-logo-mark);
+    }
+    html.rp-scope .rp-header .rp-header-logo img:last-child {
+        height: var(--rp-logo-word);
+        width: auto;
+    }
+
+    /* Nav links live in the hamburger sidebar now; keep only the icon group. */
+    html.rp-scope .rp-header .rp-header-nav {
+        justify-content: flex-end;
+        gap: 0;
+        min-width: 0;
+    }
+    html.rp-scope .rp-header .rp-nav-link {
+        display: none;
+    }
+    html.rp-scope .rp-header .rp-header-actions {
+        margin-left: 0;
+        gap: 1rem;
+    }
+
+    /* Guest header: the whole nav (links + SIGN UP / LOGIN) moves into the guest menu. */
+    html.role-general .rp-header .rp-header-nav {
+        display: none;
+    }
+    html.role-general .rp-header {
+        justify-content: space-between;
+    }
+
+    /* The profile icon is replaced by the hamburger (same sidebar opens).
+       Selector is deliberately as specific as the tap-size rule further down
+       (.rp-header-actions > button), otherwise that rule's display:inline-flex
+       would win and the icon would stay visible. */
+    html.rp-scope .rp-header .rp-header-actions > .rp-profile-toggle {
+        display: none;
+    }
+
+    html.rp-scope .rp-hamburger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: var(--rp-tap);
+        height: var(--rp-tap);
+        margin-left: 0.25rem;
+        padding: 0;
+        color: #fff;
+        background: transparent;
+        border: 0;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        touch-action: manipulation;              /* no double-tap delay */
+        -webkit-tap-highlight-color: transparent;
+        transition: color 0.15s ease, background-color 0.15s ease;
+    }
+    html.rp-scope .rp-hamburger:active {
+        background-color: rgba(255, 255, 255, 0.12);
+    }
+    html.rp-scope .rp-hamburger:focus-visible {
+        outline: 2px solid #ED7A07;
+        outline-offset: 2px;
+    }
+    html.rp-scope .rp-hamburger svg {
+        width: 1.75rem;
+        height: 1.75rem;
+    }
+
+    /* Bell dropdown: hangs off the (shorter) header and never leaves the screen. */
+    html.rp-scope #notificationPopup {
+        top: 100%;
+        right: 0.75rem;
+        margin-top: 0.25rem;
+        width: min(20rem, calc(100vw - 1.5rem));
+        max-width: calc(100vw - 1.5rem);
+    }
+
+    /* Comfortable tap size for the header icons that stay (bell, messages). */
+    html.rp-scope .rp-header .rp-header-actions > a,
+    html.rp-scope .rp-header .rp-header-actions > button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: var(--rp-tap);
+        min-height: var(--rp-tap);
+        touch-action: manipulation;
+    }
+}
+
+/* Hover tooltips under the header icons are hover-only → not shown on touch. */
+@media (hover: none) {
+    html.rp-scope header .group > span.pointer-events-none {
+        display: none;
+    }
+}
+
+/* --- Mobile ≤767px --- */
+@media (max-width: 767px) {
+    html.rp-scope .rp-header .rp-header-actions {
+        gap: 0.5rem;
+    }
+}
+
+/* --- Small mobile ≤480px --- */
+@media (max-width: 480px) {
+    html.rp-scope .rp-header .rp-header-logo {
+        gap: 0.375rem;
+    }
+}
+
+
+/* ==========================================================
+   [HAMBURGER SIDEBAR / MENU] — used on: alumni, employer (partials/user-sidebar.blade.php)
+   and general (partials/guest-sidebar.blade.php). One panel design for all three;
+   opens/closes with the ORIGINAL toggleSidebar() + `duration-300 ease-in-out` slide.
+   JS: public/assets/js/responsive-nav.js
+   ========================================================== */
+
+/* ---------- ALL SCREEN SIZES (desktop, tablet, mobile) ---------- */
+
+/* (B) CONSISTENT ALL-CAPS LABELS — the ONE place to change the casing.
+   Display-only: stored data / markup text are not touched.
+   To use Title Case instead:  text-transform: capitalize;
+   To show text exactly as written in the markup:  text-transform: none;
+   NOT applied on purpose to: the company name under the profile name, email
+   addresses, or anything else typed by the user (the name row itself already
+   carries its own `uppercase` class in the markup). The alumni "Alumni Batch ####"
+   line opts in via .rp-caps. */
+html.rp-scope #userSidebar .rp-sidebar-heading,
+html.rp-scope #userSidebar nav a,
+html.rp-scope #userSidebar form button,
+html.rp-scope #userSidebar .rp-caps,
+html.rp-scope #userSidebar .rp-guest-actions a {
+    text-transform: uppercase;
+    letter-spacing: 0.03em;          /* same tracking on every label so the list stays uniform */
+    font-weight: 600;                /* same weight on every label (only the active page is bolder, below) */
+}
+html.rp-scope #userSidebar .rp-menu-item--active {
+    font-weight: 700;                /* active page: orange bar + bold */
+}
+html.rp-scope #userSidebar .rp-sidebar-heading {
+    letter-spacing: 0.1em;           /* section heading keeps its original wide tracking (tracking-widest) */
+}
+
+/* (A) CLICKABLE PROFILE CONTAINER — the avatar + name block is one <a href=user.profile>.
+   Layout/spacing/colours are exactly the original row; hover/pressed/focus are
+   drawn by a ::before layer so nothing shifts and the divider keeps its width. */
+html.rp-scope #userSidebar .rp-profile-link {
+    position: relative;
+    isolation: isolate;              /* keeps the ::before layer above the panel, below the content */
+    min-height: 2.75rem;             /* ≥44px tap target (avatar row is 64px tall anyway) */
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+html.rp-scope #userSidebar .rp-profile-link::before {
+    content: "";
+    position: absolute;
+    inset: -0.5rem -0.5rem 0.25rem -0.5rem;
+    z-index: -1;
+    border-radius: 0.75rem;
+    background-color: transparent;
+    transition: background-color 0.15s ease;
+}
+html.rp-scope #userSidebar .rp-profile-link:active::before {
+    background-color: #f3f4f6;       /* pressed (touch + mouse) */
+}
+html.rp-scope #userSidebar .rp-profile-link:focus-visible {
+    outline: 2px solid #ED7A07;      /* visible keyboard focus */
+    outline-offset: 4px;
+    border-radius: 0.5rem;
+}
+@media (hover: hover) {
+    html.rp-scope #userSidebar .rp-profile-link:hover::before {
+        background-color: #f9fafb;   /* subtle hover (desktop only) */
+    }
+}
+
+/* Merged main-nav block: only exists on compact screens (desktop panel unchanged). */
+html.rp-scope .rp-only-compact {
+    display: none;
+}
+
+/* ---------- TABLET ≤1023px (and mobile) ---------- */
+@media (max-width: 1023px) {
+    html.rp-scope .rp-only-compact {
+        display: block;
+    }
+
+    /* Panel: same design, fits the screen, keeps its own scroll. */
+    html.rp-scope #userSidebar {
+        width: var(--rp-sidebar-w);
+        max-width: 100vw;
+        height: 100%;
+        height: 100dvh;                              /* fallback + upgrade: mobile URL bar */
+        overscroll-behavior: contain;
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    html.rp-scope #userSidebar > .overflow-y-auto {
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Section heading colour as in the mobile mockup. */
+    html.rp-scope #userSidebar .rp-sidebar-heading {
+        color: #C73D1A;
+    }
+
+    /* Menu rows: comfortable tap height. */
+    html.rp-scope #userSidebar nav a,
+    html.rp-scope #userSidebar form button {
+        min-height: var(--rp-tap);
+        touch-action: manipulation;
+    }
+    html.rp-scope #userSidebar .rp-menu-item {
+        min-height: 2.5rem;
+    }
+    html.rp-scope #userSidebar .rp-guest-actions a {
+        min-height: 2.5rem;
+    }
+    html.rp-scope #userSidebar > button {            /* the X close button: real tap target */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        top: 0.75rem;
+        right: 0.75rem;
+        touch-action: manipulation;
+    }
+
+    /* Page must not scroll behind the open menu; header (with the panel + overlay
+       inside it) is lifted above the floating chat / back-to-top buttons but stays
+       below toasts (z-300) and the alert modal (z-9999). */
+    html.rp-scope.rp-menu-open,
+    html.rp-scope.rp-menu-open body {
+        overflow: hidden;
+    }
+    html.rp-scope.rp-menu-open header.rp-header {
+        z-index: 250;
+    }
+    html.rp-scope #menuOverlay {
+        touch-action: none;
+    }
+}
+
+/* ---------- SMALL MOBILE ≤480px ---------- */
+@media (max-width: 480px) {
+    /* ALL CAPS is wider — a hair smaller so the longest label ("CHANGE PASSWORD",
+       "MY JOB POSTINGS") never wraps at 320–360px. Same size on EVERY label. */
+    html.rp-scope #userSidebar nav a,
+    html.rp-scope #userSidebar form button,
+    html.rp-scope #userSidebar .rp-guest-actions a {
+        font-size: 0.8125rem;        /* 13px */
+        letter-spacing: 0.02em;
+    }
+}
+
+
+/* ==========================================================
+   [FOOTER] — used on: general, alumni, employer (partials/footer*.blade.php)
+   Desktop = original single row (4 blocks + vertical dividers). Untouched.
+   ========================================================== */
+
+/* --- Tablet ≤1023px: 2 columns (brand + contact span the full row) --- */
+@media (max-width: 1023px) {
+    html.rp-scope .rp-footer .rp-footer-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.5rem 2rem;
+        padding: 1.75rem var(--rp-page-pad);
+        justify-content: stretch;
+    }
+    html.rp-scope .rp-footer .rp-footer-brand,
+    html.rp-scope .rp-footer .rp-footer-contact {
+        grid-column: 1 / -1;
+    }
+    html.rp-scope .rp-footer .rp-footer-divider {
+        display: none;
+    }
+    html.rp-scope .rp-footer .rp-footer-col {
+        gap: 0;
+    }
+    html.rp-scope .rp-footer .rp-footer-brand img {
+        max-width: 100%;
+    }
+    html.rp-scope .rp-footer .rp-footer-contact > .flex {
+        justify-content: flex-start;
+    }
+    /* small print in the desktop footer is 9-11px; keep it readable (>=12px) on compact screens */
+    html.rp-scope .rp-footer .rp-footer-brand p,
+    html.rp-scope .rp-footer .rp-footer-contact p {
+        font-size: 0.75rem;
+        line-height: 1.5;
+    }
+}
+
+/* --- Mobile ≤767px: stacked, centered, as in the mobile mockup --- */
+@media (max-width: 767px) {
+    html.rp-scope .rp-footer .rp-footer-row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.5rem;
+        padding: 2rem 2rem 1.75rem;                 /* mockup indents the content from the edges */
+    }
+    /* logo block */
+    html.rp-scope .rp-footer .rp-footer-brand {
+        gap: 0.875rem;
+        align-items: center;
+    }
+    html.rp-scope .rp-footer .rp-footer-brand > img {
+        height: 3.75rem;
+        width: auto;
+        flex-shrink: 0;
+    }
+    html.rp-scope .rp-footer .rp-footer-brand .flex img {
+        height: 2rem;
+        width: auto;
+        max-width: 100%;
+        align-self: flex-start;                     /* the flex column it sits in defaults to stretch,
+                                                         which was pulling the logo sideways to the width
+                                                         of the paragraphs below it and distorting it */
+    }
+    /* the two link lists read as ONE list (HOME, ABOUT, PRIVACY POLICY, TERMS OF USE, FAQs) */
+    html.rp-scope .rp-footer .rp-footer-col {
+        display: block;
+    }
+    html.rp-scope .rp-footer .rp-footer-row {
+        row-gap: 0;
+    }
+    html.rp-scope .rp-footer .rp-footer-brand {
+        margin-bottom: 1.25rem;
+    }
+    html.rp-scope .rp-footer .rp-footer-col nav {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+    html.rp-scope .rp-footer .rp-footer-col nav a {
+        display: flex;
+        align-items: center;
+        justify-content: center;                    /* quick links centered, per request */
+        min-height: 2.5rem;                         /* comfortable tap target */
+        font-size: 0.875rem;
+        touch-action: manipulation;
+    }
+    /* The mockup's footer list has only HOME / ABOUT / PRIVACY POLICY / TERMS OF USE / FAQs;
+       extra links (EVENTS, ANNOUNCEMENTS) stay reachable from the hamburger menu.
+       To show them again on mobile, delete this rule. */
+    html.rp-scope .rp-footer .rp-footer-col nav a[data-rp-footer-extra] {
+        display: none;
+    }
+    /* contact block: seal on the left, text + icons on the right */
+    html.rp-scope .rp-footer .rp-footer-contact {
+        margin-top: 1.25rem;
+    }
+    html.rp-scope .rp-footer .rp-footer-contact > .flex {
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 0.875rem;
+    }
+    html.rp-scope .rp-footer .rp-footer-contact > .flex > img {
+        height: 4.25rem;
+        width: auto;
+        flex-shrink: 0;
+    }
+    html.rp-scope .rp-footer .rp-footer-contact .max-w-\[200px\] {
+        max-width: none;
+        min-width: 0;
+    }
+    /* mockup order of the two round icons: website (globe) first, then Facebook */
+    html.rp-scope .rp-footer .rp-footer-contact .mt-2 {
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+    }
+    html.rp-scope .rp-footer .rp-footer-contact p {
+        font-size: 0.75rem;                         /* address text: 12px minimum */
+        line-height: 1.5;
+    }
+    html.rp-scope .rp-footer .rp-footer-contact p.font-bold {
+        font-size: 0.8125rem;
+    }
+    /* copyright bar */
+    html.rp-scope .rp-footer .rp-footer-copy {
+        padding: 0.5rem var(--rp-page-pad);
+    }
+    html.rp-scope .rp-footer .rp-footer-copy p {
+        font-size: 0.8125rem;
+    }
+}
+
+/* --- Small mobile ≤480px --- */
+@media (max-width: 480px) {
+    html.rp-scope .rp-footer .rp-footer-row {
+        padding: 1.75rem 1.5rem 1.5rem;
+    }
+}
+
+
+/* ==========================================================
+   [LANDING / GENERAL PAGES] — hero banners, About page sections, page containers
+   used on: every page (hero), About (general / alumni / employer)
+   ========================================================== */
+
+/* ---- Hero banner (the strip under the header on almost every page) ----
+   Desktop: fixed 200px strip, 48px h1 — untouched. Compact: height grows with
+   the text (a fixed 200px cut long titles like "Campus Announcements" off the
+   top), title/subtitle scale with --rp-hero-* (see [ROOT VARIABLES]). */
+@media (max-width: 1023px) {
+    html.rp-scope section.HeroSection {
+        height: auto;                                /* overrides h-[200px] */
+        min-height: var(--rp-hero-min-h);
+        padding: 1.5rem var(--rp-page-pad);
+    }
+    html.rp-scope section.HeroSection > div {
+        margin: 0;                                   /* overrides my-7 ml-10 / ml-4 */
+        max-width: none;
+        width: 100%;
+    }
+    html.rp-scope section.HeroSection h1 {
+        font-size: var(--rp-hero-title);
+        line-height: 1.15;
+    }
+    html.rp-scope section.HeroSection p {
+        font-size: var(--rp-hero-sub);
+        line-height: 1.4;
+    }
+}
+
+/* ---- Page containers: side padding follows --rp-page-pad ---- */
+@media (max-width: 1023px) {
+    html.rp-scope main.max-w-6xl,
+    html.rp-scope main.max-w-5xl,
+    html.rp-scope main.max-w-7xl,
+    html.rp-scope main.max-w-4xl {
+        padding-left: var(--rp-page-pad);
+        padding-right: var(--rp-page-pad);
+    }
+}
+
+/* ---- Fixed section backgrounds ----
+   The About page (PLVSection, AssociatedPartners, AlumniAssociation, SystemCore), the
+   home / alumni dashboards (AlumniServices, AlumniTestimonial, Experience) and the
+   employer dashboard (EmployerFeatures) use `background-attachment: fixed`. Phones and
+   tablets do not support it (iOS ignores it, Android renders it badly, and the image
+   only paints inside the first screen-height) → scroll on compact screens. */
+@media (max-width: 1023px) {
+    html.rp-scope :is(.PLVSection, .AssociatedPartners, .AlumniAssociation, .SystemCore,
+                      .AlumniServices, .AlumniTestimonial, .Experience, .EmployerFeatures) {
+        background-attachment: scroll;
+    }
+}
+
+/* ---- Home / dashboard sections ---- */
+@media (max-width: 767px) {
+    /* "Alumni Services" intro paragraph: was w-3/5 + justified (a 200px column) */
+    html.rp-scope .AlumniServices p {
+        width: 100%;
+        text-align: center;
+    }
+    /* section title row ("| CAMPUS EVENTS" + "GO TO EVENTS >") wraps instead of overlapping */
+    html.rp-scope section > div.flex.justify-between.items-end {
+        flex-wrap: wrap;
+        gap: 0.5rem 1rem;
+    }
+}
+@media (max-width: 767px) {
+    /* the 100px / 10% section padding is for a 1440px canvas */
+    html.rp-scope section[class*="px-[10%]"] {
+        padding: var(--rp-section-gap) var(--rp-page-pad);   /* 48px top/bottom on tablet + phone */
+        gap: var(--rp-gap);
+    }
+    html.rp-scope section.PLVSection {
+        margin-top: 2rem;                            /* was mt-[90px] */
+    }
+    html.rp-scope section[class*="px-[10%]"] > h2 {
+        font-size: clamp(1.75rem, 8vw, 2.5rem);      /* was text-5xl / 6xl / 7xl (48-84px) */
+        line-height: 1.15;
+        padding-left: 1rem;
+    }
+    html.rp-scope section[class*="px-[10%]"] > p {
+        font-size: 1rem;                              /* was text-xl / text-2xl */
+        line-height: 1.7;
+        text-align: left;                             /* justified text leaves huge gaps on 300px lines */
+    }
+    html.rp-scope section[class*="px-[10%]"] h2.text-4xl {
+        font-size: 1.5rem;                            /* "Got Questions?" */
+    }
+    /* Associated-partner cards: less padding so the logo + name fit on one row */
+    html.rp-scope .AssociatedPartners .rounded-\[20px\] {
+        padding: 1rem 1.25rem;
+        gap: 1rem;
+    }
+    html.rp-scope .AssociatedPartners h3 {
+        font-size: 1.125rem;
+        min-width: 0;
+    }
+}
+
+
+/* ==========================================================
+   [CARDS & LISTINGS] — job cards, job-board tabs, directory table, tiny text
+   used on: job board (guest/alumni/employer), alumni dashboard, alumni directory
+   ========================================================== */
+
+/* ---- Job post card (partials/job-post-card.blade.php) ---- */
+@media (max-width: 767px) {
+    html.rp-scope .rp-job-body {
+        padding: var(--rp-card-pad);
+    }
+    html.rp-scope .rp-job-body h2 {
+        font-size: 1.25rem;                           /* was text-2xl (24px) */
+        line-height: 1.25;
+    }
+    html.rp-scope .rp-job-head {
+        gap: 0.5rem;
+    }
+    html.rp-scope .rp-job-head > .text-right {
+        flex-shrink: 0;
+    }
+    html.rp-scope .rp-job-head > .text-right p {
+        white-space: nowrap;                          /* "1 week ago" no longer wraps to two lines */
+    }
+    /* meta: one column, so "Recommended Course/Program" gets the full width */
+    html.rp-scope .rp-job-meta {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.5rem;
+    }
+    /* actions: "Valid until" on its own line, then the buttons on a wrapping row */
+    html.rp-scope .rp-job-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    html.rp-scope .rp-job-actions-buttons {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    html.rp-scope .rp-job-actions-buttons > * {
+        margin-left: 0;                               /* cancels space-x-3 */
+    }
+    html.rp-scope .rp-job-actions-buttons > a,
+    html.rp-scope .rp-job-actions-buttons > button {
+        flex: 1 1 8rem;
+        min-height: var(--rp-btn-h);
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+        text-align: center;
+        white-space: nowrap;
+        touch-action: manipulation;
+    }
+    /* posted-by / votes / status row */
+    html.rp-scope .rp-job-body .border-t.flex-wrap {
+        row-gap: 0.75rem;
+    }
+    /* employer variant (general/jobPostings.blade.php): stats block + View Applicants / Edit Post */
+    html.rp-scope .rp-job-stats {
+        flex-wrap: wrap;
+        gap: 0.5rem 1.25rem;
+    }
+    html.rp-scope .rp-job-buttons {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+    html.rp-scope .rp-job-buttons > a,
+    html.rp-scope .rp-job-buttons > button {
+        flex: 1 1 8rem;
+        min-height: var(--rp-btn-h);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        touch-action: manipulation;
+    }
+}
+
+/* The "Job post saved!" bubble above the bookmark button is never shown (the bookmark form reloads
+   the page and the flash toast confirms it), but although invisible its box stuck out past the right
+   edge and made the whole alumni job-board page scroll sideways on phones. */
+@media (max-width: 1023px) {
+    html.rp-scope .bookmark-tooltip {
+        display: none;
+    }
+}
+
+/* ---- Job-board tab bar (JOB BOARD / MY APPLICATIONS / BOOKMARKS) ---- */
+@media (max-width: 767px) {
+    html.rp-scope .rp-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 1.25rem;
+        -webkit-overflow-scrolling: touch;
+    }
+    html.rp-scope .rp-tabs > a {
+        flex: none;
+        margin-left: 0;                               /* cancels space-x-8 */
+        white-space: nowrap;
+        font-size: 0.8125rem;
+    }
+}
+
+/* ---- Alumni directory table (partials/alumni-directory-table.blade.php) ----
+   Strategy: keep the table + its own horizontal scroll, and HIDE the low-priority
+   columns (Program, College) below 768px. Full Name, Batch and Actions stay. */
+@media (max-width: 1023px) {
+    html.rp-scope .hide-md { display: none; }
+    html.rp-scope table th,
+    html.rp-scope table td {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+}
+@media (max-width: 767px) {
+    html.rp-scope .hide-sm { display: none; }
+    /* directory table: names may wrap so Full Name / Batch / Actions fit without sideways scrolling */
+    html.rp-scope .rp-table-directory {
+        white-space: normal;
+    }
+    html.rp-scope .rp-table-directory td:first-child {
+        min-width: 8rem;
+    }
+    html.rp-scope table {
+        font-size: var(--rp-body-size);
+    }
+}
+
+/* ---- Tiny text: nothing renders below 12px on tablets and phones ----
+   (The desktop design uses text-[9px] / [10px] / [11px] for badges and captions.) */
+@media (max-width: 1023px) {
+    html.rp-scope [class*="text-[9px]"]:not(#notifBadge),
+    html.rp-scope [class*="text-[10px]"]:not(#notifBadge),
+    html.rp-scope [class*="text-[11px]"],
+    html.rp-scope .badge {                              /* applicant status pills (jobApplicants page CSS: 11px) */
+        font-size: 0.75rem;
+    }
+}
+
+
+/* ==========================================================
+   [FORMS] — profile edit, filters, search, application forms
+   ========================================================== */
+
+/* --- Mobile ≤767px --- */
+@media (max-width: 767px) {
+    /* 16px text in fields stops iOS Safari zooming the page on focus. */
+    html.rp-scope input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="hidden"]),
+    html.rp-scope select,
+    html.rp-scope textarea {
+        font-size: 16px;
+    }
+    html.rp-scope input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="hidden"]),
+    html.rp-scope select {
+        min-height: 2.5rem;                    /* 40px touch height */
+    }
+}
+
+
+/* ---- continued: stack two-column FIELD grids on small phones
+   Only grids that actually contain an input / select / textarea are stacked, so
+   two-up stat tiles and read-only detail grids keep their 2 columns.
+   ---- */
+@media (max-width: 480px) {
+    html.rp-scope form .grid.grid-cols-2:has(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), select, textarea) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+
+/* ==========================================================
+   [TABLES] — wrappers scroll sideways inside their own box; the page never does
+   ========================================================== */
+@media (max-width: 1023px) {
+    html.rp-scope .overflow-x-auto {
+        -webkit-overflow-scrolling: touch;
+        max-width: 100%;
+    }
+}
+
+
+/* ==========================================================
+   [CHARTS] — the general / alumni / employer views contain NO Chart.js charts
+   today. If one is added, wrap its <canvas> in <div class="rp-chart"> and set
+   Chart.js options responsive:true, maintainAspectRatio:false.
+   ========================================================== */
+html.rp-scope .rp-chart {
+    position: relative;
+    width: 100%;
+    height: var(--rp-chart-h);       /* 320 → 280 → 240px, see [ROOT VARIABLES] */
+}
+
+
+/* ==========================================================
+   [MODALS] — every modal in the general / alumni / employer views
+   Desktop = the original design and animation, untouched. Below 1024px the
+   overlay keeps a safe margin, the panel is capped to the visible height
+   (dvh = mobile URL-bar aware) and scrolls internally, and the overlay is
+   lifted above the floating chat / back-to-top buttons.
+   The open/close ANIMATION classes and JS timeouts are NOT touched here
+   (opacity / scale / transition-* / setTimeout all stay as written in the
+   templates and partials/ui-animations.blade.php).
+   ========================================================== */
+
+/* --- Tablet ≤1023px (also mobile) --- */
+@media (max-width: 1023px) {
+    /* z-index map: same relative order as the originals (50 < 100 < 110 < 120 < 130 <
+       200 < 210), shifted above the chat button (90) and back-to-top (200); toasts
+       (300) and the alert modal (9999) stay on top. */
+    html.rp-scope :is(#alumniIdStatusModal, #yearbookStatusModal, #profileModal, #noticeDetailModal, #termsModal, #dataPrivacyModal) { z-index: 210; }
+    html.rp-scope :is(#jobModal, #jobViewModal) { z-index: 215; }
+    html.rp-scope :is(#postJobModal, #applicationViewModal) { z-index: 220; }
+    html.rp-scope :is(#companyReviewModal, #interestConfirmModal, #bulkActionConfirmModal, #editPostModal) { z-index: 225; }
+    html.rp-scope :is(#jobApplyModal) { z-index: 230; }
+    html.rp-scope :is(#resumeBuilderOverlay, #resumeEditorOverlay, #jobApplySuccessModal, #pendingModal) { z-index: 240; }
+    html.rp-scope :is(#postConfirmModal, #successModal) { z-index: 245; }
+
+    /* Overlay: safe margin from every edge (notches, home indicator). */
+    html.rp-scope :is(#alumniIdStatusModal, #yearbookStatusModal, #profileModal, #noticeDetailModal, #termsModal,
+                      #dataPrivacyModal, #jobModal, #jobViewModal, #postJobModal, #applicationViewModal, #companyReviewModal,
+                      #interestConfirmModal, #bulkActionConfirmModal, #editPostModal, #jobApplyModal, #resumeBuilderOverlay,
+                      #resumeEditorOverlay, #jobApplySuccessModal, #pendingModal, #postConfirmModal, #successModal,
+                      #messageViolationModal, #messagingGuidelinesModal) {
+        padding-top: max(0.5rem, env(safe-area-inset-top));
+        padding-right: max(0.5rem, env(safe-area-inset-right));
+        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+        padding-left: max(0.5rem, env(safe-area-inset-left));
+        overscroll-behavior: contain;
+    }
+
+    /* Panel: never taller than what is visible; scrolls inside itself. */
+    html.rp-scope :is(#alumniIdStatusModal, #yearbookStatusModal, #profileModal, #noticeDetailModal, #termsModal,
+                      #dataPrivacyModal, #jobViewModal, #applicationViewModal, #companyReviewModal, #interestConfirmModal,
+                      #bulkActionConfirmModal, #jobApplyModal, #resumeBuilderOverlay, #resumeEditorOverlay, #messageViolationModal,
+                      #messagingGuidelinesModal, #successModal) > div {
+        max-width: 100%;
+        max-height: 90vh;
+        max-height: 90dvh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Every button inside any modal: no double-tap delay and a 40px touch target.
+       Overlays are matched by shape (fixed inset-0, id ending Modal / Overlay), so a modal
+       added later is covered automatically. Star / vote widgets, skill chips and
+       absolutely-positioned buttons (close x, drop-zone "Upload") keep their own sizing. */
+    html.rp-scope :is(div.fixed.inset-0[id$="Modal"], div.fixed.inset-0[id$="Overlay"]):not(#menuOverlay):not(#infoPanelOverlay) button {
+        touch-action: manipulation;
+    }
+    html.rp-scope :is(div.fixed.inset-0[id$="Modal"], div.fixed.inset-0[id$="Overlay"]):not(#menuOverlay):not(#infoPanelOverlay)
+        button:not([class*="absolute"]):not(.star-btn):not(.vote-btn):not([class*="chip"] button) {
+        min-height: var(--rp-btn-h);
+        min-width: var(--rp-btn-h);
+    }
+    /* icon-only buttons (bookmark, share, +/- course ...) are centred 40px squares */
+    html.rp-scope :is(div.fixed.inset-0[id$="Modal"], div.fixed.inset-0[id$="Overlay"]):not(#menuOverlay):not(#infoPanelOverlay)
+        button:has(> i:only-child):not(.star-btn):not(.vote-btn):not([class*="chip"] button) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    /* Skill chips keep their compact size: only the HIT AREA of their little remove (x) grows (~40px). */
+    html.rp-scope [class*="chip"] > button {
+        position: relative;
+    }
+    html.rp-scope [class*="chip"] > button::after {
+        content: "";
+        position: absolute;
+        inset: -0.75rem -0.5rem;
+    }
+}
+
+/* --- Mobile ≤767px: action buttons are 44px targets --- */
+@media (max-width: 767px) {
+    html.rp-scope :is(div.fixed.inset-0[id$="Modal"], div.fixed.inset-0[id$="Overlay"]):not(#menuOverlay):not(#infoPanelOverlay)
+        button:not([class*="absolute"]):not(.star-btn):not(.vote-btn):not([class*="chip"] button) {
+        min-height: var(--rp-tap);
+    }
+}
+
+
+/* ---- continued: centering that never hides the top of a tall panel,
+   pinned action buttons, comfortable close (x) buttons.
+   Overlays are matched by shape (fixed inset-0 + id ending "Modal"/"Overlay"),
+   so a modal added later is covered automatically. Still no change to any
+   animation class or JS timeout.
+   ---- */
+@media (max-width: 1023px) {
+    /* An overlay that centers with items-center CUTS OFF the top of a panel taller than
+       the screen (unreachable, e.g. a phone held sideways). Auto margins on the panel
+       still center a short panel, but let a tall one start at the top and scroll. */
+    html.rp-scope :is(div.fixed.inset-0[id$="Modal"], div.fixed.inset-0[id$="Overlay"]):not(#menuOverlay):not(#infoPanelOverlay):not(#siteAlertModal) {
+        overflow-y: auto;
+        align-items: flex-start;
+    }
+    html.rp-scope :is(div.fixed.inset-0[id$="Modal"], div.fixed.inset-0[id$="Overlay"]):not(#menuOverlay):not(#infoPanelOverlay):not(#siteAlertModal) > div {
+        margin-top: auto;
+        margin-bottom: auto;
+    }
+
+    /* Close / cancel (x) buttons: 40px touch target (the originals are 10-24px glyphs). */
+    html.rp-scope :is(div.fixed.inset-0[id$="Modal"], div.fixed.inset-0[id$="Overlay"]) button[onclick*="lose"],
+    html.rp-scope :is(div.fixed.inset-0[id$="Modal"], div.fixed.inset-0[id$="Overlay"]) button[onclick*="ancel"],
+    html.rp-scope :is(div.fixed.inset-0[id$="Modal"], div.fixed.inset-0[id$="Overlay"]) button[aria-label*="lose"] {
+        min-width: 2.5rem;
+        min-height: 2.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        touch-action: manipulation;
+    }
+}
+
+/* --- Tablet / phone ≤1023px --- */
+@media (max-width: 1023px) {
+    /* Register page: "Terms of Use & Privacy Policy" / "Data Privacy Act" — the "I Agree"
+       button sat at the END of the scrolling text (below the fold). Pin it to the bottom of
+       the scrolling area so it is always reachable, and leave room for the header. */
+    html.rp-scope :is(#termsModal, #dataPrivacyModal) .overflow-y-auto {
+        max-height: calc(90dvh - 3.25rem);
+    }
+    html.rp-scope :is(#termsModal, #dataPrivacyModal) .overflow-y-auto > button:last-child {
+        position: sticky;
+        bottom: 0.25rem;
+        display: block;
+        width: 100%;
+        min-height: var(--rp-tap);
+        margin-top: 0.75rem;
+        box-shadow: 0 -0.75rem 0.75rem -0.25rem #fff;
+    }
+}
+
+@media (max-width: 1023px) {
+    /* Messaging notices ("Before You Start Messaging", "Message flagged"): the primary
+       "I Understand" button stays pinned to the bottom of the (scrolling) panel — on a
+       phone held sideways the text is taller than the screen. */
+    html.rp-scope :is(#messagingGuidelinesModal, #messageViolationModal) > div > button.w-full {
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
+    }
+}
+
+
+/* ---- continued: pinned action rows, pinned close button, phones held sideways
+   Long forms keep their Cancel / Save / Next / Post row (and the job sheet its close
+   button) in view while the body scrolls inside the panel. Sticky = no JS, no markup
+   change, and no effect at all when the panel is short enough not to scroll.
+   ---- */
+@media (max-width: 1023px) {
+    /* Panels that force a 600px minimum height can never fit a phone held sideways:
+       let them shrink to the screen (they scroll inside themselves). */
+    html.rp-scope :is(#postJobModal, #editPostModal) > div {
+        min-height: 0;
+        max-height: 90vh;
+        max-height: 90dvh;
+    }
+
+    /* Pinned action rows (sit at the bottom of the scrolling panel). */
+    html.rp-scope :is(
+        #jobApplyModal :is(#applyStep1, #applyStep2) > div.flex.justify-end:last-child,
+        :is(#postJobModal, #editPostModal) form div.flex.justify-end:last-child,
+        #resumeEditorForm > div.flex.justify-end:last-child
+    ) {
+        position: sticky;
+        bottom: 0;
+        z-index: 5;
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+        background: #fff;
+        box-shadow: 0 -0.75rem 0.75rem -0.5rem rgb(0 0 0 / 0.12);
+    }
+    html.rp-scope :is(#profileModal #pm-message-btn, #successModal > div > a.block.w-full) {
+        position: sticky;
+        bottom: 0.5rem;
+        box-shadow: 0 0 0 0.5rem #fff;                    /* white halo so scrolled text never shows around the button */
+    }
+
+    /* Resume editor: its <form> is only a padded wrapper, so it is "unwrapped" (display: contents keeps
+       submit / FormData working) — that makes the panel the sticky footer's containing block, so
+       Cancel / Save can pin even though the import box above the form is taller than a landscape screen.
+       The form's own side padding (p-8 / md:p-12, top pt-4) moves onto its children. */
+    html.rp-scope #resumeEditorForm {
+        display: contents;
+    }
+    html.rp-scope #resumeEditorForm > div {
+        margin-left: 3rem;
+        margin-right: 3rem;
+    }
+    html.rp-scope #resumeEditorForm > div:first-of-type {
+        margin-top: 1rem;
+    }
+    html.rp-scope #resumeEditorForm > div.flex.justify-end:last-child {
+        margin-left: 0;
+        margin-right: 0;
+        padding-left: 3rem;
+        padding-right: 3rem;
+    }
+
+    /* Pinned header of the resume editor (title + close x). */
+    html.rp-scope #resumeEditorPanel > div:first-child {
+        position: sticky;
+        top: 0;
+        z-index: 6;
+        padding-bottom: 0.5rem;
+        background: #fff;
+        border-radius: 1.5rem 1.5rem 0 0;
+    }
+
+    /* Job detail sheet: the close (x) stays reachable however far the sheet is scrolled.
+       (position: fixed is measured from the overlay, which is the whole screen.) */
+    html.rp-scope #jobModal button[onclick="toggleModal()"] {
+        position: fixed;
+        top: calc(max(0.5rem, env(safe-area-inset-top)) + 0.5rem);
+        right: calc(max(0.5rem, env(safe-area-inset-right)) + 0.5rem);
+        z-index: 20;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 9999px;
+        background: rgb(14 15 59 / 0.55);
+    }
+
+    /* Forgot-password: the inline "Resend link" text button — hit area grows, layout does not
+       (padding out, equal negative margin back in). */
+    html.rp-scope #resendContainer button {
+        padding: 0.75rem 0.5rem;
+        margin: -0.75rem -0.25rem -0.75rem 0;
+        touch-action: manipulation;
+    }
+
+    /* Image viewer close (x): a real touch target instead of a 15px glyph. */
+    html.rp-scope #imageLightbox > button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        top: max(0.5rem, env(safe-area-inset-top));
+        right: max(0.5rem, env(safe-area-inset-right));
+        touch-action: manipulation;
+    }
+}
+
+/* --- Small in-form buttons become real touch targets (≤1023px) --- */
+@media (max-width: 1023px) {
+    /* "Upload" chips inside drop zones, "+" (add course), close buttons named by id, and the little
+       remove (x) / add-duty buttons of the resume editors */
+    html.rp-scope :is(#jobApplyModal, #postJobModal, #editPostModal) button[onclick*=".click()"],
+    html.rp-scope :is(#postJobModal, #editPostModal) button[onclick*="addCourseField"],
+    html.rp-scope :is(#resumeEditorOverlay, #resumeBuilderOverlay) :is(.remove-duty, .remove-row, .add-duty),
+    html.rp-scope :is(#resumeEditorOverlay, #resumeBuilderOverlay) button[id*="lose"] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.5rem;
+        min-height: 2.5rem;
+        touch-action: manipulation;
+    }
+}
+
+/* --- Mobile ≤767px --- */
+@media (max-width: 767px) {
+    html.rp-scope :is(#successModal, #profileModal) a.block.w-full {
+        min-height: var(--rp-tap);
+    }
+    /* Resume editor: the form's side padding is 2rem on phones (3rem from 768px, above) */
+    html.rp-scope #resumeEditorForm > div {
+        margin-left: 2rem;
+        margin-right: 2rem;
+    }
+    html.rp-scope #resumeEditorForm > div.flex.justify-end:last-child {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+    /* Resume editor rows that sit side by side on desktop (photo | name+contact, From / To / Ongoing dates,
+       certificate title | issuer | date) wrap or stack instead of pushing the panel wider than the screen. */
+    html.rp-scope #resumeEditorForm > .flex.items-center.gap-6 {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    html.rp-scope #resumeEditorForm input[name="linkedin_url"] {
+        width: 100%;
+        min-width: 0;
+    }
+    html.rp-scope #resumeEditorForm :is(.experience-row, .cert-row) .flex:not(.duty-row) {
+        flex-wrap: wrap;
+    }
+    html.rp-scope #resumeEditorForm .cert-row .flex > input:not([type="radio"]) {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+    /* editable copies inside the apply-review step (skills / experience / certification templates) */
+    html.rp-scope :is(.apply-exp-row, .apply-cert-row) .flex {
+        flex-wrap: wrap;
+    }
+}
+
+/* --- Phones held sideways (short screens): tighter padding so more of the sheet is visible --- */
+@media (max-width: 1023px) and (max-height: 480px) {
+    html.rp-scope :is(#successModal, #messagingGuidelinesModal, #messageViolationModal, #pendingModal, #postConfirmModal,
+                      #interestConfirmModal, #bulkActionConfirmModal, #jobApplySuccessModal) > div {
+        padding: 1rem 1.25rem;
+    }
+    html.rp-scope #successModal .fa-envelope {            /* forgot-password "Check your inbox" icon (6rem → 3.5rem) */
+        font-size: 3.5rem;
+    }
+    html.rp-scope #successModal h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    html.rp-scope #successModal .flex.justify-center.mb-6,
+    html.rp-scope #successModal #modalBodyText {
+        margin-bottom: 0.75rem;
+    }
+}
+
+/* Floating assistant (partials/chatbot-widget.blade.php — alumni + employer): the panel stays inside the
+   visible screen (dvh = mobile URL-bar aware) and its controls are comfortable to tap. Its own sizing
+   classes (w-[23rem] max-w-[calc(100vw-2rem)]) already fit phones; open/close is unchanged. */
+@media (max-width: 1023px) {
+    html.rp-scope #chatWidgetPanel {
+        max-height: calc(100vh - 8rem);
+        max-height: calc(100dvh - 8rem);
+    }
+    html.rp-scope #chatWidgetPanel button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: var(--rp-btn-h);
+        min-height: var(--rp-btn-h);
+        touch-action: manipulation;
+    }
+}
+
+/* Job detail sheets use vh heights; vh ignores the phone's URL bar, so the bottom of the sheet slid under
+   it. dvh follows the visible screen. (guest/alumni sheet = h-[95vh], employer sheet = max-h-[90vh]) */
+@media (max-width: 1023px) {
+    html.rp-scope #jobModal > div[class~="h-[95vh]"] {
+        height: 95vh;
+        height: 95dvh;
+    }
+    html.rp-scope #jobModal > div[class~="max-h-[90vh]"] {
+        max-height: 90vh;
+        max-height: 90dvh;
+    }
+}
+
+
+/* ==========================================================
+   [MESSAGES / TOASTS / ALERTS] — success / error / validation toasts, alert modal
+   Desktop untouched. Below 1024px: safe-area aware, readable text, comfortable
+   close buttons. Animation classes and the auto-dismiss timeouts
+   (success 5000ms, session error 7000ms, validation 8000ms, inline showToast
+   8000ms) live in the partials/pages and are NOT changed.
+   ========================================================== */
+@media (max-width: 1023px) {
+    html.rp-scope :is(#successToast, #sessionErrorToast, #errorToast) {
+        padding-top: max(0.75rem, env(safe-area-inset-top));
+        padding-left: max(0.5rem, env(safe-area-inset-left));
+        padding-right: max(0.5rem, env(safe-area-inset-right));
+    }
+    html.rp-scope :is(#successBox, #sessionErrorBox, #errorBox) {
+        width: min(92vw, 28rem);        /* = min(92vw, original max-w-md) */
+        max-width: min(92vw, 28rem);
+        margin-left: auto;
+        margin-right: auto;
+    }
+    html.rp-scope :is(#successBox, #sessionErrorBox, #errorBox) p,
+    html.rp-scope :is(#successBox, #sessionErrorBox, #errorBox) li {
+        font-size: 0.875rem;            /* 14px — never below 13px */
+        overflow-wrap: anywhere;
+    }
+    /* Dismiss (x) buttons: comfortable tap target. */
+    html.rp-scope :is(#successBox, #sessionErrorBox, #errorBox) button {
+        min-width: 2.5rem;
+        min-height: 2.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        touch-action: manipulation;
+    }
+}
+
+
+/* ==========================================================
+   [MESSAGING PAGE] — alumni chat (alumni/messages.blade.php)
+   Desktop: 3 panes side by side (chat list | thread | slide-in info) — untouched.
+   Tablet: narrower chat list. Mobile: ONE pane at a time —
+     data-rp-chat-state="list"   → the chat list (with the "To:" new-message search on top)
+     data-rp-chat-state="thread" → the open conversation, with a ← back link to the list
+   ========================================================== */
+html.rp-scope .rp-chat-back {
+    display: none;                                    /* desktop / tablet: no back link */
+}
+
+/* --- Tablet ≤1023px (also mobile) --- */
+@media (max-width: 1023px) {
+    /* The page sets the card height inline (calc(100vh - 130px)); !important is the
+       only way to beat an inline style. Two declarations = vh fallback + dvh upgrade. */
+    html.rp-scope .rp-chat {
+        padding: 0.5rem;
+    }
+    html.rp-scope .rp-chat > div {
+        height: calc(100vh - var(--rp-header-h) - 1rem) !important;
+        height: calc(100dvh - var(--rp-header-h) - 1rem) !important;
+    }
+    html.rp-scope .rp-chat-list-pane {
+        width: 16rem;                                 /* was w-80 (20rem) */
+    }
+}
+
+/* --- Mobile ≤767px --- */
+@media (max-width: 767px) {
+    html.rp-scope .rp-chat-list-pane {
+        width: 100%;
+        border-right: 0;
+    }
+    html.rp-scope .rp-chat[data-rp-chat-state="thread"] .rp-chat-list-pane {
+        display: none;                                /* open conversation: hide the list */
+    }
+    html.rp-scope .rp-chat[data-rp-chat-state="list"] > div {
+        flex-direction: column;                       /* list state: "To:" search above the chat list */
+    }
+    html.rp-scope .rp-chat[data-rp-chat-state="list"] .rp-chat-thread-pane {
+        order: -1;
+        flex: none;
+    }
+    html.rp-scope .rp-chat[data-rp-chat-state="list"] .rp-chat-thread-pane > .flex-1 {
+        display: none;                                /* the big "search for an alumnus" illustration */
+    }
+    html.rp-scope .rp-chat[data-rp-chat-state="list"] .rp-chat-list-pane {
+        flex: 1;
+        min-height: 0;
+    }
+    html.rp-scope .rp-chat-back {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 2.5rem;
+        height: 2.5rem;
+        margin-left: -0.5rem;
+        color: #0E0F3B;
+        border-radius: 9999px;
+        touch-action: manipulation;
+    }
+    html.rp-scope .rp-chat-back:active {
+        background-color: #f3f4f6;
+    }
+    /* wider bubbles on a narrow screen (were max-w-[60%]) */
+    html.rp-scope .rp-chat #messageThread [class*="max-w-[60%]"] {
+        max-width: 84%;
+    }
+    html.rp-scope .rp-chat #messageThread {
+        padding: 0.75rem;
+    }
+}
+
+
+/* ==========================================================
+   [TYPOGRAPHY & SPACING SCALE] — size scaling on smaller screens
+   Token selectors ([class~="..."]) match EXACT Tailwind class names, so
+   responsive variants such as md:text-5xl are never touched.
+   Desktop ≥1024px: untouched. Hero titles have their own rule
+   ([LANDING / GENERAL PAGES]); body / table text is set in [BASE / GLOBAL].
+   ========================================================== */
+
+/* --- Tablet ≤1023px (sizes come from --rp-fs-* in [ROOT VARIABLES], which change again at ≤767 / ≤480) --- */
+@media (max-width: 1023px) {
+    html.rp-scope [class~="text-7xl"],
+    html.rp-scope [class~="text-6xl"] { font-size: var(--rp-fs-display); line-height: 1.1; }
+    html.rp-scope [class~="text-5xl"] { font-size: var(--rp-fs-title-lg); line-height: 1.15; }
+    html.rp-scope [class~="text-4xl"] { font-size: var(--rp-fs-title); line-height: 1.2; }
+    html.rp-scope [class~="text-3xl"] { font-size: var(--rp-fs-heading); line-height: 1.25; }
+}
+
+/* --- Mobile ≤767px --- */
+@media (max-width: 767px) {
+    html.rp-scope [class~="text-2xl"] { font-size: var(--rp-fs-subheading); }   /* ~20px section heading */
+    html.rp-scope [class~="text-xl"]  { font-size: var(--rp-fs-lead); }
+
+    /* Card / panel padding: 32-48px → var(--rp-card-pad). Side padding only. */
+    html.rp-scope :is([class~="p-8"], [class~="px-8"], [class~="p-10"], [class~="px-10"], [class~="p-12"], [class~="px-12"]):not(button):not(a):not(input):not(select):not(textarea) {
+        padding-left: var(--rp-card-pad);
+        padding-right: var(--rp-card-pad);
+    }
+}
+
+
+/* ==========================================================
+   [JOB APPLICANTS] — employer applicants table toolbar (general/jobApplicants.blade.php)
+   The table itself scrolls inside its own overflow-x-auto wrapper ([TABLES]).
+   ========================================================== */
+@media (max-width: 767px) {
+    html.rp-scope .rp-applicant-toolbar {
+        padding-left: var(--rp-card-pad);
+        padding-right: var(--rp-card-pad);
+        align-items: stretch;
+    }
+    html.rp-scope .rp-applicant-toolbar > .relative {
+        width: 100%;
+    }
+    html.rp-scope .rp-applicant-toolbar #applicantSearchInput {
+        width: 100%;
+        min-height: 2.5rem;
+    }
+    /* "N selected" on its own line, then Shortlist / Decline / Hire share the row */
+    html.rp-scope .rp-bulk-actions {
+        flex-wrap: wrap;
+        width: 100%;
+        gap: 0.5rem;
+    }
+    html.rp-scope .rp-bulk-actions > span {
+        flex: 1 0 100%;
+    }
+    html.rp-scope .rp-bulk-actions > button {
+        flex: 1 1 5rem;
+        min-height: var(--rp-btn-h);
+        white-space: nowrap;
+        touch-action: manipulation;
+    }
+}
+
+
+/* ==========================================================
+   [PAGINATION] — partials/pagination.blade.php (job board, announcements, events, reviews, notifications)
+   Desktop: full page-number list. Mobile: previous / current page / next only.
+   ========================================================== */
+@media (max-width: 767px) {
+    /* the middle page numbers + "..." go; prev (first child), current (has border-b-2) and next (last child) stay */
+    html.rp-scope nav[aria-label="Pagination"] > *:not(:first-child):not(:last-child):not(.border-b-2) {
+        display: none;
+    }
+    html.rp-scope nav[aria-label="Pagination"] > :first-child,
+    html.rp-scope nav[aria-label="Pagination"] > :last-child {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: var(--rp-tap);
+        min-height: var(--rp-tap);
+        touch-action: manipulation;
+    }
+}
+
+
+/* ==========================================================
+   [LOGIN & REGISTRATION] — auth/login, register, forgotPassword, resetPassword
+   The pages already center a `max-w-md` card on a `min-h-screen` body (so the
+   on-screen keyboard never hides the submit button); below 768px the branding
+   block and card padding shrink and the inline toast stack (#toastContainer)
+   gets safe-area margins + 13px text.
+   ========================================================== */
+@media (max-width: 767px) {
+    /* Brand header above the card: seal + "PLV-AlumNet" wordmark + shield, then the
+       PAMANTASAN.../ALUMNI CONNECT lines and the "Honoring the Past..." tagline.
+       Selectors were previously h-[75px] / max-w-sm, which do not exist on these pages
+       (the real markup is h-[90px] / max-w-lg) — the mobile scaling below never actually
+       applied until this fix. */
+    html.rp-scope [class~="max-w-lg"][class~="m-7"] {     /* brand block: 28px margin -> 16px */
+        margin: 1rem;
+    }
+    html.rp-scope [class~="max-w-lg"][class~="m-7"] img[class~="h-[90px]"] {   /* seal + shield */
+        height: 2.5rem;
+        width: auto;
+    }
+    html.rp-scope [class~="max-w-lg"][class~="m-7"] .flex.flex-col.items-center > img {  /* "PLV-AlumNet" wordmark */
+        height: 1.5rem;
+        width: auto;
+    }
+    html.rp-scope [class~="max-w-lg"][class~="m-7"] [class~="tracking-widest"] {  /* PAMANTASAN NG LUNGSOD NG VALENZUELA */
+        letter-spacing: 0.02em;                            /* was tracking-widest (~0.1em) — too wide for 320-375px */
+    }
+    html.rp-scope [class~="max-w-lg"][class~="m-7"] h2 {   /* "Honoring the Past. Shaping the Future." */
+        font-size: 0.8125rem;
+        margin-top: 0.25rem;
+    }
+    html.rp-scope [class~="max-w-md"][class~="mx-auto"] {  /* the form inside the white card */
+        width: min(100%, 26.25rem);                        /* min(100%, 420px) */
+    }
+}
+/* --- Small mobile ≤480px: brand block a touch smaller still --- */
+@media (max-width: 480px) {
+    html.rp-scope [class~="max-w-lg"][class~="m-7"] img[class~="h-[90px]"] {
+        height: 2rem;
+    }
+    html.rp-scope [class~="max-w-lg"][class~="m-7"] .flex.flex-col.items-center > img {
+        height: 1.25rem;
+    }
+}
+/* inline toasts (showToast in the auth pages / change password) — phones AND tablets */
+@media (max-width: 1023px) {
+    html.rp-scope #toastContainer {
+        top: max(1rem, env(safe-area-inset-top));
+        right: max(0.5rem, env(safe-area-inset-right));
+        width: min(92vw, 24rem);
+    }
+    html.rp-scope #toastContainer > div {
+        font-size: 0.8125rem;                             /* 13px (was 12px) */
+        overflow-wrap: anywhere;
+    }
+    html.rp-scope #toastContainer button {                /* 40px hit area, the toast itself stays compact */
+        min-width: 2.5rem;
+        min-height: 2.5rem;
+        margin: -0.75rem -0.75rem -0.75rem 0;
+        touch-action: manipulation;
+    }
+}
+
+
+/* ==========================================================
+   [MISC] — tabs, avatars, hover-only bits, sticky bars
+   ========================================================== */
+@media (max-width: 767px) {
+    /* generic tab / pill rows scroll sideways instead of wrapping into 2 lines */
+    html.rp-scope nav.sticky .flex.uppercase {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+    /* avatars / thumbnails in lists keep a fixed small size */
+    html.rp-scope img.rounded-full {
+        object-fit: cover;
+    }
+}
+@media (hover: none) {
+    /* hover-only helper tooltips (bookmark / share on job cards) are not shown on touch;
+       the tap itself gives feedback (bookmark fills, "Link Copied!" shows for 2s). */
+    html.rp-scope .hover-tooltip {
+        display: none;
+    }
+}

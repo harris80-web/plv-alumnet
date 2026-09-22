@@ -45,11 +45,11 @@
     @include('partials.messaging-guidelines-modal')
     @include('partials.message-violation-modal')
 
-    <main class="max-w-7xl mx-auto p-4">
+    <main class="max-w-7xl mx-auto p-4 rp-chat" data-rp-chat-state="{{ $activeConversation ? 'thread' : 'list' }}">
         <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex" style="height: calc(100vh - 130px);">
 
             <!-- ══════════════════════ LEFT: CHAT LIST ══════════════════════ -->
-            <div class="w-80 shrink-0 border-r border-gray-100 flex flex-col">
+            <div class="w-80 shrink-0 border-r border-gray-100 flex flex-col rp-chat-list-pane">
                 <div class="p-5 border-b border-gray-100 shrink-0">
                     <h2 class="text-2xl font-bold text-[#C73D1A] mb-3">CHATS</h2>
                     <div class="flex gap-2">
@@ -70,7 +70,7 @@
             </div>
 
             <!-- ══════════════════════ MIDDLE: THREAD ══════════════════════ -->
-            <div class="flex-1 flex flex-col min-w-0">
+            <div class="flex-1 flex flex-col min-w-0 rp-chat-thread-pane">
                 @if (!$activeConversation)
                 <div class="p-5 border-b border-gray-100 relative shrink-0">
                     <div class="flex items-center gap-2">
@@ -89,6 +89,8 @@
                 @else
                 <div class="p-4 border-b border-gray-100 flex items-center justify-between shrink-0">
                     <div class="flex items-center gap-3">
+                        {{-- Back to the chat list: only shown on phones (see responsive-public.css [MESSAGING PAGE]) --}}
+                        <a href="{{ route('messages.index') }}" class="rp-chat-back" aria-label="Back to chats"><i class="fas fa-arrow-left"></i></a>
                         <div class="w-10 h-10 rounded-full bg-[#0E0F3B] flex items-center justify-center overflow-hidden shrink-0">
                             @if($activeContact->user_profile_picture)
                             <img src="{{ asset('storage/' . $activeContact->user_profile_picture) }}" class="w-full h-full object-cover">

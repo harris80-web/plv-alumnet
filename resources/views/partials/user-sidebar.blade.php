@@ -56,8 +56,8 @@
     </a>
 </div>
 
-<div id="userSidebar" class="fixed top-0 right-0 h-full w-80 bg-white z-[70] shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
-    <button onclick="toggleSidebar()" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600">
+<div id="userSidebar" aria-label="Account menu" class="rp-sidebar fixed top-0 right-0 h-full w-80 bg-white z-[70] shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+    <button onclick="toggleSidebar()" aria-label="Close menu" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600">
         <i class="fa-solid fa-xmark text-lg"></i>
     </button>
 
@@ -70,8 +70,13 @@
 
         <div class="border-t border-gray-100 mb-4"></div>
 
-        {{-- Avatar + name row --}}
-        <div class="flex items-center gap-3 pb-4 border-b border-gray-100 mb-4">
+        {{-- Avatar + name row. The whole block is ONE real link to the user's
+             View Profile page (route user.profile — the same route the "View
+             Profile" / "Company Profile" item below already uses; it shows the
+             alumni or employer profile depending on the logged-in role).
+             Only static text lives inside, so there is no nested link/button.
+             Styling: public/assets/css/responsive-public.css → [HAMBURGER SIDEBAR / MENU]. --}}
+        <a href="{{ route('user.profile') }}" class="rp-profile-link flex items-center gap-3 pb-4 border-b border-gray-100 mb-4">
             <div class="w-12 h-12 shrink-0 bg-[#0E0F3B] rounded-full flex items-center justify-center overflow-hidden">
                 <i class="fa-solid fa-user text-xl text-white"></i>
             </div>
@@ -86,7 +91,7 @@
                         {{-- alumnus?-> matters: the ?->format() call below breaks the
                              ?? isset-chain, so an unguarded ->alumnus_batch on a null
                              alumnus throws instead of falling through to the default. --}}
-                        Alumni Batch {{ auth()->user()->alumnus?->alumnus_batch?->format('Y') ?? '—' }}
+                        <span class="rp-caps">Alumni Batch {{ auth()->user()->alumnus?->alumnus_batch?->format('Y') ?? '—' }}</span>
                     @else
                         {{-- admin / super_admin have no alumnus row: show the role
                              rather than a meaningless "Alumni Batch —". --}}
@@ -94,11 +99,43 @@
                     @endif
                 </p>
             </div>
-        </div>
+        </a>
+
+        {{-- Main navigation — MERGED into this panel for <=1023px only, where the
+             header hides these links (.rp-only-compact is display:none on desktop,
+             so the desktop panel is unchanged). Same routes / order / active-page
+             logic as partials/header-alumni + header-employer — keep them in sync. --}}
+        @php
+            if (auth()->user()->user_role === 'employer') {
+                $rpNav = [
+                    ['employer.dashboard', 'HOME', []],
+                    ['notices.employerAnnouncements', 'ANNOUNCEMENTS', []],
+                    ['jobPosting.jobBoard', 'JOB BOARD', []],
+                    ['jobPosting.myJobPosts', 'MY JOB POSTINGS', ['id' => auth()->id()]],
+                ];
+            } else {
+                $rpNav = [
+                    ['alumnus.dashboard', 'HOME', []],
+                    ['notices.eventsSeminars', 'EVENTS', []],
+                    ['notices.announcements', 'ANNOUNCEMENTS', []],
+                    ['jobPosting.jobBoard', 'JOB BOARD', []],
+                    ['alumni.index', 'DIRECTORY', []],
+                ];
+            }
+        @endphp
+        <nav class="rp-only-compact rp-menu-nav space-y-1 pb-4 mb-4 border-b border-gray-100" aria-label="Main navigation">
+            @foreach ($rpNav as [$rpRoute, $rpLabel, $rpParams])
+                <a href="{{ route($rpRoute, $rpParams) }}"
+                    class="rp-menu-item -mx-6 px-6 py-2.5 flex items-center text-sm transition {{ $current_page == $rpRoute ? 'rp-menu-item--active bg-[#ED7A07] text-white font-bold' : 'text-[#0E0F3B] font-semibold hover:bg-[#ED7A07] hover:text-white' }}"
+                    @if ($current_page == $rpRoute) aria-current="page" @endif>
+                    {{ $rpLabel }}
+                </a>
+            @endforeach
+        </nav>
 
         {{-- Account settings --}}
-        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Account Settings</p>
-        <nav class="space-y-1 flex-grow">
+        <p class="rp-sidebar-heading text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Account Settings</p>
+        <nav class="space-y-1 flex-grow" aria-label="Account settings">
             @if(auth()->user()->user_role === 'employer')
                 <a href="{{ route('user.profile') }}"
                     class="group flex items-center gap-3 -mx-6 px-6 py-2.5 text-sm transition {{ $current_page == 'employer_profile' ? 'text-[#ED7A07] font-bold bg-orange-50' : 'text-[#0E0F3B] hover:bg-[#ED7A07] hover:text-white' }}">

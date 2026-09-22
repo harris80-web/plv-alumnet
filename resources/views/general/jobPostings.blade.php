@@ -161,7 +161,7 @@
 
             @forelse($jobPostings as $job)
             <!-- JOB POST CONTAINER -->
-            <div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row hover:shadow-lg transition-shadow md:min-h-[340px]">
+            <div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row hover:shadow-lg transition-shadow md:min-h-[340px] rp-job-card">
 
                 <!-- IMAGE -->
                 <div class="md:w-1/4 h-48 md:h-auto relative overflow-hidden rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none group cursor-pointer"
@@ -203,11 +203,11 @@
                 </div>
 
                 <!-- CONTENT -->
-                <div class="p-6 flex-1 flex flex-col justify-between">
+                <div class="p-6 flex-1 flex flex-col justify-between rp-job-body">
 
                     <!-- TOP -->
                     <div>
-                        <div class="flex justify-between items-start">
+                        <div class="flex justify-between items-start rp-job-head">
                             <div>
                                 <h2 class="text-2xl font-bold uppercase text-[#0E0F3B]">{{ $job->job_posting_title }}</h2>
                                 <p class="text-gray-600">{{ $job->job_posting_company }}</p>
@@ -271,7 +271,7 @@
                         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 
                             <!-- LEFT -->
-                            <div class="flex items-center gap-6 text-xs">
+                            <div class="flex items-center gap-6 text-xs rp-job-stats">
                                 <p class="text-gray-400 flex items-center">
                                     <i class="far fa-calendar-check mr-1"></i> Valid until {{ $job->job_closing_date }}
                                 </p>
@@ -286,7 +286,7 @@
                             </div>
 
                             <!-- RIGHT BUTTONS -->
-                            <div class="flex gap-2">
+                            <div class="flex gap-2 rp-job-buttons">
                                 <a href='{{ route("jobApplication.showApplications", ["jobPostingId" => $job->job_posting_id]) }}' class="bg-[#1D46A4] text-white px-6 py-2 rounded-md font-bold text-xs hover:bg-[#0E0F3B]">
                                     VIEW APPLICANTS
                                 </a>

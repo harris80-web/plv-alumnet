@@ -94,7 +94,7 @@
     @if($user && $user->user_role === 'alumni')
     <nav class="bg-white border-b sticky top-0 z-10 shadow-md">
         <div class="max-w-5xl mx-auto px-4">
-            <div class="flex justify-start space-x-8 uppercase text-sm font-bold tracking-wide">
+            <div class="flex justify-start space-x-8 uppercase text-sm font-bold tracking-wide rp-tabs">
                 <a href="{{ route('jobPosting.jobBoard') }}" class="py-4 transition-all {{ $activeTab === 'board' ? 'tab-active' : 'text-gray-500 hover:text-orange-600' }}">Job Board</a>
                 <a href="{{ route('jobPosting.myApplications') }}" class="py-4 transition-all {{ $activeTab === 'applications' ? 'tab-active' : 'text-gray-500 hover:text-orange-600' }}">My Applications</a>
                 <a href="{{ route('jobPosting.bookmarks') }}" class="py-4 transition-all {{ $activeTab === 'bookmarks' ? 'tab-active' : 'text-gray-500 hover:text-orange-600' }}">Bookmarks</a>

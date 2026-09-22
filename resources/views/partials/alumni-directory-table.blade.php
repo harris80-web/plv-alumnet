@@ -7,12 +7,12 @@
 <!-- TABLE -->
 <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
     <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm whitespace-nowrap">
+        <table class="w-full text-left text-sm whitespace-nowrap rp-table-directory">
             <thead class="bg-[#0E0F3B] text-white uppercase tracking-wider text-center text-xs">
                 <tr>
                     <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Full Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Program <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">College <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700 hide-sm">Program <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                    <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700 hide-sm">College <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                     <th data-sort class="px-4 py-4 font-semibold border-r border-slate-700">Batch <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                     <th class="px-4 py-4 font-semibold">Actions</th>
                 </tr>
@@ -43,8 +43,8 @@
                 @endphp
                 <tr class="hover:bg-slate-50/80 transition-colors text-center">
                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ $alumnus->formalName() }}</td>
-                    <td class="px-4 py-3 font-medium text-black border-r border-slate-100 leading-tight">{{ $alumnus->program->program_name ?? 'N/A' }}</td>
-                    <td class="px-4 py-3 font-medium text-black border-r border-slate-100 leading-tight">{{ $alumnus->program?->collegeName() ?? 'N/A' }}</td>
+                    <td class="px-4 py-3 font-medium text-black border-r border-slate-100 leading-tight hide-sm">{{ $alumnus->program->program_name ?? 'N/A' }}</td>
+                    <td class="px-4 py-3 font-medium text-black border-r border-slate-100 leading-tight hide-sm">{{ $alumnus->program?->collegeName() ?? 'N/A' }}</td>
                     <td class="px-4 py-3 font-medium text-black border-r border-slate-100">{{ optional($alumnus->alumnus_batch)->format('Y') }}</td>
                     <td class="px-4 py-3 text-center relative">
                         @if ($alumnus->user_id !== auth()->id())

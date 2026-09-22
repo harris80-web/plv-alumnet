@@ -24,6 +24,8 @@
             font-family: 'Montserrat', sans-serif;
         }
     </style>
+    {{-- Central responsive stylesheet + nav script (general/alumni/employer only). See RESPONSIVE-GUIDE.md. --}}
+    @include('partials.responsive-assets', ['rpRole' => 'general'])
 </head>
 
 <body class="min-h-screen relative flex items-center justify-center">

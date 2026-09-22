@@ -12,7 +12,7 @@
     ));
 @endphp
 
-<div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row relative hover:shadow-lg transition-shadow md:min-h-[340px]">
+<div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row relative hover:shadow-lg transition-shadow md:min-h-[340px] rp-job-card">
 
     <div class="md:w-1/4 h-48 md:h-auto bg-gray-300 relative rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none overflow-hidden group cursor-pointer"
         role="button" tabindex="0" aria-label="View job details"
@@ -43,8 +43,8 @@
         </div>
     </div>
 
-    <div class="p-6 flex-1 relative">
-        <div class="flex justify-between items-start">
+    <div class="p-6 flex-1 relative rp-job-body">
+        <div class="flex justify-between items-start rp-job-head">
             <div>
                 <h2 class="text-2xl font-bold uppercase text-[#0E0F3B]">
                     {{ $job->job_posting_title }}
@@ -79,7 +79,7 @@
             </div>
         </div>
 
-        <div class="mt-4 grid grid-cols-2 gap-4 text-sm font-semibold">
+        <div class="mt-4 grid grid-cols-2 gap-4 text-sm font-semibold rp-job-meta">
             <div>
                 <p class="text-[#0E0F3B]">Job Type: <span class="font-normal">{{ $job->job_posting_employment_type }}</span></p>
                 <p class="text-[#0E0F3B]">Job Setup: <span class="font-normal">{{ $job->job_posting_setup }}</span></p>
@@ -112,11 +112,11 @@
             </div>
         </div>
 
-        <div class="mt-6 flex items-center justify-between">
+        <div class="mt-6 flex items-center justify-between rp-job-actions">
             <p class="text-xs text-gray-400 flex items-center">
                 <i class="far fa-calendar-check mr-1"></i> Valid until: {{ $job->job_closing_date }}
             </p>
-            <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-3 rp-job-actions-buttons">
                 @if ($isAlumni)
                 @if($hasApplied)
                 <button disabled class="bg-green-600 cursor-not-allowed text-white px-8 py-2 rounded-md font-bold text-sm flex items-center gap-2">

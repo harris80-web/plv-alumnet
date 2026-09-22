@@ -9,10 +9,10 @@
     Profile page) regardless of the `hidden` class. All of these resources
     are already loaded once by the page itself.
 --}}
-    <footer class="bg-[#0E0F3B] text-white flex flex-col">
-        <div class="flex px-5 py-5 justify-between ">
+    <footer class="bg-[#0E0F3B] text-white flex flex-col rp-footer">
+        <div class="flex px-5 py-5 justify-between rp-footer-row">
 
-            <div class="flex gap-5 items-center font-[Montserrat] text-semibold">
+            <div class="flex gap-5 items-center font-[Montserrat] text-semibold rp-footer-brand">
                 <img src="{{ asset('assets/PLV-AlumNet LOGOMARK_WHITE.svg') }}" alt="" class="h-[93px] w-auto">
                 <div class="flex flex-col gap-1">
                     <img src="{{ asset('assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png') }}" alt="" class="h-12 w-60">
@@ -23,8 +23,8 @@
                 </div>
             </div>
 
-            <div class="flex gap-4 font-[Montserrat]">
-                <div class="w-[1.5px] bg-white "></div>
+            <div class="flex gap-4 font-[Montserrat] rp-footer-col">
+                <div class="w-[1.5px] bg-white rp-footer-divider"></div>
                 <nav id="footer-nav" class="flex flex-col justify-center text-[15px] font-semibold gap-1">
                     <a href="{{ route('employer.dashboard') }}"
                         class="{{ request()->routeIs('employer.dashboard') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
@@ -34,12 +34,12 @@
                         class="{{ request()->routeIs('employer.about') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                         ABOUT
                     </a>
-                    <a href="announcements_employer.php" class="hover:text-[#ED7A07]">ANNOUNCEMENTS</a>
+                    <a href="announcements_employer.php" class="hover:text-[#ED7A07]" data-rp-footer-extra>ANNOUNCEMENTS</a>
                 </nav>
             </div>
 
-            <div class="flex gap-4 font-[Montserrat] ">
-                <div class="w-[1.5px] bg-white "></div>
+            <div class="flex gap-4 font-[Montserrat] rp-footer-col">
+                <div class="w-[1.5px] bg-white rp-footer-divider"></div>
                 <nav id="footer-nav" class="flex flex-col justify-center text-[15px] font-semibold gap-1">
                     <a href="{{ route('employer.privacy-policy') }}"
                         class="{{ request()->routeIs('employer.privacy-policy') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
@@ -56,8 +56,8 @@
                 </nav>
             </div>
 
-            <div class="flex gap-4">
-                <div class="w-[1.5px] bg-white "></div>
+            <div class="flex gap-4 rp-footer-contact">
+                <div class="w-[1.5px] bg-white rp-footer-divider"></div>
                 <div class="flex items-end gap-4">
                     <div class="flex flex-col gap-1 max-w-[200px]">
                         <p class="font-bold text-[14px] leading-tight">PAMANTASAN NG LUNGSOD NG VALENZUELA</p>
@@ -95,7 +95,7 @@
             </div>
         </div>
 
-        <div class="bg-[#ED7A07] w-full text-center py-1.5">
+        <div class="bg-[#ED7A07] w-full text-center py-1.5 rp-footer-copy">
             <p class="font-[Montserrat] font-semibold text-[15px]">©2025 PLV-AlumNet | All Rights Reserved</p>
         </div>
     </footer>

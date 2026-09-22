@@ -286,7 +286,7 @@
                 $remainingSlots = $jobPost->remainingHiringSlots();
             @endphp
 
-            <div class="px-8 py-4 border-b bg-slate-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="px-8 py-4 border-b bg-slate-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rp-applicant-toolbar">
                 <div class="text-xs font-semibold text-gray-600">
                     Hiring Limit: <span class="text-[#0E0F3B]">{{ $jobPost->hiring_limit }}</span>
                     &nbsp;&middot;&nbsp; Hired: <span class="text-green-600">{{ $hiredCount }}</span>
@@ -300,7 +300,7 @@
                         class="pl-8 pr-3 py-1.5 border border-slate-200 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-[#1D46A4] focus:border-[#1D46A4] w-48 bg-white">
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 rp-bulk-actions">
                     <span class="text-xs font-semibold text-gray-500"><span id="selectedCount">0</span> selected</span>
 
                     <form id="bulkShortlistForm" action="{{ route('jobApplication.bulkShortlistApplicants', $jobPost->job_posting_id) }}" method="POST" class="hidden">

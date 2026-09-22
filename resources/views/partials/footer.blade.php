@@ -8,10 +8,10 @@
     `hidden` class. All of these resources are already loaded once by the
     page itself.
 --}}
-    <footer class="bg-[#0E0F3B] text-white flex flex-col">
-        <div class="flex px-5 py-5 justify-between ">
+    <footer class="bg-[#0E0F3B] text-white flex flex-col rp-footer">
+        <div class="flex px-5 py-5 justify-between rp-footer-row">
 
-            <a href="{{ route('general.home') }}" class="flex gap-5 items-center font-[Montserrat] text-semibold">
+            <a href="{{ route('general.home') }}" class="flex gap-5 items-center font-[Montserrat] text-semibold rp-footer-brand">
                 <img src="{{ asset('assets/PLV-AlumNet LOGOMARK_WHITE.svg') }}" alt="" class="h-[93px] w-auto">
                 <div class="flex flex-col gap-1">
                     <img src="{{ asset('assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png') }}" alt="" class="h-12 w-60">
@@ -22,8 +22,8 @@
                 </div>
             </a>
 
-            <div class="flex gap-4 font-[Montserrat]">
-                <div class="w-[1.5px] bg-white "></div>
+            <div class="flex gap-4 font-[Montserrat] rp-footer-col">
+                <div class="w-[1.5px] bg-white rp-footer-divider"></div>
                 <nav id="footer-nav" class="flex flex-col justify-center text-[15px] font-semibold gap-1">
                     <a href="{{ route('general.home') }}"
                         class="{{ request()->routeIs('general.home') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
@@ -33,13 +33,13 @@
                         class="{{ request()->routeIs('general.about') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                         ABOUT
                     </a>
-                    <a href="{{ route('notices.guestEventsSeminars') }}" class="{{ request()->routeIs('notices.guestEventsSeminars') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">EVENTS</a>
-                    <a href="{{ route('notices.guestAnnouncements') }}" class="{{ request()->routeIs('notices.guestAnnouncements') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">ANNOUNCEMENTS</a>
+                    <a data-rp-footer-extra href="{{ route('notices.guestEventsSeminars') }}" class="{{ request()->routeIs('notices.guestEventsSeminars') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">EVENTS</a>
+                    <a data-rp-footer-extra href="{{ route('notices.guestAnnouncements') }}" class="{{ request()->routeIs('notices.guestAnnouncements') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">ANNOUNCEMENTS</a>
                 </nav>
             </div>
 
-            <div class="flex gap-4 font-[Montserrat] ">
-                <div class="w-[1.5px] bg-white "></div>
+            <div class="flex gap-4 font-[Montserrat] rp-footer-col">
+                <div class="w-[1.5px] bg-white rp-footer-divider"></div>
                 <nav id="footer-nav" class="flex flex-col justify-center text-[15px] font-semibold gap-1">
                     <a href="{{ route('general.privacy-policy') }}"
                         class="{{ request()->routeIs('general.privacy-policy') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
@@ -56,8 +56,8 @@
                 </nav>
             </div>
 
-            <div class="flex gap-4">
-                <div class="w-[1.5px] bg-white "></div>
+            <div class="flex gap-4 rp-footer-contact">
+                <div class="w-[1.5px] bg-white rp-footer-divider"></div>
                 <div class="flex items-end gap-4">
                     <div class="flex flex-col gap-1 max-w-[200px]">
                         <p class="font-bold text-[14px] leading-tight">PAMANTASAN NG LUNGSOD NG VALENZUELA</p>
@@ -95,7 +95,7 @@
             </div>
         </div>
 
-        <div class="bg-[#ED7A07] w-full text-center py-1.5">
+        <div class="bg-[#ED7A07] w-full text-center py-1.5 rp-footer-copy">
             <p class="font-[Montserrat] font-semibold text-[15px]">©2025 PLV-AlumNet | All Rights Reserved</p>
         </div>
     </footer>

@@ -35,7 +35,7 @@
 
     .AlumniTestimonial {
         background:
-            url('assets/alumni_testimonial.jpg');
+            url('assets/alumniTestimonial.jpg');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -165,7 +165,7 @@
             <div id="eventsCarouselTrack" class="carousel-track flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-6 pb-2">
                 @foreach ($campusEvents as $event)
                 <div class="snap-start shrink-0 w-full md:w-[calc(33.333%-1rem)]">
-                    <div class="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100 flex flex-col h-full cursor-pointer"
+                    <div class="bg-white rounded-lg overflow-hidden border border-gray-100 flex flex-col h-full cursor-pointer"
                         onclick="openNoticeDetailModal(this)"
                         data-notice-id="{{ $event->id }}"
                         data-category="{{ $event->category }}"
@@ -245,7 +245,7 @@
         });
     </script>
 
-    <section class="py-4 px-6 max-w-6xl mx-auto relative pb-4">
+    <section class="py-4 px-6 max-w-6xl mx-auto relative pb-16">
         <div class="flex justify-between items-end mb-8 pl-4">
             <span class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent
             text-4xl font-bold text-blue-900 uppercase tracking-tighter"> | Announcements</span>

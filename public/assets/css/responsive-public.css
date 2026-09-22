@@ -36,6 +36,8 @@
      [FOOTER]                      2-column tablet / stacked mobile footer .... T M S
      [LANDING / GENERAL PAGES]     hero banners, fixed backgrounds, About,
                                    home sections ............................. T M
+     [CAROUSELS]                   prev/next arrows work on every breakpoint;
+                                   card shadows removed everywhere .......... D T M S
      [CARDS & LISTINGS]            job cards, job-board tabs, directory table,
                                    12px minimum text ......................... T M
      [FORMS]                       16px inputs, stacked field grids ......... M S
@@ -497,14 +499,16 @@ html.rp-scope .rp-only-compact {
    Desktop = original single row (4 blocks + vertical dividers). Untouched.
    ========================================================== */
 
-/* --- Tablet ≤1023px: 2 columns (brand + contact span the full row) --- */
+/* --- Tablet ≤1023px: brand row, then the two nav lists packed side by side
+   (not each stretched across half the row — a plain 2-column 1fr/1fr grid left
+   a wide dead gap between a short nav list and the middle of the row), then
+   the contact block full width --- */
 @media (max-width: 1023px) {
     html.rp-scope .rp-footer .rp-footer-row {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 1.5rem 2rem;
+        grid-template-columns: auto auto 1fr;
+        gap: 1.5rem 2.5rem;
         padding: 1.75rem var(--rp-page-pad);
-        justify-content: stretch;
     }
     html.rp-scope .rp-footer .rp-footer-brand,
     html.rp-scope .rp-footer .rp-footer-contact {
@@ -521,6 +525,11 @@ html.rp-scope .rp-only-compact {
     }
     html.rp-scope .rp-footer .rp-footer-contact > .flex {
         justify-content: flex-start;
+        align-items: center;                              /* was items-end: a 100px seal towered over the shorter address text */
+    }
+    html.rp-scope .rp-footer .rp-footer-contact img {
+        height: 4.5rem;                                    /* was the desktop 100px — too large next to 9-14px address text at this width */
+        width: auto;
     }
     /* small print in the desktop footer is 9-11px; keep it readable (>=12px) on compact screens */
     html.rp-scope .rp-footer .rp-footer-brand p,
@@ -729,6 +738,38 @@ html.rp-scope .rp-only-compact {
     html.rp-scope .AssociatedPartners h3 {
         font-size: 1.125rem;
         min-width: 0;
+    }
+}
+
+
+/* ==========================================================
+   [CAROUSELS] — every horizontal card carousel (partials/carousel-init.blade.php):
+   general/home "Events", alumni/dashboard "Job Matches For You" and "Events" —
+   used on ALL screen sizes, not just compact ones.
+   Card shadows are removed at the template level (the shadow-xl / hover:shadow-2xl
+   Tailwind classes were deleted from each carousel card's own markup — see those
+   three files), so there is nothing to override here for that half of the ask.
+   ========================================================== */
+
+/* The prev/next arrow buttons ship with `hidden md:flex` in the markup (desktop-only
+   by default). They must also work on mobile/tablet, so this rule keeps them
+   `display:flex` at every width — the specificity of `html.rp-scope [id$=...]`
+   already beats the plain `.hidden`/`.md\:flex` utility classes, no !important needed.
+   The carousel's own JS still fades a button out (opacity/pointer-events, not
+   `hidden`) when there is nothing left to scroll — that part is untouched. */
+html.rp-scope [id$="CarouselPrev"],
+html.rp-scope [id$="CarouselNext"] {
+    display: flex;
+    touch-action: manipulation;
+}
+
+/* --- Tablet/mobile ≤1023px: keep the arrows clear of the card edge on narrow screens --- */
+@media (max-width: 1023px) {
+    html.rp-scope [id$="CarouselPrev"] {
+        left: 0.25rem;
+    }
+    html.rp-scope [id$="CarouselNext"] {
+        right: 0.25rem;
     }
 }
 

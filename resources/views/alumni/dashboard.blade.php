@@ -351,7 +351,7 @@
                     extract(\App\Services\JobCardDataBuilder::build($job, $user, $appliedJobs, $bookmarkedIds));
                 @endphp
                 <div class="snap-start shrink-0 w-full md:w-[calc(33.333%-1.334rem)]">
-                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 flex flex-col h-full transition-transform hover:scale-[1.02]">
+                    <div class="bg-white rounded-2xl overflow-hidden border border-gray-100 flex flex-col h-full transition-transform hover:scale-[1.02]">
                         {{-- Same $cardData + openJobModal() as partials.job-post-card
                              (shared modal: partials.job-detail-modal) so clicking a
                              recommended job here opens the identical "View Details"
@@ -553,7 +553,7 @@
                 @foreach ($upcomingNotices as $notice)
                 <div class="snap-start shrink-0 w-full md:w-[calc(33.333%-1rem)]">
                     <a href="{{ route('notices.eventsSeminars', ['tab' => $notice->category === 'seminar' ? 'seminar' : 'events', 'notice' => $notice->id]) }}"
-                        class="block bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition-shadow h-full">
+                        class="block bg-white rounded-lg overflow-hidden border border-gray-100 h-full">
                         <div class="h-40 relative">
                             <img src="{{ $notice->thumbnailUrl() }}" class="w-full h-full object-cover mix-blend-multiply"
                                 @if ($notice->usesDefaultThumbnail())

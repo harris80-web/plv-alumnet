@@ -28,7 +28,6 @@
                         'program' => $alumnus->program->program_name ?? 'Not specified',
                         'college' => $alumnus->program?->collegeName() ?? 'Not specified',
                         'batch' => optional($alumnus->alumnus_batch)->format('Y'),
-                        'section' => $alumnus->section->section_name ?? 'N/A',
                         'employment' => $alumnus->alumnus_employment_status ? 'Employed' : 'Unemployed',
                         'industry' => $alumnus->industry->industry_name ?? null,
                         'aligned' => $alumnus->hasCourseAlignedJob(),

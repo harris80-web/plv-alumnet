@@ -23,7 +23,6 @@ use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\PasswordResetTokenController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\ReportController;
-use App\Http\Controllers\SectionController;
 use App\Http\Controllers\TestimonialController;
 use App\Http\Controllers\UserController;
 use App\Models\Testimonial;
@@ -377,8 +376,6 @@ Route::get('/resetPassword/{token}', [PasswordResetTokenController::class, 'rese
 Route::post('/resetPassword', [PasswordResetTokenController::class, 'updatePassword'])->name('passReset.updatePassword');
 
 Route::resource('programs', ProgramController::class);
-
-Route::resource('sections', SectionController::class);
 
 // Was missing ->middleware('auth') entirely, and submitTestimonial() itself
 // had no ownership check — any request could submit a testimonial

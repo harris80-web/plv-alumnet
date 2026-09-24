@@ -471,10 +471,16 @@
                         <div class="p-4 border-b border-slate-100">
                             <h3 class="text-sm font-bold text-[#0E0F3B]">Chatbot history</h3>
                             <p class="text-[10px] text-slate-400 mt-1">Every alumnus who has ever started a chatbot conversation, across every status. Read-only — you cannot reply from here.</p>
+                            <div class="relative mt-3">
+                                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                                <input type="text" id="chatHistorySearch" onkeyup="filterChatHistory()"
+                                    placeholder="Search by name or email"
+                                    class="w-full max-w-xs pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A]">
+                            </div>
                         </div>
-                        <div class="divide-y divide-slate-100">
+                        <div class="divide-y divide-slate-100" id="chatHistoryList">
                             @forelse ($chatHistoryAlumni as $alum)
-                            <div class="px-4 py-3">
+                            <div class="px-4 py-3 chat-history-row" data-name="{{ mb_strtolower(trim($alum->user_first_name . ' ' . $alum->user_last_name) . ' ' . $alum->user_email) }}">
                                 <div class="flex items-center gap-3 mb-2">
                                     <div class="w-8 h-8 rounded-full bg-[#0E0F3B] flex items-center justify-center text-white text-xs font-bold shrink-0">{{ mb_substr($alum->user_first_name ?? '?', 0, 1) }}</div>
                                     <div class="min-w-0 flex-1">
@@ -492,8 +498,9 @@
                                 </div>
                             </div>
                             @empty
-                            <p class="text-center text-slate-400 text-sm py-12">No alumni have started a chatbot conversation yet.</p>
+                            <p class="text-center text-slate-400 text-sm py-12" id="chatHistoryEmpty">No alumni have started a chatbot conversation yet.</p>
                             @endforelse
+                            <p class="text-center text-slate-400 text-sm py-12 hidden" id="chatHistoryNoMatch">No alumni match that search.</p>
                         </div>
                     </div>
                 </div>
@@ -654,13 +661,31 @@
             </div>
             <div id="qt-messages" class="flex-1 overflow-y-auto p-5 space-y-3 bg-slate-50"></div>
             <div class="p-4 border-t border-slate-100 shrink-0">
+                <div id="qt-resolve-error" class="hidden bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-3 text-xs"></div>
                 <div class="flex gap-2">
                     <input type="text" id="qt-input" placeholder="Type a reply..." class="flex-1 border border-slate-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/20">
                     <button type="button" id="qt-send-btn" onclick="sendAgentReply()" class="w-10 h-10 rounded-full bg-[#1D264F] hover:bg-[#0E0F3B] text-white flex items-center justify-center shrink-0"><i data-lucide="send" class="w-4 h-4"></i></button>
                 </div>
-                <button type="button" id="qt-resolve-btn" onclick="resolveQueueTicket()" class="mt-3 w-full bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 rounded-lg uppercase">Mark resolved</button>
+                <button type="button" id="qt-resolve-btn" onclick="openResolveConfirm()" class="mt-3 w-full bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 rounded-lg uppercase">Mark resolved</button>
                 {{-- Shown instead of the reply box when this ticket is with_agent but assigned to someone else — take it over to reply or resolve it. --}}
                 <button type="button" id="qt-takeover-btn" onclick="takeOverQueueTicket()" class="mt-3 w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2 rounded-lg uppercase hidden">Take Over This Ticket</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Confirmation modal for "Mark resolved" — was a native confirm()/alert() pair,
+         which is jarring and inconsistent with every other confirmation in this admin
+         (e.g. the flag-action buttons, deactivate modals elsewhere in the app). --}}
+    <div id="resolveConfirmModal" class="fixed inset-0 z-[60] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-6 text-center">
+            <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-green-100 flex items-center justify-center">
+                <i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
+            </div>
+            <h3 class="font-bold text-[#0E0F3B] mb-1">Mark this conversation as resolved?</h3>
+            <p class="text-xs text-slate-400 mb-5">The alumnus will need to start a new conversation if they have another question.</p>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeResolveConfirm()" class="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold py-2.5 rounded-lg uppercase">Cancel</button>
+                <button type="button" id="resolveConfirmBtn" onclick="confirmResolveQueueTicket()" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2.5 rounded-lg uppercase">Yes, resolve</button>
             </div>
         </div>
     </div>
@@ -1072,6 +1097,7 @@
 
         function closeQueueThread() {
             document.getElementById('queueThreadModal').classList.add('hidden');
+            document.getElementById('resolveConfirmModal').classList.add('hidden');
             document.body.style.overflow = 'auto';
             if (queueThreadPollTimer) { clearInterval(queueThreadPollTimer); queueThreadPollTimer = null; }
         }
@@ -1101,8 +1127,25 @@
             if (newOnes.length) renderQueueMessages(newOnes, true);
         }
 
-        async function resolveQueueTicket() {
-            if (!queueThreadTicketId || !confirm('Mark this conversation as resolved?')) return;
+        function openResolveConfirm() {
+            if (!queueThreadTicketId) return;
+            document.getElementById('qt-resolve-error').classList.add('hidden');
+            document.getElementById('resolveConfirmModal').classList.remove('hidden');
+        }
+
+        function closeResolveConfirm() {
+            document.getElementById('resolveConfirmModal').classList.add('hidden');
+        }
+
+        function showResolveError(message) {
+            const box = document.getElementById('qt-resolve-error');
+            box.textContent = message;
+            box.classList.remove('hidden');
+        }
+
+        async function confirmResolveQueueTicket() {
+            closeResolveConfirm();
+            if (!queueThreadTicketId) return;
 
             let res;
             try {
@@ -1111,13 +1154,13 @@
                     headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
                 });
             } catch (e) {
-                alert('Failed to mark as resolved. Please check your connection and try again.');
+                showResolveError('Failed to mark as resolved. Please check your connection and try again.');
                 return;
             }
 
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
-                alert(err.error || 'Could not mark this ticket as resolved.');
+                showResolveError(err.error || 'Could not mark this ticket as resolved.');
                 // Someone else may have taken it over (or it changed status) since this modal opened — refresh to reflect reality.
                 const r = await fetch(`{{ url('/chatbotMessaging') }}/${queueThreadTicketId}/thread`);
                 applyThreadStatus(await r.json());
@@ -1153,6 +1196,22 @@
                 container.appendChild(div);
             });
             container.scrollTop = container.scrollHeight;
+        }
+
+        // $chatHistoryAlumni is a plain collection (not paginated), so every
+        // row is already in the DOM — a client-side show/hide filter is
+        // simplest and needs no server round-trip.
+        function filterChatHistory() {
+            const term = document.getElementById('chatHistorySearch').value.trim().toLowerCase();
+            const rows = document.querySelectorAll('#chatHistoryList .chat-history-row');
+            let visible = 0;
+            rows.forEach(function (row) {
+                const match = row.dataset.name.includes(term);
+                row.classList.toggle('hidden', !match);
+                if (match) visible++;
+            });
+            const noMatch = document.getElementById('chatHistoryNoMatch');
+            if (noMatch) noMatch.classList.toggle('hidden', visible !== 0 || rows.length === 0);
         }
 
         async function openHistoryThread(ticketId) {

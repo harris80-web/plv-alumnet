@@ -440,9 +440,6 @@ $current_page = 'user_management';
                                             data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
                                     <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">College <i
                                             data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
-                                    {{-- Section column — hidden per request, not important; keep markup for easy restore.
-                                    <th class="px-3 py-4 font-semibold border-r border-slate-700">Section</th>
-                                    --}}
                                     <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700">Batch <i
                                             data-lucide="chevron-down" class="inline w-3 h-3 ml-1 sort-icon"></i></th>
                                     <th data-sort class="px-3 py-4 font-semibold border-r border-slate-700 text-right">Email <i
@@ -918,16 +915,6 @@ $current_page = 'user_management';
                         <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Batch:</label>
                         <input type="date" name="alumnus_batch" max="{{ now()->addYear()->toDateString() }}" required
                             class="flex-1 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] transition-all">
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Section:</label>
-                        <select name="section_id" required
-                            class="w-44 px-3 py-1.5 border border-[#0E0F3B] hover:border-[#C73D1A] rounded text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/30 focus:border-[#C73D1A] bg-white transition-all">
-                            <option value="" disabled selected>Select Section here</option>
-                            @foreach ($sections as $section)
-                            <option value="{{ $section->section_id }}">{{ $section->section_name }}</option>
-                            @endforeach
-                        </select>
                     </div>
                     <div class="flex items-center gap-4">
                         <label class="text-sm font-semibold text-[#0E0F3B] w-32 shrink-0">Email:</label>

@@ -122,7 +122,7 @@
                 </button>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-6">
+            <div class="flex-1 overflow-y-auto p-6 min-w-0">
 
                 @include('partials.success')
 

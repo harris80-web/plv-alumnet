@@ -34,7 +34,7 @@ class AlumnusController extends Controller
      */
     private function filteredAlumniQuery(Request $request)
     {
-        $query = Alumnus::with(['user', 'program', 'section', 'industry', 'skills'])
+        $query = Alumnus::with(['user', 'program', 'industry', 'skills'])
             ->publicProfiles();
 
         if ($search = trim((string) $request->input('search'))) {
@@ -123,7 +123,7 @@ class AlumnusController extends Controller
         abort_unless(in_array(Auth::user()->user_role, ['admin', 'super_admin']), 403);
 
         $alumnus->load([
-            'user', 'program', 'section', 'industry',
+            'user', 'program', 'industry',
             'skills', 'experiences.industry', 'certifications',
             'alumniId', 'yearbook',
         ]);

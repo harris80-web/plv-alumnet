@@ -10,4 +10,23 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+/*
+ * Sticky footer: every content page (general/alumni/employer — the admin
+ * dashboards use a separate sidebar shell with no footer, so this is a
+ * no-op there) is a flat <body> with the footer partial as its last
+ * sibling, no shared wrapper. Making body itself the flex column and
+ * pushing the footer down with margin-top:auto works regardless of how
+ * tall the content above it is, without needing to touch any individual
+ * page's markup.
+ */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+body > footer {
+    margin-top: auto;
+}
+
 

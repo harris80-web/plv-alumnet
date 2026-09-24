@@ -16,7 +16,6 @@ class Alumnus extends Model
     protected $fillable = [
         'user_id',
         'program_id',
-        'section_id',
         'alumnus_gender',
         'industry_id',
         'alumnus_employment_status',
@@ -83,12 +82,6 @@ class Alumnus extends Model
     {
         // "I belong to one user (the employer)"
         return $this->belongsTo(Program::class, 'program_id', 'program_id');
-    }
-
-    public function section()
-    {
-        // "I belong to one user (the employer)"
-        return $this->belongsTo(Section::class, 'section_id', 'section_id');
     }
 
     public function industry()

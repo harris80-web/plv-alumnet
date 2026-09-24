@@ -311,7 +311,12 @@ class EmployerController extends Controller
             $Employer->user->update([
                 'user_active' => false,
             ]);
-            Mail::to($Employer->user->user_email)->send(new DeactEmployerMail($Employer->user, $validated['deactivate-reason']));
+            // Queued, not sent inline — a synchronous SMTP hiccup used to be
+            // caught below and reported as "an error occurred" even though
+            // the deactivation had already gone through, which read as the
+            // whole action having silently failed. Matches
+            // bulkDeactivateEmployer()'s already-queued mail just below.
+            Mail::to($Employer->user->user_email)->queue(new DeactEmployerMail($Employer->user, $validated['deactivate-reason']));
 
         } catch (\Exception $e) {
             return back()->with('error', 'An error occurred while deactivating the Employer. Please try again later.');

@@ -9,7 +9,6 @@ use App\Models\Alumnus;
 use App\Models\Notice;
 use App\Models\Office;
 use App\Models\Program;
-use App\Models\Section;
 use App\Models\UserNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -338,7 +337,6 @@ class UserController extends Controller
     public function showUsers(User $user)
     {
         $this->authorizeStaff();
-        $sections = Section::all();
         $programs = Program::all();
         $industries = Industry::orderBy('industry_name')->get();
 
@@ -443,7 +441,7 @@ class UserController extends Controller
 
         return view('superAdmin.userManagement', compact(
             'pendingEmployers', 'approvedEmployers', 'alumni', 'admins',
-            'sections', 'programs', 'industries',
+            'programs', 'industries',
             'adminStats', 'alumniStats', 'employerStats', 'alumniBatchYears'
         ));
     }
@@ -566,7 +564,6 @@ class UserController extends Controller
             'alumnus_gender' => 'required|in:male,female,prefer_not_to_say',
             'program_id' => 'required|exists:programs,program_id',
             'alumnus_batch' => 'required|date|after:1900-01-01|before_or_equal:' . now()->addYear()->toDateString(),
-            'section_id' => 'required|exists:sections,section_id',
             'user_email' => 'required|email|max:255|unique:users,user_email',
         ]);
 
@@ -585,7 +582,7 @@ class UserController extends Controller
      * Alumnus + AlumniId + Yearbook bundle the same way. $data keys match
      * addAlumnus()'s validated array: user_first_name, user_middle_name,
      * user_last_name, user_suffix (nullable), user_email, alumnus_gender,
-     * program_id, section_id, alumnus_batch.
+     * program_id, alumnus_batch.
      *
      * Mail is queued (not sent inline) — importAlumniCsv() can call this in
      * a loop over many rows, and a live SMTP round-trip per row risks the
@@ -615,7 +612,6 @@ class UserController extends Controller
             $alumnus = $user->alumnus()->create([
                 'program_id' => $data['program_id'],
                 'alumnus_batch' => $data['alumnus_batch'],
-                'section_id' => $data['section_id'],
                 'alumnus_gender' => $data['alumnus_gender'],
             ]);
 
@@ -640,8 +636,8 @@ class UserController extends Controller
     public function downloadAlumniCsvTemplate()
     {
         $this->authorizeStaff();
-        $columns = ['first_name', 'middle_name', 'last_name', 'suffix', 'email', 'gender', 'college', 'program', 'section', 'batch'];
-        $example = ['Juan', 'Santos', 'Dela Cruz', '', 'juan.delacruz@example.com', 'male', 'CEIT', 'Bachelor of Science in Information Technology', 'Section A', now()->subYears(2)->format('Y-m-d')];
+        $columns = ['first_name', 'middle_name', 'last_name', 'suffix', 'email', 'gender', 'college', 'program', 'batch'];
+        $example = ['Juan', 'Santos', 'Dela Cruz', '', 'juan.delacruz@example.com', 'male', 'CEIT', 'Bachelor of Science in Information Technology', now()->subYears(2)->format('Y-m-d')];
 
         $callback = function () use ($columns, $example) {
             $handle = fopen('php://output', 'w');
@@ -658,9 +654,9 @@ class UserController extends Controller
 
     /**
      * Row-by-row CSV import, reusing createAlumnusAccount() for each valid
-     * row — a bad row (missing field, unknown program/section, duplicate
-     * email, bad gender/batch value) is skipped and reported, not fatal to
-     * the whole file, so one typo doesn't block everyone else in the batch.
+     * row — a bad row (missing field, unknown program, duplicate email, bad
+     * gender/batch value) is skipped and reported, not fatal to the whole
+     * file, so one typo doesn't block everyone else in the batch.
      */
     public function importAlumniCsv(Request $request)
     {
@@ -680,7 +676,7 @@ class UserController extends Controller
         // Normalize so column order/casing/stray whitespace in the uploaded
         // file doesn't have to match the template byte-for-byte.
         $header = array_map(fn ($h) => strtolower(trim((string) $h)), $header);
-        $required = ['first_name', 'middle_name', 'last_name', 'email', 'gender', 'college', 'program', 'section', 'batch'];
+        $required = ['first_name', 'middle_name', 'last_name', 'email', 'gender', 'college', 'program', 'batch'];
         $missing = array_diff($required, $header);
 
         if (!empty($missing)) {
@@ -716,7 +712,6 @@ class UserController extends Controller
             $genderRaw = strtolower(trim((string) ($data['gender'] ?? '')));
             $collegeRaw = trim((string) ($data['college'] ?? ''));
             $programName = trim((string) ($data['program'] ?? ''));
-            $sectionName = trim((string) ($data['section'] ?? ''));
             $batch = trim((string) ($data['batch'] ?? ''));
 
             if ($firstName === '' || $middleName === '' || $lastName === '' || $email === '') {
@@ -763,12 +758,6 @@ class UserController extends Controller
                 continue;
             }
 
-            $section = Section::where('section_name', $sectionName)->first();
-            if (!$section) {
-                $errors[] = "Row {$rowNum}: section \"{$sectionName}\" was not found.";
-                continue;
-            }
-
             // A bare 4-digit year (old template / old exports still
             // floating around) is accepted for convenience and normalized
             // to April 15 of that year — same convention the migration
@@ -798,7 +787,6 @@ class UserController extends Controller
                     'user_email' => $email,
                     'alumnus_gender' => $gender,
                     'program_id' => $program->program_id,
-                    'section_id' => $section->section_id,
                     'alumnus_batch' => $batchDate->toDateString(),
                 ]);
                 $created++;
@@ -832,11 +820,11 @@ class UserController extends Controller
     public function exportAlumniCsv()
     {
         $this->authorizeStaff();
-        $alumni = Alumnus::with(['user', 'program', 'section'])->get();
+        $alumni = Alumnus::with(['user', 'program'])->get();
 
         $callback = function () use ($alumni) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['ID', 'Last Name', 'First Name', 'Middle Name', 'Suffix', 'Gender', 'Program', 'Section', 'Batch', 'Email', 'Status']);
+            fputcsv($handle, ['ID', 'Last Name', 'First Name', 'Middle Name', 'Suffix', 'Gender', 'Program', 'Batch', 'Email', 'Status']);
 
             foreach ($alumni as $i => $alumnus) {
                 fputcsv($handle, [
@@ -847,7 +835,6 @@ class UserController extends Controller
                     $alumnus->user?->user_suffix,
                     Alumnus::genderLabels()[$alumnus->alumnus_gender] ?? '',
                     $alumnus->program->program_name ?? '',
-                    $alumnus->section->section_name ?? '',
                     optional($alumnus->alumnus_batch)->toDateString(),
                     $alumnus->user?->user_email,
                     $alumnus->user?->user_active ? 'Active' : 'Deactivated',
@@ -954,7 +941,7 @@ class UserController extends Controller
         } else if ($user->user_role == 'alumni') {
             // Only needed for the finished resume view now — the builder
             // itself moved to Edit Profile (see editProfile() below).
-            $user->load(['alumnus.program', 'alumnus.section', 'alumnus.industry', 'alumnus.skills', 'alumnus.experiences.industry', 'alumnus.certifications']);
+            $user->load(['alumnus.program', 'alumnus.industry', 'alumnus.skills', 'alumnus.experiences.industry', 'alumnus.certifications']);
             return view('alumni.profile', compact('user'));
         } else {
             Auth::logout();

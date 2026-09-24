@@ -676,7 +676,14 @@ class JobPostingController extends Controller
         // the pattern already used elsewhere (AlumnusController::deactivateAlumnus's
         // DeactAlumniMail, bulk hire mail, etc.) and means a mail outage
         // can never block or half-apply this action.
-        Mail::to($job->employer->user->user_email)->queue(new ApproveJobPostMail($job));
+        //
+        // $job->user, not $job->employer->user — job_postings.user_id can
+        // belong to staff (an admin/office account can post a vacancy from
+        // jobManagement too, same modal an employer uses), and $job->employer
+        // is null for those. Reading through $job->employer used to fatal
+        // with "Attempt to read property 'user' on null" before the mail
+        // even queued, which is what "approval points at the employer" was.
+        Mail::to($job->user->user_email)->queue(new ApproveJobPostMail($job));
         UserNotification::create([
             'user_id' => $job->user_id,
             'type' => 'job_posting_approved',
@@ -699,7 +706,11 @@ class JobPostingController extends Controller
         // Queued for the same reason as approveJobPost() above — this used
         // to run before $job->delete(), so a mail failure left the job
         // un-deleted behind a raw 500 with no indication to the admin.
-        Mail::to($job->employer->user->user_email)->queue(new DeclineJobPostMail($job));
+        //
+        // $job->user, not $job->employer->user — see the comment in
+        // approveJobPost() above; $job->employer is null for a staff-posted
+        // job and this line would fatal before ever reaching the queue.
+        Mail::to($job->user->user_email)->queue(new DeclineJobPostMail($job));
         UserNotification::create([
             'user_id' => $job->user_id,
             'type' => 'job_posting_rejected',

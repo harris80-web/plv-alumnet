@@ -13,7 +13,7 @@
 
     <!-- Greeting -->
     <p style="margin:0 0 8px 0; font-family:'Inter', Arial, sans-serif; font-size:15px; color:#0E0F3B; text-align:center;">
-        Hello, <strong style="font-weight:700;">{{ $job->employer->user->user_first_name }} {{ $job->employer->user->user_last_name }}</strong>,
+        Hello, <strong style="font-weight:700;">{{ $job->user->user_first_name }} {{ $job->user->user_last_name }}</strong>,
     </p>
 
     <!-- Intro text -->

@@ -62,7 +62,7 @@
                         <p class="text-sm text-slate-500">{{ $alumnus->program->program_name ?? 'Program not set' }}</p>
                         <p class="text-xs text-slate-400">{{ $alumnus->program?->collegeName() ?? 'College not set' }}</p>
                         {{-- Section — hidden per request, not important; keep markup for easy restore.
-                        <p class="text-xs text-slate-400 mt-1">Batch {{ optional($alumnus->alumnus_batch)->format('Y') }} &middot; {{ $alumnus->section->section_name ?? 'N/A' }}</p>
+                        <p class="text-xs text-slate-400 mt-1">Batch {{ optional($alumnus->alumnus_batch)->format('Y') }}</p>
                         --}}
                         <p class="text-xs text-slate-400 mt-1">Batch {{ optional($alumnus->alumnus_batch)->format('Y') }}</p>
 

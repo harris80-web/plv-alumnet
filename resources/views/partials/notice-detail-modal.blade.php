@@ -146,7 +146,18 @@
         })
             .then(function (res) { return res.json(); })
             .then(function (data) {
-                if (sourceCard) sourceCard.dataset.interested = data.interested ? '1' : '0';
+                if (sourceCard) {
+                    sourceCard.dataset.interested = data.interested ? '1' : '0';
+                    // When this submit came from the modal's own copy of the
+                    // form, `btn` above is the modal's button, not the card
+                    // grid's — the card sits behind the modal and previously
+                    // only had its dataset updated, so its visible button
+                    // stayed stale until a full page reload. Update the
+                    // card's own button too (a no-op when the click already
+                    // came from the card itself, since it's the same button).
+                    const cardBtn = sourceCard.querySelector('.interest-form button[type="submit"]');
+                    if (cardBtn && cardBtn !== btn) toggleInterestState(cardBtn, data.interested);
+                }
                 toggleInterestState(btn, data.interested);
                 showInterestConfirmation(data.interested, data.title);
             });

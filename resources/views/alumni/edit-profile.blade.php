@@ -330,7 +330,7 @@
                                             <p class="text-sm text-red-600 font-semibold">Will be removed when you save</p>
                                             <button type="button" onclick="undoDocumentRemoval('resume')" class="text-[10px] font-bold text-[#1D46A4] hover:underline">Undo</button>
                                         </div>
-                                        <p id="resumeFileSelected" class="text-[11px] text-gray-500 font-semibold"></p>
+                                        <p id="resumeFileSelected" class="text-sm text-gray-500 font-semibold"></p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2 shrink-0">
@@ -370,7 +370,7 @@
                                             <p class="text-sm text-red-600 font-semibold">Will be removed when you save</p>
                                             <button type="button" onclick="undoDocumentRemoval('resumeBackup')" class="text-[10px] font-bold text-[#1D46A4] hover:underline">Undo</button>
                                         </div>
-                                        <p id="resumeBackupFileSelected" class="text-[11px] text-gray-500 font-semibold"></p>
+                                        <p id="resumeBackupFileSelected" class="text-sm text-gray-500 font-semibold"></p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2 shrink-0">
@@ -410,7 +410,7 @@
                                             <p class="text-sm text-red-600 font-semibold">Will be removed when you save</p>
                                             <button type="button" onclick="undoDocumentRemoval('coverLetter')" class="text-[10px] font-bold text-[#1D46A4] hover:underline">Undo</button>
                                         </div>
-                                        <p id="coverLetterFileSelected" class="text-[11px] text-gray-500 font-semibold"></p>
+                                        <p id="coverLetterFileSelected" class="text-sm text-gray-500 font-semibold"></p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2 shrink-0">

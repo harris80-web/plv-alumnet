@@ -23,7 +23,6 @@ class DatabaseSeeder extends Seeder
         $this->call([
             IndustrySeeder::class,
             ProgramSeeder::class,
-            SectionSeeder::class,
             SkillsSeeder::class, // before Alumnus/Job — both attach skills by name
             SuperAdminSeeder::class,
             AlumnusSeeder::class,

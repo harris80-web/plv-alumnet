@@ -559,7 +559,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'user_first_name' => 'required|string|max:255',
             'user_last_name' => 'required|string|max:255',
-            'user_middle_name' => 'required|string|max:255',
+            'user_middle_name' => 'nullable|string|max:255',
             'user_suffix' => 'nullable|string|max:255',
             'alumnus_gender' => 'required|in:male,female,prefer_not_to_say',
             'program_id' => 'required|exists:programs,program_id',
@@ -599,7 +599,7 @@ class UserController extends Controller
                 'user_password' => Hash::make($password),
                 'user_first_name' => $data['user_first_name'],
                 'user_last_name' => $data['user_last_name'],
-                'user_middle_name' => $data['user_middle_name'],
+                'user_middle_name' => $data['user_middle_name'] ?: null,
                 'user_suffix' => $data['user_suffix'] ?? null,
                 'user_role' => 'alumni',
                 'user_active' => true,
@@ -632,6 +632,7 @@ class UserController extends Controller
         });
     }
 
+    /** Plain-text CSV, matching the columns importAlumniCsv() expects — the "Download Template" link in User Management. */
     /** Plain-text CSV, matching the columns importAlumniCsv() expects — the "Download Template" link in User Management. */
     public function downloadAlumniCsvTemplate()
     {
@@ -714,8 +715,8 @@ class UserController extends Controller
             $programName = trim((string) ($data['program'] ?? ''));
             $batch = trim((string) ($data['batch'] ?? ''));
 
-            if ($firstName === '' || $middleName === '' || $lastName === '' || $email === '') {
-                $errors[] = "Row {$rowNum}: first name, middle name, last name, and email are required.";
+            if ($firstName === '' || $lastName === '' || $email === '') {
+                $errors[] = "Row {$rowNum}: first name, last name, and email are required.";
                 continue;
             }
 
@@ -765,6 +766,22 @@ class UserController extends Controller
             // as a real date.
             if (ctype_digit($batch) && strlen($batch) === 4) {
                 $batchDate = Carbon::createFromDate((int) $batch, 4, 15);
+            } elseif (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $batch, $m)) {
+                // Slash-separated dates are day/month/year here, not
+                // Carbon::parse()'s default US month/day/year — matters
+                // because that default doesn't just reject an unambiguous
+                // input like 24/09/2024 (no 24th month), it silently
+                // misreads anything where the day is 1-12, e.g. 01/12/2020
+                // (meant 1 December) parsing as January 12 with no error
+                // at all.
+                //
+                // checkdate() first — createFromFormat('d/m/Y', ...) alone
+                // doesn't validate the calendar, it just rolls overflow
+                // forward (31/02/2020 silently becomes 2 March instead of
+                // being rejected), the same silent-wrong-date failure mode
+                // this whole branch exists to avoid.
+                [$d, $mo, $y] = [(int) $m[1], (int) $m[2], (int) $m[3]];
+                $batchDate = checkdate($mo, $d, $y) ? Carbon::create($y, $mo, $d) : null;
             } else {
                 try {
                     $batchDate = Carbon::parse($batch);
@@ -781,7 +798,7 @@ class UserController extends Controller
             try {
                 $this->createAlumnusAccount([
                     'user_first_name' => $firstName,
-                    'user_middle_name' => $middleName,
+                    'user_middle_name' => $middleName !== '' ? $middleName : null,
                     'user_last_name' => $lastName,
                     'user_suffix' => $suffix !== '' ? $suffix : null,
                     'user_email' => $email,

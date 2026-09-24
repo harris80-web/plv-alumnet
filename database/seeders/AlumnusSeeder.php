@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Industry;
 use App\Models\Program;
-use App\Models\Section;
 use App\Models\Skill;
 use App\Models\User;
 use Carbon\Carbon;
@@ -35,7 +34,7 @@ class AlumnusSeeder extends Seeder
         $alumni = [
             [
                 'first' => 'Ryza', 'last' => 'Ison', 'gender' => 'female',
-                'program' => 'Bachelor of Science in Information Technology', 'section' => '4-2', 'batch' => 2023,
+                'program' => 'Bachelor of Science in Information Technology', 'batch' => 2023,
                 'email' => 'alumni@example.com',
                 'skills' => ['PHP', 'Laravel', 'JavaScript', 'Git & GitHub'],
                 'experience' => ['title' => 'Junior Web Developer', 'months' => 8, 'industry' => 'Technology'],
@@ -44,7 +43,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Miguel', 'last' => 'Torres', 'gender' => 'male',
-                'program' => 'Bachelor of Science in Information Technology', 'section' => '4-3', 'batch' => 2024,
+                'program' => 'Bachelor of Science in Information Technology', 'batch' => 2024,
                 'email' => 'alumni2@example.com',
                 'skills' => ['JavaScript', 'React', 'HTML & CSS', 'Figma'],
                 'experience' => ['title' => 'Web Development Intern', 'months' => 4, 'industry' => 'Technology'],
@@ -53,7 +52,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Angela', 'last' => 'Cruz', 'gender' => 'female',
-                'program' => 'Bachelor of Science in Information Technology', 'section' => '4-4', 'batch' => 2022,
+                'program' => 'Bachelor of Science in Information Technology', 'batch' => 2022,
                 'email' => 'alumni3@example.com',
                 'skills' => ['PHP', 'MySQL', 'Network Administration'],
                 'experience' => null,
@@ -62,7 +61,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Kevin', 'last' => 'Santos', 'gender' => 'male',
-                'program' => 'Bachelor of Science in Electrical Engineering', 'section' => '4-5', 'batch' => 2023,
+                'program' => 'Bachelor of Science in Electrical Engineering', 'batch' => 2023,
                 'email' => 'alumni4@example.com',
                 'skills' => ['Circuit Design', 'AutoCAD', 'Network Administration'],
                 'experience' => ['title' => 'Electrical Technician', 'months' => 12, 'industry' => 'Technology'],
@@ -74,7 +73,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Bianca', 'last' => 'Mendoza', 'gender' => 'female',
-                'program' => 'Bachelor of Science in Psychology', 'section' => '4-6', 'batch' => 2021,
+                'program' => 'Bachelor of Science in Psychology', 'batch' => 2021,
                 'email' => 'alumni5@example.com',
                 'skills' => ['Psychological Assessment', 'Counseling', 'Communication'],
                 'experience' => ['title' => 'Guidance Counselor Assistant', 'months' => 18, 'industry' => 'Healthcare'],
@@ -83,7 +82,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Carlo', 'last' => 'Villanueva', 'gender' => 'male',
-                'program' => 'Bachelor of Science in Social Work', 'section' => '4-7', 'batch' => 2022,
+                'program' => 'Bachelor of Science in Social Work', 'batch' => 2022,
                 'email' => 'alumni6@example.com',
                 'skills' => ['Case Management', 'Community Organizing', 'Communication'],
                 'experience' => null,
@@ -92,7 +91,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Diana', 'last' => 'Ramos', 'gender' => 'female',
-                'program' => 'Bachelor of Science in Business Administration Major in Human Resource Management', 'section' => '4-8', 'batch' => 2023,
+                'program' => 'Bachelor of Science in Business Administration Major in Human Resource Management', 'batch' => 2023,
                 'email' => 'alumni7@example.com',
                 'skills' => ['Recruitment & Selection', 'Payroll Management', 'Communication', 'Microsoft Excel'],
                 'experience' => ['title' => 'HR Assistant', 'months' => 10, 'industry' => 'Business & Finance'],
@@ -104,7 +103,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Ella', 'last' => 'Fernandez', 'gender' => 'prefer_not_to_say',
-                'program' => 'Bachelor of Science in Business Administration Major in Human Resource Management', 'section' => '4-9', 'batch' => 2024,
+                'program' => 'Bachelor of Science in Business Administration Major in Human Resource Management', 'batch' => 2024,
                 'email' => 'alumni8@example.com',
                 'skills' => ['Communication', 'Teamwork'],
                 'experience' => null,
@@ -113,7 +112,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Francis', 'last' => 'Aquino', 'gender' => 'male',
-                'program' => 'Bachelor of Early Childhood Education', 'section' => '4-10', 'batch' => 2022,
+                'program' => 'Bachelor of Early Childhood Education', 'batch' => 2022,
                 'email' => 'alumni9@example.com',
                 'skills' => ['Lesson Planning', 'Classroom Management', 'Communication'],
                 'experience' => ['title' => 'Student Teacher', 'months' => 6, 'industry' => 'Education'],
@@ -122,7 +121,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Grace', 'last' => 'Lim', 'gender' => 'female',
-                'program' => 'Bachelor of Secondary Education Major in Mathematics', 'section' => '4-11', 'batch' => 2023,
+                'program' => 'Bachelor of Secondary Education Major in Mathematics', 'batch' => 2023,
                 'email' => 'alumni10@example.com',
                 'skills' => ['Lesson Planning', 'Classroom Management', 'Critical Thinking'],
                 'experience' => null,
@@ -136,7 +135,7 @@ class AlumnusSeeder extends Seeder
             // ranked and unranked rows to show.
             [
                 'first' => 'Nathaniel', 'last' => 'Bautista', 'gender' => 'male',
-                'program' => 'Bachelor of Arts in Communication', 'section' => '4-12', 'batch' => 2023,
+                'program' => 'Bachelor of Arts in Communication', 'batch' => 2023,
                 'email' => 'alumni11@example.com',
                 'skills' => ['Content Writing', 'Public Speaking', 'Communication'],
                 'experience' => ['title' => 'Media Production Assistant', 'months' => 6, 'industry' => 'Education'],
@@ -145,7 +144,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Samantha', 'last' => 'Delos Reyes', 'gender' => 'female',
-                'program' => 'Bachelor of Science in Accountancy', 'section' => '4-13', 'batch' => 2022,
+                'program' => 'Bachelor of Science in Accountancy', 'batch' => 2022,
                 'email' => 'alumni12@example.com',
                 'skills' => ['Financial Auditing', 'Bookkeeping', 'Tax Preparation', 'Microsoft Excel'],
                 'experience' => ['title' => 'Audit Assistant', 'months' => 14, 'industry' => 'Business & Finance'],
@@ -154,7 +153,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Joshua', 'last' => 'Manalo', 'gender' => 'male',
-                'program' => 'Bachelor of Science in Business Administration Major in Financial Management', 'section' => '4-14', 'batch' => 2023,
+                'program' => 'Bachelor of Science in Business Administration Major in Financial Management', 'batch' => 2023,
                 'email' => 'alumni13@example.com',
                 'skills' => ['Financial Modeling', 'Microsoft Excel', 'Critical Thinking'],
                 'experience' => null,
@@ -163,7 +162,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Camille', 'last' => 'Ocampo', 'gender' => 'female',
-                'program' => 'Bachelor of Science in Business Administration Major in Marketing Management', 'section' => '4-15', 'batch' => 2024,
+                'program' => 'Bachelor of Science in Business Administration Major in Marketing Management', 'batch' => 2024,
                 'email' => 'alumni14@example.com',
                 'skills' => ['Digital Marketing', 'Market Research', 'Content Writing', 'Canva'],
                 'experience' => ['title' => 'Marketing Intern', 'months' => 5, 'industry' => 'Business & Finance'],
@@ -172,7 +171,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Rico', 'last' => 'Navarro', 'gender' => 'male',
-                'program' => 'Bachelor of Science in Civil Engineering', 'section' => '4-1', 'batch' => 2022,
+                'program' => 'Bachelor of Science in Civil Engineering', 'batch' => 2022,
                 'email' => 'alumni15@example.com',
                 'skills' => ['Project Estimation', 'AutoCAD', 'Structural Analysis'],
                 'experience' => ['title' => 'Site Engineer Intern', 'months' => 9, 'industry' => 'Engineering & Construction'],
@@ -181,7 +180,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Patricia', 'last' => 'Alonzo', 'gender' => 'female',
-                'program' => 'Bachelor of Public Administration', 'section' => '4-2', 'batch' => 2023,
+                'program' => 'Bachelor of Public Administration', 'batch' => 2023,
                 'email' => 'alumni16@example.com',
                 'skills' => ['Policy Analysis', 'Public Administration', 'Community Organizing'],
                 'experience' => null,
@@ -190,7 +189,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Daniel', 'last' => 'Castro', 'gender' => 'male',
-                'program' => 'Bachelor of Secondary Education Major in English', 'section' => '4-3', 'batch' => 2022,
+                'program' => 'Bachelor of Secondary Education Major in English', 'batch' => 2022,
                 'email' => 'alumni17@example.com',
                 'skills' => ['Lesson Planning', 'Classroom Management', 'Communication'],
                 'experience' => ['title' => 'Student Teacher', 'months' => 6, 'industry' => 'Education'],
@@ -199,7 +198,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Michelle', 'last' => 'Salazar', 'gender' => 'female',
-                'program' => 'Bachelor of Secondary Education Major in Filipino', 'section' => '4-4', 'batch' => 2023,
+                'program' => 'Bachelor of Secondary Education Major in Filipino', 'batch' => 2023,
                 'email' => 'alumni18@example.com',
                 'skills' => ['Lesson Planning', 'Curriculum Development', 'Communication'],
                 'experience' => null,
@@ -208,7 +207,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Anton', 'last' => 'Reyes', 'gender' => 'male',
-                'program' => 'Bachelor of Secondary Education Major in Science', 'section' => '4-5', 'batch' => 2024,
+                'program' => 'Bachelor of Secondary Education Major in Science', 'batch' => 2024,
                 'email' => 'alumni19@example.com',
                 'skills' => ['Lesson Planning', 'Classroom Management', 'Critical Thinking'],
                 'experience' => null,
@@ -217,7 +216,7 @@ class AlumnusSeeder extends Seeder
             ],
             [
                 'first' => 'Jasmine', 'last' => 'Uy', 'gender' => 'female',
-                'program' => 'Bachelor of Secondary Education Major in Social Studies', 'section' => '4-6', 'batch' => 2023,
+                'program' => 'Bachelor of Secondary Education Major in Social Studies', 'batch' => 2023,
                 'email' => 'alumni20@example.com',
                 'skills' => ['Lesson Planning', 'Communication', 'Critical Thinking'],
                 'experience' => ['title' => 'Student Teacher', 'months' => 6, 'industry' => 'Education'],
@@ -228,7 +227,6 @@ class AlumnusSeeder extends Seeder
 
         foreach ($alumni as $data) {
             $programId = Program::where('program_name', $data['program'])->value('program_id');
-            $sectionId = Section::where('section_name', $data['section'])->value('section_id');
 
             $user = User::create([
                 'user_email' => $data['email'],
@@ -241,7 +239,6 @@ class AlumnusSeeder extends Seeder
 
             $alumnus = $user->alumnus()->create([
                 'program_id' => $programId,
-                'section_id' => $sectionId,
                 // alumnus_batch is a real date column — April 15 of the
                 // seed data's batch year, matching the same convention used
                 // to backfill existing rows in the batch-date migration.

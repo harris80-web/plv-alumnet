@@ -207,7 +207,6 @@ class CohortSeeder extends Seeder
         $batchYears = range(2016, 2026);
         $batchCycle = collect(range(0, $count - 1))->map(fn ($i) => $batchYears[$i % count($batchYears)])->shuffle()->values();
 
-        $sectionIds = \App\Models\Section::pluck('section_id');
         $genderPool = array_merge(array_fill(0, 9, 'male'), array_fill(0, 9, 'female'), array_fill(0, 2, 'prefer_not_to_say'));
         $staffIds = User::whereIn('user_role', ['admin', 'super_admin'])->pluck('user_id');
 
@@ -240,7 +239,6 @@ class CohortSeeder extends Seeder
 
             $alumnus = $user->alumnus()->create([
                 'program_id' => $programCycle[$i],
-                'section_id' => $sectionIds->random(),
                 // alumnus_batch is a real date column — commencement dates
                 // vary a bit (Mar–May) rather than all landing on the same
                 // day, so batch-grouped reports have realistic spread.

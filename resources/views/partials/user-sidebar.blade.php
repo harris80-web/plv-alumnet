@@ -77,9 +77,11 @@
              Only static text lives inside, so there is no nested link/button.
              Styling: public/assets/css/responsive-public.css → [HAMBURGER SIDEBAR / MENU]. --}}
         <a href="{{ route('user.profile') }}" class="rp-profile-link flex items-center gap-3 pb-4 border-b border-gray-100 mb-4">
-            <div class="w-12 h-12 shrink-0 bg-[#0E0F3B] rounded-full flex items-center justify-center overflow-hidden">
-                <i class="fa-solid fa-user text-xl text-white"></i>
-            </div>
+            @include('partials.avatar', [
+                'photo' => auth()->user()->user_profile_picture ? asset('storage/' . auth()->user()->user_profile_picture) : null,
+                'size' => 'w-12 h-12',
+                'iconSize' => 'text-xl',
+            ])
             <div class="min-w-0">
                 <p class="text-[#C73D1A] font-bold uppercase text-sm truncate">
                     {{ auth()->user()->user_first_name }} {{ auth()->user()->user_last_name }}

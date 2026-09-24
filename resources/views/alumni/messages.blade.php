@@ -279,6 +279,11 @@
                     const thread = document.getElementById('messageThread');
                     const wasNearBottom = thread.scrollHeight - thread.scrollTop - thread.clientHeight < 100;
                     newMessages.forEach(msg => {
+                        // A poll tick can land between the server creating the
+                        // message and the sender's own fetch() resolving —
+                        // skip anything already rendered (e.g. by the send
+                        // handler below) so it doesn't get appended twice.
+                        if (thread.querySelector(`[data-message-id="${msg.id}"]`)) return;
                         thread.appendChild(renderBubble(msg, msg.senderId === CURRENT_USER_ID));
                         lastMessageId = Math.max(lastMessageId, msg.id);
                     });
@@ -429,7 +434,13 @@
                         return;
                     }
                     const message = await res.json();
-                    document.getElementById('messageThread').appendChild(renderBubble(message, true));
+                    const thread = document.getElementById('messageThread');
+                    // Same race guard as pollMessages() — a poll tick may have
+                    // already rendered this exact message by the time this
+                    // fetch() resolves.
+                    if (!thread.querySelector(`[data-message-id="${message.id}"]`)) {
+                        thread.appendChild(renderBubble(message, true));
+                    }
                     lastMessageId = Math.max(lastMessageId, message.id);
                     scrollThreadToBottom();
                     input.value = '';

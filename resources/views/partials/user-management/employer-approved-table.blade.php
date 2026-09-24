@@ -38,7 +38,14 @@
                     value="{{ $employer->user_id }}">
             </td>
             <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
-                {{ $employer->employer_company_name }}
+                <div class="flex items-center justify-center gap-2">
+                    @include('partials.company-logo', [
+                        'logo' => $employer->employer_company_logo ? asset('storage/' . $employer->employer_company_logo) : null,
+                        'size' => 'w-7 h-7',
+                        'iconSize' => 'text-xs',
+                    ])
+                    <span>{{ $employer->employer_company_name }}</span>
+                </div>
             </td>
             <td class="px-4 py-3 font-medium text-black border-r border-slate-100">
                 {{ $employer->user?->formalNameWithSuffix() ?? 'N/A' }}

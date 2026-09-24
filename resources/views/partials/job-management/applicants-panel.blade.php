@@ -161,8 +161,12 @@
                 <td class="px-4 py-4 text-center text-gray-400 font-semibold">{{ $index + 1 }}</td>
                 <td class="px-4 py-4">
                     <div class="flex items-center gap-3">
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode($applicant->user->user_first_name . '+' . $applicant->user->user_last_name) }}&background=1D264F&color=fff&size=36"
-                            class="w-9 h-9 rounded-full">
+                        @include('partials.avatar', [
+                            'photo' => $applicant->user->user_profile_picture ? asset('storage/' . $applicant->user->user_profile_picture) : null,
+                            'size' => 'w-9 h-9',
+                            'iconSize' => 'text-sm',
+                            'bg' => 'bg-[#1D264F]',
+                        ])
                         <span class="font-semibold text-[#0E0F3B]">
                             {{ $applicant->user->user_last_name }}, {{ $applicant->user->user_first_name }} {{ $applicant->user->user_middle_name }} {{ $applicant->user->user_suffix }}
                         </span>

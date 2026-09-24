@@ -476,7 +476,14 @@ $current_page = 'user_management';
                                         {{ $alumnus->user_id }}
                                     </td>
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                        {{ $alumnus->user?->formalNameWithSuffix() ?? 'N/A' }}
+                                        <div class="flex items-center justify-center gap-2">
+                                            @include('partials.avatar', [
+                                                'photo' => $alumnus->user?->user_profile_picture ? asset('storage/' . $alumnus->user->user_profile_picture) : null,
+                                                'size' => 'w-7 h-7',
+                                                'iconSize' => 'text-xs',
+                                            ])
+                                            <span>{{ $alumnus->user?->formalNameWithSuffix() ?? 'N/A' }}</span>
+                                        </div>
                                     </td>
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
                                         {{ \App\Models\Alumnus::genderLabels()[$alumnus->alumnus_gender] ?? 'N/A' }}
@@ -1523,6 +1530,12 @@ $current_page = 'user_management';
             </div>
 
             <div class="px-7 py-5 space-y-5">
+                <div class="flex items-center gap-3">
+                    <div id="pendingModalLogoWrap" class="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-300 shrink-0 overflow-hidden">
+                        <i class="fas fa-building text-xl"></i>
+                    </div>
+                    <p class="text-[10px] text-gray-400">Company logo, if one was uploaded.</p>
+                </div>
                 <div class="grid grid-cols-2 gap-x-4 gap-y-4">
                     <div>
                         <p class="text-[10px] text-gray-500 font-bold uppercase">Company Name</p>
@@ -2439,6 +2452,12 @@ $current_page = 'user_management';
                     documentEl.innerHTML = documentUrl
                         ? '<a href="' + documentUrl + '" target="_blank" class="text-blue-600 hover:underline">View Document</a>'
                         : 'Not Uploaded';
+
+                    const logoUrl = this.getAttribute('data-logo');
+                    const logoWrap = document.getElementById('pendingModalLogoWrap');
+                    logoWrap.innerHTML = logoUrl
+                        ? '<img src="' + logoUrl + '" class="w-full h-full object-cover">'
+                        : '<i class="fas fa-building text-xl"></i>';
 
                     const userId = this.getAttribute('data-user-id');
                     const companyName = this.getAttribute('data-company');

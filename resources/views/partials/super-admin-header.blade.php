@@ -174,8 +174,12 @@ $title = request()->routeIs('notifications.all')
             class="hidden absolute right-0 top-14 w-56 bg-white rounded-xl shadow-2xl border border-slate-100 z-50 overflow-hidden">
 
             <div class="flex items-center gap-3 px-4 py-3 border-b border-slate-200">
-                <div class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center">
+                <div class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
+                    @if (auth()->user()->user_profile_picture)
+                    <img src="{{ asset('storage/' . auth()->user()->user_profile_picture) }}" class="w-full h-full object-cover" alt="">
+                    @else
                     <i data-lucide="user" class="w-5 h-5 text-slate-500"></i>
+                    @endif
                 </div>
                 <a href="{{ route('superAdmin.profile') }}" class="block">
                     <div class="hover:bg-slate-50 px-2 py-1 rounded-md transition cursor-pointer">
@@ -618,3 +622,16 @@ $title = request()->routeIs('notifications.all')
 
 @include('partials.back-to-top')
 @include('partials.alert-modal')
+
+@if (session('permission_denied'))
+<script>
+    // EnsureAdminFeatureAccess redirects here (rather than a raw 403 page)
+    // when an admin is missing just this one feature permission — e.g. they
+    // clicked a notification that every admin received, but this feature
+    // isn't in their own grant. showAlertModal() comes from
+    // partials/alert-modal.blade.php, included just above.
+    window.addEventListener('DOMContentLoaded', function () {
+        showAlertModal(@json(session('permission_denied')));
+    });
+</script>
+@endif

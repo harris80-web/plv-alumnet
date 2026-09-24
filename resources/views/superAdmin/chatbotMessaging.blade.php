@@ -138,7 +138,10 @@
                             <div class="space-y-2 max-h-64 overflow-y-auto">
                                 @forelse ($activeAiSessions->take(6) as $t)
                                 <div class="flex items-center gap-2 text-xs border-b border-slate-50 pb-2">
-                                    <div class="w-7 h-7 rounded-full bg-[#0E0F3B] flex items-center justify-center text-white text-[10px] font-bold shrink-0">{{ mb_substr($t->user->user_first_name ?? '?', 0, 1) }}</div>
+                                    @include('partials.avatar-initial', [
+                                        'photo' => $t->user->user_profile_picture ? asset('storage/' . $t->user->user_profile_picture) : null,
+                                        'name' => $t->user->user_first_name ?? '?',
+                                    ])
                                     <div class="min-w-0 flex-1">
                                         <p class="font-semibold text-[#0E0F3B] truncate">{{ trim(($t->user->user_first_name ?? '') . ' ' . ($t->user->user_last_name ?? '')) }}</p>
                                         <p class="text-slate-400 truncate">{{ \Illuminate\Support\Str::limit($t->latestMessage->message ?? '—', 40) }}</p>
@@ -154,7 +157,11 @@
                             <div class="space-y-2 max-h-64 overflow-y-auto">
                                 @forelse ($waitingTickets->take(6) as $t)
                                 <div class="flex items-center gap-2 text-xs border-b border-slate-50 pb-2">
-                                    <div class="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center text-white text-[10px] font-bold shrink-0">{{ mb_substr($t->user->user_first_name ?? '?', 0, 1) }}</div>
+                                    @include('partials.avatar-initial', [
+                                        'photo' => $t->user->user_profile_picture ? asset('storage/' . $t->user->user_profile_picture) : null,
+                                        'name' => $t->user->user_first_name ?? '?',
+                                        'bg' => 'bg-amber-500',
+                                    ])
                                     <div class="min-w-0 flex-1">
                                         <p class="font-semibold text-[#0E0F3B] truncate">{{ trim(($t->user->user_first_name ?? '') . ' ' . ($t->user->user_last_name ?? '')) }}</p>
                                         <p class="text-slate-400 truncate">{{ \Illuminate\Support\Str::limit($t->latestMessage->message ?? '—', 40) }}</p>
@@ -245,7 +252,10 @@
                             <div class="space-y-2 max-h-96 overflow-y-auto">
                                 @forelse ($activeAiSessions as $t)
                                 <div class="flex items-center gap-2 text-xs border-b border-slate-50 pb-2">
-                                    <div class="w-7 h-7 rounded-full bg-[#0E0F3B] flex items-center justify-center text-white text-[10px] font-bold shrink-0">{{ mb_substr($t->user->user_first_name ?? '?', 0, 1) }}</div>
+                                    @include('partials.avatar-initial', [
+                                        'photo' => $t->user->user_profile_picture ? asset('storage/' . $t->user->user_profile_picture) : null,
+                                        'name' => $t->user->user_first_name ?? '?',
+                                    ])
                                     <div class="min-w-0 flex-1">
                                         <p class="font-semibold text-[#0E0F3B] truncate">{{ trim(($t->user->user_first_name ?? '') . ' ' . ($t->user->user_last_name ?? '')) }}</p>
                                         <p class="text-slate-400 truncate">{{ \Illuminate\Support\Str::limit($t->latestMessage->message ?? '—', 40) }}</p>
@@ -353,7 +363,12 @@
                             @php $initialQueueTickets = $waitingTickets->concat($withAgentTickets); @endphp
                             @forelse ($initialQueueTickets as $t)
                             <div class="flex items-center gap-3 px-4 py-3" data-ticket-row="{{ $t->ticket_id }}">
-                                <div class="w-9 h-9 rounded-full bg-[#0E0F3B] flex items-center justify-center text-white text-xs font-bold shrink-0">{{ mb_substr($t->user->user_first_name ?? '?', 0, 1) }}</div>
+                                @include('partials.avatar-initial', [
+                                    'photo' => $t->user->user_profile_picture ? asset('storage/' . $t->user->user_profile_picture) : null,
+                                    'name' => $t->user->user_first_name ?? '?',
+                                    'size' => 'w-9 h-9',
+                                    'textSize' => 'text-xs',
+                                ])
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-2">
                                         <p class="font-semibold text-[#0E0F3B] text-sm truncate">{{ trim(($t->user->user_first_name ?? '') . ' ' . ($t->user->user_last_name ?? '')) }}</p>
@@ -482,7 +497,12 @@
                             @forelse ($chatHistoryAlumni as $alum)
                             <div class="px-4 py-3 chat-history-row" data-name="{{ mb_strtolower(trim($alum->user_first_name . ' ' . $alum->user_last_name) . ' ' . $alum->user_email) }}">
                                 <div class="flex items-center gap-3 mb-2">
-                                    <div class="w-8 h-8 rounded-full bg-[#0E0F3B] flex items-center justify-center text-white text-xs font-bold shrink-0">{{ mb_substr($alum->user_first_name ?? '?', 0, 1) }}</div>
+                                    @include('partials.avatar-initial', [
+                                        'photo' => $alum->user_profile_picture ? asset('storage/' . $alum->user_profile_picture) : null,
+                                        'name' => $alum->user_first_name ?? '?',
+                                        'size' => 'w-8 h-8',
+                                        'textSize' => 'text-xs',
+                                    ])
                                     <div class="min-w-0 flex-1">
                                         <p class="font-semibold text-[#0E0F3B] text-sm truncate">{{ trim($alum->user_first_name . ' ' . $alum->user_last_name) }}</p>
                                         <p class="text-[10px] text-slate-400 truncate">{{ $alum->user_email }} · {{ $alum->chat_tickets_count }} {{ \Illuminate\Support\Str::plural('conversation', $alum->chat_tickets_count) }}</p>
@@ -897,9 +917,13 @@
                     assignBtn = `<button type="button" onclick="claimTicket(${t.ticketId}, true)" class="shrink-0 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold px-3 py-2 rounded-md uppercase whitespace-nowrap">Take Over</button>`;
                 }
 
+                const avatarInner = t.photo
+                    ? `<img src="${escapeHtmlQueue(t.photo)}" class="w-full h-full object-cover">`
+                    : escapeHtmlQueue(t.initial);
+
                 return `
                     <div class="flex items-center gap-3 px-4 py-3" data-ticket-row="${t.ticketId}">
-                        <div class="w-9 h-9 rounded-full bg-[#0E0F3B] flex items-center justify-center text-white text-xs font-bold shrink-0">${escapeHtmlQueue(t.initial)}</div>
+                        <div class="w-9 h-9 rounded-full bg-[#0E0F3B] flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden">${avatarInner}</div>
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2">
                                 <p class="font-semibold text-[#0E0F3B] text-sm truncate">${escapeHtmlQueue(t.name)}</p>

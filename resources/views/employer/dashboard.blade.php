@@ -125,8 +125,11 @@
                     @forelse ($recentApplicants as $application)
                     <a href="{{ route('jobApplication.showApplications', ['jobPostingId' => $application->job_id]) }}"
                         class="flex items-center gap-3 py-2.5 -mx-2 px-2 rounded-lg border-b border-gray-50 last:border-0 hover:bg-slate-50 transition-colors">
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode($application->alumnus->user->user_first_name . ' ' . $application->alumnus->user->user_last_name) }}&background=random"
-                            class="w-9 h-9 rounded-full shrink-0">
+                        @include('partials.avatar', [
+                            'photo' => $application->alumnus->user->user_profile_picture ? asset('storage/' . $application->alumnus->user->user_profile_picture) : null,
+                            'size' => 'w-9 h-9',
+                            'iconSize' => 'text-sm',
+                        ])
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-semibold text-[#0E0F3B] truncate">{{ $application->alumnus->user->user_first_name }} {{ $application->alumnus->user->user_last_name }}</p>
                             <p class="text-xs text-gray-500 truncate">Applied to {{ $application->job->job_posting_title }}</p>

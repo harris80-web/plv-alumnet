@@ -270,6 +270,7 @@ class ChatTicketController extends Controller
                 'ticketId' => $t->ticket_id,
                 'name' => trim(($t->user->user_first_name ?? '') . ' ' . ($t->user->user_last_name ?? '')),
                 'initial' => mb_substr($t->user->user_first_name ?? '?', 0, 1),
+                'photo' => $t->user->user_profile_picture ? asset('storage/' . $t->user->user_profile_picture) : null,
                 'preview' => $t->latestMessage->message ?? '—',
                 'status' => $t->status,
                 'statusLabel' => $t->statusLabel(),

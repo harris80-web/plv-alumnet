@@ -247,7 +247,23 @@
                 applyClientSlice(root, 1);
             }
 
-            document.querySelectorAll('[data-pv-pagination][data-pv-mode="client"]').forEach(initClientBar);
+            // Blade's "once" directive means this script block is only ever
+            // emitted at the position of the FIRST time this partial gets
+            // pulled into the page — every later copy (e.g. a second table
+            // further down, like the Yearbook tab's bar below the Alumni ID
+            // tab's) still renders its own <div data-pv-pagination> markup,
+            // just without a second copy of this script. Since a <script>
+            // tag runs the instant the parser reaches it, initializing
+            // immediately here only ever found bars that already existed
+            // ABOVE this point in the HTML — every bar rendered further
+            // down the page silently never got initialized, so its rows
+            // never picked up their per-page slicing at all (every row
+            // stayed visible regardless of the Rows-per-page setting).
+            // DOMContentLoaded guarantees the whole page, including every
+            // later copy of this partial, exists before this runs.
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('[data-pv-pagination][data-pv-mode="client"]').forEach(initClientBar);
+            });
 
             document.addEventListener('pv:filtered', function (e) {
                 const scope = (e.detail && e.detail.scope) ? document.querySelector(e.detail.scope) : document;

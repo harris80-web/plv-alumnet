@@ -1,6 +1,6 @@
 <!-- ══════════════════════ FLOATING CHATBOT WIDGET ══════════════════════ -->
 <button type="button" id="chatWidgetButton" onclick="toggleChatWidget()"
-    class="fixed bottom-6 right-6 z-[90] w-14 h-14 rounded-full bg-[#1D264F] hover:bg-[#0E0F3B] text-white shadow-xl flex items-center justify-center transition-transform hover:scale-105">
+    class="fixed bottom-6 right-6 z-[90] w-14 h-14 rounded-full bg-[#1D264F] hover:bg-[#0E0F3B] text-white shadow-xl flex items-center justify-center transition-transform hover:scale-105 touch-none">
     <i data-lucide="message-circle" class="w-6 h-6" id="chatWidgetIcon"></i>
 </button>
 
@@ -194,5 +194,84 @@
             input.value = '';
             sendMessage(text);
         });
+
+        // ── Draggable vertical position (mobile) ──────────────────────
+        // The button sits bottom-right and can cover a real button
+        // underneath it on small screens (e.g. a chat page's own Send
+        // button). Dragging is vertical-only — the button stays pinned to
+        // the right edge, only its distance from the bottom changes — and
+        // clamped so it can never be dragged partly or fully off-screen.
+        // Touch events only (not mouse/pointer), so desktop click-to-open
+        // is completely unaffected.
+        (function initDraggableWidget() {
+            const btn = document.getElementById('chatWidgetButton');
+            const panel = document.getElementById('chatWidgetPanel');
+            const STORAGE_KEY = 'chatWidgetBottomOffset';
+            const EDGE_MARGIN = 12; // px kept clear at both the top and bottom of the screen
+            const PANEL_GAP = 8; // gap between the button and the panel above it, matching the ~1.5rem bottom-24 default
+
+            function maxOffset() {
+                return Math.max(EDGE_MARGIN, window.innerHeight - btn.offsetHeight - EDGE_MARGIN);
+            }
+
+            function applyOffset(px) {
+                const clamped = Math.min(Math.max(px, EDGE_MARGIN), maxOffset());
+                btn.style.bottom = clamped + 'px';
+                panel.style.bottom = (clamped + btn.offsetHeight + PANEL_GAP) + 'px';
+                return clamped;
+            }
+
+            // Restore the last dragged position (per-device, via
+            // localStorage) — otherwise it would snap back to the default
+            // corner on every page navigation, right back over whatever it
+            // was moved away from.
+            const saved = parseFloat(localStorage.getItem(STORAGE_KEY));
+            if (!isNaN(saved)) applyOffset(saved);
+
+            let dragging = false;
+            let moved = false;
+            let startY = 0;
+            let startOffset = 0;
+
+            btn.addEventListener('touchstart', function (e) {
+                dragging = true;
+                moved = false;
+                startY = e.touches[0].clientY;
+                // Read the button's actual current position rather than
+                // trust btn.style.bottom — that's unset on the very first
+                // touch of a page load with no saved offset yet.
+                startOffset = window.innerHeight - btn.getBoundingClientRect().bottom;
+            }, { passive: true });
+
+            btn.addEventListener('touchmove', function (e) {
+                if (!dragging) return;
+                const deltaY = e.touches[0].clientY - startY;
+                // A finger moving DOWN the screen should move the button
+                // DOWN too, i.e. decrease its distance from the bottom —
+                // hence subtracting, not adding, the delta.
+                if (Math.abs(deltaY) > 6) moved = true; // small threshold so a normal tap never gets misread as a drag
+                if (moved) applyOffset(startOffset - deltaY);
+            }, { passive: true });
+
+            btn.addEventListener('touchend', function (e) {
+                if (!dragging) return;
+                dragging = false;
+                if (moved) {
+                    // A genuine drag — save the new spot, and swallow the
+                    // click that would otherwise follow this touch and
+                    // toggle the panel open/closed unintentionally.
+                    localStorage.setItem(STORAGE_KEY, parseFloat(btn.style.bottom));
+                    e.preventDefault();
+                }
+                moved = false;
+            });
+
+            // Keep it fully on-screen through rotation/resize/keyboard
+            // pop-up rather than only re-clamping on the next drag.
+            window.addEventListener('resize', function () {
+                const current = parseFloat(btn.style.bottom);
+                if (!isNaN(current)) applyOffset(current);
+            });
+        })();
     })();
 </script>

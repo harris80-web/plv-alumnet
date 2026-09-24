@@ -305,7 +305,7 @@
     </section>
 
     <section class="py-16 px-6 max-w-6xl mx-auto">
-        <div class="flex justify-between items-center mb-10">
+        <div class="flex justify-between items-center mb-10 rp-jobmatches-head">
             <h2 class="text-3xl font-bold text-[#0E0F3B] uppercase tracking-tight">
                 Job Matches <span class="text-[#0E0F3B]">For You!</span>
             </h2>

@@ -135,7 +135,7 @@
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-id-card text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase">Membership Status</span>
+                    <span class="text-xs font-bold uppercase">Alumni ID &amp; Yearbook Claiming Status</span>
                 </div>
 
 

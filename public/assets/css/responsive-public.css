@@ -36,8 +36,9 @@
      [FOOTER]                      2-column tablet / stacked mobile footer .... T M S
      [LANDING / GENERAL PAGES]     hero banners, fixed backgrounds, About,
                                    home sections ............................. T M
-     [CAROUSELS]                   prev/next arrows work on every breakpoint;
-                                   card shadows removed everywhere .......... D T M S
+     [CAROUSELS]                   prev/next arrows work on every breakpoint,
+                                   card shadows removed, smaller card text on
+                                   mobile ..................................... D T M S
      [CARDS & LISTINGS]            job cards, job-board tabs, directory table,
                                    12px minimum text ......................... T M
      [FORMS]                       16px inputs, stacked field grids ......... M S
@@ -334,6 +335,12 @@ html.rp-scope .rp-hamburger {
 @media (max-width: 767px) {
     html.rp-scope .rp-header .rp-header-actions {
         gap: 0.5rem;
+    }
+    /* Bell dropdown: narrower than the tablet cap above (20rem reads as almost full-width
+       on a phone) — still clamped to the viewport so it can never spill off either edge. */
+    html.rp-scope #notificationPopup {
+        width: min(16rem, calc(100vw - 2rem));
+        max-width: calc(100vw - 2rem);
     }
 }
 
@@ -683,14 +690,16 @@ html.rp-scope .rp-only-compact {
 }
 
 /* ---- Fixed section backgrounds ----
-   The About page (PLVSection, AssociatedPartners, AlumniAssociation, SystemCore), the
-   home / alumni dashboards (AlumniServices, AlumniTestimonial, Experience) and the
-   employer dashboard (EmployerFeatures) use `background-attachment: fixed`. Phones and
-   tablets do not support it (iOS ignores it, Android renders it badly, and the image
-   only paints inside the first screen-height) → scroll on compact screens. */
+   Dashboard sections (AlumniServices, AlumniTestimonial, Experience, EmployerFeatures) use
+   `background-attachment: fixed`. Phones/tablets render that badly (iOS ignores it, Android
+   is janky, the image only paints inside the first screen-height) → scroll on compact screens.
+   The About page's four sections (PLVSection, AssociatedPartners, AlumniAssociation, SystemCore,
+   shared by general/alumni/employer About) are explicitly EXEMPTED per request — kept `fixed`
+   at every width to match desktop. Known caveat: iOS Safari still ignores `fixed` regardless
+   of this CSS (a platform limitation, not something any stylesheet can override) and scrolls
+   those backgrounds normally there. */
 @media (max-width: 1023px) {
-    html.rp-scope :is(.PLVSection, .AssociatedPartners, .AlumniAssociation, .SystemCore,
-                      .AlumniServices, .AlumniTestimonial, .Experience, .EmployerFeatures) {
+    html.rp-scope :is(.AlumniServices, .AlumniTestimonial, .Experience, .EmployerFeatures) {
         background-attachment: scroll;
     }
 }
@@ -702,10 +711,31 @@ html.rp-scope .rp-only-compact {
         width: 100%;
         text-align: center;
     }
+    /* Alumni Services / Employer System Features: a 2-column grid of 5 cards leaves the
+       5th sitting alone in the last row, stuck under the LEFT card instead of centered. */
+    html.rp-scope :is(.AlumniServices, .EmployerFeatures) .grid.grid-cols-2 > :nth-child(5):last-child {
+        grid-column: 1 / -1;
+        justify-self: center;
+        width: calc((100% - 1rem) / 2);      /* same width as one regular card (gap-4 = 1rem) */
+    }
     /* section title row ("| CAMPUS EVENTS" + "GO TO EVENTS >") wraps instead of overlapping */
     html.rp-scope section > div.flex.justify-between.items-end {
         flex-wrap: wrap;
         gap: 0.5rem 1rem;
+    }
+    /* alumni dashboard "Job Matches For You!" header: the title is text-3xl (30px) and the
+       "Go to Job Board >" link accidentally ALSO carries a leftover text-3xl class (from a
+       copy-pasted gradient-text style) that wins over its intended text-sm — both render
+       oversized and wrap to two lines each on phones. */
+    html.rp-scope .rp-jobmatches-head {
+        flex-wrap: wrap;
+        gap: 0.5rem 1rem;
+    }
+    html.rp-scope .rp-jobmatches-head h2 {
+        font-size: 1.125rem;
+    }
+    html.rp-scope .rp-jobmatches-head a {
+        font-size: 0.75rem;
     }
 }
 @media (max-width: 767px) {
@@ -770,6 +800,34 @@ html.rp-scope [id$="CarouselNext"] {
     }
     html.rp-scope [id$="CarouselNext"] {
         right: 0.25rem;
+    }
+}
+
+/* --- Mobile ≤767px: smaller titles/text inside every carousel card (events, job matches) --- */
+@media (max-width: 767px) {
+    html.rp-scope .carousel-track h3 {                        /* card title — text-sm (14px) on events cards, text-xl (20px) on job-match cards */
+        font-size: 0.75rem;
+    }
+    html.rp-scope .carousel-track [class~="text-xl"] {         /* the "day" number on the date badge, AND (higher specificity
+        than the plain `h3` rule above) the job-match card's title, which uses text-xl instead of text-sm */
+        font-size: 1rem;
+    }
+    html.rp-scope .carousel-track p[class~="text-xs"] {        /* description paragraphs (events cards) */
+        font-size: 0.6875rem;
+    }
+    html.rp-scope .carousel-track [class~="text-[11px]"] {     /* description paragraph (job-match card) — was already 11px, must go lower to actually shrink */
+        font-size: 0.625rem;
+    }
+    html.rp-scope .carousel-track button[class~="text-xs"] {   /* APPLY / APPLIED button label */
+        font-size: 0.625rem;
+    }
+    /* [CARDS & LISTINGS]'s 12px floor rule below also matches these text-[9px]/[10px]
+       elements (location, month badge, "% match", programs, posted/closes dates) and
+       has a higher-specificity :not(#id) trick baked in — !important is the only way
+       to make carousel cards smaller than that floor, which is deliberate here. */
+    html.rp-scope .carousel-track [class~="text-[9px]"],
+    html.rp-scope .carousel-track [class~="text-[10px]"] {
+        font-size: 0.5625rem !important;
     }
 }
 
@@ -1537,32 +1595,39 @@ html.rp-scope .rp-chat-back {
     html.rp-scope [class~="max-w-lg"][class~="m-7"] {     /* brand block: 28px margin -> 16px */
         margin: 1rem;
     }
-    html.rp-scope [class~="max-w-lg"][class~="m-7"] img[class~="h-[90px]"] {   /* seal + shield */
+    html.rp-scope [class~="max-w-lg"][class~="m-7"] img[class~="h-[90px]"] {   /* seal + shield — left as-is, see (A) below */
         height: 2.5rem;
         width: auto;
     }
-    html.rp-scope [class~="max-w-lg"][class~="m-7"] .flex.flex-col.items-center > img {  /* "PLV-AlumNet" wordmark */
-        height: 1.5rem;
+    html.rp-scope [class~="max-w-lg"][class~="m-7"] [class~="w-20"][class~="h-20"] {  /* seal's wrapper div is a fixed 80x80px box —
+        way bigger than the now-shrunk seal image inside it, reading as dead padding around "the PLV logo" */
+        width: auto;
+        height: auto;
+    }
+    html.rp-scope [class~="max-w-lg"][class~="m-7"] .flex.flex-col.items-center > img {  /* (A) "PLV-AlumNet" wordmark — the ONLY logo made bigger */
+        height: 2.5rem;
         width: auto;
     }
-    html.rp-scope [class~="max-w-lg"][class~="m-7"] [class~="tracking-widest"] {  /* PAMANTASAN NG LUNGSOD NG VALENZUELA */
+    html.rp-scope [class~="max-w-lg"][class~="m-7"] [class~="tracking-widest"],
+    html.rp-scope [class~="max-w-lg"][class~="m-7"] .flex.flex-col.items-center > p {  /* both lines: "PAMANTASAN..." and "ALUMNI CONNECT" */
+        font-size: 0.6875rem;                              /* was text-xs (12px) */
         letter-spacing: 0.02em;                            /* was tracking-widest (~0.1em) — too wide for 320-375px */
     }
     html.rp-scope [class~="max-w-lg"][class~="m-7"] h2 {   /* "Honoring the Past. Shaping the Future." */
-        font-size: 0.8125rem;
+        font-size: 0.6875rem;
         margin-top: 0.25rem;
     }
     html.rp-scope [class~="max-w-md"][class~="mx-auto"] {  /* the form inside the white card */
         width: min(100%, 26.25rem);                        /* min(100%, 420px) */
     }
 }
-/* --- Small mobile ≤480px: brand block a touch smaller still --- */
+/* --- Small mobile ≤480px: brand block a touch smaller still, wordmark logo excepted --- */
 @media (max-width: 480px) {
-    html.rp-scope [class~="max-w-lg"][class~="m-7"] img[class~="h-[90px]"] {
+    html.rp-scope [class~="max-w-lg"][class~="m-7"] img[class~="h-[90px]"] {   /* seal + shield only */
         height: 2rem;
     }
-    html.rp-scope [class~="max-w-lg"][class~="m-7"] .flex.flex-col.items-center > img {
-        height: 1.25rem;
+    html.rp-scope [class~="max-w-lg"][class~="m-7"] .flex.flex-col.items-center > img {  /* wordmark stays the bigger size set at ≤767px, just a touch smaller here */
+        height: 2.25rem;
     }
 }
 /* inline toasts (showToast in the auth pages / change password) — phones AND tablets */

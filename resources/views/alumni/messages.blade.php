@@ -429,7 +429,13 @@
                         // through to the generic fallback below and a real
                         // reason (e.g. "message content must not exceed
                         // 4000 characters") never reached the user.
-                        const reason = err.errors?.message_content?.[0] || err.errors?.attachment?.[0] || err.message;
+                        // The controller's own 403 (muted account) / 422 / 500
+                        // responses use a plain {error: "..."} key, which this
+                        // used to ignore — every one of them showed the generic
+                        // fallback instead of the real reason. A 419 means the
+                        // session/CSRF token expired.
+                        const reason = err.errors?.message_content?.[0] || err.errors?.attachment?.[0] || err.error
+                            || (res.status === 419 ? 'Your session expired. Please refresh the page and try again.' : err.message);
                         alert(reason || 'Failed to send message.');
                         return;
                     }
@@ -491,6 +497,13 @@
         });
 
         startPolling();
+
+        // On phones the floating chatbot button sits right on top of the Send
+        // button (both bottom-right), so taps on Send opened the chatbot instead.
+        // Park it above the composer while a conversation is open.
+        if (CONVERSATION_ID && window.innerWidth < 768 && window.setChatWidgetBottom) {
+            window.setChatWidgetBottom(96);
+        }
     </script>
 </body>
 

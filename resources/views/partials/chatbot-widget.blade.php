@@ -228,6 +228,10 @@
             const saved = parseFloat(localStorage.getItem(STORAGE_KEY));
             if (!isNaN(saved)) applyOffset(saved);
 
+            // Lets a page park the button somewhere specific (e.g. above a
+            // bottom-anchored composer) without touching the saved drag spot.
+            window.setChatWidgetBottom = applyOffset;
+
             let dragging = false;
             let moved = false;
             let startY = 0;

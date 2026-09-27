@@ -81,14 +81,19 @@
             return wrapper;
         }
 
-        function appendMessages(messages) {
+        function appendMessages(messages, forceScroll) {
             const thread = document.getElementById('chatWidgetThread');
+            // Measured before appending: a poll tick must not drag someone
+            // who scrolled up to read earlier messages back to the bottom.
+            const wasNearBottom = thread.scrollHeight - thread.scrollTop - thread.clientHeight < 80;
+            let added = false;
             messages.forEach(m => {
                 if (m.id <= lastMessageId && thread.querySelector(`[data-msg-id="${m.id}"]`)) return;
                 thread.appendChild(renderBubble(m));
                 lastMessageId = Math.max(lastMessageId, m.id);
+                added = true;
             });
-            scrollThreadToBottom();
+            if (added && (forceScroll || wasNearBottom)) scrollThreadToBottom();
         }
 
         function setStatus(status) {
@@ -154,7 +159,7 @@
                 // Full thread comes back (not just new messages) — appendMessages
                 // already skips anything with an id it has rendered before, so
                 // this naturally renders just the new user + AI turns.
-                appendMessages(data.messages);
+                appendMessages(data.messages, true);
                 if (data.status !== ticketStatus) setStatus(data.status);
             } catch (e) {
                 alert('Failed to send your message. Please check your connection and try again.');

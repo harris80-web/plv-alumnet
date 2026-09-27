@@ -1023,6 +1023,10 @@
 
         function renderQueueMessages(messages, append) {
             const container = document.getElementById('qt-messages');
+            // Polling re-calls this with append=true every few seconds; only
+            // follow the conversation down if something new arrived and the
+            // agent was already at the bottom, not while reading older messages.
+            const wasNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80;
             if (!append) container.innerHTML = '';
             messages.forEach(m => {
                 const bubbleClass = m.senderType === 'agent' ? 'msg-bubble-agent ml-auto' : (m.senderType === 'ai' ? 'msg-bubble-ai' : 'msg-bubble-user');
@@ -1032,7 +1036,7 @@
                 container.appendChild(div);
                 queueThreadLastId = Math.max(queueThreadLastId, m.id);
             });
-            container.scrollTop = container.scrollHeight;
+            if (!append || (messages.length > 0 && wasNearBottom)) container.scrollTop = container.scrollHeight;
         }
 
         function applyThreadStatus(data) {

@@ -60,6 +60,8 @@ class ResumeLineFeaturizer
      */
     private const MIN_LAYOUT_COVERAGE = 0.6;
 
+
+
     private const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
     private const DEGREE_KEYWORDS = ['bachelor', 'master', 'doctor', 'associate', 'diploma', 'undergraduate',
@@ -139,7 +141,9 @@ class ResumeLineFeaturizer
 
         $tooSparse = $comparableChars > 200 && $layoutChars < $comparableChars * self::MIN_LAYOUT_COVERAGE;
 
-        if ($chunks === [] || $tooSparse) {
+        $lines = $chunks === [] ? [] : $this->buildLines($chunks);
+
+        if ($lines === [] || $tooSparse) {
             return [
                 'lines' => $this->linesFromRawText($rawText),
                 'mode' => self::MODE_TEXT_ONLY,
@@ -149,7 +153,7 @@ class ResumeLineFeaturizer
         }
 
         return [
-            'lines' => $this->buildLines($chunks),
+            'lines' => $lines,
             'mode' => self::MODE_LAYOUT,
             'raw_text' => $rawText,
             'page_count' => $pageCount,
@@ -167,47 +171,75 @@ class ResumeLineFeaturizer
         $comparableChars = 0;
 
         foreach (array_slice($pages, 0, self::MAX_PAGES) as $pageIndex => $page) {
-            $fonts = $page->getFonts();
+            $pageText = 0;
 
             try {
-                $comparableChars += mb_strlen($this->collapse($page->getText()));
+                $pageText = mb_strlen($this->collapse($page->getText()));
             } catch (\Throwable) {
                 // A page whose text cannot be read contributes no benchmark.
             }
 
-            foreach ($page->getDataTm() as $row) {
+            $comparableChars += $pageText;
+
+            $pageChunks = $this->chunksFromTextMatrices($page->getDataTm(), $page->getFonts(), $pageIndex + 1);
+
+            foreach ($pageChunks as $chunk) {
                 if (count($chunks) >= self::MAX_CHUNKS) {
-                    break 2;
+                    return [$chunks, $comparableChars];
                 }
 
-                // Rows are 2 OR 4 elements: the ' and " operators never carry
-                // font data, and Tj/TJ only do with the config flag on.
-                $matrix = $row[0] ?? null;
-                $text = $row[1] ?? '';
-
-                if (! is_array($matrix) || trim((string) $text) === '') {
-                    continue;
-                }
-
-                $verticalScale = (float) ($matrix[3] ?? 1) ?: 1.0;
-                $fontSize = isset($row[3]) ? (float) $row[3] : 0.0;
-
-                [$bold, $italic] = $this->fontStyle($fonts, $row[2] ?? null);
-
-                $chunks[] = [
-                    'text' => (string) $text,
-                    'page' => $pageIndex + 1,
-                    'x' => (float) ($matrix[4] ?? 0),
-                    'y' => (float) ($matrix[5] ?? 0),
-                    'size' => $fontSize * $verticalScale,
-                    'bold' => $bold,
-                    'italic' => $italic,
-                ];
+                $chunks[] = $chunk;
             }
         }
 
         return [$chunks, $comparableChars];
     }
+
+
+    /**
+     * @param  array<int,array>  $rows  getDataTm() output
+     * @return array<int,array>
+     */
+    private function chunksFromTextMatrices(array $rows, array $fonts, int $page): array
+    {
+        $chunks = [];
+
+        foreach ($rows as $row) {
+            // Rows are 2 OR 4 elements: the ' and " operators never carry font
+            // data, and Tj/TJ only do with the config flag on.
+            $matrix = $row[0] ?? null;
+            $text = $row[1] ?? '';
+
+            if (! is_array($matrix) || trim((string) $text) === '') {
+                continue;
+            }
+
+            $verticalScale = (float) ($matrix[3] ?? 1) ?: 1.0;
+            $fontSize = isset($row[3]) ? (float) $row[3] : 0.0;
+
+            [$bold, $italic] = $this->fontStyle($fonts, $row[2] ?? null);
+
+            $chunks[] = [
+                'text' => (string) $text,
+                'page' => $page,
+                'x' => (float) ($matrix[4] ?? 0),
+                'y' => (float) ($matrix[5] ?? 0),
+                // Scaled by the text matrix, so a document drawn in a magnified
+                // coordinate space still yields sizes comparable within itself.
+                // Absolute because design tools often export a flipped matrix
+                // with a negative vertical scale: a negative size would invert
+                // every threshold derived from it, and the glue-versus-space
+                // test in particular would then split each glyph into its own
+                // fragment, turning a word into "w o r d".
+                'size' => abs($fontSize * $verticalScale),
+                'bold' => $bold,
+                'italic' => $italic,
+            ];
+        }
+
+        return $chunks;
+    }
+
 
     /** @return array{0:bool,1:bool} */
     private function fontStyle(array $fonts, ?string $fontId): array
@@ -539,6 +571,7 @@ class ResumeLineFeaturizer
         return false;
     }
 
+
     /** Horizontal span covered by a group of fragments. */
     private function extent(array $fragments): float
     {
@@ -674,7 +707,10 @@ class ResumeLineFeaturizer
 
     private function collapse(string $text): string
     {
-        return trim(preg_replace('/\s+/u', ' ', $text));
+        // preg_replace returns null if the subject is not valid UTF-8, which
+        // happens with oddly encoded PDF text; fall back to the input rather
+        // than passing null on to trim().
+        return trim(preg_replace('/\s+/u', ' ', $text) ?? $text);
     }
 
     private function median(array $values): float

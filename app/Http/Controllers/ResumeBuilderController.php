@@ -8,31 +8,28 @@ use App\Models\Experience;
 use App\Models\JobApplication;
 use App\Models\Skill;
 use App\Models\User;
-use App\Services\GeminiResumeParser;
 use App\Services\JobMatchService;
-use App\Services\ResumeTextParser;
+use App\Services\ResumeParser\ResumeParseService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Smalot\PdfParser\Parser as PdfTextParser;
 
 class ResumeBuilderController extends Controller
 {
     /**
-     * Reads text out of an uploaded PDF and extracts structured fields from
-     * it. Returns them as JSON — nothing is saved here. The wizard prefills
-     * itself from the response so the alumnus reviews and edits before
-     * anything actually hits the database, same as any other prefill (see
-     * toResumeFormArray()).
+     * Reads an uploaded PDF and extracts structured fields from it. Returns
+     * them as JSON — nothing is saved here. The wizard prefills itself from the
+     * response so the alumnus reviews and edits before anything actually hits
+     * the database, same as any other prefill (see toResumeFormArray()).
      *
-     * Tries Gemini first (free tier — see GeminiResumeParser) for better
-     * accuracy across varied resume formats, and falls back to the local
-     * heuristic parser (ResumeTextParser) if no API key is configured or the
-     * request fails for any reason, so importing never hard-depends on an
-     * external service being up.
+     * Runs a locally trained model (see App\Services\ResumeParser): the PDF's
+     * own font sizes and text positions are read, every line is labelled, and
+     * the labels are assembled into fields. No external service is called, so
+     * importing works offline and costs nothing per use. ResumeTextParser is
+     * kept only as a safety net — see ResumeParseService for exactly when.
      */
     public function import(Request $request)
     {
@@ -40,35 +37,32 @@ class ResumeBuilderController extends Controller
             'resume_file' => ['required', 'file', 'mimes:pdf', 'max:5120'],
         ]);
 
+        $file = $request->file('resume_file');
+
         try {
-            $text = (new PdfTextParser())->parseFile($request->file('resume_file')->getRealPath())->getText();
+            $result = app(ResumeParseService::class)->parse(
+                $file->getRealPath(),
+                (int) Auth::id(),
+                $file->getClientOriginalName(),
+            );
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => 'That PDF has no readable text (likely a scanned image). Try a different file.',
+            ], 422);
         } catch (\Throwable $e) {
+            Log::error('Resume import failed: ' . $e->getMessage());
+
             return response()->json([
                 'message' => 'Could not read that PDF. Make sure it\'s not scanned/image-only or password-protected.',
             ], 422);
         }
 
-        if (trim($text) === '') {
-            return response()->json([
-                'message' => 'That PDF has no readable text (likely a scanned image). Try a different file.',
-            ], 422);
-        }
-
-        $gemini = new GeminiResumeParser();
-        $usedAi = false;
-
-        if ($gemini->isConfigured()) {
-            try {
-                $parsed = $gemini->parse($text);
-                $usedAi = true;
-            } catch (\Throwable $e) {
-                Log::warning('Gemini resume parse failed, falling back to heuristic parser: ' . $e->getMessage());
-            }
-        }
-
-        $parsed ??= (new ResumeTextParser())->parse($text);
-
-        return response()->json($parsed + ['parsed_with' => $usedAi ? 'ai' : 'heuristic']);
+        return response()->json($result['payload'] + [
+            'parsed_with' => $result['parsed_with'],
+            // Echoed back by the wizard on save, so a correction can be traced
+            // to the lines that produced it.
+            'resume_parse_id' => $result['parse']?->resume_parse_id,
+        ]);
     }
 
     /**

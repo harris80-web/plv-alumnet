@@ -272,6 +272,15 @@ it('never matches a gazetteer entry inside a longer word', function () {
         ->not->toContain('hasindustry');
 });
 
+it('keeps text whose encoding defeats the whitespace pass', function () {
+    // Icon-font glyphs make preg_replace return null on these lines; treating
+    // that as an empty string silently dropped a third of the document.
+    $result = (new ResumeLineFeaturizer())->fromFile(fixture('vkpjwfqwyrzb.pdf'));
+
+    expect($result['mode'])->toBe(ResumeLineFeaturizer::MODE_LAYOUT)
+        ->and(findLine($result['lines'], 'john.doe@example.com'))->not->toBeNull();
+});
+
 it('round-trips a line through persistence without losing geometry', function () {
     $line = new Line(
         text: 'Backend Developer', page: 2, x: 34.5, y: 541.6, size: 8.25,

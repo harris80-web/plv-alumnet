@@ -80,6 +80,7 @@ class SkillGazetteer
         $haystack = ' ' . mb_strtolower(preg_replace('/\s+/u', ' ', $text)) . ' ';
         $matches = [];
 
+        // Longest first, so a short skill cannot claim part of a longer one.
         $names = array_keys($this->byName);
         usort($names, fn ($a, $b) => mb_strlen($b) <=> mb_strlen($a));
 
@@ -91,7 +92,7 @@ class SkillGazetteer
                 continue;
             }
 
-            $matches[] = $this->byName[$candidate];
+            $matches[$position] = $this->byName[$candidate];
             // Blanked out so a shorter skill cannot match inside ground already
             // claimed by a longer one.
             $haystack = mb_substr($haystack, 0, $position + 1)
@@ -99,7 +100,11 @@ class SkillGazetteer
                 . mb_substr($haystack, $position + 1 + mb_strlen($candidate));
         }
 
-        return $matches;
+        // Matching order is longest-first, but the caller wants the skills in the
+        // order the person actually wrote them.
+        ksort($matches);
+
+        return array_values($matches);
     }
 
     private function fuzzyMatch(string $name): ?array

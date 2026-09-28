@@ -420,7 +420,7 @@ Route::resource('users', UserController::class);
 Route::get('/resume/build', [ResumeBuilderController::class, 'edit'])->name('resume.build')->middleware('auth');
 Route::post('/resume/save', [ResumeBuilderController::class, 'save'])->name('resume.save')->middleware('auth');
 Route::get('/resume/pdf', [ResumeBuilderController::class, 'downloadPdf'])->name('resume.pdf')->middleware('auth');
-Route::post('/resume/import', [ResumeBuilderController::class, 'import'])->name('resume.import')->middleware('auth');
+Route::post('/resume/import', [ResumeBuilderController::class, 'import'])->name('resume.import')->middleware(['auth', 'throttle:10,1']);
 Route::get('/resume/view/{alumnusId}', [ResumeBuilderController::class, 'viewApplicantResume'])->name('resume.viewApplicant')->middleware('auth');
 
 // Local-only: renders every mails/*.blade.php exactly as it would be

@@ -31,12 +31,21 @@
                 </button>
                 <span id="editorImportResumeStatus" class="text-xs text-gray-500"></span>
             </div>
+            {{-- Required notice: importing stores the text of the uploaded file. --}}
+            <p class="text-center text-[11px] text-gray-400 mt-3 px-4">
+                Text from your uploaded resume is stored to improve the importer, and any
+                corrections you make help it get better. Nothing is saved to your profile
+                until you press Save.
+            </p>
         </div>
 
         <div class="border-t border-gray-200 mx-8 md:mx-12"></div>
 
         <form id="resumeEditorForm" class="p-8 md:p-12 pt-4">
             @csrf
+            {{-- Set by an import; submitted with the save so the parser can learn
+                 which lines the alumnus corrected. Empty when they typed from scratch. --}}
+            <input type="hidden" name="resume_parse_id" id="editorResumeParseId" value="">
 
             {{-- ===== Header (name/contact/photo are read-only here; edited on this same page) ===== --}}
             <div class="flex items-center gap-6 border-b-2 border-[#0E0F3B] pb-6 mb-6">
@@ -759,7 +768,9 @@
 
             document.getElementById('editorSkillsList').innerHTML = '';
             counters.skills = 0;
-            (data.skills || []).forEach(function (s) { addSkillChip(s.name); });
+            // The parser now supplies each skill's real category; it used to be
+            // dropped here, so every imported skill was filed as Domain Knowledge.
+            (data.skills || []).forEach(function (s) { addSkillChip(s.name, s.category); });
 
             document.getElementById('editorWorkList').innerHTML = '';
             document.getElementById('editorProjectList').innerHTML = '';
@@ -770,8 +781,13 @@
             counters.certifications = 0;
             (data.certifications || []).forEach(addCertRowWithData);
 
+            // Submitted with the save so a correction can be traced back to the
+            // lines that produced it, which is what lets the parser learn.
+            var editorParseId = document.getElementById('editorResumeParseId');
+            if (editorParseId) editorParseId.value = data.resume_parse_id || '';
+
             var found = (data.skills || []).length + (data.experiences || []).length + (data.certifications || []).length;
-            var method = data.parsed_with === 'ai' ? ' (AI-assisted)' : '';
+            var method = data.parsed_with === 'model+heuristic' ? ' (partly by fallback)' : '';
             editorImportStatus.textContent = found > 0
                 ? 'Imported' + method + ' — review the fields below, then save.'
                 : 'Imported, but couldn\'t find much structured data — please fill in manually.';

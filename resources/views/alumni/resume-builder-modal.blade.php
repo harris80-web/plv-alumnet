@@ -39,6 +39,12 @@
                 </button>
                 <span id="importResumeStatus" class="text-xs text-gray-500"></span>
             </div>
+            {{-- Required notice: importing stores the text of the uploaded file. --}}
+            <p class="text-center text-[11px] text-gray-400 mt-3 px-4">
+                Text from your uploaded resume is stored to improve the importer, and any
+                corrections you make help it get better. Nothing is saved to your profile
+                until you press Save.
+            </p>
         </div>
 
         <div class="border-t border-gray-200 mb-6"></div>
@@ -76,6 +82,9 @@
 
         <form id="resume-form" class="bg-white rounded-lg shadow p-6">
             @csrf
+            {{-- Set by an import; submitted with the save so the parser can learn
+                 which lines the alumnus corrected. Empty when they typed from scratch. --}}
+            <input type="hidden" name="resume_parse_id" id="resumeParseId" value="">
 
             {{-- ===== Step 0: Summary ===== --}}
             <section class="wizard-step" data-step="0">
@@ -839,7 +848,10 @@
     function addCertRowWithData(cert) {
         addRow('cert-row-template', 'cert-list', 'certifications');
         var row = document.getElementById('cert-list').lastElementChild;
-        row.querySelector('input[value="' + cert.certification_type + '"]').checked = true;
+        // Guarded: an unexpected type would otherwise throw here and abandon the
+        // rest of the import half-applied.
+        var typeRadio = row.querySelector('input[value="' + String(cert.certification_type || '').replace(/"/g, '') + '"]');
+        if (typeRadio) typeRadio.checked = true;
         row.querySelector('[name$="[certification_name]"]').value = cert.certification_name || '';
         row.querySelector('[name$="[certification_from]"]').value = cert.certification_from || '';
         row.querySelector('[name$="[certification_date]"]').value = cert.certification_date || '';
@@ -848,6 +860,7 @@
     var importBtn = document.getElementById('importResumeBtn');
     var importFile = document.getElementById('importResumeFile');
     var importStatus = document.getElementById('importResumeStatus');
+    var parseIdInput = document.getElementById('resumeParseId');
 
     var resumeDropzone = document.getElementById('resumeDropzone');
     var resumeDropzoneText = document.getElementById('resumeDropzoneText');
@@ -913,7 +926,9 @@
 
             document.getElementById('skills-list').innerHTML = '';
             counters.skills = 0;
-            (data.skills || []).forEach(function (s) { addSkillChip(s.name); });
+            // The parser now supplies each skill's real category; it used to be
+            // dropped here, so every imported skill was filed as Domain Knowledge.
+            (data.skills || []).forEach(function (s) { addSkillChip(s.name, s.category); });
 
             document.getElementById('experience-list').innerHTML = '';
             counters.experiences = 0;
@@ -923,8 +938,12 @@
             counters.certifications = 0;
             (data.certifications || []).forEach(addCertRowWithData);
 
+            // Submitted with the save so a correction can be traced back to the
+            // lines that produced it, which is what lets the parser learn.
+            if (parseIdInput) parseIdInput.value = data.resume_parse_id || '';
+
             var found = (data.skills || []).length + (data.experiences || []).length + (data.certifications || []).length;
-            var method = data.parsed_with === 'ai' ? ' (AI-assisted)' : '';
+            var method = data.parsed_with === 'model+heuristic' ? ' (partly by fallback)' : '';
             importStatus.textContent = found > 0
                 ? 'Imported' + method + ' — review the fields below, then save.'
                 : 'Imported, but couldn\'t find much structured data — please fill in manually.';

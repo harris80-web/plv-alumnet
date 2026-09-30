@@ -66,12 +66,12 @@
                     <tr>
                         <td align="center" style="padding:20px 36px 36px 36px; font-family:'Montserrat', Arial, sans-serif;">
                             <!-- Colored Logo -->
-                            <!-- @php
+                            @php
                                 $logoUrl = asset('assets/PLV-AlumNet-LETTERMARK-COLORED-2.png');
                             @endphp
                             <img src="{{ $logoUrl }}" alt="PLV-AlumNet"
                                  width="140" height="44"
-                                style="display:block; width:140px; max-width:140px; height:auto; margin:0 auto 10px auto; border:0;"> -->
+                                style="display:block; width:140px; max-width:140px; height:auto; margin:0 auto 10px auto; border:0;">
                             <!-- Copyright Notice -->
                             <p style="margin:0; font-family:'Montserrat', Arial, sans-serif; font-size:13px; font-weight:700; color:#0E0F3B; text-align:center;">
                                 &copy;2026 PLV-AlumNet | All Rights Reserved

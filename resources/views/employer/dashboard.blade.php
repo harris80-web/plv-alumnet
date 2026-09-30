@@ -58,7 +58,7 @@
 
     <section class="bg-gray-50 p-8">
         <div class="max-w-6xl mx-auto">
-            <h2 class="text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent mb-8 tracking-wide">
+            <h2 class="text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent mb-8 tracking-wide rp-dashboard-title">
                 DASHBOARD FOR {{ strtoupper($employer->employer_company_name ?? 'YOUR COMPANY') }}
             </h2>
 

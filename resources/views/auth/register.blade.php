@@ -75,7 +75,7 @@
                 <div class="text-center mb-6">
                     <span
                         class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
-                        Sign Up </span>
+                        Employer Sign Up </span>
                     <span
                         class=" font-[Inter] text-[#b85c38] font-medium bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent"><br>Let's
                         Get Started!</span>

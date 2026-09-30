@@ -594,12 +594,6 @@ html.rp-scope .rp-only-compact {
         font-size: 0.875rem;
         touch-action: manipulation;
     }
-    /* The mockup's footer list has only HOME / ABOUT / PRIVACY POLICY / TERMS OF USE / FAQs;
-       extra links (EVENTS, ANNOUNCEMENTS) stay reachable from the hamburger menu.
-       To show them again on mobile, delete this rule. */
-    html.rp-scope .rp-footer .rp-footer-col nav a[data-rp-footer-extra] {
-        display: none;
-    }
     /* contact block: seal on the left, text + icons on the right */
     html.rp-scope .rp-footer .rp-footer-contact {
         margin-top: 1.25rem;
@@ -771,6 +765,80 @@ html.rp-scope .rp-only-compact {
     }
 }
 
+/* ---- Employer FAQs page (employer/faqs.blade.php) ----
+   #faq-section has no side padding of its own (max-w-3xl mx-auto only), so its
+   FAQ boxes sat flush against the viewport edge on mobile; inset it like the
+   other cards. Title/question/answer text also get an explicit reduction on
+   top of (title) or beyond the reach of (question/answer, which aren't part
+   of) the sitewide text-3xl/xl typography scale. ---- */
+@media (max-width: 767px) {
+    html.rp-scope #faq-section {
+        max-width: 92%;
+    }
+    html.rp-scope .rp-faq-title {
+        /* !important: beats the later, equal-specificity [class~="text-3xl"] rule
+           in [TYPOGRAPHY & SPACING SCALE] that this title's own text-3xl class also matches */
+        font-size: 1.25rem !important;
+    }
+    html.rp-scope .rp-faq-question {
+        font-size: 0.9375rem;
+    }
+    html.rp-scope .rp-faq-answer {
+        font-size: 0.8125rem;
+    }
+}
+
+/* ---- Terms of Use cards (employer/tou.blade.php) — icon + title stack and
+   center (items-center) on mobile already, but the title itself inherited
+   text-left from its wrapper, so a wrapped 2-line title looked ragged next
+   to the centered icon above it. display:block on the icon avoids the
+   default inline-SVG baseline gap so it stays visually centered too. ---- */
+@media (max-width: 767px) {
+    html.rp-scope .rp-tou-card-title {
+        text-align: center;
+    }
+    html.rp-scope .rp-tou-icon {
+        display: block;
+    }
+}
+
+/* ---- Alumni Testimonial cards (partials/testimonial-cards.blade.php) ----
+   Course/college/batch colors AND the one-field-per-line layout now apply at
+   EVERY width (course keeps its original blue; college/batch are recolored;
+   each field stacks on its own line and the ", " separators are hidden, on
+   desktop too, not just mobile). Only the extra type-size/spacing tightening
+   below stays mobile-only — that was about fixing cramped text on a small
+   card, not something desktop needs. */
+html.rp-scope .AlumniTestimonial .rp-tc-college {
+    color: #C73D1A;
+}
+html.rp-scope .AlumniTestimonial .rp-tc-batch {
+    color: #6B7280;
+}
+html.rp-scope .AlumniTestimonial .rp-tc-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+html.rp-scope .AlumniTestimonial .rp-tc-sep {
+    display: none;
+}
+@media (max-width: 767px) {
+    html.rp-scope .AlumniTestimonial .rp-tc-meta {
+        font-size: 0.75rem;
+        margin-top: 0.375rem;
+        margin-bottom: 0.875rem;
+    }
+    html.rp-scope .AlumniTestimonial .rp-tc-name {
+        font-size: 1rem;
+        line-height: 1.3;
+    }
+    html.rp-scope .AlumniTestimonial .rp-tc-body {
+        margin-top: 0.25rem;
+        line-height: 1.6;
+    }
+}
+
 
 /* ==========================================================
    [CAROUSELS] — every horizontal card carousel (partials/carousel-init.blade.php):
@@ -839,6 +907,13 @@ html.rp-scope [id$="CarouselNext"] {
 
 /* ---- Job post card (partials/job-post-card.blade.php) ---- */
 @media (max-width: 767px) {
+    /* Same treatment as .rp-notice-card (events/announcements): inset the card from
+       the page edge instead of letting it run full-bleed at the page's own padding. */
+    html.rp-scope .rp-job-card {
+        max-width: 92%;
+        margin-left: auto;
+        margin-right: auto;
+    }
     html.rp-scope .rp-job-body {
         padding: var(--rp-card-pad);
     }
@@ -887,6 +962,17 @@ html.rp-scope [id$="CarouselNext"] {
     html.rp-scope .rp-job-body .border-t.flex-wrap {
         row-gap: 0.75rem;
     }
+    /* Its right-hand cluster (company votes/rating + application-status badge,
+       .rp-job-status-row) has no wrap of its own, so on a narrow phone it can run
+       past the card's right edge — most visible on My Applications/Bookmarks,
+       where the status badge always renders. Wrapping keeps the badge fully
+       inside the card, right-aligned under the votes widget when both are present. */
+    html.rp-scope .rp-job-status-row {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        max-width: 100%;
+    }
     /* employer variant (general/jobPostings.blade.php): stats block + View Applicants / Edit Post */
     html.rp-scope .rp-job-stats {
         flex-wrap: wrap;
@@ -905,6 +991,73 @@ html.rp-scope [id$="CarouselNext"] {
         justify-content: center;
         text-align: center;
         touch-action: manipulation;
+    }
+
+    /* ---- My Job Postings header (general/jobPostings.blade.php) ----
+       Title + "Post a New Job" sat side by side and both stayed full desktop
+       size; stack them and shrink the button so it reads as a secondary
+       action under the title instead of competing with it for width. */
+    html.rp-scope .rp-postings-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    html.rp-scope .rp-postings-title {
+        /* !important: beats the later, equal-specificity [class~="text-3xl"] rule
+           in [TYPOGRAPHY & SPACING SCALE] that this title's own text-3xl class also matches */
+        font-size: 1.375rem !important;
+    }
+    html.rp-scope .rp-postings-post-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.75rem;
+    }
+
+    /* ---- My Job Postings filters (general/jobPostings.blade.php) ----
+       The [FORMS] rule below gives every <input>/<select> a 40px min-height
+       for tap comfort, but the Industry/Job Type/Job Setup multiselect
+       triggers are <button>s and never got it — so Location/Date Posted
+       stood taller than the rest of the filter row. Bring them back down
+       to the buttons' natural height instead of growing the buttons up.
+       !important: the [FORMS] rule's chain of :not() exclusions gives it
+       higher specificity than a single class selector could otherwise beat. */
+    html.rp-scope .rp-filter-compact {
+        min-height: 0 !important;
+    }
+
+    /* ---- Edit Job Post modal (general/jobPostings.blade.php #editPostModal) ----
+       The generic [MODALS] rules already give this overlay a safe-area gutter and
+       cap the panel's height; this adds the deliberately smaller width plus the
+       compacting (padding/inputs/text/buttons) that's specific to this form. */
+    html.rp-scope .rp-editpost-panel {
+        /* !important: overrides the panel's own Tailwind max-w-4xl (both are single-class
+           selectors, and this stylesheet's <link> is emitted after the Tailwind CDN's
+           injected <style>, so without it the cascade order isn't reliably guaranteed).
+           min-height: 0 is already set for this panel by the #editPostModal > div rule
+           further down ([MODALS]). */
+        max-width: 92% !important;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    html.rp-scope .rp-editpost-title {
+        /* !important: beats the later, equal-specificity [class~="text-3xl"] rule
+           in [TYPOGRAPHY & SPACING SCALE] that this title's own text-3xl class also matches */
+        font-size: 1.25rem !important;
+    }
+    html.rp-scope .rp-editpost-body {
+        padding: var(--rp-card-pad);
+    }
+    html.rp-scope .rp-editpost-body input,
+    html.rp-scope .rp-editpost-body select {
+        padding-top: 0.375rem;
+        padding-bottom: 0.375rem;
+    }
+    html.rp-scope .rp-editpost-actions {
+        padding: 0.75rem 0;
+        margin-top: 1.5rem;
+    }
+    html.rp-scope .rp-editpost-btn {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
     }
 }
 
@@ -933,6 +1086,18 @@ html.rp-scope [id$="CarouselNext"] {
     }
 }
 
+/* ---- Events / Seminars / Announcements cards (alumni/eventsSeminars.blade.php,
+   alumni/announcements.blade.php) — single-column grid on mobile leaves the card
+   flush with the page's own side padding; inset it a bit further so it reads as
+   a card floating with its own gap rather than a full-bleed panel. ---- */
+@media (max-width: 767px) {
+    html.rp-scope .rp-notice-card {
+        max-width: 92%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
 /* ---- Alumni directory table (partials/alumni-directory-table.blade.php) ----
    Strategy: keep the table + its own horizontal scroll, and HIDE the low-priority
    columns (Program, College) below 768px. Full Name, Batch and Actions stay. */
@@ -955,6 +1120,62 @@ html.rp-scope [id$="CarouselNext"] {
     }
     html.rp-scope table {
         font-size: var(--rp-body-size);
+    }
+    /* column header titles (Full Name / Program / College / Batch / Actions) — was text-xs (12px) */
+    html.rp-scope .rp-table-directory thead th {
+        font-size: 0.625rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+}
+
+/* ---- Shared table pagination bar (partials/table-pagination-bar.blade.php) —
+   used by the Alumni Directory (and other rp-scope tables). Its "item count +
+   nav" cluster doesn't wrap, so on a narrow phone the item count text plus
+   5 nav buttons can overflow the row; wrap it and drop First/Last (keeping
+   Prev / "Page x of y" / Next) so it always fits. ---- */
+@media (max-width: 767px) {
+    html.rp-scope [data-pv-pagination] {
+        gap: 0.5rem;
+    }
+    html.rp-scope [data-pv-pagination] > div:last-child {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    html.rp-scope [data-pv-pagination] [data-pv-first],
+    html.rp-scope [data-pv-pagination] [data-pv-last] {
+        display: none;
+    }
+}
+
+/* ---- Alumni "View Profile" header (alumni/profile.blade.php) — Course and
+   "Alumni Batch YYYY" share one line on desktop (unchanged); on mobile the
+   batch drops to its own line below the course. ---- */
+@media (max-width: 767px) {
+    html.rp-scope .rp-profile-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+    }
+    html.rp-scope .rp-profile-sep {
+        display: none;
+    }
+}
+
+/* ---- Company review cards (general/companyReviews.blade.php) — reached via the
+   "Reviews" link on a job post/modal. Course/college share one line with the
+   review date; on mobile they get their own color and a size smaller than that
+   line's default text-xs (12px). ---- */
+@media (max-width: 767px) {
+    html.rp-scope .rp-review-course {
+        font-size: 0.6875rem;   /* 11px */
+        color: #1D46A4;
+    }
+    html.rp-scope .rp-review-college {
+        font-size: 0.6875rem;   /* 11px */
+        color: #ED7A07;
     }
 }
 
@@ -1085,9 +1306,14 @@ html.rp-scope .rp-chart {
         min-height: var(--rp-btn-h);
         min-width: var(--rp-btn-h);
     }
-    /* icon-only buttons (bookmark, share, +/- course ...) are centred 40px squares */
+    /* icon-only buttons (bookmark, share, +/- course ...) are centred 40px squares.
+       :not(.hidden) matters: #modal-applied-btn ("<i>...</i> APPLIED") also matches
+       `> i:only-child` (its "APPLIED" text is a text node, not an element), so without
+       this exclusion the rule's specificity beat Tailwind's plain `.hidden{display:none}`
+       and force-showed the Applied button on tablet/mobile even for guests who should
+       only ever see "LOGIN TO APPLY". */
     html.rp-scope :is(div.fixed.inset-0[id$="Modal"], div.fixed.inset-0[id$="Overlay"]):not(#menuOverlay):not(#infoPanelOverlay)
-        button:has(> i:only-child):not(.star-btn):not(.vote-btn):not([class*="chip"] button) {
+        button:has(> i:only-child):not(.hidden):not(.star-btn):not(.vote-btn):not([class*="chip"] button) {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -1241,7 +1467,9 @@ html.rp-scope .rp-chart {
     }
 
     /* Job detail sheet: the close (x) stays reachable however far the sheet is scrolled.
-       (position: fixed is measured from the overlay, which is the whole screen.) */
+       (position: fixed is measured from the overlay, which is the whole screen.)
+       No background/border-radius pill here on purpose — just the plain icon at a
+       comfortable touch-target size, per request to drop the extra chrome around it. */
     html.rp-scope #jobModal button[onclick="toggleModal()"] {
         position: fixed;
         top: calc(max(0.5rem, env(safe-area-inset-top)) + 0.5rem);
@@ -1252,8 +1480,6 @@ html.rp-scope .rp-chart {
         justify-content: center;
         width: 2.5rem;
         height: 2.5rem;
-        border-radius: 9999px;
-        background: rgb(14 15 59 / 0.55);
     }
 
     /* Forgot-password: the inline "Resend link" text button — hit area grows, layout does not
@@ -1490,6 +1716,14 @@ html.rp-scope .rp-chat-back {
     html.rp-scope .rp-chat #messageThread {
         padding: 0.75rem;
     }
+    /* Composer row (attach / input / send): #messageInput already has flex-1, but a
+       flex item's default min-width is auto (its intrinsic content width), which for
+       a text input can be wider than the space left after the two 40px round buttons
+       — pushing Send past the right edge on a narrow phone. min-width: 0 lets it
+       actually shrink to fill just the remaining space. */
+    html.rp-scope #messageInput {
+        min-width: 0;
+    }
 }
 
 
@@ -1514,6 +1748,14 @@ html.rp-scope .rp-chat-back {
 @media (max-width: 767px) {
     html.rp-scope [class~="text-2xl"] { font-size: var(--rp-fs-subheading); }   /* ~20px section heading */
     html.rp-scope [class~="text-xl"]  { font-size: var(--rp-fs-lead); }
+
+    /* Employer dashboard's "DASHBOARD FOR <company name>" heading (employer/dashboard.blade.php) —
+       length varies per employer, so the generic text-2xl rule above (20px) still isn't small
+       enough to avoid awkward wrapping for a long company name on a phone. */
+    html.rp-scope .rp-dashboard-title {
+        font-size: 1.125rem;
+        line-height: 1.3;
+    }
 
     /* Card / panel padding: 32-48px → var(--rp-card-pad). Side padding only. */
     html.rp-scope :is([class~="p-8"], [class~="px-8"], [class~="p-10"], [class~="px-10"], [class~="p-12"], [class~="px-12"]):not(button):not(a):not(input):not(select):not(textarea) {

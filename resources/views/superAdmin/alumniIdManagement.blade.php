@@ -226,7 +226,7 @@
                                     @endphp
                                     <tr class="border-b border-slate-100" data-search="{{ mb_strtolower($fullName . ' ' . $referenceNo) }}"
                                         data-reference="{{ mb_strtolower($referenceNo) }}" data-program="{{ $alumniIdRecord->alumnus->program->program_name ?? '' }}"
-                                        data-submitted="{{ $alumniIdRecord->created_at->format('Y-m-d') }}" data-status="{{ $alumniIdRecord->status }}">
+                                        data-batch="{{ optional($alumniIdRecord->alumnus->alumnus_batch)->format('Y') }}" data-status="{{ $alumniIdRecord->status }}">
                                         <td class="border-r border-slate-100">
                                             <input type="checkbox" class="alumni-id-checkbox bulk-checkbox" value="{{ $alumniIdRecord->id }}">
                                         </td>
@@ -462,9 +462,14 @@
                 </select>
             </div>
             <div>
-                <label class="text-[13px] font-bold text-[#1e1b4b] block mb-2">Submission Date</label>
-                <input type="date" id="aidFilterDate"
-                    class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#C73D1A]">
+                <label class="text-[13px] font-bold text-[#1e1b4b] block mb-2">Batch Year</label>
+                <select id="aidFilterBatch"
+                    class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-600 focus:outline-none">
+                    <option value="">Select Batch</option>
+                    @foreach ($alumniIdBatches as $batchYear)
+                    <option value="{{ $batchYear }}">{{ $batchYear }}</option>
+                    @endforeach
+                </select>
             </div>
             <hr class="border-slate-100">
             <div>
@@ -763,7 +768,7 @@
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
             const refQuery = document.getElementById('aidFilterReference').value.trim().toLowerCase();
             const program = document.getElementById('aidFilterProgram').value;
-            const date = document.getElementById('aidFilterDate').value;
+            const batch = document.getElementById('aidFilterBatch').value;
             const statuses = [...document.querySelectorAll('.aid-filter-status:checked')].map(cb => cb.value);
 
             const rows = document.querySelectorAll('#alumniIdsTbody tr[data-search]');
@@ -772,7 +777,7 @@
                 const match = row.dataset.search.includes(query) &&
                     (!refQuery || row.dataset.reference.includes(refQuery)) &&
                     (!program || row.dataset.program === program) &&
-                    (!date || row.dataset.submitted === date) &&
+                    (!batch || row.dataset.batch === batch) &&
                     (statuses.length === 0 || statuses.includes(row.dataset.status));
                 row.style.display = match ? '' : 'none';
                 if (match) visibleCount++;

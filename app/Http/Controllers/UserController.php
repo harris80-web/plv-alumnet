@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ApproveEmployerMail;
 use App\Mail\RejectEmployerMail;
 use App\Models\User;
 use App\Models\Employer;
@@ -526,6 +527,15 @@ class UserController extends Controller
         $user->update(['user_active' => 1]);
 
         $user->employer->update(['employer_approved' => 1]);
+
+        // Approval already happened above — a failed notification email must
+        // not undo it or block the response, just get logged.
+        try {
+            Mail::to($user->user_email)->send(new ApproveEmployerMail($user));
+        } catch (\Exception $e) {
+            Log::error('Failed to send employer approval email: ' . $e->getMessage());
+        }
+
         return back()->with('success', 'Status updated successfully!');
     }
 
@@ -533,7 +543,7 @@ class UserController extends Controller
     {
         $this->authorizeStaff();
         $user = Employer::where('user_id', $id)->firstOrFail();
-       
+
         $validated = $request->validate([
             'reject-reason' => 'required|string|max:255'
         ]);
@@ -545,11 +555,12 @@ class UserController extends Controller
             // Delete after successful email
             $user->delete();
             $user->user->delete();
-            
+
         } catch (\Exception $e) {
+            Log::error('Failed to send employer rejection email, employer not removed: ' . $e->getMessage());
             return back()->with('error', $e->getMessage());
         }
-        
+
         return redirect()->back()->with('success', 'Employer has been rejected and removed.');
     }
 

@@ -60,15 +60,15 @@
         <!-- HEADER ROW -->
         <div class="flex flex-col md:items-center md:justify-between mb-6 gap-4">
 
-            <div class="w-full flex items-center justify-between mb-8">
+            <div class="w-full flex items-center justify-between mb-8 rp-postings-header">
                 <!-- LEFT: TITLE -->
-                <h1 class="text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent rp-postings-title">
                     MY JOB POSTINGS
                 </h1>
                 <!-- RIGHT: BUTTON -->
                 <button
                     onclick="openPostJobModal()"
-                    class="flex items-center gap-2 bg-[#1D264F] hover:bg-blue-900 text-white px-6 py-2.5 rounded-lg font-bold text-sm tracking-widest shadow-lg transition-all transform hover:scale-105 active:scale-95">
+                    class="flex items-center gap-2 bg-[#1D264F] hover:bg-blue-900 text-white px-6 py-2.5 rounded-lg font-bold text-sm tracking-widest shadow-lg transition-all transform hover:scale-105 active:scale-95 rp-postings-post-btn">
                     <i class="fas fa-plus text-xs"></i>
                     <span>POST A NEW JOB</span>
                 </button>
@@ -126,14 +126,14 @@
                         <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none text-xs">
                             <i class="fas fa-map-marker-alt"></i>
                         </span>
-                        <input type="text" name="location" value="{{ $filters['location'] ?? '' }}" placeholder="Location" class="w-full pl-11 pr-4 py-1.5 border rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                        <input type="text" name="location" value="{{ $filters['location'] ?? '' }}" placeholder="Location" class="w-full pl-11 pr-4 py-1.5 border rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-[#C73D1A] rp-filter-compact">
                     </div>
 
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none text-xs">
                             <i class="fas fa-calendar-alt"></i>
                         </span>
-                        <select name="date_posted" onchange="this.form.submit()" class="w-full pl-11 pr-10 py-1.5 border rounded-full bg-white text-xs appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                        <select name="date_posted" onchange="this.form.submit()" class="w-full pl-11 pr-10 py-1.5 border rounded-full bg-white text-xs appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A] rp-filter-compact">
                             <option value="">Date Posted</option>
                             <option value="24h" {{ ($filters['date_posted'] ?? '') === '24h' ? 'selected' : '' }}>Last 24 Hours</option>
                             <option value="7d" {{ ($filters['date_posted'] ?? '') === '7d' ? 'selected' : '' }}>Last 7 Days</option>
@@ -396,7 +396,7 @@
     <div id="editPostModal"
         class="fixed inset-0 z-[999] bg-black/70 flex items-center justify-center overflow-y-auto hidden p-4">
 
-        <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl relative flex flex-col min-h-[600px] max-h-[90vh] overflow-y-auto my-8">
+        <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl relative flex flex-col min-h-[600px] max-h-[90vh] overflow-y-auto my-8 rp-editpost-panel">
 
             @foreach($jobPostings as $job)
             <form id="editForm-{{ $job->job_posting_id }}" class="flex flex-col flex-1 hidden" action="{{ route('jobPosting.editJobPost', ['id' => $job->job_posting_id]) }}" method="post" enctype="multipart/form-data">
@@ -408,14 +408,14 @@
                 </button>
 
                 <div class="w-full pt-12 text-center">
-                    <h2 class="inline-block text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+                    <h2 class="inline-block text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent rp-editpost-title">
                         EDIT JOB POST
                     </h2>
                 </div>
 
                 <div class="flex flex-col flex-1">
 
-                    <div class="p-10 pt-6 space-y-4">
+                    <div class="p-10 pt-6 space-y-4 rp-editpost-body">
 
                         <!-- THUMBNAIL -->
                         <div class="space-y-1">
@@ -572,14 +572,14 @@
                             </div>
                         </div>
 
-                        <div class="flex justify-end gap-4 mt-10 p-5">
+                        <div class="flex justify-end gap-4 mt-10 p-5 rp-editpost-actions">
                             <button type="button" onclick="closeEditPostModal()"
-                                class="px-10 py-2 border-2 border-[#1D264F] text-[#1D264F] rounded-md font-bold text-sm hover:bg-[#0E0F3B] hover:text-white transition">
+                                class="px-10 py-2 border-2 border-[#1D264F] text-[#1D264F] rounded-md font-bold text-sm hover:bg-[#0E0F3B] hover:text-white transition rp-editpost-btn">
                                 CANCEL
                             </button>
 
                             <button type="submit"
-                                class="px-12 py-2 bg-[#0E0F3B] text-white rounded-md font-bold text-sm hover:bg-blue-900 transition">
+                                class="px-12 py-2 bg-[#0E0F3B] text-white rounded-md font-bold text-sm hover:bg-blue-900 transition rp-editpost-btn">
                                 SAVE CHANGES
                             </button>
                         </div>

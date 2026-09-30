@@ -191,7 +191,7 @@
                 <span>Posted by <span class="font-bold text-black">{{ $job->user->user_first_name }} {{ $job->user->user_last_name }}</span></span>
             </div>
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 rp-job-status-row">
                 @if ($employer && $isAlumni)
                 <div class="flex items-center gap-2">
                     {{-- Up/downvote — per THIS job posting (see JobPostingVote),

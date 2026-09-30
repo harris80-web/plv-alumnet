@@ -123,7 +123,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach ($notices as $notice)
             @php $isInterested = in_array($notice->id, $interestedNoticeIds); @endphp
-            <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 flex flex-col h-full transition-transform hover:scale-[1.01] cursor-pointer"
+            <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 flex flex-col h-full transition-transform hover:scale-[1.01] cursor-pointer rp-notice-card"
                 onclick="openNoticeDetailModal(this)"
                 data-notice-id="{{ $notice->id }}"
                 data-category="{{ $notice->category }}"

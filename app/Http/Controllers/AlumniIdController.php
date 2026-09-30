@@ -53,8 +53,11 @@ class AlumniIdController extends Controller
         // alumnus_batch is now a full date — extract the year here rather
         // than listing every unique exact date.
         $batches = $yearbooks->pluck('alumnus.alumnus_batch')->filter()->map(fn ($d) => $d->year)->unique()->sortDesc()->values();
+        // Same idea for the Alumni ID tab's own "Batch Year" filter — computed from
+        // $alumniIds (not $yearbooks), since the two tabs' alumni don't necessarily overlap.
+        $alumniIdBatches = $alumniIds->pluck('alumnus.alumnus_batch')->filter()->map(fn ($d) => $d->year)->unique()->sortDesc()->values();
 
-        return view('superAdmin.alumniIdManagement', compact('alumniIds', 'statusCounts', 'yearbooks', 'yearbookCounts', 'programs', 'batches'));
+        return view('superAdmin.alumniIdManagement', compact('alumniIds', 'statusCounts', 'yearbooks', 'yearbookCounts', 'programs', 'batches', 'alumniIdBatches'));
     }
 
     /** The single "Mark ..." button — advances exactly one stage. */

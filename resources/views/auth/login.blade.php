@@ -126,7 +126,7 @@
 
                 <div class="mt-6 text-center text-sm text-gray-600">
                     Don't have an account yet? <br>
-                    <a href="{{ route('auth.register') }}" class="text-orange-600 font-bold hover:underline">Sign Up</a>
+                    <a href="{{ route('auth.register') }}" class="text-orange-600 font-bold hover:underline">Create Employer Account</a>
                 </div>
             </div>
         </div>

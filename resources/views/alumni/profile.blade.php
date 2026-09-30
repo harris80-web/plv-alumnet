@@ -77,9 +77,8 @@
                         {{ $user->user_last_name }}, {{ $user->user_first_name }}
                         {{ $user->user_middle_name }} {{ $user->user_suffix }}
                     </h3>
-                    <p class="text-sm font-semibold text-[#ED7A07] uppercase mt-1">
-                        {{ $user->alumnus->program->program_name ?? 'Not specified' }} &bull; Alumni Batch
-                        {{ $user->alumnus->alumnus_batch?->format('Y') ?? '--' }}
+                    <p class="text-sm font-semibold text-[#ED7A07] uppercase mt-1 rp-profile-meta">
+                        <span class="rp-profile-course">{{ $user->alumnus->program->program_name ?? 'Not specified' }}</span><span class="rp-profile-sep"> &bull; </span><span class="rp-profile-batch">Alumni Batch {{ $user->alumnus->alumnus_batch?->format('Y') ?? '--' }}</span>
                     </p>
                 </div>
             </div>

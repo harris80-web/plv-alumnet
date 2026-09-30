@@ -54,7 +54,7 @@
     <section id="faq-section" class="max-w-3xl mx-auto font-[Montserrat]">
 
         <header class="text-center mt-5 mb-10">
-            <h1 class="text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent tracking-wide">
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent tracking-wide rp-faq-title">
                 PLV-AlumNet<br>Frequently Asked Questions (FAQs)
             </h1>
             <p class="text-black mt-4 text-sm max-w-lg mx-auto font-medium">
@@ -68,7 +68,7 @@
                 <button class="faq-toggle w-full flex items-center justify-between bg-white p-5 rounded-t-xl shadow-md border-b border-gray-100 transition-all outline-none focus:outline-none focus:ring-0">
                     <div class="flex items-center gap-4">
                         <span class="bg-orange-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold shrink-0">?</span>
-                        <span class="text-lg font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-left">
+                        <span class="text-lg font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-left rp-faq-question">
                             {{ $faq->faq_question }}
                         </span>
                     </div>
@@ -78,7 +78,7 @@
                 <div class="faq-content grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out overflow-hidden">
                     <div class="min-h-0">
                         <div class="faq-gradient p-6 rounded-b-xl shadow-lg bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07]">
-                            <p class="text-white text-center text-sm leading-relaxed whitespace-pre-line">{{ $faq->faq_answer }}</p>
+                            <p class="text-white text-center text-sm leading-relaxed whitespace-pre-line rp-faq-answer">{{ $faq->faq_answer }}</p>
                         </div>
                     </div>
                 </div>

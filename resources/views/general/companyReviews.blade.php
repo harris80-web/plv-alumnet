@@ -104,9 +104,9 @@
                                 {{ $review->alumnus->user->user_first_name ?? 'Alumnus' }} {{ $review->alumnus->user->user_last_name ?? '' }}
                             </p>
                             <p class="text-xs text-gray-400">
-                                {{ $review->alumnus->program->program_name ?? 'PLV Alumnus' }}
+                                <span class="rp-review-course">{{ $review->alumnus->program->program_name ?? 'PLV Alumnus' }}</span>
                                 @if ($review->alumnus->program?->collegeName())
-                                &middot; {{ $review->alumnus->program->collegeName() }}
+                                &middot; <span class="rp-review-college">{{ $review->alumnus->program->collegeName() }}</span>
                                 @endif
                                 &middot; {{ $review->created_at->diffForHumans() }}
                             </p>

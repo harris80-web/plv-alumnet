@@ -95,7 +95,7 @@
             <div class="relative p-[2px] rounded-3xl bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] shadow-xl">
                 <div class="bg-white rounded-[22px] p-10 h-full flex flex-col items-center text-center">
                     <div class="w-20 h-20 bg-orange-700 text-white rounded-full flex items-center justify-center mb-6">
-                        <i class="fa-solid fa-shield-halved text-4xl"></i>
+                        <i class="fa-solid fa-shield-alt text-4xl"></i>
                     </div>
                     <h2 class="text-3xl font-bold mb-6 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Data Confidentiality</h2>
                     <p class="text-gray-800 font-bold leading-relaxed text-sm mb-6">

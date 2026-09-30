@@ -20,9 +20,18 @@
             </div>
         </div>
         <div>
-            <h4 class="text-blue-900 font-bold uppercase text-lg">{{ $testimonial->alumnus->user->user_first_name }} {{ $testimonial->alumnus->user->user_last_name }}</h4>
-            <p class="text-blue-700 text-[10px] font-semibold mb-3 uppercase">{{ $testimonial->alumnus->program->program_name }}@if($testimonial->alumnus->program?->collegeName()), {{ $testimonial->alumnus->program->collegeName() }}@endif, Batch {{ optional($testimonial->alumnus->alumnus_batch)->format('Y') }}</p>
-            <p class="text-gray-600 text-xs leading-relaxed">{{ $testimonial->testimonial_body }}</p>
+            <h4 class="text-blue-900 font-bold uppercase text-lg rp-tc-name">{{ $testimonial->alumnus->user->user_first_name }} {{ $testimonial->alumnus->user->user_last_name }}</h4>
+            {{-- Desktop keeps the original single-line, single-color rendering (spans are
+                 inline by default and inherit text-blue-700 here) — the mobile-only rule in
+                 responsive-public.css is what breaks these into separate colored lines. --}}
+            <p class="text-blue-700 text-[10px] font-semibold mb-3 uppercase rp-tc-meta">
+                <span class="rp-tc-course">{{ $testimonial->alumnus->program->program_name }}</span>
+                @if($testimonial->alumnus->program?->collegeName())
+                <span class="rp-tc-sep">, </span><span class="rp-tc-college">{{ $testimonial->alumnus->program->collegeName() }}</span>
+                @endif
+                <span class="rp-tc-sep">, </span><span class="rp-tc-batch">Batch {{ optional($testimonial->alumnus->alumnus_batch)->format('Y') }}</span>
+            </p>
+            <p class="text-gray-600 text-xs leading-relaxed rp-tc-body">{{ $testimonial->testimonial_body }}</p>
         </div>
     </div>
     @empty

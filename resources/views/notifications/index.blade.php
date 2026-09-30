@@ -73,22 +73,19 @@
             <p class="font-semibold">{{ $activeTab === 'unread' ? "You're all caught up." : 'No notifications yet.' }}</p>
         </div>
         @else
-        <div class="space-y-3">
+        <div class="bg-white rounded-2xl shadow-sm divide-y divide-gray-50 overflow-hidden">
             @foreach ($notifications as $notification)
             @php $unread = $notification->read_at === null; @endphp
             <a href="{{ route('notifications.open', $notification) }}"
-                class="flex items-start gap-4 bg-white rounded-xl shadow-sm border p-4 transition-shadow hover:shadow-md cursor-pointer {{ $unread ? 'border-l-4 border-l-blue-600 bg-blue-50/60' : 'border-gray-100' }}">
-                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0 mt-0.5">
-                    <i class="fa-solid fa-triangle-exclamation text-[#C73D1A] text-sm"></i>
+                class="block p-4 transition-colors hover:bg-gray-50 {{ $unread ? 'bg-blue-50' : '' }}">
+                <div class="flex items-start gap-2">
+                    <span class="w-2 h-2 rounded-full shrink-0 mt-1.5 {{ $unread ? 'bg-blue-600' : '' }}"></span>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-bold text-[#0E0F3B]">{{ $notification->title }}</p>
+                        <p class="text-xs text-gray-500 mt-0.5 break-words">{{ $notification->body }}</p>
+                        <p class="text-[10px] text-gray-400 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
+                    </div>
                 </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-sm font-bold text-[#0E0F3B]">{{ $notification->title }}</p>
-                    <p class="text-sm text-gray-500 mt-1 break-words">{{ $notification->body }}</p>
-                    <p class="text-xs text-gray-400 mt-2">{{ $notification->created_at->diffForHumans() }}</p>
-                </div>
-                @if ($unread)
-                <span class="w-2.5 h-2.5 rounded-full bg-blue-600 shrink-0 mt-1.5"></span>
-                @endif
             </a>
             @endforeach
         </div>

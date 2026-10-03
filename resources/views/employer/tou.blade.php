@@ -38,7 +38,7 @@
     }
 </style>
 
-<body>
+<body class="min-h-screen flex flex-col">
     @include('partials.header-employer')
 
     <section class="HeroSection h-[200px] flex items-end text-white shadow-lg">
@@ -48,7 +48,7 @@
         </div>
     </section>
 
-    <section class="bg-white py-16 px-4 font-[Montserrat]">
+    <section class="bg-white py-16 px-4 font-[Montserrat] flex-1">
         <div class="max-w-5xl mx-auto text-center">
             <h2 class="text-4xl font-bold mb-2">
                 <span class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">PLV-AlumNet Terms of Use</span>

@@ -57,7 +57,7 @@
 </style>
 
 
-<body>
+<body class="min-h-screen flex flex-col">
     @php
     $current_page = Route::currentRouteName();
     $activeTab ??= 'board';
@@ -106,7 +106,7 @@
     @include('partials.success')
 
     @include('partials.error')
-    <main class="max-w-5xl mx-auto p-6">
+    <main class="max-w-5xl mx-auto p-6 flex-1">
         <!-- SEARCH & FILTER -->
         <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-5 mb-8">
             <form method="GET" action="{{ $activeTabRoute }}">

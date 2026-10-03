@@ -31,7 +31,7 @@
     }
 </style>
 
-<body>
+<body class="min-h-screen flex flex-col">
     @php $current_page = Route::currentRouteName(); @endphp
     @include('partials.header-alumni')
 
@@ -45,7 +45,7 @@
     @include('partials.success')
 
     @include('partials.error')
-    <main class="max-w-6xl mx-auto p-6 pb-16">
+    <main class="max-w-6xl mx-auto p-6 pb-16 flex-1">
 
         <!-- SEARCH & FILTER -->
         <form method="GET" action="{{ route('alumni.index') }}" class="bg-white rounded-2xl shadow-md border border-gray-100 p-5 mb-8 flex flex-col md:flex-row gap-4">

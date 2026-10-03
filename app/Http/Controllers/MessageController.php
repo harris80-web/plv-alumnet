@@ -6,6 +6,7 @@ use App\Models\ChatbotSetting;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\MessageFlag;
+use App\Models\UserNotification;
 use App\Services\MessageAuditor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -75,6 +76,21 @@ class MessageController extends Controller
             }
             return response()->json(['error' => 'Failed to send message.'], 500);
         }
+
+        // So the recipient's bell badge actually reflects new messages — the
+        // one domain event in the app that wasn't already wired into the
+        // generic notification system (see UserNotification::targetUrl()
+        // for how 'new_message' routes back into this conversation).
+        $senderName = trim(Auth::user()->user_first_name . ' ' . Auth::user()->user_last_name);
+        UserNotification::create([
+            'user_id' => $receiver->user_id,
+            'type' => 'new_message',
+            'reference_id' => $conversation->conversation_id,
+            'title' => "New message from {$senderName}",
+            'body' => $message->message_content !== ''
+                ? \Illuminate\Support\Str::limit($message->message_content, 120)
+                : "{$senderName} sent you an attachment.",
+        ]);
 
         // Outside the transaction — a flagging hiccup should never roll back
         // a legitimate send. Skipped entirely (no query) when auditing is off.

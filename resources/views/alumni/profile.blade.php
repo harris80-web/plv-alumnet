@@ -28,7 +28,7 @@
     }
 </style>
 
-<body>
+<body class="min-h-screen flex flex-col">
     @include('partials.header-alumni')
 
     <section class="HeroSection h-[200px] flex items-end text-white shadow-lg">
@@ -38,7 +38,7 @@
         </div>
     </section>
 
-    <main class="max-w-5xl mx-auto mt-10 mb-12 px-4">
+    <main class="max-w-5xl mx-auto mt-10 mb-12 px-4 flex-1">
         <div class="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden p-8 md:p-12">
 
             <h2

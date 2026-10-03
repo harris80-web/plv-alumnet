@@ -42,7 +42,7 @@
     }
 </style>
 
-<body>
+<body class="min-h-screen flex flex-col">
     @include('partials.header-alumni')
 
     <section class="HeroSection h-[200px] flex items-end text-white shadow-lg">
@@ -52,7 +52,7 @@
         </div>
     </section>
 
-    <section id="faq-section" class="max-w-3xl mx-auto font-[Montserrat] px-4">
+    <section id="faq-section" class="max-w-3xl mx-auto font-[Montserrat] px-4 flex-1">
 
         <header class="text-center mt-10 mb-10">
             <h1 class="text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent tracking-wide">

@@ -40,7 +40,7 @@
 </style>
 
 
-<body>
+<body class="min-h-screen flex flex-col">
     @php
     $current_page = 'general.jobPostings';
     @endphp
@@ -55,7 +55,7 @@
         </div>
     </section>
 
-    <main class="max-w-6xl mx-auto p-6">
+    <main class="max-w-6xl mx-auto p-6 flex-1">
 
         <!-- HEADER ROW -->
         <div class="flex flex-col md:items-center md:justify-between mb-6 gap-4">

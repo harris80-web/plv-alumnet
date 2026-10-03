@@ -84,7 +84,7 @@ class UserNotification extends Model
             'job_posting_approved' => route('jobPosting.myJobPosts', array_filter(['id' => $this->user_id, 'job' => $this->reference_id])),
             'job_posting_rejected' => route('jobPosting.myJobPosts', ['id' => $this->user_id]),
             'job_application_hired', 'job_application_declined', 'job_application_shortlisted' => route('jobPosting.myApplications', array_filter(['job' => $this->reference_id])),
-            'message_mute', 'message_warning' => $this->reference_id ? route('messages.show', $this->reference_id) : route('messages.index'),
+            'new_message', 'message_mute', 'message_warning' => $this->reference_id ? route('messages.show', $this->reference_id) : route('messages.index'),
             'alumni_id_status', 'yearbook_status' => route('alumnus.dashboard') . '#status-section',
             default => null,
         };

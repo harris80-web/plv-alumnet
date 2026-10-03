@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Alumnus;
 use App\Models\Conversation;
+use App\Models\UserNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -94,11 +95,20 @@ class ConversationController extends Controller
 
         $userId = Auth::id();
 
-        // Opening a thread is what "reads" it.
+        // Opening a thread is what "reads" it — both the per-message flag
+        // (chat-list unread bubble) and the bell's "new_message" notification
+        // for this conversation, so the badge count actually clears here
+        // rather than only when the bell dropdown itself is clicked.
         $conversation->messages()
             ->where('receiver_id', $userId)
             ->where('message_read', false)
             ->update(['message_read' => true]);
+
+        UserNotification::where('user_id', $userId)
+            ->where('type', 'new_message')
+            ->where('reference_id', $conversation->conversation_id)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
 
         $messages = $conversation->messages()->orderBy('message_id')->get();
 

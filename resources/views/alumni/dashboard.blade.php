@@ -146,13 +146,13 @@
                         Yearbook Claiming Status
                     </h4>
                 </div>
-                <div class="relative h-64 bg-[url('https://images.unsplash.com/photo-1528569937393-ee892b976859?auto=format&fit=crop&w=800&q=80')] bg-cover bg-center">
+                <div class="relative h-64 bg-[url('https://images.pexels.com/photos/8447618/pexels-photo-8447618.jpeg?auto=compress&cs=tinysrgb&w=800')] bg-cover bg-center">
                     <div class="absolute inset-0 flex flex-col items-center justify-center text-white p-6 text-center"
                         style="background-image: linear-gradient(180deg, rgba(32,113,201,0.7) 60%, rgba(29,70,164,0.7) 80%, rgba(14,15,59,0.7) 95%);">
-                        <h3 class="text-xl font-bold uppercase tracking-widest mb-4">{{ $yearbookCard['title'] }}</h3>
-                        <p class="text-[11px] leading-relaxed mb-6 px-4">{{ $yearbookCard['desc'] }}</p>
+                        <h3 class="text-2xl font-bold uppercase tracking-widest mb-5">{{ $yearbookCard['title'] }}</h3>
+                        <p class="text-xs leading-relaxed mb-7 px-4 max-w-[220px]">{{ $yearbookCard['desc'] }}</p>
 
-                        <div class="text-left w-full max-w-[200px] text-[10px] space-y-1">
+                        <div class="text-left w-full max-w-[210px] text-[11px] space-y-1.5">
                             <p><span class="font-bold">DATE:</span> {{ optional($yearbookRecord?->distribution_scheduled_at)->format('M d, Y') ?? 'TBA' }}</p>
                             <p><span class="font-bold">SCHEDULE:</span> {{ optional($yearbookRecord?->distribution_scheduled_at)->format('h:i A') ?? 'TBA' }}</p>
                             <p><span class="font-bold">LOCATION:</span> {{ $yearbookRecord ? $yearbookRecord->locationLabel() : 'TBA' }}</p>
@@ -306,10 +306,10 @@
 
     <section class="py-16 px-6 max-w-6xl mx-auto">
         <div class="flex justify-between items-center mb-10 rp-jobmatches-head">
-            <h2 class="text-3xl font-bold text-[#0E0F3B] uppercase tracking-tight">
-                Job Matches <span class="text-[#0E0F3B]">For You!</span>
+            <h2 class="text-3xl font-bold uppercase tracking-tight bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+                Job Matches <span>For You!</span>
             </h2>
-            <a href="{{ route('jobPosting.jobBoard') }}" class="text-[#ED7A07] font-bold uppercase text-sm hover:border-b-2 border-[#C73D1A] inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+            <a href="{{ route('jobPosting.jobBoard') }}" class="font-bold uppercase text-sm bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent hover:border-b-2 border-[#C73D1A] transition-colors">
                 Go to Job Board >
             </a>
         </div>
@@ -653,7 +653,7 @@
         <div class="relative w-full ">
 
             <div class="relative z-10 bg-[#0E0F3B] p-10 rounded-2xl shadow-2xl w-full max-w-xl mx-auto shadow-outer">
-                <form action="{{ route('testimonials.submit', Auth::user()) }}" method="POST" class="space-y-4">
+                <form id="testimonialForm" action="{{ route('testimonials.submit', Auth::user()) }}" method="POST" class="space-y-4">
                     @csrf
                     <!-- <div>
                         <label for="testimonial_name" class="block text-white font-bold mb-1 text-sm">Name:</label>
@@ -681,11 +681,13 @@
 
                     <p class="flex items-start gap-2 text-[11px] text-gray-300 leading-relaxed">
                         <i class="fa-solid fa-circle-info mt-0.5 shrink-0"></i>
-                        <span>By submitting, you agree that your testimonial, name, and course/program will be publicly displayed on PLV-AlumNet, in accordance with our data privacy policy.</span>
+                        <span>By submitting, you agree that your testimonial, name, and course/program will be publicly displayed on PLV-AlumNet, in accordance with our data privacy policy. Your testimonial is also subject to administrator approval before it is published.</span>
                     </p>
 
                     <div class="flex justify-center pt-2">
-                        <button type="submit" class="bg-[#ED7A07] text-white font-bold px-10 py-2.5 rounded-md hover:bg-orange-600 transition uppercase tracking-wider text-base shadow-lg">
+                        <button type="button"
+                            onclick="openAnimatedModal(document.getElementById('testimonialConfirmModal'), document.getElementById('testimonialConfirmModalPanel'))"
+                            class="bg-[#ED7A07] text-white font-bold px-10 py-2.5 rounded-md hover:bg-orange-600 transition uppercase tracking-wider text-base shadow-lg">
                             Submit
                         </button>
                     </div>
@@ -704,6 +706,46 @@
         </div>
         </div>
     </section>
+
+    <!-- Testimonial Submission Confirmation Modal -->
+    <div id="testimonialConfirmModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden opacity-0 transition-opacity duration-200 font-[Montserrat]">
+        <div id="testimonialConfirmModalPanel" class="bg-white rounded-xl shadow-2xl w-[90%] max-w-lg overflow-hidden opacity-0 scale-95 transition-all duration-200">
+            <div class="bg-[#0E0F3B] px-4 py-2 flex items-center justify-between">
+                <span class="text-white text-[10px] font-semibold uppercase tracking-widest">Before You Submit</span>
+                <button onclick="closeAnimatedModal(document.getElementById('testimonialConfirmModal'), document.getElementById('testimonialConfirmModalPanel'))"
+                    class="text-white text-xl leading-none hover:text-gray-300 focus:outline-none">&times;</button>
+            </div>
+            <div class="px-6 py-5 overflow-y-auto max-h-[75vh] text-center">
+                <div class="flex justify-center mb-4">
+                    <div class="bg-[#0E0F3B] rounded-full p-4">
+                        <i class="fa-solid fa-circle-check text-3xl text-white"></i>
+                    </div>
+                </div>
+                <h2 class="text-xl font-bold mt-1 mb-3">
+                    <span
+                        class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Admin Approval & Data Privacy</span>
+                </h2>
+                <p class="text-[13px] text-[#0E0F3B] leading-relaxed mb-4">
+                    Your testimonial will be reviewed by a PLV-AlumNet administrator before it is published. It will not appear publicly until it has been approved.
+                </p>
+                <p class="text-[13px] text-[#0E0F3B] leading-relaxed mb-6">
+                    By continuing, you consent to PLV-AlumNet collecting and publicly displaying your testimonial, name, and course/program on the platform, in accordance with our
+                    <a href="#" onclick="window.open('{{ route('alumni.privacy-policy') }}', '_blank')" class="text-orange-600 underline font-bold">Data Privacy Policy</a>.
+                </p>
+                <button onclick="confirmTestimonialSubmit()"
+                    class="bg-[#0E0F3B] text-white text-[13px] font-bold uppercase tracking-widest px-12 py-2.5 rounded-md hover:bg-blue-900 transition-colors">
+                    I Agree, Submit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmTestimonialSubmit() {
+            document.getElementById('testimonialForm').submit();
+        }
+    </script>
 
     @include('partials.footer-alumni')
 

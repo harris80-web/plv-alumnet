@@ -15,6 +15,16 @@
         </button>
     </div>
 
+    <div id="chatWidgetNotice" class="shrink-0 px-4 py-2 flex items-start gap-1.5 text-[10px] leading-snug text-slate-500 bg-slate-100 border-b border-slate-200">
+        <i data-lucide="info" class="w-3 h-3 mt-0.5 shrink-0"></i>
+        <span>If our AI assistant can't answer your question after 3 tries, a live agent will automatically take over the conversation.</span>
+    </div>
+
+    <div id="chatWidgetAgentBanner" class="hidden shrink-0 px-4 py-2 flex items-center gap-1.5 text-[10px] font-bold text-green-700 bg-green-50 border-b border-green-200">
+        <i data-lucide="user-check" class="w-3.5 h-3.5 shrink-0"></i>
+        <span>A live agent has joined this conversation.</span>
+    </div>
+
     <div id="chatWidgetThread" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50"></div>
 
     <div id="chatWidgetTyping" class="hidden px-4 pb-1 text-[10px] text-slate-400 italic">Assistant is typing...</div>
@@ -39,6 +49,9 @@
         let lastMessageId = 0;
         let pollTimer = null;
         let started = false;
+        // Sticks once true — a conversation that reached a live agent keeps
+        // showing the "agent has joined" banner even after it's resolved.
+        let hasHadAgent = false;
 
         const statusLabels = {
             ai_active: 'Chatting with AI assistant',
@@ -94,6 +107,8 @@
         function setStatus(status) {
             ticketStatus = status;
             document.getElementById('chatWidgetStatus').textContent = statusLabels[status] || status;
+            if (status === 'with_agent') hasHadAgent = true;
+            document.getElementById('chatWidgetAgentBanner').classList.toggle('hidden', !hasHadAgent);
             const input = document.getElementById('chatWidgetInput');
             const submitBtn = document.querySelector('#chatWidgetForm button[type="submit"]');
             const resolved = status === 'resolved';

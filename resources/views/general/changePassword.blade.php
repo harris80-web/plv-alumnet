@@ -20,7 +20,7 @@
     </style>
 </head>
 
-<body class="bg-white">
+<body class="bg-white min-h-screen flex flex-col">
 
     <!-- Error Toast Container -->
     <div id="toastContainer" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 w-[90%] max-w-sm pointer-events-none"></div>
@@ -38,7 +38,7 @@
         </div>
     </section>
 
-    <div class="min-h-[60vh] flex items-center justify-center px-4 py-12">
+    <div class="min-h-[60vh] flex items-center justify-center px-4 py-12 flex-1">
         <div class="w-full max-w-2xl">
             <h2 class="text-3xl font-bold text-center bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent mb-2">
                 Change Password

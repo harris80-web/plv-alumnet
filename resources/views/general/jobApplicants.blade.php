@@ -163,7 +163,7 @@
     ::-webkit-scrollbar { display: none; }
 </style>
 
-<body>
+<body class="min-h-screen flex flex-col">
     @php $current_page = 'employer_job_postings'; @endphp
     @include('partials.header-employer')
     @include('partials.success')
@@ -184,7 +184,7 @@
         </a>
     </div>
 
-    <main class="max-w-5xl mx-auto px-6 pb-12">
+    <main class="max-w-5xl mx-auto px-6 pb-12 flex-1">
 
         <!-- JOB DETAILS CARD -->
         <div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row mt-4 mb-8 md:min-h-[340px]">

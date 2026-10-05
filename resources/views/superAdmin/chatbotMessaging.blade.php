@@ -1025,8 +1025,11 @@
             const container = document.getElementById('qt-messages');
             if (!append) container.innerHTML = '';
             messages.forEach(m => {
+                // The 4s poll and a send's own refetch can both return the same new message.
+                if (container.querySelector(`[data-msg-id="${m.id}"]`)) return;
                 const bubbleClass = m.senderType === 'agent' ? 'msg-bubble-agent ml-auto' : (m.senderType === 'ai' ? 'msg-bubble-ai' : 'msg-bubble-user');
                 const div = document.createElement('div');
+                div.dataset.msgId = m.id;
                 div.className = 'max-w-[75%] rounded-2xl px-4 py-2 text-xs ' + bubbleClass;
                 div.textContent = m.message;
                 container.appendChild(div);
@@ -1126,11 +1129,21 @@
             if (queueThreadPollTimer) { clearInterval(queueThreadPollTimer); queueThreadPollTimer = null; }
         }
 
+        let agentReplySending = false;
         async function sendAgentReply() {
             const input = document.getElementById('qt-input');
             const message = input.value.trim();
-            if (!message || !queueThreadTicketId) return;
+            // A second Enter before the first reply returns would post the same text twice.
+            if (!message || !queueThreadTicketId || agentReplySending) return;
+            agentReplySending = true;
+            try {
+                await postAgentReply(input, message);
+            } finally {
+                agentReplySending = false;
+            }
+        }
 
+        async function postAgentReply(input, message) {
             const formData = new FormData();
             formData.append('_token', CSRF_TOKEN);
             formData.append('message', message);

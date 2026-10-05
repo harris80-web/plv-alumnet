@@ -241,6 +241,9 @@
     </div>
 </div>
 
+{{-- Staff postings are auto-approved (JobPostingController::addJobPost()), so the copy below must not promise a review. --}}
+@php $postsLiveImmediately = in_array(Auth::user()?->user_role, ['admin', 'super_admin'], true); @endphp
+
 <!-- POST JOB CONFIRMATION MODAL -->
 <div id="postConfirmModal" class="fixed inset-0 z-[210] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center">
@@ -248,7 +251,7 @@
             <i class="fas fa-paper-plane text-[#1D46A4] text-2xl"></i>
         </div>
         <h2 class="text-xl font-bold text-[#0E0F3B] mb-2">Post this Job?</h2>
-        <p class="text-gray-500 text-sm mb-6">Please confirm that all job details are correct before submitting for admin approval.</p>
+        <p class="text-gray-500 text-sm mb-6">{{ $postsLiveImmediately ? 'Please confirm that all job details are correct. This job will be published to the job board right away.' : 'Please confirm that all job details are correct before submitting for admin approval.' }}</p>
         <div class="flex gap-3">
             <button onclick="cancelPostConfirm()" class="flex-1 border border-gray-300 text-gray-600 py-2.5 rounded-lg font-bold text-sm hover:bg-gray-100 transition-colors">
                 CANCEL
@@ -276,10 +279,10 @@
             </div>
         </div>
         <h2 class="text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent mb-2">
-            Job Post is now Pending for Approval
+            {{ $postsLiveImmediately ? 'Job Post Published' : 'Job Post is now Pending for Approval' }}
         </h2>
         <p class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent text-sm mb-8 leading-relaxed">
-            Your job post has been queued for review by the PLV-AlumNet Admin. We'll notify you as soon as it is approved.
+            {{ $postsLiveImmediately ? 'Your job post is approved automatically and will be live on the job board.' : "Your job post has been queued for review by the PLV-AlumNet Admin. We'll notify you as soon as it is approved." }}
         </p>
         <button onclick="closePendingModal()" class="w-full bg-[#0E0F3B] text-white py-3 rounded-md font-bold hover:bg-blue-900 transition-colors uppercase tracking-wider">
             Done

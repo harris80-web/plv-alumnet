@@ -405,11 +405,16 @@
 
         const composerForm = document.getElementById('composerForm');
         if (composerForm) {
+            let sending = false;
             composerForm.addEventListener('submit', async function (e) {
                 e.preventDefault();
+                // A second Enter/tap before the first request returns would
+                // post the same text again (the input is only cleared on success).
+                if (sending) return;
                 const input = document.getElementById('messageInput');
                 const content = input.value.trim();
                 if (!content && !pendingAttachment) return;
+                sending = true;
 
                 const formData = new FormData();
                 formData.append('_token', CSRF_TOKEN);
@@ -459,6 +464,7 @@
                 } catch (e) {
                     alert('Failed to send message. Please check your connection and try again.');
                 } finally {
+                    sending = false;
                     submitBtn.disabled = false;
                 }
             });

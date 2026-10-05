@@ -295,9 +295,11 @@ class JobPostingController extends Controller
         $description = Purifier::clean($validated['job_posting_description'], 'job_description');
 
         $jobPost = null;
+        // Staff postings go live immediately; only an employer's posting waits for review.
+        $autoApproved = in_array(Auth::user()->user_role, ['admin', 'super_admin'], true);
 
         try {
-            DB::transaction(function () use ($validated, $jobImagePath, $id, $selectedPrograms, $description, &$jobPost) {
+            DB::transaction(function () use ($validated, $jobImagePath, $id, $selectedPrograms, $description, $autoApproved, &$jobPost) {
                 $jobPost = JobPosting::create([
                     'job_posting_image' => $jobImagePath,
                     'job_posting_title' => $validated['job_posting_title'],
@@ -310,6 +312,7 @@ class JobPostingController extends Controller
                     'job_posting_setup' => $validated['job_posting_setup'],
                     'industry_id' => $validated['industry_id'] ?? null,
                     'user_id' => $id,
+                    'job_approved' => $autoApproved,
                 ]);
                 $jobPost->programs()->attach($selectedPrograms);
                 $this->syncJobSkills($jobPost, $validated['skills'] ?? []);
@@ -334,32 +337,36 @@ class JobPostingController extends Controller
     }
 
     /**
-     * Mirrors showJobManagement()'s cross-review split: each staff role
-     * reviews jobs from employers and from the *other* staff role, never
-     * their own — so notification recipients follow the same rule (an
-     * employer's posting alerts both staff roles, an admin's posting alerts
-     * only super_admin, and vice versa).
+     * An employer's posting needs review, so it alerts both staff roles.
+     * Staff postings are auto-approved: an admin's posting only informs
+     * super_admin that it went live, and a super_admin's posting alerts
+     * nobody.
      */
     private function notifyJobPostingSubmitted(JobPosting $jobPost, string $submitterRole): void
     {
-        $notifyRoles = match ($submitterRole) {
-            'admin' => ['super_admin'],
-            'super_admin' => ['admin'],
-            default => ['admin', 'super_admin'],
-        };
+        if ($submitterRole === 'super_admin') {
+            return;
+        }
 
-        $recipientIds = User::whereIn('user_role', $notifyRoles)->pluck('user_id');
+        $postedByAdmin = $submitterRole === 'admin';
+        $recipientIds = User::whereIn('user_role', $postedByAdmin ? ['super_admin'] : ['admin', 'super_admin'])->pluck('user_id');
         if ($recipientIds->isEmpty()) {
             return;
         }
+
+        $poster = Auth::user();
+        $title = $postedByAdmin ? 'Admin posted a job' : 'New job posting awaiting approval';
+        $body = $postedByAdmin
+            ? "{$poster->user_first_name} {$poster->user_last_name} posted \"{$jobPost->job_posting_title}\" at {$jobPost->job_posting_company}. It is live on the job board."
+            : "\"{$jobPost->job_posting_title}\" at {$jobPost->job_posting_company} was submitted for review.";
 
         $now = now();
         $rows = $recipientIds->map(fn ($userId) => [
             'user_id' => $userId,
             'type' => 'job_posting_submitted',
             'reference_id' => $jobPost->job_posting_id,
-            'title' => 'New job posting awaiting approval',
-            'body' => "\"{$jobPost->job_posting_title}\" at {$jobPost->job_posting_company} was submitted for review.",
+            'title' => $title,
+            'body' => $body,
             'created_at' => $now,
             'updated_at' => $now,
         ])->all();
@@ -508,27 +515,14 @@ class JobPostingController extends Controller
 
     /**
      * Shared base query for job-management (both the full page and the two
-     * AJAX pagination fragments below) — same role-scoping either way, kept
-     * in one place so those three call sites can't drift out of sync.
+     * AJAX pagination fragments below), kept in one place so those three
+     * call sites can't drift out of sync. Every posting, whoever posted it:
+     * staff postings are auto-approved now, so there is no cross-review
+     * split left to scope this by.
      */
     private function jobManagementBaseQuery()
     {
-        $user = Auth::user();
-        $query = JobPosting::query()->with('user');
-
-        if ($user->user_role === 'super_admin') {
-            // Super Admin sees jobs from Employers and Admins
-            $query->whereHas('user', function ($q) {
-                $q->whereIn('user_role', ['employer', 'admin']);
-            });
-        } elseif ($user->user_role === 'admin') {
-            // Admin sees jobs from Employers and Super Admins
-            $query->whereHas('user', function ($q) {
-                $q->whereIn('user_role', ['employer', 'super_admin']);
-            });
-        }
-
-        return $query;
+        return JobPosting::query()->with('user');
     }
 
     /**

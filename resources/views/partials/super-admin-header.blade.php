@@ -635,3 +635,4 @@ $title = request()->routeIs('notifications.all')
     });
 </script>
 @endif
+@include('partials.session-watch')

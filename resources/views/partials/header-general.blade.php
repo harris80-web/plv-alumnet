@@ -71,6 +71,7 @@
         @include('partials.guest-sidebar')
     </header>
     @include('partials.ui-animations')
+    @include('partials.session-watch')
 </body>
 
 </html>

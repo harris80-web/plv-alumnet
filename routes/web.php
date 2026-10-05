@@ -140,6 +140,9 @@ Route::get('/employer/faqs', [FaqController::class, 'employerFaqs'])->name('empl
 Route::get('/profile', [UserController::class, 'showProfile'])->name('user.profile')->middleware('auth');
 Route::post('/user/logout', [UserController::class, 'logout'])->name('user.logout');
 Route::post('/admin/heartbeat', [UserController::class, 'heartbeat'])->name('admin.heartbeat')->middleware('auth');
+// No `auth` middleware on purpose: partials/session-watch.blade.php needs a
+// JSON "nobody is signed in" answer, not a redirect to the login page.
+Route::get('/session/status', fn () => response()->json(['userId' => auth()->id()]))->name('session.status');
 
 Route::get('/profile/edit', [UserController::class, 'editProfile'])->name('users.editProfile')->middleware('auth');
 

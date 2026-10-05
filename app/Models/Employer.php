@@ -35,6 +35,31 @@ class Employer extends Model
         'employer_year_established' => 'integer',
     ];
 
+    /** @var array<int,self|null> one lookup per poster per request */
+    private static array $posterCache = [];
+
+    /**
+     * The vote/rating/review target for whoever posted a job: the real
+     * employers row, or for an admin/super_admin poster (who has none) an
+     * unsaved stand-in keyed on their user id, so the same votes()/reviews()
+     * relations and counters work for staff postings. Null for anyone else.
+     */
+    public static function forPoster(?User $poster): ?self
+    {
+        if (! $poster) {
+            return null;
+        }
+
+        return self::$posterCache[$poster->user_id] ??= match (true) {
+            $poster->user_role === 'employer' => $poster->employer,
+            in_array($poster->user_role, ['admin', 'super_admin'], true) => (new self)->forceFill([
+                'user_id' => $poster->user_id,
+                'employer_company_name' => trim("{$poster->user_first_name} {$poster->user_last_name}") . ' (PLV-AlumNet)',
+            ])->setRelation('user', null),
+            default => null,
+        };
+    }
+
     public function user()
     {
         // "I belong to one user (the employer)"

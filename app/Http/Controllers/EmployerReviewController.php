@@ -5,11 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\Employer;
 use App\Models\EmployerReview;
 use App\Models\JobPostingVote;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class EmployerReviewController extends Controller
 {
+    /** {employer} is the job poster's user id: an employer, or a staff account that posts jobs (see Employer::forPoster()). */
+    private function resolvePoster(int $userId): Employer
+    {
+        $poster = Employer::forPoster(User::find($userId));
+        abort_unless($poster, 404);
+
+        return $poster;
+    }
+
     /**
      * AJAX vote/rating endpoint — shared by three different UI actions on a
      * job card: the quick up/down click (sends `vote` + `job_posting_id`),
@@ -25,8 +35,9 @@ class EmployerReviewController extends Controller
      * tells a modal submission apart from a bare rating click — see
      * $isReviewSubmission below.
      */
-    public function vote(Request $request, Employer $employer)
+    public function vote(Request $request, int $employer)
     {
+        $employer = $this->resolvePoster($employer);
         $user = Auth::user();
         abort_unless($user && $user->user_role === 'alumni' && $user->alumnus, 403);
 
@@ -110,8 +121,9 @@ class EmployerReviewController extends Controller
      * this page lists at all, so every row here has a rating, and the
      * filter is by star count (1-5) instead of vote type.
      */
-    public function reviews(Request $request, Employer $employer)
+    public function reviews(Request $request, int $employer)
     {
+        $employer = $this->resolvePoster($employer);
         $filter = (int) $request->query('rating');
         $filter = in_array($filter, range(EmployerReview::MIN_RATING, EmployerReview::MAX_RATING), true) ? $filter : null;
 

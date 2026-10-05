@@ -49,7 +49,7 @@ class JobCardDataBuilder
         // NOT shown to admin/employer roles (only the alumni-facing vote
         // buttons are gated; the "Reviews" link below stays visible to
         // everyone).
-        $employer = $job->employer;
+        $employer = $job->employer ?? \App\Models\Employer::forPoster($job->user);
         $companyUpvotes = $employer?->upvoteCount() ?? 0;
         $companyDownvotes = $employer?->downvoteCount() ?? 0;
         // The "Reviews (N)" link/page is rating-driven (see

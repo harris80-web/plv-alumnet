@@ -246,7 +246,13 @@ class UserController extends Controller
             'user_password' => 'Password',
         ]);
 
-        if (Auth::attempt(['user_email' => $validated['user_email'], 'password' => $validated['user_password']], true)) {
+        // An employer whose registration is still pending (or whose account
+        // was deactivated) fails here exactly like a wrong password, so the
+        // response gives no hint that the account exists.
+        $mayLogIn = fn (User $user) => $user->user_role !== 'employer'
+            || ($user->user_active && $user->employer?->employer_approved);
+
+        if (Auth::attemptWhen(['user_email' => $validated['user_email'], 'password' => $validated['user_password']], $mayLogIn, true)) {
             // Regenerates the session ID (and, as part of that, the CSRF
             // token) on every successful login — without this, a session
             // that existed before authentication keeps the same ID after

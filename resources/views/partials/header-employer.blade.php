@@ -78,6 +78,7 @@
     @include('partials.chatbot-widget')
     @include('partials.back-to-top', ['nearChatWidget' => true])
     @include('partials.alert-modal')
+    @include('partials.session-watch')
 </body>
 
 </html>

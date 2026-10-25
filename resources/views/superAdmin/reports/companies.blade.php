@@ -206,7 +206,7 @@
                 </div>
 
                 <div class="flex justify-end">
-                    <a href="{{ route('reports.exportCsv', array_merge(['group' => 'companies'], array_filter($dashboardFilters))) }}"
+                    <a href="{{ route('reports.exportCsv', array_merge(['group' => 'companies'], array_filter($dashboardFilters) + [\App\Services\DashboardReportService::FILTERS_APPLIED_PARAM => 1])) }}"
                         class="text-xs font-bold text-slate-500 hover:text-[#C73D1A] flex items-center gap-1">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i> Export CSV
                     </a>
@@ -285,6 +285,8 @@
             ['batch', 'program_id', 'employment_status', 'college', 'year'].forEach(key => {
                 params.getAll(key + '[]').forEach(v => addField(key + '[]', v));
             });
+            // Applied-filters marker, so an emptied Year/Year Graduated exports as "all years", not the current-year default.
+            if (params.has('filtered')) addField('filtered', '1');
             document.body.appendChild(form);
             form.submit();
             form.remove();

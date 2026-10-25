@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\JobApplication;
 use App\Models\JobPosting;
-use Carbon\Carbon;
 use Illuminate\Console\Command;
 
 class DeclineOnJobExpire extends Command
@@ -32,8 +31,7 @@ class DeclineOnJobExpire extends Command
         // JobPosting's primary key is job_posting_id, not id — this table
         // has no `id` column at all, so this threw "Unknown column 'id'"
         // on every run and never got past this line.
-        $expiredJobIds = JobPosting::where('job_closing_date', '<', Carbon::today())
-                                    ->pluck('job_posting_id');
+        $expiredJobIds = JobPosting::expired()->pluck('job_posting_id');
 
         // 2. Mass-update all 'shortlisted' applicants for those specific jobs to 'declined'
         // job_applications' foreign key to job_postings is job_id, not

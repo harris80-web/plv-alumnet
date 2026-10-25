@@ -38,7 +38,8 @@
                         class="{{ request()->routeIs('alumni.about') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                         ABOUT
                     </a>
-                    <a href="" class="hover:text-[#ED7A07]" data-rp-footer-extra>EVENTS</a>
+                    <a href="{{ route('notices.eventsSeminars') }}"
+                        class="{{ request()->routeIs('notices.eventsSeminars') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}" data-rp-footer-extra>EVENTS</a>
                 </nav>
             </div>
 

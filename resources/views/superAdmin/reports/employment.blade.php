@@ -47,7 +47,7 @@
                     'batchYearOptions' => $batchYearOptions,
                     'programs' => $programs,
                     'yearOptions' => $yearOptions,
-                    'exportCsvUrl' => route('reports.exportCsv', array_merge(['group' => 'employment'], array_filter($dashboardFilters))),
+                    'exportCsvUrl' => route('reports.exportCsv', array_merge(['group' => 'employment'], array_filter($dashboardFilters) + [\App\Services\DashboardReportService::FILTERS_APPLIED_PARAM => 1])),
                 ])
 
                 <div class="mb-4 mt-3 flex items-center">
@@ -372,6 +372,8 @@
             ['batch', 'program_id', 'employment_status', 'college', 'year'].forEach(key => {
                 params.getAll(key + '[]').forEach(v => addField(key + '[]', v));
             });
+            // Applied-filters marker, so an emptied Year/Year Graduated exports as "all years", not the current-year default.
+            if (params.has('filtered')) addField('filtered', '1');
             document.body.appendChild(form);
             form.submit();
             form.remove();

@@ -74,16 +74,22 @@ class JobPosting extends Model
         return self::DEFAULT_THUMBNAIL_OVERLAY;
     }
 
+    /** Today's date on the local (PH) calendar — see config('app.local_timezone'). */
+    public static function localToday(): string
+    {
+        return Carbon::today(config('app.local_timezone'))->toDateString();
+    }
+
     public function scopeActive($query)
     {
         return $query->where(function ($q) {
-            $q->where('job_closing_date', '>=', Carbon::today());
+            $q->where('job_closing_date', '>=', self::localToday());
         });
     }
 
     public function scopeExpired($query)
     {
-        return $query->where('job_closing_date', '<', Carbon::today());
+        return $query->where('job_closing_date', '<', self::localToday());
     }
 
     public function employer()
@@ -199,7 +205,7 @@ class JobPosting extends Model
  
     public function scopeOpen($query)
     {
-        return $query->where('job_closing_date', '>=', now()->toDateString());
+        return $query->where('job_closing_date', '>=', self::localToday());
     }
  
     public function scopeForProgram($query, $programId)

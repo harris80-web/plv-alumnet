@@ -408,12 +408,15 @@
                                     <i class="fas fa-check-circle"></i> APPLIED
                                 </button>
                                 @else
-                                <form action="{{ route('jobApplication.apply', $job->job_posting_id) }}" method="POST" class="shrink-0">
-                                    @csrf
-                                    <button type="submit" class="bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white px-4 py-1.5 rounded-md font-bold text-xs transition-colors">
-                                        APPLY
-                                    </button>
-                                </form>
+                                {{-- Same review-first flow as partials.job-post-card's Apply
+                                     (partials.job-apply-modal, included below) — a bare POST
+                                     here skipped picking a resume/cover letter and was
+                                     rejected by JobApplicationController::applyJob(). --}}
+                                <button type="button"
+                                    onclick="openApplyModal({{ $job->job_posting_id }}, {{ $user->alumnus->hasUploadedResumeFile() ? 'true' : 'false' }}, {{ $user->alumnus->hasBuilderResume() ? 'true' : 'false' }}, {{ !empty($user->alumnus->alumnus_cover_letter_file_path) ? 'true' : 'false' }})"
+                                    class="shrink-0 bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white px-4 py-1.5 rounded-md font-bold text-xs transition-colors">
+                                    APPLY
+                                </button>
                                 @endif
                             </div>
                         </div>
@@ -452,6 +455,12 @@
          all, so clicking a star or a vote button in a Job Match's detail
          modal did nothing. --}}
     @include('partials.company-review-modal')
+    {{-- Defines openApplyModal() — both the Job Match card's Apply button and
+         the View Details modal's Apply (partials.job-detail-modal) call it;
+         without this include the modal's Apply silently did nothing here. --}}
+    @if ($user && $user->user_role === 'alumni')
+    @include('partials.job-apply-modal')
+    @endif
 
     <section class="AlumniServices orange-gradient py-16 px-6 text-white text-center">
         <div class="max-w-4xl mx-auto">

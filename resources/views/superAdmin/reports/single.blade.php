@@ -59,9 +59,20 @@
                     <form method="GET" action="{{ route('reports.show', $report) }}" id="dashboardFilterForm"
                         class="flex flex-wrap items-center gap-3 bg-white px-6 py-4 rounded-xl border border-slate-200 shadow-md text-sm font-medium text-slate-700">
 
+                        <input type="hidden" name="{{ \App\Services\DashboardReportService::FILTERS_APPLIED_PARAM }}" value="1">
+
+                        @if ($filterSet === 'full')
                         <div class="flex-1 min-w-[150px]">
                             @include('partials.multiselect-filter', [
-                                'name' => 'batch', 'icon' => 'fas fa-calendar', 'placeholder' => 'Batch Year',
+                                'name' => 'year', 'icon' => 'fas fa-calendar-day', 'placeholder' => 'Year',
+                                'options' => collect($yearOptions)->mapWithKeys(fn ($y) => [$y => $y]),
+                                'selected' => $dashboardFilters['year'],
+                            ])
+                        </div>
+                        @endif
+                        <div class="flex-1 min-w-[150px]">
+                            @include('partials.multiselect-filter', [
+                                'name' => 'batch', 'icon' => 'fas fa-calendar', 'placeholder' => 'Year Graduated',
                                 'options' => $batchYearOptions->mapWithKeys(fn ($y) => [$y => $y]),
                                 'selected' => $dashboardFilters['batch'],
                             ])
@@ -90,13 +101,6 @@
                                 'selected' => $dashboardFilters['employment_status'],
                             ])
                         </div>
-                        <div class="flex-1 min-w-[150px]">
-                            @include('partials.multiselect-filter', [
-                                'name' => 'year', 'icon' => 'fas fa-calendar-day', 'placeholder' => 'Year',
-                                'options' => collect($yearOptions)->mapWithKeys(fn ($y) => [$y => $y]),
-                                'selected' => $dashboardFilters['year'],
-                            ])
-                        </div>
                         @endif
 
                         @if ($report === 'hires-per-month')
@@ -123,10 +127,10 @@
                         @endif
 
                         <div class="w-full flex items-center justify-end gap-3 pt-3 mt-1 border-t border-slate-100">
-                            @if (array_filter($dashboardFilters))
+                            @if (request()->has(\App\Services\DashboardReportService::FILTERS_APPLIED_PARAM))
                             <a href="{{ route('reports.show', $report) }}"
                                 class="shrink-0 whitespace-nowrap bg-slate-200 text-[10px] text-slate-600 px-3 py-1.5 rounded-md flex items-center gap-1 hover:bg-slate-300 transition shadow-sm font-semibold uppercase tracking-wide">
-                                <i data-lucide="x" class="w-3.5 h-3.5 shrink-0"></i> Clear Filters
+                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 shrink-0"></i> Reset Filters
                             </a>
                             @endif
 
@@ -137,7 +141,7 @@
 
                             <a href="{{ route('reports.show.exportPdf', array_merge(
                                     ['report' => $report],
-                                    array_filter($dashboardFilters),
+                                    array_filter($dashboardFilters) + [\App\Services\DashboardReportService::FILTERS_APPLIED_PARAM => 1],
                                     $report === 'hires-per-month' ? ['hire_months' => $hireMonths] : [],
                                     $report === 'top-hiring-companies' ? ['top_companies' => $topCompaniesLimit] : []
                                 )) }}"
@@ -147,7 +151,7 @@
 
                             <a href="{{ route('reports.show.exportCsv', array_merge(
                                     ['report' => $report],
-                                    array_filter($dashboardFilters),
+                                    array_filter($dashboardFilters) + [\App\Services\DashboardReportService::FILTERS_APPLIED_PARAM => 1],
                                     $report === 'hires-per-month' ? ['hire_months' => $hireMonths] : [],
                                     $report === 'top-hiring-companies' ? ['top_companies' => $topCompaniesLimit] : []
                                 )) }}"

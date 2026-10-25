@@ -304,7 +304,7 @@
                             <img src="https://ui-avatars.com/api/?name={{ urlencode($job->employer->user->user_first_name . ' ' . $job->employer->user->user_last_name) }}&background=random"
                                 class="w-6 h-6 rounded-full mr-2">
                             <span>Posted by <span class="font-bold text-black">{{ $job->employer->user->user_first_name }} {{ $job->employer->user->user_last_name }}</span></span>
-                            @if($job->job_closing_date && \Carbon\Carbon::parse($job->job_closing_date)->isPast())
+                            @if($job->job_closing_date && $job->job_closing_date < \App\Models\JobPosting::localToday())
                             <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded">
                                 Down (Expired on {{ \Carbon\Carbon::parse($job->job_closing_date)->format('M d, Y') }})
                             </span>

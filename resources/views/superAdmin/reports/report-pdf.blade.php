@@ -32,9 +32,9 @@
     <p class="meta">
         Generated {{ now()->format('M d, Y h:i A') }}<br>
         @if (in_array($group, ['employment', 'placement', 'companies']))
-        Filters &mdash; Batch: {{ $batchLabel }} | Program: {{ $programLabel }} | Employment Status: {{ $statusLabel }} | College: {{ $collegeLabel }} | Year: {{ $yearLabel }}
+        Filters &mdash; Year: {{ $yearLabel }} | Year Graduated: {{ $batchLabel }} | College: {{ $collegeLabel }} | Program: {{ $programLabel }} | Employment Status: {{ $statusLabel }}
         @elseif ($group === 'alumniid')
-        Filters &mdash; Batch: {{ $batchLabel }} | Program: {{ $programLabel }} | College: {{ $collegeLabel }}
+        Filters &mdash; Year Graduated: {{ $batchLabel }} | College: {{ $collegeLabel }} | Program: {{ $programLabel }}
         @elseif ($group === 'networking')
         Range &mdash; Last {{ $networkMonths }} months
         @endif

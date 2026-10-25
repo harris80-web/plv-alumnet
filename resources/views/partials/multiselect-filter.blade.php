@@ -29,14 +29,19 @@
     $selected = collect($selected ?? [])->map(fn ($v) => (string) $v)->all();
     $count = count($selected);
     $optionAttrs = $optionAttrs ?? [];
+    // Names the actual picks ("2025, 2026") instead of a bare "2 Selected" —
+    // listed in the options' own order, truncated by CSS with the full list
+    // in the tooltip. Kept in sync client-side by updateMultiselectLabel().
+    $selectedLabels = collect($options)->filter(fn ($label, $value) => in_array((string) $value, $selected, true))->values();
+    $triggerText = $count ? $selectedLabels->implode(', ') : $placeholder;
 @endphp
 <div class="relative multiselect-filter" data-placeholder="{{ $placeholder }}" data-name="{{ $name }}">
-    <button type="button" onclick="toggleMultiselect(this)"
+    <button type="button" onclick="toggleMultiselect(this)" title="{{ $count ? $placeholder . ': ' . $triggerText : $placeholder }}"
         class="multiselect-trigger-btn w-full flex items-center pl-11 pr-10 py-1.5 border rounded-full bg-white text-left text-xs {{ $count ? 'text-[#0E0F3B] font-semibold' : 'text-gray-500' }} relative focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
         <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none text-xs">
             <i class="{{ $icon }}"></i>
         </span>
-        <span class="truncate multiselect-trigger-label">{{ $count ? $count . ' Selected' : $placeholder }}</span>
+        <span class="truncate multiselect-trigger-label">{{ $triggerText }}</span>
         <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none">
             <i class="fas fa-chevron-down text-[10px]"></i>
         </span>

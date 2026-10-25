@@ -66,11 +66,10 @@
                 $dashboardTiles = [
                     ['value' => $stats['activePostings'], 'label' => 'Active Job Postings', 'icon' => 'fa-briefcase'],
                     ['value' => $stats['totalApplicants'], 'label' => 'Total Applicants', 'icon' => 'fa-users'],
-                    ['value' => $stats['unreadApplicants'], 'label' => 'New Unreviewed', 'icon' => 'fa-user-clock'],
-                    ['value' => $stats['pending'], 'label' => 'Pending Review', 'icon' => 'fa-hourglass-half'],
                     ['value' => $stats['shortlisted'], 'label' => 'Shortlisted', 'icon' => 'fa-list-check'],
                     ['value' => $stats['hired'], 'label' => 'Hired via AlumNet', 'icon' => 'fa-handshake'],
-                    ['value' => $stats['expiringSoon'], 'label' => 'Expiring Soon', 'icon' => 'fa-calendar-xmark'],
+                    ['value' => $stats['pending'], 'label' => 'Pending Review', 'icon' => 'fa-hourglass-half'],
+                    ['value' => $stats['expiringSoon'], 'label' => 'Job Postings Expiring Soon', 'icon' => 'fa-calendar-xmark'],
                 ];
             @endphp
 
@@ -78,7 +77,7 @@
                 <h3 class="font-bold text-[#0E0F3B] mb-5 flex items-center gap-2 text-sm uppercase tracking-wide">
                     <i class="fa-solid fa-chart-pie text-[#1D46A4]"></i> Overview
                 </h3>
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     @foreach ($dashboardTiles as $tile)
                     <div class="bg-slate-50 rounded-xl border border-gray-200 p-4 text-center transition-all hover:-translate-y-0.5 hover:shadow-md">
                         <div class="text-2xl md:text-3xl font-bold text-orange-600 mb-1.5">{{ $tile['value'] }}</div>
@@ -101,7 +100,10 @@
                     @forelse ($jobPostings->take(5) as $job)
                     <a href="{{ route('jobApplication.showApplications', ['jobPostingId' => $job->job_posting_id]) }}" class="block mb-4 last:mb-0 group">
                         <div class="flex justify-between gap-2 text-xs font-semibold text-gray-600 mb-1.5">
-                            <span class="truncate group-hover:text-[#C73D1A] transition-colors">{{ $job->job_posting_title }}</span>
+                            <span class="flex items-baseline gap-1.5 min-w-0">
+                                <span class="truncate group-hover:text-[#C73D1A] transition-colors">{{ $job->job_posting_title }}</span>
+                                <span class="shrink-0 text-[10px] font-normal text-gray-400">· Posted {{ $job->created_at->format('M j, Y') }}</span>
+                            </span>
                             <span class="shrink-0">{{ $job->applications_count }} {{ \Illuminate\Support\Str::plural('applicant', $job->applications_count) }}</span>
                         </div>
                         <div class="w-full bg-gray-100 rounded-full h-2">

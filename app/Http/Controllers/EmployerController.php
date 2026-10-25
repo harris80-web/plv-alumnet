@@ -52,7 +52,7 @@ class EmployerController extends Controller
                 ->where('job_applications.is_read', false)
                 ->count(),
             'expiringSoon' => JobPosting::where('user_id', $employerId)->approved()->open()
-                ->whereBetween('job_closing_date', [now()->toDateString(), now()->addDays(self::EXPIRING_SOON_DAYS)->toDateString()])
+                ->whereBetween('job_closing_date', [JobPosting::localToday(), now(config('app.local_timezone'))->addDays(self::EXPIRING_SOON_DAYS)->toDateString()])
                 ->count(),
             'totalApplicants' => $applicationsByStatus->sum(),
             'pending' => $applicationsByStatus->get('pending', 0),
@@ -68,7 +68,7 @@ class EmployerController extends Controller
         // the active ones.
         $jobPostings = JobPosting::where('user_id', $employerId)
             ->withCount('applications')
-            ->orderByRaw('CASE WHEN job_approved = 1 AND job_closing_date >= ? THEN 0 ELSE 1 END', [now()->toDateString()])
+            ->orderByRaw('CASE WHEN job_approved = 1 AND job_closing_date >= ? THEN 0 ELSE 1 END', [JobPosting::localToday()])
             ->orderByDesc('applications_count')
             ->get();
 

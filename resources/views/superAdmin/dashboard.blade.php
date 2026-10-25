@@ -196,6 +196,42 @@
             background: rgba(199, 61, 26, 0.05);
         }
 
+        /* "View raw data" cue on every clickable chart — see partials/raw-data-link. */
+        .chart-card {
+            position: relative;
+        }
+        .raw-data-link {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 9px;
+            font-size: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+            color: #C73D1A;
+            background: #fff;
+            border: 1px solid rgba(199, 61, 26, 0.35);
+            border-radius: 999px;
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+        }
+        .raw-data-link:hover,
+        .chart-card:has(.chart-clickable:hover) .raw-data-link {
+            background: #C73D1A;
+            color: #fff;
+        }
+        .raw-data-link--inline {
+            position: static;
+        }
+        /* Keep a long title from running underneath the pinned link. */
+        .chart-card:has(> .raw-data-link:not(.raw-data-link--inline)) > .card-title {
+            padding-right: 115px;
+        }
+
         /* ── Industry bars ── */
         .ind-bar-wrap {
             display: flex;
@@ -403,6 +439,7 @@
                     <!-- Employment Status Breakdown -->
                     <div class="chart-card">
                         <div class="card-title">Employment Status Breakdown</div>
+                        @include('partials.raw-data-link', ['url' => route('reports.show', 'employment-status')])
                         <div class="card-sub">Overall distribution of all alumni and their employment status</div>
                         <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.show', 'employment-status') }}')">
                             <canvas id="chartStatus"></canvas>
@@ -412,6 +449,7 @@
                     <!-- Industry Distribution -->
                     <div class="chart-card">
                         <div class="card-title">Industry Distribution of <span>Employed Alumni</span></div>
+                        @include('partials.raw-data-link', ['url' => route('reports.show', 'industry-distribution')])
                         <div class="card-sub">Sectors where PLV alumni are currently employed</div>
                         <div class="ind-bar-wrap chart-clickable" onclick="goToReport('{{ route('reports.show', 'industry-distribution') }}')">
                             @forelse ($industryDistribution as $industryName => $count)
@@ -434,6 +472,7 @@
                     <!-- Employment Rate by Batch/Year -->
                     <div class="chart-card">
                         <div class="card-title">Employment Rate by Batch/Year</div>
+                        @include('partials.raw-data-link', ['url' => route('reports.show', 'employment-by-batch')])
                         <div class="card-sub">Employed vs. unemployed counts across graduation batches</div>
                         <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.show', 'employment-by-batch') }}')">
                             <canvas id="chartPlacement"></canvas>
@@ -444,6 +483,7 @@
                     <!-- Job-to-Degree Alignment -->
                     <div class="chart-card">
                         <div class="card-title">Job-to-Degree Alignment by Program/Course</div>
+                        @include('partials.raw-data-link', ['url' => route('reports.show', 'job-alignment')])
                         <div class="card-sub">% of employed alumni whose job matches their degree field ({{ $alignmentRate }}% overall) &mdash; every program</div>
                         <div class="chart-clickable" style="margin-top:10px; height:220px; overflow-y:auto;" onclick="goToReport('{{ route('reports.show', 'job-alignment') }}')">
                             <div style="height:{{ max(160, $programAlignment->count() * 26) }}px;">
@@ -460,6 +500,7 @@
                     <!-- Employment Rate by Gender -->
                     <div class="chart-card">
                         <div class="card-title">Employment Rate by Gender</div>
+                        @include('partials.raw-data-link', ['url' => route('reports.show', 'employment-by-gender')])
                         <div class="card-sub">Employed vs. total alumni per gender</div>
                         <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.show', 'employment-by-gender') }}')">
                             <canvas id="chartGender"></canvas>
@@ -469,6 +510,7 @@
                     <!-- Employment Interval -->
                     <div class="chart-card">
                         <div class="card-title">Employment Interval</div>
+                        @include('partials.raw-data-link', ['url' => route('reports.show', 'employment-interval')])
                         <div class="card-sub">Time from graduation to first job (alumni with a recorded first-job date)</div>
                         <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.show', 'employment-interval') }}')">
                             <canvas id="chartInterval"></canvas>
@@ -480,6 +522,7 @@
                 <!-- Job Before Graduation & Internships -->
                 <div class="chart-card mb-4">
                     <div class="card-title">Job Before Graduation &amp; Internships</div>
+                    @include('partials.raw-data-link', ['url' => route('reports.show', 'job-before-grad')])
                     <div class="card-sub">Of alumni with a recorded first job</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 items-center">
                         <div class="chart-clickable" style="height:180px;" onclick="goToReport('{{ route('reports.show', 'job-before-grad') }}')">
@@ -510,6 +553,7 @@
                 @endphp
                 <div class="chart-card mb-4">
                     <div class="card-title">Employment by Month</div>
+                    @include('partials.raw-data-link', ['url' => route('reports.show', 'employment-by-month')])
                     <div class="card-sub">Which month alumni get employed (Jan&ndash;Dec{{ $selectedYears ? ', ' . implode(', ', $selectedYears) : ', pooled across employment years' }}) for
                         {{ !empty($dashboardFilters['batch']) ? implode(', ', $dashboardFilters['batch']) . ' batch' : 'all batches' }}
                         @if ($selectedProgramNames->isNotEmpty())
@@ -547,6 +591,8 @@
                                 <div class="card-title">Top Hiring Companies</div>
                                 <div class="card-sub">Most hires among current filters</div>
                             </div>
+                            <div class="flex items-center gap-2" style="margin-left:auto;">
+                            @include('partials.raw-data-link', ['url' => route('reports.show', 'top-hiring-companies'), 'inline' => true])
                             <select id="topCompaniesSelect" onchange="updateTopCompanies(this.value)"
                                 style="border:1px solid #d1d5db; border-radius:6px; padding:5px 10px; font-size:12px; font-family:'Montserrat',sans-serif; outline:none; color:#374151;">
                                 <option value="5" {{ $topCompaniesLimit === 5 ? 'selected' : '' }}>Top 5</option>
@@ -554,6 +600,7 @@
                                 <option value="15" {{ $topCompaniesLimit === 15 ? 'selected' : '' }}>Top 15</option>
                                 <option value="20" {{ $topCompaniesLimit === 20 ? 'selected' : '' }}>Top 20</option>
                             </select>
+                            </div>
                         </div>
                         <div class="ind-bar-wrap chart-clickable" onclick="goToReport('{{ route('reports.show', 'top-hiring-companies') }}')">
                             @forelse ($topHiringCompanies as $row)
@@ -576,6 +623,8 @@
                             <div class="card-title">Hires per Month</div>
                             <div class="card-sub">Date an applicant was actually marked hired, grouped by month</div>
                         </div>
+                        <div class="flex items-center gap-2" style="margin-left:auto;">
+                        @include('partials.raw-data-link', ['url' => route('reports.show', 'hires-per-month'), 'inline' => true])
                         <select id="hiresRangeSelect" onchange="updateHiresRange(this.value)"
                             style="border:1px solid #d1d5db; border-radius:6px; padding:5px 10px; font-size:12px; font-family:'Montserrat',sans-serif; outline:none; color:#374151;">
                             <option value="3" {{ $hireMonths === 3 ? 'selected' : '' }}>Last 3 months</option>
@@ -583,6 +632,7 @@
                             <option value="12" {{ $hireMonths === 12 ? 'selected' : '' }}>Last 12 months</option>
                             <option value="24" {{ $hireMonths === 24 ? 'selected' : '' }}>Last 24 months</option>
                         </select>
+                        </div>
                     </div>
                     <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.show', 'hires-per-month') }}')">
                         <canvas id="chartHires"></canvas>
@@ -594,8 +644,9 @@
                      <!-- Networking Activity -->
                     <div class="chart-card">
                         <div class="card-title">Alumni <span>Networking Activity</span></div>
+                        @include('partials.raw-data-link', ['url' => route('reports.networking'), 'keepFilters' => false])
                         <div class="card-sub">New conversations & messages — last 6 months</div>
-                        <div class="chart-clickable" style="margin-top:10px; height:130px;" onclick="goToReport('{{ route('reports.networking') }}')">
+                        <div class="chart-clickable" style="margin-top:10px; height:130px;" onclick="goToReport('{{ route('reports.networking') }}', false)">
                             <canvas id="chartNetworking"></canvas>
                         </div>
                     </div>
@@ -605,9 +656,16 @@
                         <div class="card-title">Alumni ID & Yearbook Reports</div>
                         <div class="grid grid-cols-2 gap-4 mt-3">
                             <div>
-                                <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px;">Alumni ID
-                                    Status</div>
-                                <div class="chart-clickable" style="height:130px;" onclick="window.location.href='{{ route('reports.show', 'alumni-id-status') }}'"><canvas id="chartAlumniID"></canvas></div>
+                                {{-- This widget is deliberately unfiltered (see showDashboard()), so its
+                                     drill-down opens with filters explicitly applied-but-empty ("all years")
+                                     rather than the report page's current-year default — keeps the raw data
+                                     matching the chart. --}}
+                                @php $alumniIdReportUrl = route('reports.show', ['alumni-id-status', \App\Services\DashboardReportService::FILTERS_APPLIED_PARAM => 1]); @endphp
+                                <div class="flex items-center justify-between gap-2" style="margin-bottom:6px;">
+                                    <span style="font-size:11px;font-weight:700;color:#374151;">Alumni ID Status</span>
+                                    @include('partials.raw-data-link', ['url' => $alumniIdReportUrl, 'inline' => true, 'keepFilters' => false])
+                                </div>
+                                <div class="chart-clickable" style="height:130px;" onclick="goToReport({{ json_encode($alumniIdReportUrl) }}, false)"><canvas id="chartAlumniID"></canvas></div>
                                 <div style="font-size:9.5px;color:#6b7280;margin-top:8px;line-height:1.7;">
                                     @php $alumniIdRegistered = $alumniIdCounts->sum(); @endphp
                                     Registered for ID: <strong>{{ number_format($alumniIdRegistered) }} ({{ $alumniIdTotal > 0 ? round($alumniIdRegistered / $alumniIdTotal * 100) : 0 }}%)</strong><br>
@@ -615,9 +673,12 @@
                                 </div>
                             </div>
                             <div>
-                                <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px;">Yearbook
-                                    Distribution</div>
-                                <div class="chart-clickable" style="height:130px;" onclick="window.location.href='{{ route('reports.show', 'yearbook-status') }}'"><canvas id="chartYearbook"></canvas></div>
+                                @php $yearbookReportUrl = route('reports.show', ['yearbook-status', \App\Services\DashboardReportService::FILTERS_APPLIED_PARAM => 1]); @endphp
+                                <div class="flex items-center justify-between gap-2" style="margin-bottom:6px;">
+                                    <span style="font-size:11px;font-weight:700;color:#374151;">Yearbook Distribution</span>
+                                    @include('partials.raw-data-link', ['url' => $yearbookReportUrl, 'inline' => true, 'keepFilters' => false])
+                                </div>
+                                <div class="chart-clickable" style="height:130px;" onclick="goToReport({{ json_encode($yearbookReportUrl) }}, false)"><canvas id="chartYearbook"></canvas></div>
                                 <div style="font-size:9.5px;color:#6b7280;margin-top:8px;line-height:1.7;">
                                     @php $yearbookPending = $yearbookCounts['pending'] + $yearbookCounts['ready_to_claim']; @endphp
                                     Claimed: <strong>{{ number_format($yearbookCounts['claimed']) }} ({{ $alumniIdTotal > 0 ? round($yearbookCounts['claimed'] / $alumniIdTotal * 100) : 0 }}%)</strong><br>
@@ -677,15 +738,28 @@
     // also strips the clickable styling itself so it doesn't even look
     // interactive for someone who can't use it.
     const CAN_VIEW_REPORTS = @json(Auth::user()->canAccessAdminFeature('reports'));
-    function goToReport(url) {
-        if (CAN_VIEW_REPORTS) window.location.href = url;
-    }
-    document.addEventListener('DOMContentLoaded', function () {
-        if (!CAN_VIEW_REPORTS) {
-            document.querySelectorAll('.chart-clickable').forEach(function (el) {
-                el.classList.remove('chart-clickable');
+    // Carries the dashboard's currently-applied filters over (same as each
+    // chart's "View raw data" link — partials/raw-data-link), so the raw
+    // table always matches the chart that was clicked instead of falling
+    // back to the report page's own current-year default.
+    function goToReport(url, keepFilters = true) {
+        if (!CAN_VIEW_REPORTS) return;
+        const target = new URL(url, window.location.origin);
+        if (keepFilters) {
+            new URLSearchParams(window.location.search).forEach(function (value, key) {
+                target.searchParams.append(key, value);
             });
         }
+        window.location.href = target.toString();
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.chart-clickable').forEach(function (el) {
+            if (CAN_VIEW_REPORTS) {
+                el.title = 'Click to view the raw data behind this chart';
+            } else {
+                el.classList.remove('chart-clickable');
+            }
+        });
     });
 
     // ── Item 18: EXPORT PDF now captures every real Chart.js canvas as a
@@ -732,6 +806,8 @@
         ['batch', 'program_id', 'employment_status', 'college', 'year'].forEach(key => {
             params.getAll(key + '[]').forEach(v => addField(key + '[]', v));
         });
+        // Applied-filters marker, so an emptied Year/Year Graduated exports as "all years", not the current-year default.
+        if (params.has('filtered')) addField('filtered', '1');
 
         document.body.appendChild(form);
         form.submit();

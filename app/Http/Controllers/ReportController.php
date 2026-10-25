@@ -42,7 +42,7 @@ class ReportController extends Controller
     private function resolveFilters(DashboardReportService $s): array
     {
         return [
-            $s->resolveIntArray(request()->input('batch')),
+            $s->resolveBatches(request()->input('batch')),
             $s->resolveIntArray(request()->input('program_id')),
             $s->resolveEmploymentStatuses(request()->input('employment_status')),
             $s->resolveColleges(request()->input('college')),
@@ -53,10 +53,7 @@ class ReportController extends Controller
     private function filterOptions(DashboardReportService $reportService): array
     {
         return [
-            'batchYearOptions' => Alumnus::whereNotNull('alumnus_batch')
-                ->selectRaw('DISTINCT YEAR(alumnus_batch) as year')
-                ->orderByDesc('year')
-                ->pluck('year'),
+            'batchYearOptions' => $reportService->batchYearOptions(),
             'programs' => Program::orderBy('program_name')->get(),
             'yearOptions' => $reportService->yearOptions(),
         ];
@@ -799,7 +796,7 @@ class ReportController extends Controller
     private function alumniIdFilters(DashboardReportService $reportService): array
     {
         return [
-            $reportService->resolveIntArray(request()->input('batch')),
+            $reportService->resolveBatches(request()->input('batch')),
             $reportService->resolveIntArray(request()->input('program_id')),
             $reportService->resolveColleges(request()->input('college')),
         ];

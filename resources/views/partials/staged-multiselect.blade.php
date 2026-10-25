@@ -53,17 +53,24 @@
         selectAllCheck.classList.toggle('hidden', !selectAll.checked);
     }
 
-    // Keeps the trigger button's "N Selected"/placeholder text in sync
-    // client-side, since the page no longer reloads on every checkbox click.
+    // Keeps the trigger button's text in sync client-side (the picked
+    // options' own labels, comma-joined — same as the server-rendered text
+    // in multiselect-filter.blade.php), since the page no longer reloads on
+    // every checkbox click.
     function updateMultiselectLabel(panel) {
         const wrap = panel.closest('.multiselect-filter');
         const labelSpan = wrap.querySelector('.multiselect-trigger-label');
+        const btn = wrap.querySelector('.multiselect-trigger-btn');
         const placeholder = wrap.dataset.placeholder || '';
-        const count = panel.querySelectorAll('.option-checkbox:checked').length;
-        labelSpan.textContent = count ? count + ' Selected' : placeholder;
-        wrap.querySelector('.multiselect-trigger-btn').classList.toggle('text-[#0E0F3B]', count > 0);
-        wrap.querySelector('.multiselect-trigger-btn').classList.toggle('font-semibold', count > 0);
-        wrap.querySelector('.multiselect-trigger-btn').classList.toggle('text-gray-500', count === 0);
+        const names = Array.from(panel.querySelectorAll('.option-checkbox:checked')).map(function (o) {
+            return o.closest('label').querySelector('.text-xs').textContent.trim();
+        });
+        const count = names.length;
+        labelSpan.textContent = count ? names.join(', ') : placeholder;
+        btn.title = count ? placeholder + ': ' + names.join(', ') : placeholder;
+        btn.classList.toggle('text-[#0E0F3B]', count > 0);
+        btn.classList.toggle('font-semibold', count > 0);
+        btn.classList.toggle('text-gray-500', count === 0);
     }
 
     document.addEventListener('DOMContentLoaded', function () {

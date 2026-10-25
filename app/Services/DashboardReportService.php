@@ -56,6 +56,55 @@ class DashboardReportService
             ->unique()->values()->all();
     }
 
+    /**
+     * Hidden marker every report filter form submits alongside its
+     * checkboxes (see partials/report-filters-form.blade.php). Its absence
+     * means "fresh visit / reset" → Year and Year Graduated default to the
+     * current year; its presence means the admin actually applied filters,
+     * so an empty Year/Year Graduated selection is honored as "all years"
+     * instead of snapping back to the default.
+     */
+    public const FILTERS_APPLIED_PARAM = 'filtered';
+
+    public function filtersApplied(): bool
+    {
+        return request()->has(self::FILTERS_APPLIED_PARAM);
+    }
+
+    public function currentYear(): int
+    {
+        return (int) now(config('app.local_timezone'))->year;
+    }
+
+    private function defaultToCurrentYear(array $years): array
+    {
+        return (!empty($years) || $this->filtersApplied()) ? $years : [$this->currentYear()];
+    }
+
+    /** Year Graduated filter (alumnus_batch's year) — defaults to the current year, see FILTERS_APPLIED_PARAM. */
+    public function resolveBatches($raw): array
+    {
+        return $this->defaultToCurrentYear($this->resolveIntArray($raw));
+    }
+
+    /**
+     * Year Graduated dropdown options — every graduation year actually on
+     * file, plus the current year even when nobody's recorded as graduating
+     * in it yet, so the default selection always has a checkbox to show as
+     * checked (and can be unchecked).
+     */
+    public function batchYearOptions()
+    {
+        return Alumnus::whereNotNull('alumnus_batch')
+            ->selectRaw('DISTINCT YEAR(alumnus_batch) as year')
+            ->pluck('year')
+            ->push($this->currentYear())
+            ->map(fn ($y) => (int) $y)
+            ->unique()
+            ->sortDesc()
+            ->values();
+    }
+
     /** Shared by Batch (graduation year) and Program ID filters — both are positive integers. */
     public function resolveIntArray($raw): array
     {
@@ -83,13 +132,13 @@ class DashboardReportService
      */
     public function resolveYears($raw): array
     {
-        return $this->resolveIntArray($raw);
+        return $this->defaultToCurrentYear($this->resolveIntArray($raw));
     }
 
     /** Descending list of years actually spanned by event-dated data, for the Year filter's dropdown. */
     public function yearOptions(): array
     {
-        $currentYear = (int) now()->year;
+        $currentYear = $this->currentYear();
 
         $minYear = collect([
             DB::table('job_postings')->min('created_at'),
@@ -139,7 +188,8 @@ class DashboardReportService
 
         $activeJobsQuery = DB::table('job_postings')
             ->where('job_approved', true)
-            ->where('job_closing_date', '>', now());
+            // Same "still open through its closing day" rule as JobPosting::scopeOpen().
+            ->where('job_closing_date', '>=', \App\Models\JobPosting::localToday());
         if (!empty($years)) {
             $activeJobsQuery->whereIn(DB::raw('YEAR(job_closing_date)'), $years);
         }

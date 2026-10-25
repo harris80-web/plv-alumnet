@@ -1,7 +1,7 @@
 {{--
     Shared filter bar for the admin dashboard and its 3 grouped report-detail
-    pages (superAdmin/reports/*) — Batch/College/Course/Employment
-    Status/Year, all staged multi-selects (item 15), College cascading
+    pages (superAdmin/reports/*) — Year/Year Graduated/College/Course/
+    Employment Status, all staged multi-selects (item 15), College cascading
     Course (items 12/13), plus Apply/Clear/Export PDF actions.
 
     Requires the including page to also:
@@ -26,12 +26,28 @@
     <form method="GET" action="{{ $formAction }}" id="dashboardFilterForm"
         class="flex flex-wrap items-center gap-3 bg-white px-6 py-4 rounded-xl border border-slate-200 shadow-md text-sm font-medium text-slate-700">
 
-        <!-- Batch Year (multi-select, item 15) -->
+        {{-- Tells the server these are deliberately-applied filters, so an
+             empty Year/Year Graduated means "all years" rather than the
+             current-year default (see DashboardReportService::FILTERS_APPLIED_PARAM). --}}
+        <input type="hidden" name="{{ \App\Services\DashboardReportService::FILTERS_APPLIED_PARAM }}" value="1">
+
+        <!-- Year (item 16 — distinct from Year Graduated: when things happened, not when alumni graduated) -->
+        <div class="flex-1 min-w-[150px]">
+            @include('partials.multiselect-filter', [
+                'name' => 'year',
+                'icon' => 'fas fa-calendar-day',
+                'placeholder' => 'Year',
+                'options' => collect($yearOptions)->mapWithKeys(fn ($y) => [$y => $y]),
+                'selected' => $dashboardFilters['year'],
+            ])
+        </div>
+
+        <!-- Year Graduated (multi-select, item 15 — the alumnus_batch year) -->
         <div class="flex-1 min-w-[150px]">
             @include('partials.multiselect-filter', [
                 'name' => 'batch',
                 'icon' => 'fas fa-calendar',
-                'placeholder' => 'Batch Year',
+                'placeholder' => 'Year Graduated',
                 'options' => $batchYearOptions->mapWithKeys(fn ($y) => [$y => $y]),
                 'selected' => $dashboardFilters['batch'],
             ])
@@ -71,22 +87,13 @@
             ])
         </div>
 
-        <!-- Year (item 16 — distinct from Batch: when things happened, not when alumni graduated) -->
-        <div class="flex-1 min-w-[150px]">
-            @include('partials.multiselect-filter', [
-                'name' => 'year',
-                'icon' => 'fas fa-calendar-day',
-                'placeholder' => 'Year',
-                'options' => collect($yearOptions)->mapWithKeys(fn ($y) => [$y => $y]),
-                'selected' => $dashboardFilters['year'],
-            ])
-        </div>
-
         <div class="w-full flex items-center justify-end gap-3 pt-3 mt-1 border-t border-slate-100">
-            @if (array_filter($dashboardFilters))
+            {{-- Back to the defaults (current Year + Year Graduated), not "no
+                 filters" — so it only shows once something's been applied. --}}
+            @if (request()->has(\App\Services\DashboardReportService::FILTERS_APPLIED_PARAM))
             <a href="{{ $clearRoute }}"
                 class="shrink-0 whitespace-nowrap bg-slate-200 text-[10px] text-slate-600 px-3 py-1.5 rounded-md flex items-center gap-1 hover:bg-slate-300 transition shadow-sm font-semibold uppercase tracking-wide">
-                <i data-lucide="x" class="w-3.5 h-3.5 shrink-0"></i> Clear Filters
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 shrink-0"></i> Reset Filters
             </a>
             @endif
 

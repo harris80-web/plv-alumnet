@@ -42,11 +42,13 @@
                     <form method="GET" action="{{ route('reports.alumniid') }}" id="dashboardFilterForm"
                         class="flex flex-wrap items-center gap-3 bg-white px-6 py-4 rounded-xl border border-slate-200 shadow-md text-sm font-medium text-slate-700">
 
+                        <input type="hidden" name="{{ \App\Services\DashboardReportService::FILTERS_APPLIED_PARAM }}" value="1">
+
                         <div class="flex-1 min-w-[150px]">
                             @include('partials.multiselect-filter', [
                                 'name' => 'batch',
                                 'icon' => 'fas fa-calendar',
-                                'placeholder' => 'Batch Year',
+                                'placeholder' => 'Year Graduated',
                                 'options' => $batchYearOptions->mapWithKeys(fn ($y) => [$y => $y]),
                                 'selected' => $dashboardFilters['batch'],
                             ])
@@ -74,10 +76,10 @@
                         </div>
 
                         <div class="w-full flex items-center justify-end gap-3 pt-3 mt-1 border-t border-slate-100">
-                            @if (array_filter($dashboardFilters))
+                            @if (request()->has(\App\Services\DashboardReportService::FILTERS_APPLIED_PARAM))
                             <a href="{{ route('reports.alumniid') }}"
                                 class="shrink-0 whitespace-nowrap bg-slate-200 text-[10px] text-slate-600 px-3 py-1.5 rounded-md flex items-center gap-1 hover:bg-slate-300 transition shadow-sm font-semibold uppercase tracking-wide">
-                                <i data-lucide="x" class="w-3.5 h-3.5 shrink-0"></i> Clear Filters
+                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 shrink-0"></i> Reset Filters
                             </a>
                             @endif
 
@@ -91,7 +93,7 @@
                                 <i data-lucide="file-text" class="w-3.5 h-3.5 shrink-0"></i> EXPORT PDF
                             </button>
 
-                            <a href="{{ route('reports.exportCsv', array_merge(['group' => 'alumniid'], array_filter($dashboardFilters))) }}"
+                            <a href="{{ route('reports.exportCsv', array_merge(['group' => 'alumniid'], array_filter($dashboardFilters) + [\App\Services\DashboardReportService::FILTERS_APPLIED_PARAM => 1])) }}"
                                 class="shrink-0 whitespace-nowrap border border-[#0E0F3B] text-[#0E0F3B] text-[10px] px-3 py-1.5 rounded-md flex items-center gap-1 hover:bg-[#0E0F3B] hover:text-white transition shadow-sm font-semibold uppercase tracking-wide">
                                 <i data-lucide="download" class="w-3.5 h-3.5 shrink-0"></i> EXPORT CSV
                             </a>
@@ -333,6 +335,8 @@
             ['batch', 'program_id', 'college'].forEach(key => {
                 params.getAll(key + '[]').forEach(v => addField(key + '[]', v));
             });
+            // Applied-filters marker, so an emptied Year/Year Graduated exports as "all years", not the current-year default.
+            if (params.has('filtered')) addField('filtered', '1');
             document.body.appendChild(form);
             form.submit();
             form.remove();

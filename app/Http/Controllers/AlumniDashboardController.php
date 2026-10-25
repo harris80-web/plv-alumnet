@@ -62,7 +62,7 @@ class AlumniDashboardController extends Controller
                 ->whereHas('jobPosting', fn ($q) => $q->approved()->open())
                 ->get()
                 ->sortByDesc(fn (JobMatch $match) => $match->blendedScore())
-                ->take(9)
+                ->take(10)
                 ->values();
 
             // Same shape job-post-card.blade.php already expects

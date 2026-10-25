@@ -77,7 +77,7 @@
     <h1>PLV-AlumNet &mdash; Admin Dashboard Report</h1>
     <p class="meta">
         Generated {{ now()->format('M d, Y h:i A') }}<br>
-        Filters &mdash; Batch: {{ $batchLabel }} | Program: {{ $programLabel }} | Employment Status: {{ $statusLabel }} | College: {{ $collegeLabel }} | Year: {{ $yearLabel }}
+        Filters &mdash; Year: {{ $yearLabel }} | Year Graduated: {{ $batchLabel }} | College: {{ $collegeLabel }} | Program: {{ $programLabel }} | Employment Status: {{ $statusLabel }}
     </p>
 
     <div class="section">
@@ -149,7 +149,7 @@
 
     <div class="section">
         <h2>Employment by Month (Jan&ndash;Dec{{ $yearLabel !== 'All' ? ', ' . $yearLabel : ', pooled across employment years' }})</h2>
-        <p class="subheading">Batch: {{ $batchLabel }} | Program: {{ $programLabel }}</p>
+        <p class="subheading">Year Graduated: {{ $batchLabel }} | Program: {{ $programLabel }}</p>
         @if (!empty($charts['chartEmploymentByMonth']))
             <img class="chart-img" src="{{ $charts['chartEmploymentByMonth'] }}">
         @else

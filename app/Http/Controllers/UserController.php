@@ -1076,7 +1076,7 @@ class UserController extends Controller
         // Batch/Course/Employment Status/College/Year filters — all
         // multi-select now (item 15) — see DashboardReportService for
         // exactly how each report uses each one.
-        $batches = $reportService->resolveIntArray(request()->query('batch'));
+        $batches = $reportService->resolveBatches(request()->query('batch'));
         $programIds = $reportService->resolveIntArray(request()->query('program_id'));
         $employmentStatuses = $reportService->resolveEmploymentStatuses(request()->query('employment_status'));
         $colleges = $reportService->resolveColleges(request()->query('college'));
@@ -1086,14 +1086,9 @@ class UserController extends Controller
 
         $stats = $reportService->buildOverviewStats($batches, $programIds, $employmentStatuses, $colleges, $years);
 
-        // The Batch filter stays a "graduation year" pick even though
-        // alumnus_batch is now a full date — DISTINCT YEAR(...) extracts
-        // the years actually present instead of every individual date
-        // (which would make the dropdown useless).
-        $batchYearOptions = Alumnus::whereNotNull('alumnus_batch')
-            ->selectRaw('DISTINCT YEAR(alumnus_batch) as year')
-            ->orderByDesc('year')
-            ->pluck('year');
+        // The Year Graduated filter stays a "graduation year" pick even
+        // though alumnus_batch is a full date — see batchYearOptions().
+        $batchYearOptions = $reportService->batchYearOptions();
         $programs = Program::orderBy('program_name')->get();
         $yearOptions = $reportService->yearOptions();
         // hire_months/top_companies live outside $dashboardFilters on
@@ -1146,7 +1141,7 @@ class UserController extends Controller
     public function exportDashboardReport(DashboardReportService $reportService)
     {
         $this->authorizeStaff();
-        $batches = $reportService->resolveIntArray(request()->query('batch'));
+        $batches = $reportService->resolveBatches(request()->query('batch'));
         $programIds = $reportService->resolveIntArray(request()->query('program_id'));
         $employmentStatuses = $reportService->resolveEmploymentStatuses(request()->query('employment_status'));
         $colleges = $reportService->resolveColleges(request()->query('college'));
@@ -1274,7 +1269,7 @@ class UserController extends Controller
     public function exportDashboardReportPdf(DashboardReportService $reportService)
     {
         $this->authorizeStaff();
-        $batches = $reportService->resolveIntArray(request()->input('batch'));
+        $batches = $reportService->resolveBatches(request()->input('batch'));
         $programIds = $reportService->resolveIntArray(request()->input('program_id'));
         $employmentStatuses = $reportService->resolveEmploymentStatuses(request()->input('employment_status'));
         $colleges = $reportService->resolveColleges(request()->input('college'));

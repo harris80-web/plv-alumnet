@@ -55,7 +55,7 @@ class DeclineShortlistedOnJobExpiry implements ShouldQueue
         // Same "expired" definition as the rest of the app (JobPosting::
         // scopeOpen()/scopeActive()): a posting closing today is still open
         // through the end of today, only strictly-past dates count.
-        if (Carbon::parse($job->job_closing_date)->greaterThanOrEqualTo(Carbon::today())) {
+        if ($job->job_closing_date >= JobPosting::localToday()) {
             return;
         }
 
@@ -64,13 +64,13 @@ class DeclineShortlistedOnJobExpiry implements ShouldQueue
             ->update(['application_status' => 'declined']);
     }
 
-    /** Delay target for a given posting — the moment its closing date has fully elapsed. */
+    /** Delay target for a given posting — the moment its closing date has fully elapsed (local PH midnight). */
     public static function delayFor(JobPosting $job): ?Carbon
     {
         if (!$job->job_closing_date) {
             return null;
         }
 
-        return Carbon::parse($job->job_closing_date)->addDay()->startOfDay();
+        return Carbon::parse($job->job_closing_date, config('app.local_timezone'))->addDay()->startOfDay();
     }
 }

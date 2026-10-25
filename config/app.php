@@ -67,6 +67,13 @@ return [
 
     'timezone' => 'UTC',
 
+    // Timestamps stay in UTC (above — switching it would shift every stored
+    // created_at by 8h), but "is this job posting's closing date past yet?"
+    // has to be judged by the school's calendar day, not UTC's — otherwise a
+    // post that closed yesterday still reads as open until 8 AM PH time.
+    // See JobPosting::localToday().
+    'local_timezone' => env('APP_LOCAL_TIMEZONE', 'Asia/Manila'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

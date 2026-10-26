@@ -11,19 +11,23 @@
     will include it too once its filters move to this same component).
 --}}
 <script>
+    function closeMultiselect(panel) {
+        panel.classList.add('hidden');
+        panel.closest('.multiselect-filter').classList.remove('is-open');
+    }
+
     function toggleMultiselect(btn) {
         const panel = btn.parentElement.querySelector('.multiselect-panel');
         document.querySelectorAll('.multiselect-panel').forEach(function (p) {
-            if (p !== panel) p.classList.add('hidden');
+            if (p !== panel) closeMultiselect(p);
         });
         panel.classList.toggle('hidden');
+        btn.parentElement.classList.toggle('is-open', !panel.classList.contains('hidden'));
     }
 
     document.addEventListener('click', function (e) {
         if (!e.target.closest('.multiselect-filter')) {
-            document.querySelectorAll('.multiselect-panel').forEach(function (p) {
-                p.classList.add('hidden');
-            });
+            document.querySelectorAll('.multiselect-panel').forEach(closeMultiselect);
         }
     });
 
@@ -62,11 +66,12 @@
         const labelSpan = wrap.querySelector('.multiselect-trigger-label');
         const btn = wrap.querySelector('.multiselect-trigger-btn');
         const placeholder = wrap.dataset.placeholder || '';
+        const prefix = wrap.dataset.labelPrefix || '';
         const names = Array.from(panel.querySelectorAll('.option-checkbox:checked')).map(function (o) {
             return o.closest('label').querySelector('.text-xs').textContent.trim();
         });
         const count = names.length;
-        labelSpan.textContent = count ? names.join(', ') : placeholder;
+        labelSpan.textContent = count ? (prefix ? prefix + ': ' : '') + names.join(', ') : placeholder;
         btn.title = count ? placeholder + ': ' + names.join(', ') : placeholder;
         btn.classList.toggle('text-[#0E0F3B]', count > 0);
         btn.classList.toggle('font-semibold', count > 0);

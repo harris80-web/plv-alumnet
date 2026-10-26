@@ -136,34 +136,46 @@ $current_page = 'user_management';
                     <div class="grid grid-cols-4 gap-4 mb-6">
 
                         <!-- Total Admins -->
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-800">{{ $adminStats['total'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="user-cog" class="w-5 h-5 shrink-0 text-slate-800"></i>
+                                <p class="text-2xl font-bold text-slate-800">{{ $adminStats['total'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total Admin</p>
                         </div>
 
                         <!-- Active Admins -->
-                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('admin_status') === 'Active' ? 'border-green-500 ring-2 ring-green-200' : 'border-slate-200' }}"
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('admin_status') === 'Active' ? 'border-green-500 ring-2 ring-green-200' : 'border-transparent' }}"
                             title="Click to {{ request('admin_status') === 'Active' ? 'clear this filter' : 'filter by Active' }}"
                             onclick="pvSearchNavigate('admin_status', '{{ request('admin_status') === 'Active' ? '' : 'Active' }}', 'adminPage')">
-                            <p class="text-2xl font-bold text-green-500">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="user-check" class="w-5 h-5 shrink-0 text-green-500"></i>
+                                <p class="text-2xl font-bold text-green-500">
                                 {{ $adminStats['active'] }}
                             </p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Active Admin</p>
                         </div>
 
                         <!-- Inactive Admins -->
-                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('admin_status') === 'Inactive' ? 'border-[#C73D1A] ring-2 ring-orange-200' : 'border-slate-200' }}"
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('admin_status') === 'Inactive' ? 'border-[#C73D1A] ring-2 ring-orange-200' : 'border-transparent' }}"
                             title="Click to {{ request('admin_status') === 'Inactive' ? 'clear this filter' : 'filter by Inactive' }}"
                             onclick="pvSearchNavigate('admin_status', '{{ request('admin_status') === 'Inactive' ? '' : 'Inactive' }}', 'adminPage')">
-                            <p class="text-2xl font-bold text-[#C73D1A]">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="user-x" class="w-5 h-5 shrink-0 text-[#C73D1A]"></i>
+                                <p class="text-2xl font-bold text-[#C73D1A]">
                                 {{ $adminStats['inactive'] }}
                             </p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Inactive Admin</p>
                         </div>
 
                         <!-- Super Admin -->
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-amber-400">1</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="user-star" class="w-5 h-5 shrink-0 text-amber-400"></i>
+                                <p class="text-2xl font-bold text-amber-400">1</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Super Admin</p>
                         </div>
 
@@ -302,38 +314,50 @@ $current_page = 'user_management';
                     <div class="grid grid-cols-4 gap-4 mb-6">
 
                         <!-- Total Alumni -->
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-800">{{ $alumniStats['total'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="graduation-cap" class="w-5 h-5 shrink-0 text-slate-800"></i>
+                                <p class="text-2xl font-bold text-slate-800">{{ $alumniStats['total'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total Alumni</p>
                         </div>
 
                         <!-- Active Accounts -->
-                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('alumni_status') === 'Active' ? 'border-green-500 ring-2 ring-green-200' : 'border-slate-200' }}"
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('alumni_status') === 'Active' ? 'border-green-500 ring-2 ring-green-200' : 'border-transparent' }}"
                             title="Click to {{ request('alumni_status') === 'Active' ? 'clear this filter' : 'filter by Active' }}"
                             onclick="pvSearchNavigate('alumni_status', '{{ request('alumni_status') === 'Active' ? '' : 'Active' }}', 'alumniPage')">
-                            <p class="text-2xl font-bold text-green-500">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="user-check" class="w-5 h-5 shrink-0 text-green-500"></i>
+                                <p class="text-2xl font-bold text-green-500">
                                 {{ $alumniStats['active'] }}
                             </p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Active Accounts</p>
                         </div>
 
                         <!-- Deactivated Accounts -->
-                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('alumni_status') === 'Deactivated' ? 'border-[#C73D1A] ring-2 ring-orange-200' : 'border-slate-200' }}"
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('alumni_status') === 'Deactivated' ? 'border-[#C73D1A] ring-2 ring-orange-200' : 'border-transparent' }}"
                             title="Click to {{ request('alumni_status') === 'Deactivated' ? 'clear this filter' : 'filter by Deactivated' }}"
                             onclick="pvSearchNavigate('alumni_status', '{{ request('alumni_status') === 'Deactivated' ? '' : 'Deactivated' }}', 'alumniPage')">
-                            <p class="text-2xl font-bold text-[#C73D1A]">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="user-x" class="w-5 h-5 shrink-0 text-[#C73D1A]"></i>
+                                <p class="text-2xl font-bold text-[#C73D1A]">
                                 {{ $alumniStats['deactivated'] }}
                             </p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Deactivated Accounts</p>
                         </div>
 
                         <!-- New This Month -->
-                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('alumni_new_this_month') ? 'border-amber-400 ring-2 ring-amber-200' : 'border-slate-200' }}"
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('alumni_new_this_month') ? 'border-amber-400 ring-2 ring-amber-200' : 'border-transparent' }}"
                             title="Click to {{ request('alumni_new_this_month') ? 'clear this filter' : 'filter by New This Month' }}"
                             onclick="pvSearchNavigate('alumni_new_this_month', '{{ request('alumni_new_this_month') ? '' : '1' }}', 'alumniPage')">
-                            <p class="text-2xl font-bold text-amber-400">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="user-plus" class="w-5 h-5 shrink-0 text-amber-400"></i>
+                                <p class="text-2xl font-bold text-amber-400">
                                 {{ $alumniStats['newThisMonth'] }}
                             </p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">New This Month</p>
                         </div>
 
@@ -476,14 +500,7 @@ $current_page = 'user_management';
                                         {{ $alumnus->user_id }}
                                     </td>
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
-                                        <div class="flex items-center justify-center gap-2">
-                                            @include('partials.avatar', [
-                                                'photo' => $alumnus->user?->user_profile_picture ? asset('storage/' . $alumnus->user->user_profile_picture) : null,
-                                                'size' => 'w-7 h-7',
-                                                'iconSize' => 'text-xs',
-                                            ])
-                                            <span>{{ $alumnus->user?->formalNameWithSuffix() ?? 'N/A' }}</span>
-                                        </div>
+                                        {{ $alumnus->user?->formalNameWithSuffix() ?? 'N/A' }}
                                     </td>
                                     <td class="px-3 py-3 font-medium text-black border-r border-slate-100">
                                         {{ \App\Models\Alumnus::genderLabels()[$alumnus->alumnus_gender] ?? 'N/A' }}
@@ -587,40 +604,52 @@ $current_page = 'user_management';
                     <div class="grid grid-cols-4 gap-4 mb-6">
 
                         <!-- Total Employer -->
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-800">
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="building-2" class="w-5 h-5 shrink-0 text-slate-800"></i>
+                                <p class="text-2xl font-bold text-slate-800">
                                 {{ $employerStats['total'] }}
                             </p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total Employer</p>
                         </div>
 
                         <!-- Awaiting Approval -->
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
                             title="Click to jump to Employers Awaiting Approval"
                             onclick="document.getElementById('employerPendingSection').scrollIntoView({behavior:'smooth', block:'start'})">
-                            <p class="text-2xl font-bold text-amber-400">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="hourglass" class="w-5 h-5 shrink-0 text-amber-400"></i>
+                                <p class="text-2xl font-bold text-amber-400">
                                 {{ $employerStats['awaitingApproval'] }}
                             </p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Awaiting Approval</p>
                         </div>
 
                         <!-- Active Accounts -->
-                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('employer_status', 'Active') === 'Active' ? 'border-green-500 ring-2 ring-green-200' : 'border-slate-200' }}"
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('employer_status', 'Active') === 'Active' ? 'border-green-500 ring-2 ring-green-200' : 'border-transparent' }}"
                             title="Click to {{ request('employer_status', 'Active') === 'Active' ? 'clear this filter' : 'filter by Active' }}"
                             onclick="pvSearchNavigate('employer_status', '{{ request('employer_status', 'Active') === 'Active' ? '' : 'Active' }}', 'employerApprovedPage')">
-                            <p class="text-2xl font-bold text-green-500">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="user-check" class="w-5 h-5 shrink-0 text-green-500"></i>
+                                <p class="text-2xl font-bold text-green-500">
                                 {{ $employerStats['active'] }}
                             </p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Active Employers</p>
                         </div>
 
                         <!-- Deactivated Accounts -->
-                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('employer_status') === 'Deactivated' ? 'border-[#C73D1A] ring-2 ring-orange-200' : 'border-slate-200' }}"
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('employer_status') === 'Deactivated' ? 'border-[#C73D1A] ring-2 ring-orange-200' : 'border-transparent' }}"
                             title="Click to {{ request('employer_status') === 'Deactivated' ? 'clear this filter' : 'filter by Deactivated' }}"
                             onclick="pvSearchNavigate('employer_status', '{{ request('employer_status') === 'Deactivated' ? '' : 'Deactivated' }}', 'employerApprovedPage')">
-                            <p class="text-2xl font-bold text-[#C73D1A]">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="user-x" class="w-5 h-5 shrink-0 text-[#C73D1A]"></i>
+                                <p class="text-2xl font-bold text-[#C73D1A]">
                                 {{ $employerStats['deactivated'] }}
                             </p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Deactivated Accounts</p>
                         </div>
                     </div>

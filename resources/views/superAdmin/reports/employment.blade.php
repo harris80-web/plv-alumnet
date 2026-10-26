@@ -87,7 +87,7 @@
                         </table>
                     </div>
                     <div class="chart-card">
-                        <div class="card-title">Employment Rate by Batch/Year</div>
+                        <div class="card-title">Employment Rate by Year Graduated</div>
                         <div class="card-sub">Employed vs. unemployed counts across graduation batches</div>
                         <div style="margin-top:10px; height:220px;"><canvas id="chartPlacement"></canvas></div>
                         <div class="report-table-scroll">
@@ -337,7 +337,7 @@
         // Auto-sorts the Alumni Report table to match whichever dashboard
         // chart was clicked to land here — e.g. ?sort=employment_status (from
         // "Employment Status Breakdown") or ?sort=employment_status,batch
-        // (from "Employment Rate by Batch/Year"). The shared column-sorter
+        // (from "Employment Rate by Year Graduated"). The shared column-sorter
         // (partials/table-sort.blade.php, loaded globally via the admin
         // header) is a stable single-column sort triggered by clicking a
         // <th data-sort> — simulating clicks on each requested key in

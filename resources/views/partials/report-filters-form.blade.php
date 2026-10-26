@@ -37,6 +37,7 @@
                 'name' => 'year',
                 'icon' => 'fas fa-calendar-day',
                 'placeholder' => 'Year',
+                'labelPrefix' => 'Year',
                 'options' => collect($yearOptions)->mapWithKeys(fn ($y) => [$y => $y]),
                 'selected' => $dashboardFilters['year'],
             ])
@@ -48,6 +49,7 @@
                 'name' => 'batch',
                 'icon' => 'fas fa-calendar',
                 'placeholder' => 'Year Graduated',
+                'labelPrefix' => 'Year Graduated',
                 'options' => $batchYearOptions->mapWithKeys(fn ($y) => [$y => $y]),
                 'selected' => $dashboardFilters['batch'],
             ])

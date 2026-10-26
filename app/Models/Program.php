@@ -57,6 +57,33 @@ class Program extends Model
         'Bachelor of Secondary Education Major in Social Studies' => ['Education'],
     ];
 
+    /** Short labels for space-tight charts (e.g. the dashboard's Job-to-Degree Alignment), keyed by program_name like ALIGNED_INDUSTRIES. */
+    public const ABBREVIATIONS = [
+        'Bachelor of Arts in Communication' => 'BAC',
+        'Bachelor of Early Childhood Education' => 'BECED',
+        'Bachelor of Science in Accountancy' => 'BSA',
+        'Bachelor of Science in Business Administration Major in Financial Management' => 'BSBA FM',
+        'Bachelor of Science in Business Administration Major in Human Resource Management' => 'BSBA HRM',
+        'Bachelor of Science in Business Administration Major in Marketing Management' => 'BSBA MM',
+        'Bachelor of Science in Civil Engineering' => 'BSCE',
+        'Bachelor of Science in Electrical Engineering' => 'BSEE',
+        'Bachelor of Science in Information Technology' => 'BSIT',
+        'Bachelor of Science in Psychology' => 'BSP',
+        'Bachelor of Public Administration' => 'BPA',
+        'Bachelor of Science in Social Work' => 'BSSW',
+        'Bachelor of Secondary Education Major in English' => 'BSED ENGLISH',
+        'Bachelor of Secondary Education Major in Filipino' => 'BSED FILIPINO',
+        'Bachelor of Secondary Education Major in Mathematics' => 'BSED MATH',
+        'Bachelor of Secondary Education Major in Science' => 'BSED SCIENCE',
+        'Bachelor of Secondary Education Major in Social Studies' => 'BSED SOCSTUD',
+    ];
+
+    /** Abbreviation for a program name, or the name itself when none is defined (e.g. "Unspecified", a newly added program). */
+    public static function abbreviationFor(string $programName): string
+    {
+        return self::ABBREVIATIONS[$programName] ?? $programName;
+    }
+
     public function isAlignedWithIndustry(?Industry $industry): bool
     {
         if (!$industry) {

@@ -102,23 +102,35 @@
 
                 <!-- STAT CARDS -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                        <p class="text-2xl font-bold text-slate-800">{{ $counts['total'] }}</p>
+                    <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="circle-help" class="w-5 h-5 shrink-0 text-slate-800"></i>
+                            <p class="text-2xl font-bold text-slate-800">{{ $counts['total'] }}</p>
+                        </div>
                         <p class="text-xs font-medium text-slate-500 mt-1">Total FAQs</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                    <div class="bg-white rounded-lg border border-transparent shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
                         title="Click to filter by Everyone" onclick="filterFaqsByRecipientTile('everyone')">
-                        <p class="text-2xl font-bold text-green-600">{{ $counts['everyone'] }}</p>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="users" class="w-5 h-5 shrink-0 text-green-600"></i>
+                            <p class="text-2xl font-bold text-green-600">{{ $counts['everyone'] }}</p>
+                        </div>
                         <p class="text-xs font-medium text-slate-500 mt-1">Everyone</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                    <div class="bg-white rounded-lg border border-transparent shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
                         title="Click to filter by Alumni Only" onclick="filterFaqsByRecipientTile('alumni')">
-                        <p class="text-2xl font-bold text-blue-600">{{ $counts['alumni'] }}</p>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="graduation-cap" class="w-5 h-5 shrink-0 text-blue-600"></i>
+                            <p class="text-2xl font-bold text-blue-600">{{ $counts['alumni'] }}</p>
+                        </div>
                         <p class="text-xs font-medium text-slate-500 mt-1">Alumni Only</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                    <div class="bg-white rounded-lg border border-transparent shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
                         title="Click to filter by Employer Only" onclick="filterFaqsByRecipientTile('employer')">
-                        <p class="text-2xl font-bold text-purple-600">{{ $counts['employer'] }}</p>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="building-2" class="w-5 h-5 shrink-0 text-purple-600"></i>
+                            <p class="text-2xl font-bold text-purple-600">{{ $counts['employer'] }}</p>
+                        </div>
                         <p class="text-xs font-medium text-slate-500 mt-1">Employer Only</p>
                     </div>
                 </div>

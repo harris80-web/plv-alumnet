@@ -1,5 +1,5 @@
 {{--
-    Shared table pagination bar: rows-per-page select (left) + item count and
+    Shared table pagination bar: rows-per-page select (left) + record count and
     first/prev/next/last icon nav (right). Works in three modes without any
     page-specific JS — behavior is driven entirely by the data-pv-* attributes
     below, read by the single delegated script at the bottom (defined once no
@@ -68,10 +68,10 @@
         </div>
     </div>
 
-    <!-- Item count + nav -->
+    <!-- Record count + nav -->
     <div class="flex items-center gap-4 text-[#0E0F3B]">
         <span data-pv-items-text class="text-slate-500 font-medium">
-            {{ number_format($pvTotal) }} {{ Str::plural('item', $pvTotal) }}
+            {{ number_format($pvTotal) }} {{ Str::plural('record', $pvTotal) }}
         </span>
         <div class="flex items-center gap-1">
             <button type="button" data-pv-first title="First page"
@@ -226,7 +226,7 @@
                 });
 
                 const itemsText = root.querySelector('[data-pv-items-text]');
-                if (itemsText) itemsText.textContent = eligible.length.toLocaleString() + (eligible.length === 1 ? ' item' : ' items');
+                if (itemsText) itemsText.textContent = eligible.length.toLocaleString() + (eligible.length === 1 ? ' record' : ' records');
                 updateNavUI(root, page, lastPage);
 
                 // The click handler below reads these two attributes to

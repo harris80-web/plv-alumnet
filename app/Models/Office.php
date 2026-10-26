@@ -27,7 +27,7 @@ class Office extends Model
         'user_management' => 'User Management',
         'job_management' => 'Job Placement Management',
         'alumni_id_management' => 'Alumni ID & Yearbook Management',
-        'notices' => 'Notices & Events Management',
+        'notices' => 'Announcements, Events & Seminar',
         'messaging' => 'Chatbot & Messaging Management',
         'testimonials' => 'Testimonial Management',
         'faqs' => 'Manage FAQs',

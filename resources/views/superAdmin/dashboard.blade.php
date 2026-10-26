@@ -347,7 +347,7 @@
                 </div>
 
                 <!-- Stat Cards -->
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
 
                     <div class="stat-card">
                         <div class="s-top">
@@ -402,35 +402,6 @@
                         <div class="s-value">{{ $stats['industryPartners'] }}</div>
                     </div>
 
-                    <div class="stat-card">
-                        <div class="s-top">
-                            <svg class="s-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2">
-                                <rect x="2" y="7" width="20" height="14" rx="2" />
-                                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
-                                <line x1="12" y1="12" x2="12" y2="16" />
-                                <line x1="10" y1="14" x2="14" y2="14" />
-                            </svg>
-                            <span class="s-label">Active Job Postings</span>
-                            <!--<span class="stat-badge badge-down">▼ -3.1%</span>-->
-                        </div>
-                        <div class="s-value">{{ $stats['activeJobs'] }}</div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="s-top">
-                            <svg class="s-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2">
-                                <path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
-                                <circle cx="12" cy="12" r="2" />
-                                <path d="M6 12H4M20 12h-2" />
-                            </svg>
-                            <span class="s-label">Job Placement Rate</span>
-                            <!--<span class="stat-badge badge-flat">▶ +0.0%</span>-->
-                        </div>
-                        <div class="s-value">{{ $stats['jobPlacementRate'] }}%</div>
-                    </div>
-
                 </div>
 
                 <!-- Row 2: 4 chart cards -->
@@ -469,9 +440,9 @@
                 <!-- Row 3: 3 chart cards -->
                 <div class="grid grid-cols-2 gap-4 mb-4">
 
-                    <!-- Employment Rate by Batch/Year -->
+                    <!-- Employment Rate by Year Graduated -->
                     <div class="chart-card">
-                        <div class="card-title">Employment Rate by Batch/Year</div>
+                        <div class="card-title">Employment Rate by Year Graduated</div>
                         @include('partials.raw-data-link', ['url' => route('reports.show', 'employment-by-batch')])
                         <div class="card-sub">Employed vs. unemployed counts across graduation batches</div>
                         <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.show', 'employment-by-batch') }}')">
@@ -485,10 +456,8 @@
                         <div class="card-title">Job-to-Degree Alignment by Program/Course</div>
                         @include('partials.raw-data-link', ['url' => route('reports.show', 'job-alignment')])
                         <div class="card-sub">% of employed alumni whose job matches their degree field ({{ $alignmentRate }}% overall) &mdash; every program</div>
-                        <div class="chart-clickable" style="margin-top:10px; height:220px; overflow-y:auto;" onclick="goToReport('{{ route('reports.show', 'job-alignment') }}')">
-                            <div style="height:{{ max(160, $programAlignment->count() * 26) }}px;">
-                                <canvas id="chartAlignment"></canvas>
-                            </div>
+                        <div class="chart-clickable" style="margin-top:10px; height:240px;" onclick="goToReport('{{ route('reports.show', 'job-alignment') }}')">
+                            <canvas id="chartAlignment"></canvas>
                         </div>
                     </div>
 
@@ -572,20 +541,49 @@
                         Placement &amp; Hiring</span>
                 </div>
 
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <!-- 3 stat cards in one row, Top Hiring Companies full width below -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                     <div class="stat-card">
                         <div class="s-top">
-                            <span class="s-label">Total Applications</span>
+                            <!-- target -->
+                            <svg class="s-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <circle cx="12" cy="12" r="6" />
+                                <circle cx="12" cy="12" r="2" />
+                            </svg>
+                            <span class="s-label">Job Placement Rate</span>
                         </div>
-                        <div class="s-value">{{ $totalApplications }}</div>
+                        <div class="s-value">{{ $stats['jobPlacementRate'] }}%</div>
                     </div>
                     <div class="stat-card">
                         <div class="s-top">
+                            <!-- briefcase -->
+                            <svg class="s-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="7" width="20" height="14" rx="2" />
+                                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+                                <line x1="12" y1="12" x2="12" y2="16" />
+                                <line x1="10" y1="14" x2="14" y2="14" />
+                            </svg>
+                            <span class="s-label">Active Job Postings</span>
+                        </div>
+                        <div class="s-value">{{ $stats['activeJobs'] }}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="s-top">
+                            <!-- user-check -->
+                            <svg class="s-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <polyline points="16 11 18 13 22 9" />
+                            </svg>
                             <span class="s-label">Total Hired</span>
                         </div>
                         <div class="s-value">{{ $totalHired }}</div>
                     </div>
-                    <div class="chart-card" style="grid-column: span 2;">
+                    <div class="chart-card" style="grid-column: 1 / -1;">
                         <div class="flex items-center justify-between gap-3" style="flex-wrap:wrap;">
                             <div>
                                 <div class="card-title">Top Hiring Companies</div>
@@ -637,6 +635,13 @@
                     <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.show', 'hires-per-month') }}')">
                         <canvas id="chartHires"></canvas>
                     </div>
+                </div>
+
+                <!-- System Overview Heading -->
+                <div class="mb-2 ml-1 mt-6 flex items-center">
+                    <span
+                        class="section-heading bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Alumni Reports
+                     &amp; Other Updates</span>
                 </div>
 
                 <!-- Row 4: Alumni ID Reports + Recent Activity -->
@@ -947,12 +952,15 @@
         }
     });
 
-    // 4. Job-to-Degree Alignment — horizontal bar (every program; card scrolls if the list is tall)
+    // 4. Job-to-Degree Alignment — vertical bar, every program. The x-axis shows
+    // Program::ABBREVIATIONS; hovering a column shows the full program name.
     const alignmentEntries = @json($programAlignment);
+    const alignmentFullNames = Object.keys(alignmentEntries);
+    const alignmentAbbreviations = @json($programAlignment->keys()->map(fn ($name) => \App\Models\Program::abbreviationFor($name))->values());
     new Chart(document.getElementById('chartAlignment'), {
         type: 'bar',
         data: {
-            labels: Object.keys(alignmentEntries),
+            labels: alignmentAbbreviations,
             datasets: [{
                 label: 'Alignment %',
                 data: Object.values(alignmentEntries).map(p => p.rate),
@@ -961,17 +969,33 @@
             }]
         },
         options: {
-            indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            // Hovering anywhere in a program's column (not just on the bar
+            // itself — a 0% program has no bar to hover) opens its tooltip.
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: items => alignmentFullNames[items[0].dataIndex],
+                        label: item => {
+                            const p = Object.values(alignmentEntries)[item.dataIndex];
+                            return ` Alignment: ${p.rate}% (${p.aligned} of ${p.total} employed)`;
+                        }
+                    }
+                }
+            },
             scales: {
                 x: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'Montserrat', size: 8 }, autoSkip: false, maxRotation: 60, minRotation: 45 }
+                },
+                y: {
                     grid: { color: gridColor },
                     max: 100,
                     ticks: { font: fontDef, callback: v => v + '%' }
-                },
-                y: { grid: { display: false }, ticks: { font: { family: 'Montserrat', size: 8 } } }
+                }
             }
         }
     });

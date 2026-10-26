@@ -15,6 +15,9 @@
                      attributes per checkbox (e.g. the dashboard's Course
                      filter tags each option with data-college so a College
                      filter elsewhere on the same page can cascade it)
+      $labelPrefix — optional; once something is picked the trigger reads
+                     "{prefix}: {picks}" (e.g. "Year: 2026") instead of
+                     the bare picks
 
     Staged, not auto-submitting — checking/unchecking an option only updates
     this panel's own UI (via partials/staged-multiselect.blade.php's shared
@@ -33,11 +36,24 @@
     // listed in the options' own order, truncated by CSS with the full list
     // in the tooltip. Kept in sync client-side by updateMultiselectLabel().
     $selectedLabels = collect($options)->filter(fn ($label, $value) => in_array((string) $value, $selected, true))->values();
-    $triggerText = $count ? $selectedLabels->implode(', ') : $placeholder;
+    $labelPrefix = $labelPrefix ?? null;
+    $picks = $selectedLabels->implode(', ');
+    $triggerText = $count ? ($labelPrefix ? $labelPrefix . ': ' . $picks : $picks) : $placeholder;
 @endphp
-<div class="relative multiselect-filter" data-placeholder="{{ $placeholder }}" data-name="{{ $name }}">
-    <button type="button" onclick="toggleMultiselect(this)" title="{{ $count ? $placeholder . ': ' . $triggerText : $placeholder }}"
-        class="multiselect-trigger-btn w-full flex items-center pl-11 pr-10 py-1.5 border rounded-full bg-white text-left text-xs {{ $count ? 'text-[#0E0F3B] font-semibold' : 'text-gray-500' }} relative focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+@once
+    <style>
+        /* Trigger border: grey at rest, #C73D1A while clicked/focused or its
+           panel is open (.is-open, toggled by partials/staged-multiselect).
+           Set explicitly so it no longer inherits the text colour — that made
+           a filter with picks look navy-bordered. */
+        .multiselect-trigger-btn { border-color: #d1d5db; transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+        .multiselect-filter.is-open .multiselect-trigger-btn,
+        .multiselect-trigger-btn:focus { border-color: #C73D1A; box-shadow: 0 0 0 2px rgba(199, 61, 26, 0.15); }
+    </style>
+@endonce
+<div class="relative multiselect-filter" data-placeholder="{{ $placeholder }}" data-name="{{ $name }}" data-label-prefix="{{ $labelPrefix }}">
+    <button type="button" onclick="toggleMultiselect(this)" title="{{ $count ? $placeholder . ': ' . $picks : $placeholder }}"
+        class="multiselect-trigger-btn w-full flex items-center pl-11 pr-10 py-1.5 border rounded-full bg-white text-left text-xs {{ $count ? 'text-[#0E0F3B] font-semibold' : 'text-gray-500' }} relative focus:outline-none">
         <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none text-xs">
             <i class="{{ $icon }}"></i>
         </span>

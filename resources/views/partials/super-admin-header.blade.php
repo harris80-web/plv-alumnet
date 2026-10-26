@@ -15,25 +15,25 @@ $pageTitles = [
     'userManagement.blade.php'         => 'User Management',
     'jobManagement.blade.php'          => 'Job Placement Management',
     'alumniIdManagement.blade.php'     => 'Alumni ID & Yearbook Management',
-    'notices.blade.php'                 => 'Notices & Events',
+    'notices.blade.php'                 => 'Announcements, Events & Seminar Management',
     'chatbotMessaging.blade.php'         => 'Chatbot & Messaging',
     'testimonialManagement.blade.php'    => 'Testimonial Management',
     'faqManagement.blade.php'            => 'Manage FAQs',
     
     //FULL DETAILED REPORTS PAGES - When charts/graphs are clicked
-    'employment-status.blade.php'   => 'Full Detailed Report',
-    'industry-distribution.blade.php'   => 'Full Detailed Report',
-    'employment-by-batch.blade.php'   => 'Full Detailed Report',
-    'job-alignment.blade.php'   => 'Full Detailed Report',
-    'employment-by-gender.blade.php'   => 'Full Detailed Report',
-    'employment-interval.blade.php'   => 'Full Detailed Report',
-    'job-before-grad.blade.php'   => 'Full Detailed Report',
-    'employment-by-month.blade.php'   => 'Full Detailed Report',
+    'employment-status.blade.php'   => 'Employment Status Breakdown',
+    'industry-distribution.blade.php'   => 'Industry Distribution of Employed Alumni',
+    'employment-by-batch.blade.php'   => 'Employment Rate by Year Graduated',
+    'job-alignment.blade.php'   => 'Job-to-Degree Alignment by Program',
+    'employment-by-gender.blade.php'   => 'Employment Rate by Gender',
+    'employment-interval.blade.php'   => 'Employment Interval',
+    'job-before-grad.blade.php'   => 'Job Before Graduation & Internships',
+    'employment-by-month.blade.php'   => 'Employment by Month',
     'hires-per-month.blade.php'   => 'Full Detailed Report',
 
-    'networking.blade.php'   => 'Full Detailed Report',
-    'alumni-id-status.blade.php'   => 'Full Detailed Report',
-    'yearbook-status.blade.php'   => 'Full Detailed Report'
+    'networking.blade.php'   => 'Alumni Networking Activity',
+    'alumni-id-status.blade.php'   => 'Alumni ID Reports',
+    'yearbook-status.blade.php'   => 'Alumni Yearbook Reports'
 
 
 ];
@@ -299,6 +299,7 @@ $title = request()->routeIs('notifications.all')
 @include('partials.ui-animations')
 @include('partials.bulk-checkbox')
 @include('partials.table-sort')
+@include('partials.select-theme')
 <script src="https://unpkg.com/lucide@latest"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <script>

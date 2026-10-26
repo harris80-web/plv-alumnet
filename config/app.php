@@ -67,6 +67,13 @@ return [
 
     'timezone' => 'UTC',
 
+    /*
+    | How long admins typically take to review a new employer sign-up. Shown in
+    | the "Thank you for signing up" modal on the employer sign-up page.
+    | Set EMPLOYER_REVIEW_TIMEFRAME in .env (e.g. "1-3 business days").
+    */
+    'employer_review_timeframe' => env('EMPLOYER_REVIEW_TIMEFRAME', '[X business days]'),
+
     // Timestamps stay in UTC (above — switching it would shift every stored
     // created_at by 8h), but "is this job posting's closing date past yet?"
     // has to be judged by the school's calendar day, not UTC's — otherwise a

@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notices & Events Management | PLV-AlumNet</title>
+    <title>Announcements, Events & Seminar | PLV-AlumNet</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/PLV-AlumNet LOGO.png') }}">
     <!-- @vite('resources/css/app.css')
@@ -93,45 +93,67 @@
                 </div>
                 @endif
 
-                <!-- STAT CARDS -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                        <p class="text-2xl font-bold text-slate-800">{{ $counts['total'] }}</p>
+                <!-- STAT CARDS: 4 across on top, the 3 recipient cards centered below (same card width) -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+                    <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-4 py-3">
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="clipboard-list" class="w-4 h-4 shrink-0 text-slate-800"></i>
+                            <p class="text-xl font-bold text-slate-800">{{ $counts['total'] }}</p>
+                        </div>
                         <p class="text-xs font-medium text-slate-500 mt-1">Total Notices</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                    <div class="bg-white rounded-lg border border-transparent shadow-sm px-4 py-3 cursor-pointer transition-all hover:shadow-md"
                         title="Click to filter by Events" onclick="filterNoticesByCategoryTile('event')">
-                        <p class="text-2xl font-bold text-blue-600">{{ $counts['event'] }}</p>
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="calendar-days" class="w-4 h-4 shrink-0 text-blue-600"></i>
+                            <p class="text-xl font-bold text-blue-600">{{ $counts['event'] }}</p>
+                        </div>
                         <p class="text-xs font-medium text-slate-500 mt-1">Events</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                    <div class="bg-white rounded-lg border border-transparent shadow-sm px-4 py-3 cursor-pointer transition-all hover:shadow-md"
                         title="Click to filter by Seminars" onclick="filterNoticesByCategoryTile('seminar')">
-                        <p class="text-2xl font-bold text-purple-600">{{ $counts['seminar'] }}</p>
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="presentation" class="w-4 h-4 shrink-0 text-purple-600"></i>
+                            <p class="text-xl font-bold text-purple-600">{{ $counts['seminar'] }}</p>
+                        </div>
                         <p class="text-xs font-medium text-slate-500 mt-1">Seminars</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                    <div class="bg-white rounded-lg border border-transparent shadow-sm px-4 py-3 cursor-pointer transition-all hover:shadow-md"
                         title="Click to filter by Announcements" onclick="filterNoticesByCategoryTile('announcement')">
-                        <p class="text-2xl font-bold text-amber-600">{{ $counts['announcement'] }}</p>
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="megaphone" class="w-4 h-4 shrink-0 text-amber-600"></i>
+                            <p class="text-xl font-bold text-amber-600">{{ $counts['announcement'] }}</p>
+                        </div>
                         <p class="text-xs font-medium text-slate-500 mt-1">Announcements</p>
                     </div>
                 </div>
 
-                <!-- RECIPIENT STAT CARDS -->
-                <div class="grid grid-cols-3 gap-4 mb-6">
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                <!-- RECIPIENT STAT CARDS — 8-col grid, each card spans 2 (= one top-row card's width),
+                     starting at col 2 so the row of 3 sits centered. On mobile the lone 3rd card is centered. -->
+                <div class="grid grid-cols-2 lg:grid-cols-8 gap-3 mb-6">
+                    <div class="lg:col-span-2 lg:col-start-2 bg-white rounded-lg border border-transparent shadow-sm px-4 py-3 cursor-pointer transition-all hover:shadow-md"
                         title="Click to filter by Everyone" onclick="filterNoticesByRecipientTile('everyone')">
-                        <p class="text-2xl font-bold text-slate-800">{{ $counts['everyone'] }}</p>
-                        <p class="text-xs font-medium text-slate-500 mt-1">Everyone</p>
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="users" class="w-4 h-4 shrink-0 text-slate-800"></i>
+                            <p class="text-xl font-bold text-slate-800">{{ $counts['everyone'] }}</p>
+                        </div>
+                        <p class="text-xs font-medium text-slate-500 mt-1">Published to Everyone</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                    <div class="lg:col-span-2 bg-white rounded-lg border border-transparent shadow-sm px-4 py-3 cursor-pointer transition-all hover:shadow-md"
                         title="Click to filter by Alumni Only" onclick="filterNoticesByRecipientTile('alumni')">
-                        <p class="text-2xl font-bold text-teal-600">{{ $counts['alumni'] }}</p>
-                        <p class="text-xs font-medium text-slate-500 mt-1">Alumni Only</p>
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="graduation-cap" class="w-4 h-4 shrink-0 text-teal-600"></i>
+                            <p class="text-xl font-bold text-teal-600">{{ $counts['alumni'] }}</p>
+                        </div>
+                        <p class="text-xs font-medium text-slate-500 mt-1">Published to Alumni Only</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                    <div class="col-span-2 justify-self-center w-[calc(50%-0.375rem)] lg:w-auto lg:justify-self-stretch lg:col-span-2 bg-white rounded-lg border border-transparent shadow-sm px-4 py-3 cursor-pointer transition-all hover:shadow-md"
                         title="Click to filter by Employer Only" onclick="filterNoticesByRecipientTile('employer')">
-                        <p class="text-2xl font-bold text-indigo-600">{{ $counts['employer'] }}</p>
-                        <p class="text-xs font-medium text-slate-500 mt-1">Employer Only</p>
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="building-2" class="w-4 h-4 shrink-0 text-indigo-600"></i>
+                            <p class="text-xl font-bold text-indigo-600">{{ $counts['employer'] }}</p>
+                        </div>
+                        <p class="text-xs font-medium text-slate-500 mt-1">Published to Employer Only</p>
                     </div>
                 </div>
 
@@ -163,7 +185,7 @@
                             <thead class="bg-[#0E0F3B] text-white">
                                 <tr>
                                     <th data-sort class="border-r border-slate-700">ID No. <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                                    <th data-sort class="border-r border-slate-700">Category <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                    <th data-sort data-col-center class="border-r border-slate-700">Category <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                     <th data-sort class="border-r border-slate-700">Title <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                     <th data-sort class="border-r border-slate-700">Date &amp; Time <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                     <th data-sort class="border-r border-slate-700">Location <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
@@ -479,10 +501,11 @@
             </div>
 
             <div class="p-4 bg-slate-50 flex justify-end gap-3 border-t border-slate-100">
-                <button type="button" id="nm-view-edit-btn" class="px-6 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition-colors uppercase">
+                <button type="button" id="nm-view-edit-btn" class="px-6 py-2 text-sm font-medium text-[#0E0F3B] bg-white border border-[#0E0F3B] rounded-lg hover:bg-[#0E0F3B] hover:text-white transition-colors uppercase">
                     Edit
                 </button>
-                <button type="button" onclick="closeNoticeModal()" class="px-6 py-2 text-sm font-medium text-white bg-[#0E0F3B] rounded-lg hover:bg-[#1a1c5a] transition-colors uppercase">
+                {{-- Same-colour border keeps it the same height as the outlined Edit button. --}}
+                <button type="button" onclick="closeNoticeModal()" class="px-6 py-2 text-sm font-medium text-white bg-[#0E0F3B] border border-[#0E0F3B] rounded-lg hover:bg-[#1a1c5a] transition-colors uppercase">
                     Done
                 </button>
             </div>

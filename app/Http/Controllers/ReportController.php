@@ -200,7 +200,7 @@ class ReportController extends Controller
 
         $titles = [
             'employment-status' => 'Employment Status Breakdown',
-            'employment-by-batch' => 'Employment Rate by Batch/Year',
+            'employment-by-batch' => 'Employment Rate by Year Graduated',
             'employment-by-gender' => 'Employment Rate by Gender',
             'employment-interval' => 'Employment Interval',
             'job-alignment' => 'Job-to-Degree Alignment by Program',
@@ -653,7 +653,7 @@ class ReportController extends Controller
                 fputcsv($out, ['Unemployment Rate', $r['unemploymentRate'] . '%']);
                 fputcsv($out, []);
 
-                fputcsv($out, ['EMPLOYMENT RATE BY BATCH/YEAR']);
+                fputcsv($out, ['EMPLOYMENT RATE BY YEAR GRADUATED']);
                 fputcsv($out, ['Batch', 'Total', 'Employed', 'Rate']);
                 foreach ($r['employmentByBatch'] as $batchYear => $row) {
                     fputcsv($out, [$batchYear, $row['total'], $row['employed'], $row['rate'] . '%']);

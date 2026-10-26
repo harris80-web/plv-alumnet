@@ -101,12 +101,12 @@ if (! function_exists('icon_class')) {
 
             @if (Auth::user()->canAccessAdminFeature('notices'))
             <a href="{{ route('notices.management') }}"
-                data-tooltip="Notices & Events Management"
+                data-tooltip="Announcements, Events & Seminar Management"
                 class="nav-link relative group flex items-center h-10 transition-all {{ $current_page === 'notices' ? 'bg-white/10 border-l-4 border-orange-500 pl-4' : 'hover:bg-white/10 px-5 group' }}">
                 <div class="w-8 shrink-0 flex items-center">
                     <i data-lucide="calendar-days" class="w-4 h-4 transition-colors {{ $current_page === 'notices' ? 'text-orange-500' : 'text-slate-400 group-hover:text-orange-500' }}"></i>
                 </div>
-                <span class="sidebar-text hidden opacity-0 whitespace-nowrap">Notices & Events Management</span>
+                <span class="sidebar-text hidden opacity-0 whitespace-nowrap">Announcements, Events & Seminar</span>
             </a>
             @endif
 

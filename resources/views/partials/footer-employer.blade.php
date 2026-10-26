@@ -12,7 +12,7 @@
     <footer class="bg-[#0E0F3B] text-white flex flex-col rp-footer">
         <div class="flex px-5 py-5 justify-between rp-footer-row">
 
-            <div class="flex gap-5 items-center font-[Montserrat] text-semibold rp-footer-brand">
+            <a href="{{ route('employer.dashboard') }}" class="flex gap-5 items-center font-[Montserrat] text-semibold rp-footer-brand">
                 <img src="{{ asset('assets/PLV-AlumNet LOGOMARK_WHITE.svg') }}" alt="" class="h-[93px] w-auto">
                 <div class="flex flex-col gap-1">
                     <img src="{{ asset('assets/PLV-AlumNet LETTERMARK LOGO_FINAL 1.png') }}" alt="" class="h-12 w-60">
@@ -21,7 +21,7 @@
                     </p>
                     <p class="text-[13px]">Honoring the Past. Shaping the Future.</p>
                 </div>
-            </div>
+            </a>
 
             <div class="flex gap-4 font-[Montserrat] rp-footer-col">
                 <div class="w-[1.5px] bg-white rp-footer-divider"></div>
@@ -34,7 +34,8 @@
                         class="{{ request()->routeIs('employer.about') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}">
                         ABOUT
                     </a>
-                    <a href="announcements_employer.php" class="hover:text-[#ED7A07]" data-rp-footer-extra>ANNOUNCEMENTS</a>
+                    <a href="{{ route('notices.employerAnnouncements') }}"
+                        class="{{ request()->routeIs('notices.employerAnnouncements') ? 'text-[#ED7A07]' : 'hover:text-[#ED7A07]' }}" data-rp-footer-extra>ANNOUNCEMENTS</a>
                 </nav>
             </div>
 
@@ -67,7 +68,7 @@
                             Maysan Road corner Tongco Street, Maysan, Valenzuela City, Philippines
                         </p>
                         <div class="flex items-center gap-3 mt-2">
-                            <a href="https://www.facebook.com/PamantasanNgLungsodNgValenzuelaOfficialAccount/" target="_blank" class="group">
+                            <a href="https://www.facebook.com/PamantasanNgLungsodNgValenzuelaOfficialAccount/" target="_blank" rel="noopener noreferrer" aria-label="PLV on Facebook (opens in a new tab)" class="group">
                                 <div
                                     class="flex items-center justify-center w-8 h-8 bg-white border border-white rounded-full transition-all duration-300 group-hover:border-[#ED7A07] group-hover:bg-[#ED7A07]">
                                     <i
@@ -81,7 +82,7 @@
                                         class="fa-solid fa-envelope text-sm text-[#0E0F3B] transition-colors duration-300 group-hover:text-white"></i>
                                 </div>
                             </a> -->
-                            <a href="https://valenzuela.plv.edu.ph/PLVWeb/home" target="_blank" class="group">
+                            <a href="https://valenzuela.plv.edu.ph/PLVWeb/home" target="_blank" rel="noopener noreferrer" aria-label="PLV official website (opens in a new tab)" class="group">
                                 <div
                                     class="flex items-center justify-center w-8 h-8 bg-white border border-white rounded-full transition-all duration-300 group-hover:border-[#ED7A07] group-hover:bg-[#ED7A07]">
                                     <i

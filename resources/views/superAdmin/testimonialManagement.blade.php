@@ -105,24 +105,36 @@
                 @include('partials.error')
     <!-- Stat Cards -->
                 <div class="grid grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                        <p class="text-2xl font-bold text-slate-800">{{ $total_testimonials }}</p>
+                    <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="quote" class="w-5 h-5 shrink-0 text-slate-800"></i>
+                            <p class="text-2xl font-bold text-slate-800">{{ $total_testimonials }}</p>
+                        </div>
                         <p class="text-xs font-medium text-slate-500 mt-1">Total Testimonials</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                    <div class="bg-white rounded-lg border border-transparent shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
                         title="Click to filter by Published"
                         onclick="setFilter('status','Published','status-label','status-dropdown')">
-                        <p class="text-2xl font-bold text-green-500">{{ $published_count }}</p>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="eye" class="w-5 h-5 shrink-0 text-green-500"></i>
+                            <p class="text-2xl font-bold text-green-500">{{ $published_count }}</p>
+                        </div>
                         <p class="text-xs font-medium text-slate-500 mt-1">Published</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                    <div class="bg-white rounded-lg border border-transparent shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
                         title="Click to filter by Hidden"
                         onclick="setFilter('status','Hidden','status-label','status-dropdown')">
-                        <p class="text-2xl font-bold text-slate-400">{{ $hidden_count }}</p>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="eye-off" class="w-5 h-5 shrink-0 text-slate-400"></i>
+                            <p class="text-2xl font-bold text-slate-400">{{ $hidden_count }}</p>
+                        </div>
                         <p class="text-xs font-medium text-slate-500 mt-1">Hidden</p>
                     </div>
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                        <p class="text-2xl font-bold text-amber-400">{{ $programs_count }}</p>
+                    <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="graduation-cap" class="w-5 h-5 shrink-0 text-amber-400"></i>
+                            <p class="text-2xl font-bold text-amber-400">{{ $programs_count }}</p>
+                        </div>
                         <p class="text-xs font-medium text-slate-500 mt-1">Programs Represented</p>
                     </div>
                 </div>

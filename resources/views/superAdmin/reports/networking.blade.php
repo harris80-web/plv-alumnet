@@ -22,6 +22,8 @@
         .chart-card { background: #fff; border-radius: 10px; padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
         .card-title { font-size: 13px; font-weight: 700; background: linear-gradient(to right, #0E0F3B, #C73D1A, #ED7A07); -webkit-background-clip: text; background-clip: text; color: transparent; display: inline-block; }
         .card-sub { font-size: 10.5px; color: #000; margin-top: 2px; }
+        /* Same brand-coloured focus as the report search bar (border is set inline, hence !important). */
+        #networkRangeSelect:focus { outline: none; border-color: #C73D1A !important; box-shadow: 0 0 0 2px rgba(199, 61, 26, 0.15); }
         table.report-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
         table.report-table th, table.report-table td { border-bottom: 1px solid #f1f5f9; padding: 6px 8px; text-align: left; }
         table.report-table th { color: #0E0F3B; font-weight: 700; background: #f8fafc; }
@@ -66,11 +68,8 @@
                 </div>
 
                 <div class="chart-card mb-4">
-                    <div class="flex items-center justify-between gap-3 flex-wrap">
-                        <div>
-                            <div class="card-title">Alumni Networking Activity</div>
-                            <div class="card-sub">New conversation threads started & messages sent, by month</div>
-                        </div>
+                    {{-- No title here: the page header already shows it. Range picker first, description beside it. --}}
+                    <div class="flex items-center gap-3 flex-wrap">
                         <select id="networkRangeSelect" onchange="updateNetworkRange(this.value)"
                             style="border:1px solid #d1d5db; border-radius:6px; padding:5px 10px; font-size:12px; font-family:'Montserrat',sans-serif;">
                             <option value="3" {{ $networkMonths === 3 ? 'selected' : '' }}>Last 3 months</option>
@@ -78,6 +77,7 @@
                             <option value="12" {{ $networkMonths === 12 ? 'selected' : '' }}>Last 12 months</option>
                             <option value="24" {{ $networkMonths === 24 ? 'selected' : '' }}>Last 24 months</option>
                         </select>
+                        <div class="card-sub" style="margin-top:0;">New conversation threads started & messages sent, by month</div>
                     </div>
                     <div style="margin-top:10px; height:260px;"><canvas id="chartNetworking"></canvas></div>
                 </div>

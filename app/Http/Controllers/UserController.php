@@ -107,11 +107,14 @@ class UserController extends Controller
             'user_first_name' => 'required|string|max:100',
             'user_last_name' => 'required|string|max:100',
             'user_email' => 'required|email|max:100|unique:users,user_email',
-            'employer_company_document' => 'required|file|mimes:pdf|max:20000',
+            // Keep the accepted types/size in sync with auth/register.blade.php (dropzone note + JS check).
+            'employer_company_document' => 'required|file|mimes:pdf,jpg,jpeg,png,webp|max:20000',
             // 'employer_id_picture_selfie' => 'required|file|mimes:jpg,png,pdf|max:20000',
             // 'employer_company_id_picture' => 'required|file|mimes:jpg,png,pdf|max:20000',
             // 'employer_company_id_picture_selfie' => 'required|file|mimes:jpg,png,pdf|max:20000',
-            'user_password' => 'required|string|min:8'
+            // `confirmed` expects a matching `user_password_confirmation` input — the
+            // sign-up form's client-side check is only a convenience.
+            'user_password' => 'required|string|min:8|confirmed'
         ], [], [
             // Without these, a missing field reads as "The user first name
             // field is required." — the raw attribute name leaking through
@@ -1176,7 +1179,7 @@ class UserController extends Controller
             fputcsv($out, ['Job Placement Rate', $stats['jobPlacementRate'] . '%']);
             fputcsv($out, []);
 
-            fputcsv($out, ['EMPLOYMENT RATE BY BATCH/YEAR']);
+            fputcsv($out, ['EMPLOYMENT RATE BY YEAR GRADUATED']);
             fputcsv($out, ['Batch', 'Total', 'Employed', 'Rate']);
             foreach ($r['employmentByBatch'] as $batchYear => $row) {
                 fputcsv($out, [$batchYear, $row['total'], $row['employed'], $row['rate'] . '%']);

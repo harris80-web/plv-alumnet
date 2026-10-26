@@ -36,6 +36,8 @@
         table.report-table th, table.report-table td { border-bottom: 1px solid #f1f5f9; padding: 6px 8px; text-align: left; }
         table.report-table th { color: #0E0F3B; font-weight: 700; background: #f8fafc; }
         .report-table-scroll { overflow-y: auto; }
+        /* Brand-coloured focus instead of the browser's black outline (border is set inline, hence !important). */
+        #reportTableSearch:focus { outline: none; border-color: #C73D1A !important; box-shadow: 0 0 0 2px rgba(199, 61, 26, 0.15); }
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -64,7 +66,7 @@
                         @if ($filterSet === 'full')
                         <div class="flex-1 min-w-[150px]">
                             @include('partials.multiselect-filter', [
-                                'name' => 'year', 'icon' => 'fas fa-calendar-day', 'placeholder' => 'Year',
+                                'name' => 'year', 'icon' => 'fas fa-calendar-day', 'placeholder' => 'Year', 'labelPrefix' => 'Year',
                                 'options' => collect($yearOptions)->mapWithKeys(fn ($y) => [$y => $y]),
                                 'selected' => $dashboardFilters['year'],
                             ])
@@ -72,7 +74,7 @@
                         @endif
                         <div class="flex-1 min-w-[150px]">
                             @include('partials.multiselect-filter', [
-                                'name' => 'batch', 'icon' => 'fas fa-calendar', 'placeholder' => 'Year Graduated',
+                                'name' => 'batch', 'icon' => 'fas fa-calendar', 'placeholder' => 'Year Graduated', 'labelPrefix' => 'Year Graduated',
                                 'options' => $batchYearOptions->mapWithKeys(fn ($y) => [$y => $y]),
                                 'selected' => $dashboardFilters['batch'],
                             ])
@@ -164,16 +166,14 @@
 
                 {{-- RAW DATA TABLE --}}
                 <div class="chart-card mb-4">
-                    <div class="flex items-center justify-between gap-3 flex-wrap">
-                        <div>
-                            <div class="card-title" style="font-size:13px;">{{ $title }}</div>
-                            <div class="card-sub">{{ count($tableRows) }} record(s) &mdash; click a column to re-sort, or search</div>
-                        </div>
-                        <div class="relative">
+                    {{-- No title here: the page header already shows it. Search first (wide), record count beside it. --}}
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <div class="relative w-full sm:w-[420px]">
                             <i data-lucide="search" style="width:12px;height:12px;position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#9ca3af;"></i>
                             <input type="text" id="reportTableSearch" placeholder="Search..." oninput="filterReportTable()"
-                                style="border:1px solid #d1d5db; border-radius:6px; padding:5px 10px 5px 26px; font-size:11px; font-family:'Montserrat',sans-serif;">
+                                style="width:100%; border:1px solid #d1d5db; border-radius:6px; padding:5px 10px 5px 26px; font-size:11px; font-family:'Montserrat',sans-serif;">
                         </div>
+                        <div class="card-sub" style="margin-top:0;">{{ count($tableRows) }} record(s) &mdash; click a column to re-sort, or search</div>
                     </div>
                     <div class="report-table-scroll" style="max-height:450px;">
                         <table class="report-table" id="reportDataTable">

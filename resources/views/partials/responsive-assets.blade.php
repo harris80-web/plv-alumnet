@@ -21,3 +21,5 @@
 <script>document.documentElement.classList.add('rp-scope', 'role-{{ $rpRole }}');</script>
 <link rel="stylesheet" href="{{ asset('assets/css/responsive-public.css') }}?v={{ $rpCssVer }}">
 <script src="{{ asset('assets/js/responsive-nav.js') }}?v={{ $rpJsVer }}" defer></script>
+{{-- Not rp-scoped: brand colour for native dropdown lists, shared with the admin pages (see the partial). --}}
+@include('partials.select-theme')

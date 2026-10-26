@@ -159,26 +159,38 @@
                 @include('partials.error')
     <!-- Stat Cards -->
                 <div class="grid grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                        <p class="text-2xl font-bold text-slate-800">{{ $totalJobs }}</p>
+                    <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="briefcase" class="w-5 h-5 shrink-0 text-slate-800"></i>
+                            <p class="text-2xl font-bold text-slate-800">{{ $totalJobs }}</p>
+                        </div>
                         <p class="text-xs font-medium text-slate-500 mt-1">Total Job Posts</p>
                     </div>
-                    <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ ($filters['status'] ?? '') === 'pending' ? 'border-[#ED7A07] ring-2 ring-orange-200' : 'border-slate-200' }}"
+                    <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ ($filters['status'] ?? '') === 'pending' ? 'border-[#ED7A07] ring-2 ring-orange-200' : 'border-transparent' }}"
                         title="Click to {{ ($filters['status'] ?? '') === 'pending' ? 'clear this filter' : 'filter by Pending' }}"
                         onclick="pvSearchNavigate('status', '{{ ($filters['status'] ?? '') === 'pending' ? '' : 'pending' }}', 'page')">
-                        <p class="text-2xl font-bold text-[#ED7A07]">{{ $pendingCount }}</p>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="clock" class="w-5 h-5 shrink-0 text-[#ED7A07]"></i>
+                            <p class="text-2xl font-bold text-[#ED7A07]">{{ $pendingCount }}</p>
+                        </div>
                         <p class="text-xs font-medium text-slate-500 mt-1">Pending Approval</p>
                     </div>
-                    <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ ($filters['status'] ?? '') === 'approved' ? 'border-green-500 ring-2 ring-green-200' : 'border-slate-200' }}"
+                    <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ ($filters['status'] ?? '') === 'approved' ? 'border-green-500 ring-2 ring-green-200' : 'border-transparent' }}"
                         title="Click to {{ ($filters['status'] ?? '') === 'approved' ? 'clear this filter' : 'filter by Approved' }}"
                         onclick="pvSearchNavigate('status', '{{ ($filters['status'] ?? '') === 'approved' ? '' : 'approved' }}', 'page')">
-                        <p class="text-2xl font-bold text-green-500">{{ $approvedCount }}</p>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="circle-check" class="w-5 h-5 shrink-0 text-green-500"></i>
+                            <p class="text-2xl font-bold text-green-500">{{ $approvedCount }}</p>
+                        </div>
                         <p class="text-xs font-medium text-slate-500 mt-1">Approved Job Posts</p>
                     </div>
-                    <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ ($filters['status'] ?? '') === 'declined' ? 'border-red-500 ring-2 ring-red-200' : 'border-slate-200' }}"
+                    <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ ($filters['status'] ?? '') === 'declined' ? 'border-red-500 ring-2 ring-red-200' : 'border-transparent' }}"
                         title="Click to {{ ($filters['status'] ?? '') === 'declined' ? 'clear this filter' : 'filter by Declined' }}"
                         onclick="pvSearchNavigate('status', '{{ ($filters['status'] ?? '') === 'declined' ? '' : 'declined' }}', 'page')">
-                        <p class="text-2xl font-bold text-red-500">{{ $declinedCount }}</p>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="circle-x" class="w-5 h-5 shrink-0 text-red-500"></i>
+                            <p class="text-2xl font-bold text-red-500">{{ $declinedCount }}</p>
+                        </div>
                         <p class="text-xs font-medium text-slate-500 mt-1">Declined Job Posts</p>
                     </div>
                 </div>

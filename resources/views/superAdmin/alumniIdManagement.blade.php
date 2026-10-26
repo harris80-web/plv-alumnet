@@ -131,23 +131,35 @@
                 <div id="pageTab-id">
 
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-800">{{ $statusCounts['total'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="id-card" class="w-5 h-5 shrink-0 text-slate-800"></i>
+                                <p class="text-2xl font-bold text-slate-800">{{ $statusCounts['total'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total Alumni IDs</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
                             title="Click to filter by Pending" onclick="filterAlumniIdByStatusTile('pending')">
-                            <p class="text-2xl font-bold text-amber-500">{{ $statusCounts['pending'] }}</p>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="clock" class="w-5 h-5 shrink-0 text-amber-500"></i>
+                                <p class="text-2xl font-bold text-amber-500">{{ $statusCounts['pending'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Pending</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
                             title="Click to filter by Ready to Claim" onclick="filterAlumniIdByStatusTile('ready_to_claim')">
-                            <p class="text-2xl font-bold text-purple-500">{{ $statusCounts['ready_to_claim'] }}</p>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="package-check" class="w-5 h-5 shrink-0 text-purple-500"></i>
+                                <p class="text-2xl font-bold text-purple-500">{{ $statusCounts['ready_to_claim'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Ready to Claim</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
                             title="Click to filter by Claimed" onclick="filterAlumniIdByStatusTile('claimed')">
-                            <p class="text-2xl font-bold text-green-500">{{ $statusCounts['claimed'] }}</p>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="circle-check" class="w-5 h-5 shrink-0 text-green-500"></i>
+                                <p class="text-2xl font-bold text-green-500">{{ $statusCounts['claimed'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Claimed</p>
                         </div>
                     </div>
@@ -289,23 +301,35 @@
                 <div id="pageTab-yearbook" class="hidden">
 
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-800">{{ $yearbookCounts['total'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="book-open" class="w-5 h-5 shrink-0 text-slate-800"></i>
+                                <p class="text-2xl font-bold text-slate-800">{{ $yearbookCounts['total'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total Yearbooks</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
                             title="Click to filter by Pending" onclick="filterYearbookByStatusTile('pending')">
-                            <p class="text-2xl font-bold text-amber-500">{{ $yearbookCounts['pending'] }}</p>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="clock" class="w-5 h-5 shrink-0 text-amber-500"></i>
+                                <p class="text-2xl font-bold text-amber-500">{{ $yearbookCounts['pending'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Pending</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
                             title="Click to filter by Ready to Claim" onclick="filterYearbookByStatusTile('ready_to_claim')">
-                            <p class="text-2xl font-bold text-purple-500">{{ $yearbookCounts['ready_to_claim'] }}</p>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="package-check" class="w-5 h-5 shrink-0 text-purple-500"></i>
+                                <p class="text-2xl font-bold text-purple-500">{{ $yearbookCounts['ready_to_claim'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Ready to Claim</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md"
                             title="Click to filter by Claimed" onclick="filterYearbookByStatusTile('claimed')">
-                            <p class="text-2xl font-bold text-green-500">{{ $yearbookCounts['claimed'] }}</p>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="circle-check" class="w-5 h-5 shrink-0 text-green-500"></i>
+                                <p class="text-2xl font-bold text-green-500">{{ $yearbookCounts['claimed'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Claimed</p>
                         </div>
                     </div>
@@ -345,7 +369,7 @@
                                         </th>
                                         <th data-sort class="border-r border-slate-700">Reference No. <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                         <th data-sort class="border-r border-slate-700">Full Name <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
-                                        <th data-sort class="border-r border-slate-700">Batch <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
+                                        <th data-sort data-col-center class="border-r border-slate-700">Year Graduated <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                         <th data-sort class="border-r border-slate-700">Distribution Status <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                         <th data-sort class="border-r border-slate-700">Distribution Schedule <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
                                         <th data-sort class="border-r border-slate-700">Distribution Location <i class="fas fa-chevron-down text-[9px] ml-0.5 sort-icon"></i></th>
@@ -462,10 +486,10 @@
                 </select>
             </div>
             <div>
-                <label class="text-[13px] font-bold text-[#1e1b4b] block mb-2">Batch Year</label>
+                <label class="text-[13px] font-bold text-[#1e1b4b] block mb-2">Year Graduated</label>
                 <select id="aidFilterBatch"
                     class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-600 focus:outline-none">
-                    <option value="">Select Batch</option>
+                    <option value="">Select Year Graduated</option>
                     @foreach ($alumniIdBatches as $batchYear)
                     <option value="{{ $batchYear }}">{{ $batchYear }}</option>
                     @endforeach
@@ -507,10 +531,10 @@
                     class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#C73D1A]">
             </div>
             <div>
-                <label class="text-[13px] font-bold text-[#1e1b4b] block mb-2">Batch</label>
+                <label class="text-[13px] font-bold text-[#1e1b4b] block mb-2">Year Graduated</label>
                 <select id="ybFilterBatch"
                     class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-600 focus:outline-none">
-                    <option value="">Select Batch</option>
+                    <option value="">Select Year Graduated</option>
                     @foreach ($batches as $batchYear)
                     <option value="{{ $batchYear }}">{{ $batchYear }}</option>
                     @endforeach

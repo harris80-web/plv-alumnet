@@ -62,7 +62,7 @@
     </div>
 
     <div class="section">
-        <h2>Employment Rate by Batch/Year</h2>
+        <h2>Employment Rate by Year Graduated</h2>
         @if (!empty($charts['chartPlacement']))
             <img class="chart-img" src="{{ $charts['chartPlacement'] }}">
         @endif

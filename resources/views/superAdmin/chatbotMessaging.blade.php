@@ -110,24 +110,39 @@
                 <!-- ══════════════════════ OVERVIEW ══════════════════════ -->
                 <div id="pageTab-overview">
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-800">{{ $overview['activeAiSessions'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="bot" class="w-5 h-5 shrink-0 text-slate-800"></i>
+                                <p class="text-2xl font-bold text-slate-800">{{ $overview['activeAiSessions'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Active AI Sessions</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-green-600">{{ $overview['aiResolutionRate'] }}%</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="gauge" class="w-5 h-5 shrink-0 text-green-600"></i>
+                                <p class="text-2xl font-bold text-green-600">{{ $overview['aiResolutionRate'] }}%</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">AI resolution rate</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-amber-600">{{ $overview['pendingEscalations'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="headset" class="w-5 h-5 shrink-0 text-amber-600"></i>
+                                <p class="text-2xl font-bold text-amber-600">{{ $overview['pendingEscalations'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Pending escalations</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-blue-600">{{ $overview['alumniMessagesToday'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="messages-square" class="w-5 h-5 shrink-0 text-blue-600"></i>
+                                <p class="text-2xl font-bold text-blue-600">{{ $overview['alumniMessagesToday'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Alumni Messages today</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-red-600">{{ $overview['detectedMessages'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="shield-alert" class="w-5 h-5 shrink-0 text-red-600"></i>
+                                <p class="text-2xl font-bold text-red-600">{{ $overview['detectedMessages'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Detected Messages</p>
                         </div>
                     </div>
@@ -228,20 +243,32 @@
                 <!-- ══════════════════════ AI CHATBOT ══════════════════════ -->
                 <div id="pageTab-aichatbot" class="hidden">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-800">{{ $aiChatbot['activeAiSessions'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="bot" class="w-5 h-5 shrink-0 text-slate-800"></i>
+                                <p class="text-2xl font-bold text-slate-800">{{ $aiChatbot['activeAiSessions'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Active AI Sessions</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-green-600">{{ $aiChatbot['resolvedToday'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="circle-check" class="w-5 h-5 shrink-0 text-green-600"></i>
+                                <p class="text-2xl font-bold text-green-600">{{ $aiChatbot['resolvedToday'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Resolved today</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-amber-600">{{ $aiChatbot['escalatedToday'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="headset" class="w-5 h-5 shrink-0 text-amber-600"></i>
+                                <p class="text-2xl font-bold text-amber-600">{{ $aiChatbot['escalatedToday'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Escalated today</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-blue-600">{{ $aiChatbot['resolutionRate'] }}%</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="gauge" class="w-5 h-5 shrink-0 text-blue-600"></i>
+                                <p class="text-2xl font-bold text-blue-600">{{ $aiChatbot['resolutionRate'] }}%</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Resolution rate</p>
                         </div>
                     </div>
@@ -314,28 +341,43 @@
                 <!-- ══════════════════════ LIVE AGENT QUEUE ══════════════════════ -->
                 <div id="pageTab-queue" class="hidden">
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md" id="queueTileAvailable"
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md" id="queueTileAvailable"
                             title="Click to show only unclaimed threads waiting for an agent"
                             onclick="setQueueFilter('available')">
-                            <p class="text-2xl font-bold text-amber-600">{{ $liveQueue['totalInQueue'] }}</p>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="inbox" class="w-5 h-5 shrink-0 text-amber-600"></i>
+                                <p class="text-2xl font-bold text-amber-600">{{ $liveQueue['totalInQueue'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total in queue</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-800">{{ $liveQueue['avgWaitMinutes'] }}m</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="timer" class="w-5 h-5 shrink-0 text-slate-800"></i>
+                                <p class="text-2xl font-bold text-slate-800">{{ $liveQueue['avgWaitMinutes'] }}m</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Avg. wait time</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-green-600">{{ $liveQueue['resolvedTodayByAgents'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="circle-check" class="w-5 h-5 shrink-0 text-green-600"></i>
+                                <p class="text-2xl font-bold text-green-600">{{ $liveQueue['resolvedTodayByAgents'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Resolved today</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-blue-600">{{ $liveQueue['agentsOnline'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="users" class="w-5 h-5 shrink-0 text-blue-600"></i>
+                                <p class="text-2xl font-bold text-blue-600">{{ $liveQueue['agentsOnline'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Agents available</p>
                         </div>
-                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md" id="queueTileMine"
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md" id="queueTileMine"
                             title="Click to show only threads assigned to you"
                             onclick="setQueueFilter('mine')">
-                            <p class="text-2xl font-bold text-purple-600">{{ $liveQueue['assignedToMe'] }}</p>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="user" class="w-5 h-5 shrink-0 text-purple-600"></i>
+                                <p class="text-2xl font-bold text-purple-600">{{ $liveQueue['assignedToMe'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Assigned to me</p>
                         </div>
                     </div>
@@ -402,20 +444,32 @@
                 <!-- ══════════════════════ ALUMNI MESSAGING (auditing) ══════════════════════ -->
                 <div id="pageTab-alumnimsg" class="hidden">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-800">{{ $alumniMessaging['threadsToday'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="messages-square" class="w-5 h-5 shrink-0 text-slate-800"></i>
+                                <p class="text-2xl font-bold text-slate-800">{{ $alumniMessaging['threadsToday'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total threads today</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-red-600">{{ $alumniMessaging['autoFlagged'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="flag" class="w-5 h-5 shrink-0 text-red-600"></i>
+                                <p class="text-2xl font-bold text-red-600">{{ $alumniMessaging['autoFlagged'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Auto-flagged</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-amber-600">{{ $alumniMessaging['warningsThisWeek'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="triangle-alert" class="w-5 h-5 shrink-0 text-amber-600"></i>
+                                <p class="text-2xl font-bold text-amber-600">{{ $alumniMessaging['warningsThisWeek'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Warnings issued this week</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-800">{{ $alumniMessaging['mutedThisMonth'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="volume-x" class="w-5 h-5 shrink-0 text-slate-800"></i>
+                                <p class="text-2xl font-bold text-slate-800">{{ $alumniMessaging['mutedThisMonth'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Muted this month</p>
                         </div>
                     </div>
@@ -528,20 +582,32 @@
                 <!-- ══════════════════════ REPORTS ══════════════════════ -->
                 <div id="pageTab-reports" class="hidden">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-slate-800">{{ $reports['totalSessionsThisWeek'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="bot" class="w-5 h-5 shrink-0 text-slate-800"></i>
+                                <p class="text-2xl font-bold text-slate-800">{{ $reports['totalSessionsThisWeek'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Total chatbot sessions this week</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-green-600">{{ $reports['aiResolvedThisWeek'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="circle-check" class="w-5 h-5 shrink-0 text-green-600"></i>
+                                <p class="text-2xl font-bold text-green-600">{{ $reports['aiResolvedThisWeek'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">AI resolved</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-amber-600">{{ $reports['escalatedThisWeek'] }}</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="headset" class="w-5 h-5 shrink-0 text-amber-600"></i>
+                                <p class="text-2xl font-bold text-amber-600">{{ $reports['escalatedThisWeek'] }}</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Escalated to agent</p>
                         </div>
-                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-5 py-4">
-                            <p class="text-2xl font-bold text-blue-600">{{ $reports['avgResolutionMinutes'] }}m</p>
+                        <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="timer" class="w-5 h-5 shrink-0 text-blue-600"></i>
+                                <p class="text-2xl font-bold text-blue-600">{{ $reports['avgResolutionMinutes'] }}m</p>
+                            </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Avg. resolution time</p>
                         </div>
                     </div>
@@ -869,11 +935,11 @@
             document.getElementById('queueTileAvailable').classList.toggle('border-amber-500', queueFilter === 'available');
             document.getElementById('queueTileAvailable').classList.toggle('ring-2', queueFilter === 'available');
             document.getElementById('queueTileAvailable').classList.toggle('ring-amber-200', queueFilter === 'available');
-            document.getElementById('queueTileAvailable').classList.toggle('border-slate-200', queueFilter !== 'available');
+            document.getElementById('queueTileAvailable').classList.toggle('border-transparent', queueFilter !== 'available');
             document.getElementById('queueTileMine').classList.toggle('border-purple-500', queueFilter === 'mine');
             document.getElementById('queueTileMine').classList.toggle('ring-2', queueFilter === 'mine');
             document.getElementById('queueTileMine').classList.toggle('ring-purple-200', queueFilter === 'mine');
-            document.getElementById('queueTileMine').classList.toggle('border-slate-200', queueFilter !== 'mine');
+            document.getElementById('queueTileMine').classList.toggle('border-transparent', queueFilter !== 'mine');
             document.getElementById('queueListTitle').textContent =
                 queueFilter === 'available' ? 'Available threads' : (queueFilter === 'mine' ? 'Assigned to me' : 'Full queue');
             document.getElementById('queueClearFilterBtn').classList.toggle('hidden', queueFilter === 'all');

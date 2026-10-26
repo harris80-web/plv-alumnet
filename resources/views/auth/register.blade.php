@@ -25,6 +25,20 @@
 
             font-family: 'Montserrat', sans-serif;
         }
+
+        /* Hide the browser's built-in "reveal password" button (Edge) and autofill key
+           button (Chromium) — the form has its own gray show/hide toggle, and the two
+           icons were stacking on top of each other. */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
+        }
+        input::-webkit-credentials-auto-fill-button {
+            visibility: hidden;
+            pointer-events: none;
+            position: absolute;
+            right: 0;
+        }
     </style>
     {{-- Central responsive stylesheet + nav script (general/alumni/employer only). See RESPONSIVE-GUIDE.md. --}}
     @include('partials.responsive-assets', ['rpRole' => 'general'])
@@ -82,7 +96,8 @@
                 </div>
 
 
-                @include('partials.success')
+                {{-- Deferred: the toast waits until "Got it" dismisses the post-sign-up modal. --}}
+                @include('partials.success', ['deferred' => true])
 
                 @include('partials.error')
                 <form action="{{ route('users.storeEmployer') }}" method="POST" enctype="multipart/form-data"
@@ -94,6 +109,27 @@
                         </script>
                     @endif
 
+                    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                        <p class="text-[11px] text-gray-500"><span class="text-red-600 font-bold">*</span> Required field</p>
+
+                        {{-- Alumni help: tooltip is positioned by JS (fixed) so it never overflows the viewport. --}}
+                        <div id="alumniHelp" class="relative">
+                            <button type="button" id="alumniHelpTrigger" aria-describedby="alumniHelpTip" aria-expanded="false"
+                                class="inline-flex items-center gap-1 text-[11px] text-gray-500 hover:text-[#C73D1A] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C73D1A] rounded transition-colors">
+                                <i class="fas fa-circle-info text-[#1D46A4]" aria-hidden="true"></i>
+                                <span class="underline decoration-dotted underline-offset-2">I'm an <strong>alumni</strong>, where do I sign up?</span>
+                            </button>
+                            <div id="alumniHelpTip" role="tooltip" hidden
+                                class="fixed z-[200] opacity-0 transition-opacity duration-150 p-2 w-[min(18rem,calc(100vw-1.5rem))]">
+                                <div class="bg-[#0E0F3B] text-white text-[11px] leading-relaxed py-2 px-3 rounded shadow-xl relative">
+                                    <p>This page is for employers only. Alumni don't need to sign up, your account credentials have been sent to your email.</p>
+                                    <a href="{{ route('auth.login') }}" class="inline-block mt-1.5 font-bold text-white underline hover:text-[#ED7A07] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ED7A07] rounded">Go to Alumni Login</a>
+                                    <span id="alumniHelpArrow" class="absolute w-0 h-0 border-[6px] border-transparent"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="pt-1">
                         <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-wider border-b border-gray-200 pb-1">
                             Business Details</p>
@@ -101,32 +137,46 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Business Name:</label>
-                            <input type="text" name="employer_company_name"
+                            <label for="employer_company_name" class="block text-sm font-semibold text-[#0E0F3B] mb-1">Business Name: <span class="text-red-600" aria-hidden="true">*</span></label>
+                            <input type="text" id="employer_company_name" name="employer_company_name"
                                 class="w-full px-4 py-0.5 border rounded focus:outline-none focus:ring-2 {{ $errors->has('employer_company_name') ? 'border-red-600 focus:ring-red-600' : 'border-[#C73D1A] focus:ring-[#C73D1A]' }}"
-                                required>
+                                required aria-required="true">
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Website URL:</label>
-                            <input type="url" name="employer_website_url"
+                            <label for="employer_website_url" class="block text-sm font-semibold text-[#0E0F3B] mb-1">Website URL: <span class="text-[10px] font-normal text-gray-400">(Optional)</span></label>
+                            <input type="url" id="employer_website_url" name="employer_website_url"
                                 class="w-full px-4 py-0.5 border rounded focus:outline-none focus:ring-2 {{ $errors->has('employer_website_url') ? 'border-red-600 focus:ring-red-600' : 'border-[#C73D1A] focus:ring-[#C73D1A]' }}">
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Business Verification
-                            Document</label>
+                            Document <span class="text-red-600" aria-hidden="true">*</span></label>
                         <p class="text-[10px] text-gray-500 mb-2">Upload a document proving your company's legitimacy
                             <br>(eg. Business Permit, SEC/DTI Registration, BIR Certificate)</p>
 
-                        <div id="documentDropzone"
-                            class="w-full border border-dashed rounded-lg bg-slate-50 hover:bg-slate-100 transition cursor-pointer flex items-center justify-center text-center px-4 py-4 {{ $errors->has('employer_company_document') ? 'border-red-600' : 'border-[#C73D1A]' }}"
+                        <div id="documentDropzone" role="button" tabindex="0" aria-describedby="documentInfo documentError"
+                            class="w-full border border-dashed rounded-lg bg-slate-50 hover:bg-slate-100 transition cursor-pointer flex items-center justify-center text-center px-4 py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C73D1A] {{ $errors->has('employer_company_document') ? 'border-red-600' : 'border-[#C73D1A]' }}"
                             onclick="document.getElementById('employer_company_document').click()">
                             <span id="documentDropzoneText" class="text-[11px] text-gray-400">Choose file or drag &amp;
                                 drop here</span>
                         </div>
                         <input type="file" id="employer_company_document" name="employer_company_document"
-                            accept="application/pdf,image/*" class="hidden">
+                            accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" class="hidden" aria-required="true">
+
+                        <p id="documentError" role="alert" class="hidden text-[11px] text-red-600 mt-1.5"></p>
+
+                        {{-- Limits mirror UserController::storeEmployer(): mimes:pdf,jpg,jpeg,png,webp, max:20000 (KB). --}}
+                        <div id="documentInfo" class="mt-2 space-y-1">
+                            <p class="flex items-start gap-1.5 text-[10px] text-gray-500">
+                                <i class="fas fa-circle-info text-[#1D46A4] mt-px shrink-0" aria-hidden="true"></i>
+                                <span>Accepted formats: PDF, JPG, PNG, WEBP. Maximum file size: 20 MB.</span>
+                            </p>
+                            <p class="flex items-start gap-1.5 text-[10px] text-gray-500">
+                                <i class="fas fa-shield-halved text-[#1D46A4] mt-px shrink-0" aria-hidden="true"></i>
+                                <span>We ask for this to confirm your business is legitimate and to protect our alumni and students. Only our admin team will review it and is never shown publicly.</span>
+                            </p>
+                        </div>
                     </div>
 
                     <div class="pt-1">
@@ -136,35 +186,35 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">First Name:</label>
-                            <input type="text" name="user_first_name"
+                            <label for="user_first_name" class="block text-sm font-semibold text-[#0E0F3B] mb-1">First Name: <span class="text-red-600" aria-hidden="true">*</span></label>
+                            <input type="text" id="user_first_name" name="user_first_name"
                                 class="w-full px-4 py-0.5 border rounded focus:outline-none focus:ring-2 {{ $errors->has('user_first_name') ? 'border-red-600 focus:ring-red-600' : 'border-[#C73D1A] focus:ring-[#C73D1A]' }}"
-                                required>
+                                required aria-required="true">
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Last Name:</label>
-                            <input type="text" name="user_last_name"
+                            <label for="user_last_name" class="block text-sm font-semibold text-[#0E0F3B] mb-1">Last Name: <span class="text-red-600" aria-hidden="true">*</span></label>
+                            <input type="text" id="user_last_name" name="user_last_name"
                                 class="w-full px-4 py-0.5 border rounded focus:outline-none focus:ring-2 {{ $errors->has('user_last_name') ? 'border-red-600 focus:ring-red-600' : 'border-[#C73D1A] focus:ring-[#C73D1A]' }}"
-                                required>
+                                required aria-required="true">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Email:</label>
-                        <input type="email" name="user_email"
+                        <label for="user_email" class="block text-sm font-semibold text-[#0E0F3B] mb-1">Email: <span class="text-red-600" aria-hidden="true">*</span></label>
+                        <input type="email" id="user_email" name="user_email"
                             class="w-full px-4 py-0.5 border rounded focus:outline-none focus:ring-2 {{ $errors->has('user_email') ? 'border-red-600 focus:ring-red-600' : 'border-[#C73D1A] focus:ring-[#C73D1A]' }}"
-                            required>
+                            required aria-required="true">
                     </div>
 
                     <div class="relative">
-                        <label class="block text-sm font-semibold text-[#0E0F3B] mb-1">Password:</label>
+                        <label for="passwordInput" class="block text-sm font-semibold text-[#0E0F3B] mb-1">Password: <span class="text-red-600" aria-hidden="true">*</span></label>
 
                         <input id="passwordInput" type="password" name="user_password"
                             class="w-full px-4 py-0.5 border rounded focus:outline-none focus:ring-2 pr-10 {{ $errors->has('user_password') ? 'border-red-600 focus:ring-red-600' : 'border-[#C73D1A] focus:ring-[#C73D1A]' }}"
-                            required>
+                            required aria-required="true">
 
-                        <button type="button" id="togglePassword"
-                            class="absolute right-3 top-8 text-gray-400 hover:text-orange-500 focus:outline-none">
+                        <button type="button" id="togglePassword" aria-label="Show password" data-toggle-for="passwordInput"
+                            class="absolute right-3 top-8 text-gray-400 hover:text-orange-500 focus:outline-none focus-visible:text-orange-500">
                             <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-5" fill="none"
                                 viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -173,6 +223,30 @@
                                     d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
                         </button>
+                    </div>
+
+                    <div class="relative">
+                        <label for="confirmPasswordInput" class="block text-sm font-semibold text-[#0E0F3B] mb-1">Confirm Password: <span class="text-red-600" aria-hidden="true">*</span></label>
+
+                        <input id="confirmPasswordInput" type="password" name="user_password_confirmation"
+                            class="w-full px-4 py-0.5 border rounded focus:outline-none focus:ring-2 pr-10 border-[#C73D1A] focus:ring-[#C73D1A]"
+                            required aria-required="true" aria-describedby="confirmPasswordError confirmPasswordSuccess">
+
+                        <button type="button" id="toggleConfirmPassword" aria-label="Show password" data-toggle-for="confirmPasswordInput"
+                            class="absolute right-3 top-8 text-gray-400 hover:text-orange-500 focus:outline-none focus-visible:text-orange-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-5" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
+
+                        <p id="confirmPasswordError" role="alert" class="hidden text-[11px] text-red-600 mt-1">Passwords do not match.</p>
+                        <p id="confirmPasswordSuccess" role="status" class="hidden items-center gap-1 text-[11px] text-green-600 mt-1">
+                            <i class="fas fa-circle-check" aria-hidden="true"></i> Passwords match.
+                        </p>
                     </div>
 
                     <!-- Hidden for now but required by backend -->
@@ -185,21 +259,24 @@
 
                     <div class="space-y-2 py-2">
                         <label class="flex items-start gap-2 cursor-pointer">
-                            <input type="checkbox" id="terms-checkbox" class="mt-1 accent-[#C73D1A]" required>
+                            <input type="checkbox" id="terms-checkbox" class="mt-1 accent-[#C73D1A]" required aria-required="true">
                             <span class="text-[11px] text-black">I agree to the
-                                <a href="#" onclick="openModal(event)" class="text-orange-600 underline font-bold">Terms
-                                    of Use</a>
+                                <a href="#" onclick="openModal(event)"
+                                    class="text-orange-600 underline font-bold">Terms of Use</a>
                                 and
                                 <a href="#" onclick="openModal(event)"
-                                    class="text-orange-600 underline font-bold">Privacy Policy</a>.
+                                    class="text-orange-600 underline font-bold">Privacy Policy</a>,
+                                and I consent to my information being used to verify my account and run the platform.
+                                <span class="text-red-600" aria-hidden="true">*</span>
                             </span>
                         </label>
                         <label class="flex items-start gap-2 cursor-pointer">
-                            <input type="checkbox" id="rep-checkbox" class="mt-1 accent-[#C73D1A]" required>
-                            <span class="text-[11px] text-black">I confirm that I am an authorized representative of my
-                                company and agree to handle all applicant data in compliance with the
+                            <input type="checkbox" id="rep-checkbox" class="mt-1 accent-[#C73D1A]" required aria-required="true">
+                            <span class="text-[11px] text-black">I'm an authorized representative of my company, and I'll
+                                handle applicants' data in line with the
                                 <a href="#" onclick="openPrivacyModal(event)"
                                     class="text-orange-600 underline font-bold">Data Privacy Act</a>.
+                                <span class="text-red-600" aria-hidden="true">*</span>
                             </span>
                         </label>
                     </div>
@@ -328,11 +405,14 @@
     </div>
 
     <!-- Success Modal -->
-    <div id="successModal"
+    {{-- style: responsive-public.css sets `overscroll-behavior: contain` on this overlay at <=1023px,
+         which stops scrolling on the backdrop from reaching the page; this modal should let it through. --}}
+    <div id="successModal" style="overscroll-behavior: auto;"
         class="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 hidden opacity-0 transition-opacity duration-200 font-[Montserrat]">
-        <div id="successModalPanel" class="bg-white rounded-xl shadow-2xl w-[90%] max-w-md overflow-hidden transform transition-all duration-200 opacity-0 scale-95 relative">
-            <button onclick="closeSuccessModal()"
-                class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none z-10">
+        <div id="successModalPanel" role="dialog" aria-modal="true" aria-labelledby="successModalTitle" aria-describedby="successModalBody"
+            class="bg-white rounded-xl shadow-2xl w-[90%] max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-200 opacity-0 scale-95 relative">
+            <button onclick="closeSuccessModal()" aria-label="Close and return to home"
+                class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C73D1A] rounded z-10">
                 <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
                     </path>
@@ -347,20 +427,21 @@
                         </svg>
                     </div>
                 </div>
-                <h2 class="text-2xl font-bold mb-2">
+                <h2 id="successModalTitle" class="text-2xl font-bold mb-2">
                     <span
                         class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
-                        Account Pending<br>for Approval
+                        Thank you<br>for signing up!
                     </span>
                 </h2>
-                <p
+                <p id="successModalBody"
                     class="text-sm leading-relaxed mb-8 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
-                    Your account has been successfully registered and is currently awaiting <strong>administrative
-                        review</strong>. Access will be granted once your account has been <strong>approved</strong>.
+                    Your account is now <strong>pending review</strong>.<br> Our team will verify your business information
+                    and documents. You'll receive an email once your account is <strong>approved</strong>, which may
+                    take {{ config('app.employer_review_timeframe') }}.
                 </p>
-                <a href="{{ route('general.home') }}"
-                    class="block w-full bg-[#0E0F3B] text-white py-3 rounded-md font-bold uppercase tracking-widest hover:bg-blue-900 transition-colors shadow-lg text-center">
-                    Back to Home
+                <a id="successModalConfirm" href="{{ route('general.home') }}" onclick="event.preventDefault(); closeSuccessModal()"
+                    class="block w-full bg-[#0E0F3B] text-white py-3 rounded-md font-bold uppercase tracking-widest hover:bg-blue-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C73D1A] focus-visible:ring-offset-2 transition-colors shadow-lg text-center">
+                    Got it
                 </a>
             </div>
         </div>
@@ -431,7 +512,54 @@
             }
         }
 
-        documentInput.addEventListener('change', updateDocumentDropzoneText);
+        // Mirrors UserController::storeEmployer(): `mimes:pdf|max:20000` (KB).
+        const DOCUMENT_MAX_BYTES = 20000 * 1024;
+        const documentError = document.getElementById('documentError');
+
+        function setDocumentError(message) {
+            documentError.textContent = message || '';
+            documentError.classList.toggle('hidden', !message);
+            documentDropzone.classList.toggle('border-red-600', !!message);
+            documentDropzone.classList.toggle('border-[#C73D1A]', !message);
+            documentDropzone.setAttribute('aria-invalid', message ? 'true' : 'false');
+        }
+
+        // Returns an error message, or '' when the file is acceptable.
+        function documentProblem(file) {
+            // Extension is the primary check (file.type can be empty on some systems); MIME is a fallback.
+            const allowedExt = /\.(pdf|jpe?g|png|webp)$/i.test(file.name);
+            const allowedMime = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'].includes(file.type);
+            if (!allowedExt && !allowedMime) return 'Invalid file type. Please upload a PDF, JPG, PNG, or WEBP file.';
+            if (file.size > DOCUMENT_MAX_BYTES) return 'File is too large. The maximum size is 20 MB.';
+            return '';
+        }
+
+        // Validates whatever is currently in the input; clears it if it is unusable.
+        function checkDocumentInput() {
+            if (documentInput.files.length === 0) {
+                updateDocumentDropzoneText();
+                return false;
+            }
+            const problem = documentProblem(documentInput.files[0]);
+            if (problem) {
+                documentInput.value = '';
+                updateDocumentDropzoneText();
+                setDocumentError(problem);
+                return false;
+            }
+            setDocumentError('');
+            updateDocumentDropzoneText();
+            return true;
+        }
+
+        documentInput.addEventListener('change', checkDocumentInput);
+
+        documentDropzone.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                documentInput.click();
+            }
+        });
 
         ['dragenter', 'dragover'].forEach(eventName => {
             documentDropzone.addEventListener(eventName, function (e) {
@@ -451,30 +579,82 @@
 
         documentDropzone.addEventListener('drop', function (e) {
             if (e.dataTransfer.files.length > 0) {
-                documentInput.files = e.dataTransfer.files;
-                updateDocumentDropzoneText();
+                // The input is single-file; keep only the first dropped file.
+                const dt = new DataTransfer();
+                dt.items.add(e.dataTransfer.files[0]);
+                documentInput.files = dt.files;
+                checkDocumentInput();
             }
         });
 
-        const passwordInput = document.getElementById('passwordInput');
-        const togglePassword = document.getElementById('togglePassword');
-        const eyeIcon = document.getElementById('eyeIcon');
-
-        togglePassword.addEventListener('click', function () {
-            // Toggle the type attribute
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-
-            // Change the Icon (Optional: Swaps to "Eye with Slash" when visible)
-            if (type === 'text') {
-                eyeIcon.innerHTML = `
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-            `;
-            } else {
-                eyeIcon.innerHTML = `
+        // Show/hide password toggles (Password + Confirm Password)
+        const EYE_OPEN = `
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
             `;
+        const EYE_SLASH = `
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+            `;
+
+        document.querySelectorAll('[data-toggle-for]').forEach(function (toggleBtn) {
+            const input = document.getElementById(toggleBtn.dataset.toggleFor);
+            const icon = toggleBtn.querySelector('svg');
+
+            toggleBtn.addEventListener('click', function () {
+                const show = input.getAttribute('type') === 'password';
+                input.setAttribute('type', show ? 'text' : 'password');
+                icon.innerHTML = show ? EYE_SLASH : EYE_OPEN;
+                toggleBtn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+            });
+        });
+
+        // Confirm Password: must match Password (checked on blur, while typing once touched, and on submit)
+        const passwordInput = document.getElementById('passwordInput');
+        const confirmInput = document.getElementById('confirmPasswordInput');
+        const confirmError = document.getElementById('confirmPasswordError');
+        let confirmTouched = false;
+
+        const confirmSuccess = document.getElementById('confirmPasswordSuccess');
+
+        // The "match" message shows live as soon as the values agree; the "do not match"
+        // error waits until the field has been blurred/submitted so it doesn't nag mid-typing.
+        function validateConfirmPassword() {
+            const filled = confirmInput.value !== '';
+            const mismatch = filled && confirmInput.value !== passwordInput.value;
+            const match = filled && !mismatch;
+            const showError = mismatch && confirmTouched;
+
+            confirmError.classList.toggle('hidden', !showError);
+            confirmSuccess.classList.toggle('hidden', !match);
+            confirmSuccess.classList.toggle('flex', match);
+            confirmInput.setAttribute('aria-invalid', showError ? 'true' : 'false');
+            confirmInput.classList.toggle('border-red-600', showError);
+            confirmInput.classList.toggle('focus:ring-red-600', showError);
+            confirmInput.classList.toggle('border-[#C73D1A]', !showError);
+            confirmInput.classList.toggle('focus:ring-[#C73D1A]', !showError);
+            return !mismatch;
+        }
+
+        confirmInput.addEventListener('blur', function () {
+            confirmTouched = true;
+            validateConfirmPassword();
+        });
+        confirmInput.addEventListener('input', validateConfirmPassword);
+        passwordInput.addEventListener('input', validateConfirmPassword);
+
+        // Native `required` checks run first; this blocks what they can't see
+        // (the hidden file input and the password match).
+        document.querySelector('form[action="{{ route('users.storeEmployer') }}"]').addEventListener('submit', function (e) {
+            confirmTouched = true;
+            const passwordsMatch = validateConfirmPassword();
+            const hasDocument = checkDocumentInput();
+
+            if (!hasDocument && !documentError.textContent) {
+                setDocumentError('Please upload your business verification document.');
+            }
+            if (!passwordsMatch || !hasDocument) {
+                e.preventDefault();
+                (!hasDocument ? documentDropzone : confirmInput).focus();
             }
         });
 
@@ -516,13 +696,174 @@
             if (e.target === this) closePrivacyModal();
         });
 
+        // Post-sign-up modal. Every way of dismissing it (Got it, X, ESC, backdrop) ends on
+        // the home page: the account can't log in until an admin approves it, so the login
+        // page would just bounce the employer back.
+        const successModal = document.getElementById('successModal');
+        const successModalPanel = document.getElementById('successModalPanel');
+        const successHomeUrl = document.getElementById('successModalConfirm').href;
+
         function showSuccessModal() {
-            openAnimatedModal(document.getElementById('successModal'), document.getElementById('successModalPanel'));
+            openAnimatedModal(successModal, successModalPanel);
+            // openAnimatedModal locks body scroll; this modal is informational, so keep the
+            // page behind it scrollable (wheel/touch on the backdrop scrolls the document).
+            document.body.style.overflow = '';
+            document.getElementById('successModalConfirm').focus({ preventScroll: true });
         }
 
+        // Flow: modal first -> (Got it / X / ESC / backdrop) -> modal closes -> success toast
+        // appears -> a moment later the user lands on the home page.
+        const TOAST_READ_MS = 2500;
+        let successClosing = false;
+
         function closeSuccessModal() {
-            closeAnimatedModal(document.getElementById('successModal'), document.getElementById('successModalPanel'));
+            if (successClosing) return;
+            successClosing = true;
+            closeAnimatedModal(successModal, successModalPanel, null, function () {
+                if (window.showSuccessToast) window.showSuccessToast();
+                setTimeout(function () { window.location.href = successHomeUrl; }, TOAST_READ_MS);
+            });
         }
+
+        successModal.addEventListener('click', function (e) {
+            if (e.target === this) closeSuccessModal();
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (successModal.classList.contains('hidden')) return;
+
+            if (e.key === 'Escape') {
+                closeSuccessModal();
+                return;
+            }
+
+            // Focus trap: keep Tab/Shift+Tab inside the dialog.
+            if (e.key === 'Tab') {
+                const focusable = successModalPanel.querySelectorAll('a[href], button:not([disabled])');
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            }
+        });
+
+        // "I'm an alumni, where do I sign up?" tooltip.
+        // Hover (mouse), keyboard focus, and tap (touch/pen) all open it; ESC, outside tap,
+        // or leaving/blurring closes it. Positioned with `position: fixed` and clamped to the
+        // viewport so it can flip above/below and never overflows at ~375px.
+        (function () {
+            const wrap = document.getElementById('alumniHelp');
+            const trigger = document.getElementById('alumniHelpTrigger');
+            const tip = document.getElementById('alumniHelpTip');
+            const arrow = document.getElementById('alumniHelpArrow');
+            const MARGIN = 12;       // min distance from the viewport edge
+            const CLOSE_DELAY = 200; // lets the pointer travel from the trigger into the tooltip
+            let closeTimer = null;
+            let hideTimer = null;
+
+            function position() {
+                const t = trigger.getBoundingClientRect();
+                const tipW = tip.offsetWidth;
+                const tipH = tip.offsetHeight;
+                const vw = document.documentElement.clientWidth;
+                const vh = window.innerHeight;
+
+                // Prefer below the trigger (so it sits over the form, not the header); flip above if it won't fit.
+                const spaceBelow = vh - t.bottom;
+                const placeBelow = spaceBelow >= tipH || spaceBelow >= t.top;
+                const top = placeBelow ? t.bottom : t.top - tipH;
+                const left = Math.min(Math.max(t.left + t.width / 2 - tipW / 2, MARGIN), vw - tipW - MARGIN);
+
+                tip.style.top = Math.max(top, 0) + 'px';
+                tip.style.left = left + 'px';
+
+                // Point the arrow at the trigger's centre. The visible box sits inside `tip`'s 8px
+                // padding (which doubles as the hover bridge), and the arrow is 12px wide.
+                const boxW = tipW - 16;
+                const arrowLeft = t.left + t.width / 2 - (left + 8) - 6;
+                arrow.style.left = Math.min(Math.max(arrowLeft, 8), boxW - 20) + 'px';
+                // Inline colours: Tailwind's `border-transparent` would otherwise win the cascade.
+                arrow.classList.toggle('bottom-full', placeBelow);
+                arrow.classList.toggle('top-full', !placeBelow);
+                arrow.style.borderBottomColor = placeBelow ? '#1f2937' : 'transparent'; // gray-800, same as the bg
+                arrow.style.borderTopColor = placeBelow ? 'transparent' : '#1f2937';
+            }
+
+            function open() {
+                clearTimeout(closeTimer);
+                clearTimeout(hideTimer);
+                if (!tip.hidden && tip.classList.contains('opacity-100')) return position();
+                tip.hidden = false;
+                position();
+                trigger.setAttribute('aria-expanded', 'true');
+                // Force a reflow so the opacity transition actually plays.
+                tip.getBoundingClientRect();
+                tip.classList.remove('opacity-0');
+                tip.classList.add('opacity-100');
+            }
+
+            function close() {
+                clearTimeout(closeTimer);
+                trigger.setAttribute('aria-expanded', 'false');
+                tip.classList.remove('opacity-100');
+                tip.classList.add('opacity-0');
+                hideTimer = setTimeout(function () { tip.hidden = true; }, 150); // matches duration-150
+            }
+
+            function closeSoon() {
+                clearTimeout(closeTimer);
+                closeTimer = setTimeout(close, CLOSE_DELAY);
+            }
+
+            // Mouse hover over either the trigger or the tooltip keeps it open.
+            wrap.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') open(); });
+            wrap.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') closeSoon(); });
+
+            // Tap / click / Enter / Space on the trigger. A mouse click leaves it open (hover already did).
+            let lastPointerType = '';
+            trigger.addEventListener('pointerdown', function (e) { lastPointerType = e.pointerType; });
+            trigger.addEventListener('click', function () {
+                const isOpen = trigger.getAttribute('aria-expanded') === 'true';
+                const viaMouse = lastPointerType === 'mouse';
+                lastPointerType = ''; // a later keyboard "click" has no pointerdown, so it must toggle
+                if (viaMouse || !isOpen) open(); else close();
+            });
+
+            // Keyboard focus only (not the focus a tap or click also causes).
+            let ignoreFocus = false;
+            wrap.addEventListener('focusin', function () {
+                if (ignoreFocus) return;
+                if (trigger.matches(':focus-visible') || tip.contains(document.activeElement)) open();
+            });
+            wrap.addEventListener('focusout', function (e) {
+                if (!wrap.contains(e.relatedTarget)) closeSoon();
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && trigger.getAttribute('aria-expanded') === 'true') {
+                    close();
+                    if (wrap.contains(document.activeElement)) {
+                        // Hand focus back to the trigger without the focus handler re-opening the tip.
+                        ignoreFocus = true;
+                        trigger.focus();
+                        ignoreFocus = false;
+                    }
+                }
+            });
+
+            // Tap outside closes it (touch has no hover-out).
+            document.addEventListener('pointerdown', function (e) {
+                if (!wrap.contains(e.target)) close();
+            });
+
+            window.addEventListener('resize', function () { if (!tip.hidden) position(); });
+            window.addEventListener('scroll', function () { if (!tip.hidden) position(); }, { passive: true });
+        })();
     </script>
 </body>
 

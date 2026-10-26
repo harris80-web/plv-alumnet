@@ -49,6 +49,7 @@
                                 'name' => 'batch',
                                 'icon' => 'fas fa-calendar',
                                 'placeholder' => 'Year Graduated',
+                                'labelPrefix' => 'Year Graduated',
                                 'options' => $batchYearOptions->mapWithKeys(fn ($y) => [$y => $y]),
                                 'selected' => $dashboardFilters['batch'],
                             ])

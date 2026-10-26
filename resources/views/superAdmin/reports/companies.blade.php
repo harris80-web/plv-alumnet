@@ -82,6 +82,7 @@
                     'batchYearOptions' => $batchYearOptions,
                     'programs' => $programs,
                     'yearOptions' => $yearOptions,
+                    'exportCsvUrl' => route('reports.exportCsv', array_merge(['group' => 'companies'], array_filter($dashboardFilters) + [\App\Services\DashboardReportService::FILTERS_APPLIED_PARAM => 1])),
                 ])
 
                 <!-- ══ TAB: ALUMNI ══ -->
@@ -205,12 +206,6 @@
                     </div>
                 </div>
 
-                <div class="flex justify-end">
-                    <a href="{{ route('reports.exportCsv', array_merge(['group' => 'companies'], array_filter($dashboardFilters) + [\App\Services\DashboardReportService::FILTERS_APPLIED_PARAM => 1])) }}"
-                        class="text-xs font-bold text-slate-500 hover:text-[#C73D1A] flex items-center gap-1">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i> Export CSV
-                    </a>
-                </div>
             </div>
         </main>
     </div>

@@ -62,11 +62,22 @@
     </button>
 
     <div class="p-6 flex flex-col flex-1 overflow-y-auto">
-        {{-- Logo --}}
-        <div class="flex items-center justify-center gap-2 mb-6">
+        {{-- Logo: links to this role's home page, same as the header logo
+             (alumni → alumni dashboard, employer → employer dashboard). --}}
+        @php
+            $rpSidebarHome = match (auth()->user()->user_role) {
+                'employer' => 'employer.dashboard',
+                'alumni' => 'alumnus.dashboard',
+                'admin', 'super_admin' => 'superAdmin.dashboard',
+                'registrar' => 'registrar.dashboard',
+                default => 'general.home',
+            };
+        @endphp
+        <a href="{{ route($rpSidebarHome) }}" title="Go to Dashboard" aria-label="PLV-AlumNet — Dashboard"
+            class="rp-sidebar-logo flex items-center justify-center gap-2 mb-6 rounded-lg transition-opacity hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ED7A07] focus-visible:ring-offset-2">
             <img src="{{ asset('assets/PLV-AlumNet LOGOMARK_BLUE 1.png') }}" alt="" class="h-14 w-auto">
             <img src="{{ asset('assets/PLV-AlumNet LETTERMARK_COLORED 2.png') }}" alt="PLV-AlumNet" class="h-9 w-auto">
-        </div>
+        </a>
 
         <div class="border-t border-gray-100 mb-4"></div>
 

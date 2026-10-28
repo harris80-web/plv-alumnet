@@ -4,16 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Mail\DeactEmployerMail;
 use App\Models\Employer;
-use App\Models\JobApplication;
 use App\Models\JobPosting;
 use App\Models\Notice;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use App\Services\PdfChartImages;
 
 class EmployerController extends Controller
 {
@@ -29,12 +30,46 @@ class EmployerController extends Controller
     {
         $user = Auth::user();
         $employer = $user->employer;
-        $employerId = $user->user_id;
 
+        $recentAnnouncements = Notice::category('announcement')
+            ->visibleToEmployer()
+            ->orderByDesc('event_datetime')
+            ->take(3)
+            ->get();
+
+        return view('employer.dashboard', array_merge(
+            $this->dashboardData($user->user_id),
+            compact('employer', 'recentAnnouncements')
+        ));
+    }
+
+    /**
+     * The dashboard's Overview + analytics as a PDF. The page's Export PDF
+     * button POSTs each Chart.js canvas as a JPEG data URL (same approach as
+     * the admin dashboard's export — see superAdmin/dashboard.blade.php's
+     * exportPdfWithCharts()); without them (plain GET) each chart falls back
+     * to a table in the PDF, so the export never breaks.
+     */
+    public function exportDashboardPdf(Request $request)
+    {
+        $user = Auth::user();
+        $employer = $user->employer;
+        $data = $this->dashboardData($user->user_id);
+        $charts = PdfChartImages::fromRequest($request, ['chartApplicationStatus', 'chartMonthlyActivity']);
+
+        $pdf = Pdf::loadView('employer.dashboard-report-pdf', array_merge($data, compact('employer', 'charts')))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('employer_dashboard_report_' . now(config('app.local_timezone'))->format('Y-m-d') . '.pdf');
+    }
+
+    /** Everything the dashboard page and its PDF export both show, built once so the two can't drift apart. */
+    private function dashboardData(int $employerId): array
+    {
         // One grouped query for the whole applicant-status breakdown
         // (pending/shortlisted/hired/declined) instead of four separate
-        // COUNT queries — the dashboard's stat tiles and the "total
-        // applicants" figure both read off this same result.
+        // COUNT queries — the dashboard's stat tiles, the "total
+        // applicants" figure and the status chart all read off this result.
         $applicationsByStatus = DB::table('job_applications')
             ->join('job_postings', 'job_postings.job_posting_id', '=', 'job_applications.job_id')
             ->where('job_postings.user_id', $employerId)
@@ -60,6 +95,14 @@ class EmployerController extends Controller
             'hired' => $applicationsByStatus->get('hired', 0),
         ];
 
+        // Application Status Breakdown chart — every status, zeros included.
+        $statusBreakdown = [
+            'Pending' => (int) $applicationsByStatus->get('pending', 0),
+            'Shortlisted' => (int) $applicationsByStatus->get('shortlisted', 0),
+            'Hired' => (int) $applicationsByStatus->get('hired', 0),
+            'Declined' => (int) $applicationsByStatus->get('declined', 0),
+        ];
+
         // Active (approved + not yet closed) postings first, then ranked by
         // applicant count within each group — an active post with 20
         // applicants should surface before a closed one with 2, but a
@@ -77,25 +120,41 @@ class EmployerController extends Controller
         // reads as a full bar, not an arbitrary fixed max.
         $maxApplicantsPerPosting = max(1, (int) $jobPostings->max('applications_count'));
 
-        // Newest applicants across every posting, for the "jump straight to
-        // whoever just applied" widget — same is_read flag the unreadApplicants
-        // stat and My Job Postings page already use.
-        $recentApplicants = JobApplication::with(['alumnus.user', 'job'])
-            ->whereHas('job', fn ($q) => $q->where('user_id', $employerId))
-            ->latest('application_date')
-            ->take(6)
-            ->get();
+        $monthlyActivity = $this->monthlyApplicationsAndHires($employerId);
 
-        $recentAnnouncements = Notice::category('announcement')
-            ->visibleToEmployer()
-            ->orderByDesc('event_datetime')
-            ->take(3)
-            ->get();
+        return compact('stats', 'statusBreakdown', 'jobPostings', 'maxApplicantsPerPosting', 'monthlyActivity');
+    }
 
-        return view('employer.dashboard', compact(
-            'employer', 'stats', 'jobPostings', 'maxApplicantsPerPosting',
-            'recentApplicants', 'recentAnnouncements'
-        ));
+    /**
+     * Applications received and applicants hired per month for the last 6
+     * months (current month included), bucketed by the LOCAL (PH) calendar
+     * month — timestamps are stored in app.timezone, so they're converted
+     * before grouping rather than grouped in SQL.
+     *
+     * @return array{labels: string[], applications: int[], hires: int[]}
+     */
+    private function monthlyApplicationsAndHires(int $employerId): array
+    {
+        $localTz = config('app.local_timezone');
+        $storedTz = config('app.timezone');
+        $months = collect(range(5, 0))->map(fn ($i) => now($localTz)->startOfMonth()->subMonths($i));
+        $since = $months->first()->copy()->setTimezone($storedTz)->toDateTimeString();
+
+        $rows = DB::table('job_applications')
+            ->join('job_postings', 'job_postings.job_posting_id', '=', 'job_applications.job_id')
+            ->where('job_postings.user_id', $employerId)
+            ->where(fn ($q) => $q->where('job_applications.application_date', '>=', $since)->orWhere('job_applications.hired_at', '>=', $since))
+            ->get(['job_applications.application_date', 'job_applications.hired_at']);
+
+        $monthKey = fn ($value) => $value ? \Carbon\Carbon::parse($value, $storedTz)->setTimezone($localTz)->format('Y-m') : null;
+        $applications = $rows->map(fn ($r) => $monthKey($r->application_date))->filter()->countBy();
+        $hires = $rows->map(fn ($r) => $monthKey($r->hired_at))->filter()->countBy();
+
+        return [
+            'labels' => $months->map(fn ($m) => $m->format('M Y'))->all(),
+            'applications' => $months->map(fn ($m) => (int) $applications->get($m->format('Y-m'), 0))->all(),
+            'hires' => $months->map(fn ($m) => (int) $hires->get($m->format('Y-m'), 0))->all(),
+        ];
     }
 
     /**
@@ -166,15 +225,15 @@ class EmployerController extends Controller
         // Validate the incoming request data
         $validated = $request->validate([
             'user_profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10048',
-            'user_first_name' => 'nullable|string',
-            'user_last_name' => 'nullable|string',
+            'user_first_name' => 'required|string|max:100',
+            'user_last_name' => 'required|string|max:100',
             'user_middle_name' => 'nullable|string',
             'user_suffix' => 'nullable|string',
             'employer_position' => 'nullable|string',
-            'user_email' => 'nullable|email|unique:users,user_email,' . $user->user_id . ',user_id',
+            'user_email' => 'required|email|max:100|unique:users,user_email,' . $user->user_id . ',user_id',
             'user_number' => 'nullable|string',
             'employer_company_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10048',
-            'employer_company_name' => 'nullable|string',
+            'employer_company_name' => 'required|string|max:255',
             'employer_year_established' => 'nullable|date_format:Y',
             // employer_company_size is an unsignedBigInteger column — a
             // non-numeric value (e.g. a typed range like "50-100") used to
@@ -199,7 +258,7 @@ class EmployerController extends Controller
             'user_email' => 'Email',
             'user_number' => 'Phone Number',
             'employer_company_logo' => 'Company Logo',
-            'employer_company_name' => 'Company Name',
+            'employer_company_name' => 'Business Name',
             'employer_year_established' => 'Year Established',
             'employer_company_size' => 'Company Size',
             'employer_website_url' => 'Company Website',

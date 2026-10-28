@@ -396,7 +396,9 @@ class JobPostingController extends Controller
      * Same filter shape as the Job Board (search/industry/job_type/job_setup/
      * location/date_posted, via the shared applySearchFilters()) so "My Job
      * Postings" behaves identically to the board instead of the old
-     * Program-only filter it used to have.
+     * Program-only filter it used to have — plus a status filter
+     * (pending/approved/expired, see applyMyJobStatusFilter()) and a
+     * user-chosen page size for the admin-style table + pagination bar.
      */
     public function showMyJobPosts(Request $request, $id)
     {
@@ -405,21 +407,107 @@ class JobPostingController extends Controller
         // applicant counts, etc.) by changing the id in the URL.
         abort_unless(Auth::check() && Auth::id() == (int) $id, 403);
 
-        $query = JobPosting::with(['skills', 'applicants', 'industry', 'programs'])->where('user_id', $id);
-
-        $jobPostings = $this->applySearchFilters($query, $request)
+        $jobPostings = $this->myJobPostsQuery($request, $id)
+            ->with(['skills', 'applicants', 'industry', 'programs'])
             ->latest()
-            ->paginate(6)
+            ->paginate(self::resolveMyJobPostsPerPage($request))
             ->withQueryString();
+
+        // Stat widgets count ALL of this poster's posts (not just the
+        // filtered page), so they read as an overview the way the admin Job
+        // Placement Management widgets do.
+        $statusCounts = [
+            'total' => JobPosting::where('user_id', $id)->count(),
+            'pending' => $this->applyMyJobStatusFilter(JobPosting::where('user_id', $id), 'pending')->count(),
+            'approved' => $this->applyMyJobStatusFilter(JobPosting::where('user_id', $id), 'approved')->count(),
+            'expired' => $this->applyMyJobStatusFilter(JobPosting::where('user_id', $id), 'expired')->count(),
+        ];
 
         $programs = Program::all();
         $industries = Industry::all();
         $users = Auth::user();
-        $filters = $request->only(['search', 'industry', 'job_type', 'job_setup', 'location', 'date_posted']);
-        $advancedFilters = collect($filters)->except('search')->all();
-        $moreFiltersActive = (bool) array_filter($advancedFilters);
+        $filters = $request->only(['search', 'industry', 'job_type', 'job_setup', 'location', 'date_posted', 'status']);
+        // Filters that live in the slide-in "Filter by" panel (search and
+        // status have their own controls in the toolbar).
+        $panelFilterCount = count(array_filter(collect($filters)->except(['search', 'status'])->all()));
 
-        return view('general.jobPostings', compact('jobPostings', 'programs', 'industries', 'users', 'filters', 'moreFiltersActive'));
+        return view('general.jobPostings', compact('jobPostings', 'programs', 'industries', 'users', 'filters', 'panelFilterCount', 'statusCounts'));
+    }
+
+    /** CSV of the poster's own job posts — the same filters/status as the table, every page (not just the visible one). */
+    public function exportMyJobPostsCsv(Request $request, $id)
+    {
+        abort_unless(Auth::check() && Auth::id() == (int) $id, 403);
+
+        $jobPostings = $this->myJobPostsQuery($request, $id)
+            ->with(['applicants', 'industry', 'programs'])
+            ->latest()
+            ->get();
+
+        $callback = function () use ($jobPostings) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Job Title', 'Company Name', 'Location', 'Job Type', 'Job Setup', 'Recommended Program', 'Industry', 'Applicants', 'Unread Applications', 'Hired', 'Hiring Limit', 'Status', 'Posting Date', 'Closing Date']);
+            foreach ($jobPostings as $job) {
+                fputcsv($out, [
+                    $job->job_posting_title,
+                    $job->job_posting_company,
+                    $job->job_posting_address,
+                    $job->job_posting_employment_type,
+                    $job->job_posting_setup,
+                    $job->programs->pluck('program_name')->implode(', '),
+                    $job->industry->industry_name ?? 'N/A',
+                    $job->applicants->count(),
+                    $job->applicants->where('pivot.is_read', false)->count(),
+                    $job->applicants->where('pivot.application_status', 'hired')->count(),
+                    $job->hiring_limit,
+                    $job->myPostStatusLabel(),
+                    $job->created_at->format('M d, Y'),
+                    $job->job_closing_date ? \Carbon\Carbon::parse($job->job_closing_date)->format('M d, Y') : 'N/A',
+                ]);
+            }
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="my_job_postings_' . now()->format('Y-m-d') . '.csv"',
+        ]);
+    }
+
+    /** The poster's own (non-declined) job posts with the page's search/panel filters and status applied. */
+    private function myJobPostsQuery(Request $request, $id)
+    {
+        $query = $this->applySearchFilters(JobPosting::where('user_id', $id), $request);
+
+        return $this->applyMyJobStatusFilter($query, $request->input('status'));
+    }
+
+    /**
+     * Mutually exclusive statuses, matching JobPosting::myPostStatus():
+     *   expired  — closing date already passed (regardless of approval;
+     *              it's off the board either way, so that's what matters)
+     *   pending  — not expired, still awaiting staff approval
+     *   approved — not expired, approved and live on the job board
+     */
+    private function applyMyJobStatusFilter($query, ?string $status)
+    {
+        $today = JobPosting::localToday();
+        $notExpired = fn ($q) => $q->whereNull('job_closing_date')->orWhere('job_closing_date', '>=', $today);
+
+        return match ($status) {
+            'pending' => $query->where('job_approved', false)->where($notExpired),
+            'approved' => $query->where('job_approved', true)->where($notExpired),
+            'expired' => $query->where('job_closing_date', '<', $today),
+            default => $query,
+        };
+    }
+
+    /** Same page sizes the shared table-pagination-bar offers; anything else falls back to 10. */
+    private static function resolveMyJobPostsPerPage(Request $request): int
+    {
+        $perPage = (int) $request->input('per_page');
+
+        return in_array($perPage, [5, 10, 20, 50], true) ? $perPage : 10;
     }
 
     public function editJobPost(Request $request, $id)

@@ -42,7 +42,7 @@ class JobPosting extends Model
     private const DEFAULT_THUMBNAIL = 'assets/default images/jobPost_default.svg';
 
     /** Tint applied over the default thumbnail only — a real uploaded photo is never tinted. */
-    private const DEFAULT_THUMBNAIL_OVERLAY = ['color' => '#0E0F3B', 'overlayOpacity' => 0.7, 'imageOpacity' => 1.0];
+    private const DEFAULT_THUMBNAIL_OVERLAY = ['color' => '#0E0F3B', 'overlayOpacity' => 0.55, 'imageOpacity' => 1.0];
 
     /** Falls back to a stock image so job cards never show a broken image. */
     public function thumbnailUrl(): string
@@ -78,6 +78,25 @@ class JobPosting extends Model
     public static function localToday(): string
     {
         return Carbon::today(config('app.local_timezone'))->toDateString();
+    }
+
+    /**
+     * The poster-facing status on "My Job Postings": expired / pending /
+     * approved — mutually exclusive, same rules as
+     * JobPostingController::applyMyJobStatusFilter().
+     */
+    public function myPostStatus(): string
+    {
+        if ($this->job_closing_date && $this->job_closing_date < self::localToday()) {
+            return 'expired';
+        }
+
+        return $this->job_approved ? 'approved' : 'pending';
+    }
+
+    public function myPostStatusLabel(): string
+    {
+        return ['expired' => 'Expired', 'pending' => 'Pending Approval', 'approved' => 'Approved'][$this->myPostStatus()];
     }
 
     public function scopeActive($query)

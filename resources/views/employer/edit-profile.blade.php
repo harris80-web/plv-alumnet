@@ -4,15 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PLV-AlumNet | Edit Profile</title>
+    <title>PLV-AlumNet | Edit Company Profile</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&family=Poppins:wght@300;400;600;700&family=Inter:wght@400;500;700&display=swap"
-        rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Poppins:wght@300;400;600;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/PLV-AlumNet LOGO.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -23,230 +19,316 @@
         background-size: cover;
         background-position: center;
     }
+
+    /* Same company card banner as the Company Profile page. */
+    .company-banner {
+        background:
+            url("{{ asset('assets/heroSection.svg') }}") center / cover;
+    }
+
+    /* One look for every field on this form (same navy border / orange focus as the job post forms). */
+    .profile-field {
+        width: 100%;
+        padding: 0.55rem 0.85rem;
+        background: #ffffff;
+        border: 1px solid #0E0F3B;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #0E0F3B;
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .profile-field::placeholder { color: #94a3b8; font-weight: 400; }
+    .profile-field:focus { border-color: #C73D1A; box-shadow: 0 0 0 3px rgba(199, 61, 26, 0.12); }
+    /* A select still showing its placeholder ("Select") reads like an empty field. */
+    .profile-field.is-placeholder { color: #94a3b8; font-weight: 400; }
+    .profile-label {
+        display: block;
+        margin-bottom: 0.35rem;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #1D264F;
+    }
+    /* Required / optional markers next to the labels. */
+    .req-mark { margin-left: 2px; color: #C73D1A; }
+    .opt-tag {
+        display: inline-block;
+        margin-left: 0.4rem;
+        padding: 1px 6px;
+        border-radius: 9999px;
+        background: #f1f5f9;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0;
+        text-transform: none;
+        vertical-align: 1px;
+    }
 </style>
 
-<body>
+@php
+    $employer = $user->employer;
+@endphp
+
+<body class="min-h-screen flex flex-col bg-gray-50">
+    @php $current_page = 'employer_edit'; @endphp
     @include('partials.header-employer')
 
+    {{-- Hero banner hidden on this page (the page title + company card replace it).
     <section class="HeroSection h-[200px] flex items-end text-white shadow-lg">
-        <div class="max-w-6xl  w-full my-7 ml-10">
-            <h1 class="text-5xl font-bold mb-2">Edit Employer Profile</h1>
+        <div class="max-w-6xl w-full my-7 ml-10">
+            <h1 class="text-5xl font-bold mb-2">Welcome to PLV-AlumNet!</h1>
             <p class="text-xl font-light">PLV-AlumNet: Honoring the Past. Shaping the Future.</p>
         </div>
     </section>
+    --}}
 
-    <main class="main-content-wrapper min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
+    <main class="w-full max-w-6xl mx-auto px-6 py-8 flex-1 font-['Montserrat']">
         @include('partials.error-toast')
         @include('partials.success')
 
         @include('partials.error')
-    <form action="{{ route('employers.updateProfile', $user->user_id) }}" method="post" enctype="multipart/form-data">
 
-            <div class="w-full max-w-6xl mx-auto space-y-10 font-['Montserrat']">
+        <form id="employerProfileForm" action="{{ route('employers.updateProfile', $user->user_id) }}" method="post" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
 
-                @csrf
-                @method('PUT')
+            {{-- Title row: same layout as the Company Profile page, with Cancel / Save on the right.
+                 Phones: the buttons drop under the subtitle and share the row. --}}
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 mb-5 sm:mb-6">
+                <h1 class="inline-block text-xl sm:text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+                    EDIT EMPLOYER PROFILE
+                </h1>
+                <div class="order-3 sm:order-2 w-full sm:w-auto flex items-center gap-2 sm:gap-3">
+                    {{-- An <a>, not a <button>: a plain button inside this form would submit it. --}}
+                    <a href="{{ route('user.profile') }}"
+                        class="flex-1 sm:flex-none inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg border border-[#0E0F3B] text-[#0E0F3B] font-bold text-[11px] sm:text-xs tracking-wider sm:tracking-widest hover:bg-[#0E0F3B] hover:text-white transition-colors whitespace-nowrap">
+                        CANCEL
+                    </a>
+                    <button type="submit"
+                        class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-[#1D264F] hover:bg-blue-900 text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-bold text-[11px] sm:text-xs tracking-wider sm:tracking-widest shadow-lg transition-colors whitespace-nowrap">
+                        <i class="fa-solid fa-floppy-disk"></i> SAVE CHANGES
+                    </button>
+                </div>
+                <p class="order-2 sm:order-3 w-full -mt-2 text-xs sm:text-sm text-slate-500">Update your company and contact details. Alumni see these on your job posts. <span class="whitespace-nowrap">Fields marked <span class="font-bold text-[#C73D1A]">*</span> are required.</span></p>
+            </div>
 
-                <!-- EDIT EMPLOYER DETAILS -->
-                <section>
-                    <h2 class="w-fit text-2xl md:text-3xl font-bold mb-4 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
-                        Employer Details
-                    </h2>
+            {{-- ===== Company card (logo upload) ===== --}}
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden" aria-label="Company logo">
+                <div class="company-banner h-24 sm:h-28"></div>
+                <div class="px-5 sm:px-8 pb-6">
+                    <div class="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
+                        <div class="relative -mt-12 w-24 h-24 sm:w-28 sm:h-28 shrink-0">
+                            <button type="button" onclick="document.getElementById('companyLogoInput').click()" title="Change company logo"
+                                class="w-full h-full rounded-2xl bg-white border-4 border-white shadow-md overflow-hidden flex items-center justify-center group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C73D1A]">
+                                <img id="companyLogoPreview"
+                                    src="{{ $employer?->employer_company_logo ? asset('storage/' . $employer->employer_company_logo) : '' }}"
+                                    alt="Business Logo"
+                                    class="w-full h-full object-contain bg-white {{ $employer?->employer_company_logo ? '' : 'hidden' }}"
+                                    style="{{ $employer?->employer_company_logo ? '' : 'display:none' }}">
+                                <span id="companyLogoPlaceholder"
+                                    class="w-full h-full rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 group-hover:bg-slate-100 flex flex-col items-center justify-center text-[#1D264F] transition {{ $employer?->employer_company_logo ? 'hidden' : '' }}"
+                                    style="{{ $employer?->employer_company_logo ? 'display:none' : '' }}">
+                                    <i class="fa-solid fa-plus text-lg"></i>
+                                    <span class="text-[9px] font-bold uppercase mt-1">Add Logo</span>
+                                </span>
+                            </button>
+                            <span class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#1D264F] text-white border-2 border-white shadow flex items-center justify-center text-xs pointer-events-none">
+                                <i class="fa-solid fa-camera"></i>
+                            </span>
+                            <input type="file" name="employer_company_logo" id="companyLogoInput" accept="image/*" class="hidden"
+                                onchange="previewImageInput(this, 'companyLogoPreview', 'companyLogoPlaceholder'); document.getElementById('companyLogoViewBtn').classList.remove('hidden');">
+                        </div>
 
-                    <div class="bg-white rounded-3xl border border-gray-100 shadow-md p-8 md:p-10">
-                        <div class="flex flex-col md:flex-row md:items-center gap-8">
-                            <div class="relative shrink-0 mx-auto md:mx-0">
-                                <div class="w-28 h-28 rounded-full bg-cyan-100 flex items-center justify-center shadow-inner border-4 border-white overflow-hidden">
-                                    <img id="profileImagePreview"
-                                        src="{{ $user->user_profile_picture ? asset('storage/' . $user->user_profile_picture) : '' }}"
-                                        alt="Profile Picture"
-                                        class="w-full h-full object-cover {{ $user->user_profile_picture ? '' : 'hidden' }}"
-                                        style="{{ $user->user_profile_picture ? '' : 'display:none' }}">
-                                    <svg id="profileImagePlaceholderIcon" xmlns="http://www.w3.org/2000/svg" class="w-14 h-14 text-cyan-600 {{ $user->user_profile_picture ? 'hidden' : '' }}"
-                                        style="{{ $user->user_profile_picture ? 'display:none' : '' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="12" cy="7" r="4"></circle>
-                                    </svg>
-                                </div>
-
-                                <div class="absolute bottom-1 right-1">
-                                    <button type="button" onclick="togglePhotoOptions(event)" class="bg-gray-600 text-white p-2 rounded-full border-2 border-white hover:bg-gray-800 transition z-10 shadow-md">
-                                        <i class="fa-solid fa-camera text-xs"></i>
-                                    </button>
-
-                                    <div id="photoOptions" class="hidden absolute top-full mt-2 left-1/2 -translate-x-1/2 w-52 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50">
-                                        <button type="button" onclick="openImageLightbox(document.getElementById('profileImagePreview').src)" class="w-full text-left px-4 py-2 text-sm text-[#0E0F3B] tracking-tighter text-[#0E0F3B] hover:font-bold hover:bg-gray-50 flex items-center gap-3 transition">
-                                            <i class="fa-solid fa-image text-[#0E0F3B] text-sm"></i> View Profile Image
-                                        </button>
-
-                                        <label for="imageUpload" class="w-full text-left px-4 py-2 text-sm text-[#0E0F3B] tracking-tighter text-[#0E0F3B] hover:font-bold hover:bg-gray-50 flex items-center gap-3 cursor-pointer mb-0 transition">
-                                            <i class="fa-solid fa-upload text-[#0E0F3B] text-sm"></i> Upload an Image
-                                            <input type="file" name="user_profile_picture" id="imageUpload" class="hidden" accept="image/*"
-                                                onchange="previewImageInput(this, 'profileImagePreview', 'profileImagePlaceholderIcon')">
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-16 gap-y-6 flex-1">
-                                <div>
-                                    <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mb-1">Employer Name</p>
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <input type="text" name="user_first_name" value="{{ old('user_first_name', $user->user_first_name) }}" placeholder="First Name" class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-lg font-medium text-black focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400">
-                                        </div>
-                                        <div>
-                                            <input type="text" name="user_middle_name" value="{{ old('user_middle_name', $user->user_middle_name) }}" placeholder="Middle Name" class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-lg font-medium text-black focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400">
-                                        </div>
-                                        <div>
-                                            <input type="text" name="user_last_name" value="{{ old('user_last_name', $user->user_last_name) }}" placeholder="Last Name" class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-lg font-medium text-black focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400">
-                                        </div>
-                                        <div>
-                                            @php $currentSuffix = old('user_suffix', $user->user_suffix); @endphp
-                                            <select
-                                                name="user_suffix"
-                                                class="w-full h-10 px-4 border border-[#0E0F3B] rounded-lg text-lg font-medium {{ $currentSuffix ? 'text-black' : 'text-gray-400' }} focus:border-[#C73D1A] focus:ring-0 outline-none transition bg-white"
-                                                onchange="this.classList.remove('text-gray-400'); this.classList.add('text-black')">
-                                                <option value="" disabled {{ $currentSuffix ? '' : 'selected' }}>Suffix</option>
-                                                <option value="Jr." @selected($currentSuffix === 'Jr.')>Jr.</option>
-                                                <option value="Sr." @selected($currentSuffix === 'Sr.')>Sr.</option>
-                                                <option value="II" @selected($currentSuffix === 'II')>II</option>
-                                                <option value="III" @selected($currentSuffix === 'III')>III</option>
-                                                <option value="IV" @selected($currentSuffix === 'IV')>IV</option>
-                                                <option value="V" @selected($currentSuffix === 'V')>V</option>
-                                                <option value="N/A" @selected($currentSuffix === 'N/A')>N/A</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <input type="text" name="employer_position" value="{{ old('employer_position', optional($user->employer)->employer_position) }}" placeholder="e.g. HR Manager" class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-md font-medium text-gray-800 focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400">
-                                    <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mt-1">Employer Position</p>
-                                </div>
-
-                                <div>
-                                    <input type="email" name="user_email" value="{{ old('user_email', $user->user_email) }}" placeholder="example@domain.com" class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-gray-800 text-md font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400">
-                                    <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mt-1">Email</p>
-                                </div>
-                                <div>
-                                    <input type="tel" name="user_number" value="{{ old('user_number', $user->user_number) }}" placeholder="+63 XXX XXX XXXX" class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-gray-800 text-md font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400">
-                                    <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mt-1">Contact Number</p>
-                                </div>
-                            </div>
+                        <div class="flex-1 min-w-0 sm:pt-4">
+                            <h2 id="companyNamePreview" class="text-xl sm:text-2xl font-bold text-[#0E0F3B] break-words">
+                                {{ $employer?->employer_company_name ?: 'Your company name' }}
+                            </h2>
+                            <p class="mt-1 text-sm text-slate-500"><span class="font-semibold text-[#1D264F]">Company logo</span><span class="opt-tag">Optional</span><span class="block sm:inline sm:ml-1">PNG, JPG, GIF or SVG, up to 10 MB. Click the logo to change it.</span></p>
+                            <button type="button" id="companyLogoViewBtn" onclick="openImageLightbox(document.getElementById('companyLogoPreview').src)"
+                                class="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-[#1D46A4] hover:underline {{ $employer?->employer_company_logo ? '' : 'hidden' }}">
+                                <i class="fa-solid fa-eye"></i> View current logo
+                            </button>
                         </div>
                     </div>
-                </section>
+                </div>
+            </section>
 
-                <!-- EDIT BUSINESS DETAILS -->
-                <section>
-                    <h2 class="w-fit text-2xl md:text-3xl font-bold mb-4 bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
-                        Business Details
-                    </h2>
+            <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
-                    <div class="bg-white rounded-3xl border border-gray-100 shadow-md p-8 md:p-10">
-                        <div class="flex flex-col md:flex-row md:items-center gap-8">
-                            <div class="relative w-28 shrink-0 mx-auto md:mx-0">
-                                <div class="w-28 h-28 flex flex-col items-center justify-center border border-[#0E0F3B] border-dashed rounded-2xl bg-slate-50 hover:bg-slate-100 transition cursor-pointer overflow-hidden"
-                                    onclick="document.getElementById('companyLogoInput').click()">
-                                    <img id="companyLogoPreview"
-                                        src="{{ optional($user->employer)->employer_company_logo ? asset('storage/' . $user->employer->employer_company_logo) : '' }}"
-                                        alt="Business Logo"
-                                        class="w-full h-full object-cover {{ optional($user->employer)->employer_company_logo ? '' : 'hidden' }}"
-                                        style="{{ optional($user->employer)->employer_company_logo ? '' : 'display:none' }}">
-                                    <div id="companyLogoPlaceholder" class="flex flex-col items-center justify-center {{ optional($user->employer)->employer_company_logo ? 'hidden' : '' }}"
-                                        style="{{ optional($user->employer)->employer_company_logo ? 'display:none' : '' }}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-[#0E0F3B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
-                                        </svg>
-                                        <span class="text-[9px] font-bold text-[#0E0F3B] uppercase mt-1 text-center px-1">Update Logo</span>
-                                    </div>
-                                </div>
-                                <button type="button" onclick="openImageLightbox(document.getElementById('companyLogoPreview').src)"
-                                    class="absolute top-1.5 right-1.5 bg-white/90 hover:bg-white text-[#0E0F3B] p-1.5 rounded-full border border-gray-200 shadow-sm {{ optional($user->employer)->employer_company_logo ? '' : 'hidden' }}"
-                                    id="companyLogoViewBtn">
-                                    <i class="fa-solid fa-eye text-xs"></i>
-                                </button>
-                                <input type="file" name="employer_company_logo" id="companyLogoInput" accept="image/*" class="hidden"
-                                    onchange="previewImageInput(this, 'companyLogoPreview', 'companyLogoPlaceholder'); document.getElementById('companyLogoViewBtn').classList.remove('hidden');">
-                                <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter text-center mt-2">Business Logo</p>
+                {{-- ===== Left: business details + addresses ===== --}}
+                <div class="lg:col-span-2 space-y-6">
+                    <section class="bg-white rounded-2xl shadow-sm border border-slate-100">
+                        <header class="flex items-center gap-3 px-6 py-4 border-b border-slate-100">
+                            <span class="w-9 h-9 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-building"></i></span>
+                            <div>
+                                <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Business Details</h3>
+                                <p class="text-xs text-slate-500">Registered information about your company.</p>
                             </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-16 gap-y-6 flex-1">
-                                <div>
-                                    <input type="text" name="employer_company_name" value="{{ old('employer_company_name', optional($user->employer)->employer_company_name) }}" placeholder="Enter registered business name..." class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-gray-800 text-md font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400">
-                                    <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mt-1">Business Name</p>
-                                </div>
-                                <div>
-                                    <input type="number" name="employer_company_size" min="1" step="1" inputmode="numeric" value="{{ old('employer_company_size', optional($user->employer)->employer_company_size) }}" placeholder="e.g. 50" class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-gray-800 text-md font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400">
-                                    <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mt-1">Company/Business Size</p>
-                                </div>
-                                <div>
-                                    <input type="text" name="employer_year_established" value="{{ old('employer_year_established', optional($user->employer)->employer_year_established) }}" placeholder="YYYY" class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-gray-800 text-md font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400">
-                                    <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mt-1">Year Established</p>
-                                </div>
-                                <div>
-                                    <input type="url" name="employer_website_url" value="{{ old('employer_website_url', optional($user->employer)->employer_website_url) }}" placeholder="www.website.com" class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-gray-800 text-md font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400">
-                                    <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mt-1">Official Website URL</p>
-                                </div>
-                                <div>
-                                    @php $currentIndustry = old('industry_id', optional($user->employer)->industry_id); @endphp
-                                    <select name="industry_id" class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-gray-800 text-md font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition bg-white">
-                                        <option value="">Select Industry</option>
-                                        @foreach ($industries as $industry)
-                                        <option value="{{ $industry->industry_id }}" @selected($currentIndustry == $industry->industry_id)>{{ $industry->industry_name }}</option>
-                                        @endforeach
-                                    </select>
-                                    <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mt-1">Industry / Sector</p>
-                                </div>
+                        </header>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5 p-6">
+                            <div class="sm:col-span-2">
+                                <label for="employer_company_name" class="profile-label">Business Name<span class="req-mark" aria-hidden="true">*</span></label>
+                                <input type="text" id="employer_company_name" name="employer_company_name" required value="{{ old('employer_company_name', $employer?->employer_company_name) }}"
+                                    placeholder="Enter registered business name" class="profile-field"
+                                    oninput="document.getElementById('companyNamePreview').textContent = this.value.trim() || 'Your company name'">
+                            </div>
+                            <div>
+                                <label for="industry_id" class="profile-label">Industry / Sector<span class="opt-tag">Optional</span></label>
+                                @php $currentIndustry = old('industry_id', $employer?->industry_id); @endphp
+                                <select id="industry_id" name="industry_id" class="profile-field">
+                                    <option value="">Select industry</option>
+                                    @foreach ($industries as $industry)
+                                    <option value="{{ $industry->industry_id }}" @selected($currentIndustry == $industry->industry_id)>{{ $industry->industry_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label for="employer_company_size" class="profile-label">Company / Business Size<span class="opt-tag">Optional</span></label>
+                                <input type="number" id="employer_company_size" name="employer_company_size" min="1" step="1" inputmode="numeric"
+                                    value="{{ old('employer_company_size', $employer?->employer_company_size) }}" placeholder="Number of employees, e.g. 50" class="profile-field">
+                            </div>
+                            <div>
+                                <label for="employer_year_established" class="profile-label">Year Established<span class="opt-tag">Optional</span></label>
+                                <input type="text" id="employer_year_established" name="employer_year_established" inputmode="numeric" maxlength="4"
+                                    value="{{ old('employer_year_established', $employer?->employer_year_established) }}" placeholder="YYYY" class="profile-field">
+                            </div>
+                            <div>
+                                <label for="employer_website_url" class="profile-label">Official Website<span class="opt-tag">Optional</span></label>
+                                <input type="url" id="employer_website_url" name="employer_website_url"
+                                    value="{{ old('employer_website_url', $employer?->employer_website_url) }}" placeholder="https://www.yourcompany.com" class="profile-field">
                             </div>
                         </div>
+                    </section>
 
-                        {{-- Company Addresses — as many as the employer wants (head office,
-                             branches, etc.); picked from a dropdown when posting a job
-                             instead of retyping the address every time. --}}
-                        <div class="mt-8 pt-6 border-t border-gray-100">
-                            <p class="text-[11px] font-bold text-[#C73D1A] uppercase tracking-tighter mb-3">Company Addresses</p>
+                    {{-- Company Addresses — as many as the employer wants (head office,
+                         branches, etc.); picked from a dropdown when posting a job
+                         instead of retyping the address every time. --}}
+                    <section class="bg-white rounded-2xl shadow-sm border border-slate-100">
+                        <header class="flex items-center gap-3 px-6 py-4 border-b border-slate-100">
+                            <span class="w-9 h-9 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-location-dot"></i></span>
+                            <div>
+                                <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Company Addresses<span class="opt-tag">Optional</span></h3>
+                                <p class="text-xs text-slate-500">Office and branch locations you can pick from when posting a job.</p>
+                            </div>
+                        </header>
+                        <div class="p-6">
                             {{-- Always present (even when every real row is removed) so a
                                  "delete all addresses" save actually persists as empty,
                                  instead of the field being missing from the request entirely. --}}
                             <input type="hidden" name="addresses[]" value="">
                             <div id="companyAddressList" class="space-y-2">
-                                @forelse (old('addresses', optional($user->employer)->addresses?->pluck('address')->all() ?? []) as $address)
+                                @foreach (old('addresses', $employer?->addresses?->pluck('address')->all() ?? []) as $address)
+                                @continue($address === null || $address === '')
                                 <div class="flex items-center gap-2 company-address-row">
-                                    <input type="text" name="addresses[]" value="{{ $address }}" placeholder="e.g. 123 Rizal St., Valenzuela City"
-                                        class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-gray-800 text-md font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400">
-                                    <button type="button" onclick="this.closest('.company-address-row').remove()"
-                                        class="shrink-0 text-red-500 hover:text-red-700 transition p-2">
+                                    <span class="w-8 h-8 shrink-0 rounded-full bg-orange-50 text-[#C73D1A] flex items-center justify-center text-xs"><i class="fa-solid fa-map-pin"></i></span>
+                                    <input type="text" name="addresses[]" value="{{ $address }}" placeholder="e.g. 123 Rizal St., Valenzuela City" aria-label="Company address" class="profile-field">
+                                    <button type="button" onclick="this.closest('.company-address-row').remove()" title="Remove this address" aria-label="Remove this address"
+                                        class="shrink-0 w-9 h-9 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-700 transition flex items-center justify-center">
                                         <i class="fa-solid fa-trash-can"></i>
                                     </button>
                                 </div>
-                                @empty
-                                @endforelse
+                                @endforeach
                             </div>
                             <button type="button" onclick="addCompanyAddressRow()"
-                                class="mt-3 text-xs font-bold text-[#1D264F] border border-[#1D264F] rounded-lg px-4 py-2 hover:bg-[#1D264F] hover:text-white transition">
-                                <i class="fa-solid fa-plus mr-1"></i> Add Address
+                                class="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-[#1D264F] border border-[#1D264F] rounded-lg px-4 py-2 hover:bg-[#1D264F] hover:text-white transition">
+                                <i class="fa-solid fa-plus"></i> Add Address
                             </button>
                         </div>
-                    </div>
-                </section>
+                    </section>
+                </div>
 
-            </div>
+                {{-- ===== Right: contact person ===== --}}
+                <div class="space-y-6">
+                    <section class="bg-white rounded-2xl shadow-sm border border-slate-100">
+                        <header class="flex items-center gap-3 px-6 py-4 border-b border-slate-100">
+                            <span class="w-9 h-9 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-user-tie"></i></span>
+                            <div>
+                                <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Contact Person</h3>
+                                <p class="text-xs text-slate-500">Who represents your company.</p>
+                            </div>
+                        </header>
+                        <div class="p-6 space-y-5">
+                            <div class="flex items-center gap-4">
+                                <div class="relative shrink-0">
+                                    <div class="w-16 h-16 rounded-full bg-[#1D264F] flex items-center justify-center overflow-hidden">
+                                        <img id="profileImagePreview"
+                                            src="{{ $user->user_profile_picture ? asset('storage/' . $user->user_profile_picture) : '' }}"
+                                            alt="Profile Picture"
+                                            class="w-full h-full object-cover {{ $user->user_profile_picture ? '' : 'hidden' }}"
+                                            style="{{ $user->user_profile_picture ? '' : 'display:none' }}">
+                                        <i id="profileImagePlaceholderIcon" class="fa-solid fa-user text-2xl text-white {{ $user->user_profile_picture ? 'hidden' : '' }}"
+                                            style="{{ $user->user_profile_picture ? 'display:none' : '' }}"></i>
+                                    </div>
+                                    <button type="button" onclick="togglePhotoOptions(event)" title="Change profile photo" aria-label="Change profile photo"
+                                        class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[#C73D1A] text-white border-2 border-white shadow flex items-center justify-center text-[10px] hover:bg-[#a83215] transition">
+                                        <i class="fa-solid fa-camera"></i>
+                                    </button>
 
-            <div class="mt-8 flex gap-4 w-full max-w-6xl justify-end font-[Montserrat]">
-                {{-- Was a plain <button> with no type — inside a <form>, that
-                     defaults to type="submit", so Cancel was actually submitting
-                     the (unchanged) profile form and showing the "Profile
-                     updated successfully!" message. An <a> tag can't submit a
-                     form, so it can't regress the same way. --}}
-                <a href="{{ route('user.profile') }}"
-                    class="px-8 py-3 rounded-lg  border border-[#0E0F3B]  text-[#0E0F3B] font-semibold hover:bg-[#0E0F3B] hover:text-white transition uppercase text-xs inline-flex items-center justify-center">
-                    Cancel
-                </a>
-                <button class="px-8 py-3 rounded-lg bg-[#0D0D2B] text-white font-semibold hover:bg-blue-900 transition uppercase text-xs shadow-lg">
-                    Save Changes
-                </button>
+                                    <div id="photoOptions" class="hidden absolute top-full mt-2 left-0 w-52 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50">
+                                        <button type="button" onclick="openImageLightbox(document.getElementById('profileImagePreview').src)" class="w-full text-left px-4 py-2 text-sm text-[#0E0F3B] hover:bg-gray-50 flex items-center gap-3 transition">
+                                            <i class="fa-solid fa-image text-sm"></i> View Profile Image
+                                        </button>
+                                        <label for="imageUpload" class="w-full text-left px-4 py-2 text-sm text-[#0E0F3B] hover:bg-gray-50 flex items-center gap-3 cursor-pointer mb-0 transition">
+                                            <i class="fa-solid fa-upload text-sm"></i> Upload an Image
+                                            <input type="file" name="user_profile_picture" id="imageUpload" class="hidden" accept="image/*"
+                                                onchange="previewImageInput(this, 'profileImagePreview', 'profileImagePlaceholderIcon')">
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-bold text-[#0E0F3B]">Profile Photo<span class="opt-tag">Optional</span></p>
+                                    <p class="text-xs text-slate-500">PNG or JPG, up to 10 MB.</p>
+                                </div>
+                            </div>
+
+                            {{-- Desktop: this card is a narrow sidebar, so First / Middle Name take a full row
+                                 (keeps "Middle Name  Optional" on one line); Last Name + Suffix still share one. --}}
+                            <div class="grid grid-cols-2 gap-3 items-end">
+                                <div class="lg:col-span-2">
+                                    <label for="user_first_name" class="profile-label">First Name<span class="req-mark" aria-hidden="true">*</span></label>
+                                    <input type="text" id="user_first_name" name="user_first_name" required value="{{ old('user_first_name', $user->user_first_name) }}" placeholder="First name" class="profile-field">
+                                </div>
+                                <div class="lg:col-span-2">
+                                    <label for="user_middle_name" class="profile-label">Middle Name<span class="opt-tag">Optional</span></label>
+                                    <input type="text" id="user_middle_name" name="user_middle_name" value="{{ old('user_middle_name', $user->user_middle_name) }}" placeholder="Middle name" class="profile-field">
+                                </div>
+                                <div>
+                                    <label for="user_last_name" class="profile-label">Last Name<span class="req-mark" aria-hidden="true">*</span></label>
+                                    <input type="text" id="user_last_name" name="user_last_name" required value="{{ old('user_last_name', $user->user_last_name) }}" placeholder="Last name" class="profile-field">
+                                </div>
+                                <div>
+                                    <label for="user_suffix" class="profile-label">Suffix<span class="opt-tag">Optional</span></label>
+                                    @php $currentSuffix = old('user_suffix', $user->user_suffix); @endphp
+                                    <select id="user_suffix" name="user_suffix" class="profile-field {{ $currentSuffix ? '' : 'is-placeholder' }}"
+                                        onchange="this.classList.remove('is-placeholder')">
+                                        {{-- Disabled placeholder, as before: an empty suffix is ignored on save (pick N/A for none). --}}
+                                        <option value="" disabled {{ $currentSuffix ? '' : 'selected' }}>Select</option>
+                                        @foreach (['Jr.', 'Sr.', 'II', 'III', 'IV', 'V', 'N/A'] as $suffix)
+                                        <option value="{{ $suffix }}" @selected($currentSuffix === $suffix)>{{ $suffix }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="employer_position" class="profile-label">Position<span class="opt-tag">Optional</span></label>
+                                <input type="text" id="employer_position" name="employer_position" value="{{ old('employer_position', $employer?->employer_position) }}" placeholder="e.g. HR Manager" class="profile-field">
+                            </div>
+                            <div>
+                                <label for="user_email" class="profile-label">Email<span class="req-mark" aria-hidden="true">*</span></label>
+                                <input type="email" id="user_email" name="user_email" required value="{{ old('user_email', $user->user_email) }}" placeholder="example@domain.com" class="profile-field">
+                            </div>
+                            <div>
+                                <label for="user_number" class="profile-label">Contact Number<span class="opt-tag">Optional</span></label>
+                                <input type="tel" id="user_number" name="user_number" value="{{ old('user_number', $user->user_number) }}" placeholder="+63 XXX XXX XXXX" class="profile-field">
+                            </div>
+                        </div>
+                    </section>
+                </div>
             </div>
         </form>
     </main>
@@ -261,10 +343,10 @@
         const row = document.createElement('div');
         row.className = 'flex items-center gap-2 company-address-row';
         row.innerHTML = `
-            <input type="text" name="addresses[]" placeholder="e.g. 123 Rizal St., Valenzuela City"
-                class="w-full px-4 py-1.5 border border-[#0E0F3B] rounded-lg text-gray-800 text-md font-medium focus:border-[#C73D1A] focus:ring-0 outline-none transition placeholder-gray-400">
-            <button type="button" onclick="this.closest('.company-address-row').remove()"
-                class="shrink-0 text-red-500 hover:text-red-700 transition p-2">
+            <span class="w-8 h-8 shrink-0 rounded-full bg-orange-50 text-[#C73D1A] flex items-center justify-center text-xs"><i class="fa-solid fa-map-pin"></i></span>
+            <input type="text" name="addresses[]" placeholder="e.g. 123 Rizal St., Valenzuela City" aria-label="Company address" class="profile-field">
+            <button type="button" onclick="this.closest('.company-address-row').remove()" title="Remove this address" aria-label="Remove this address"
+                class="shrink-0 w-9 h-9 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-700 transition flex items-center justify-center">
                 <i class="fa-solid fa-trash-can"></i>
             </button>
         `;
@@ -274,42 +356,15 @@
 
     function togglePhotoOptions(event) {
         event.stopPropagation(); // Prevents the window click listener from immediately closing it
-        const options = document.getElementById('photoOptions');
-        options.classList.toggle('hidden');
+        document.getElementById('photoOptions').classList.toggle('hidden');
     }
 
-    // Close the dropdown when clicking anywhere else on the page
-    window.addEventListener('click', function(e) {
+    // Close the photo menu when clicking anywhere else on the page.
+    window.addEventListener('click', function (e) {
         const options = document.getElementById('photoOptions');
-        const button = event.target.closest('button');
-
-        // If the click is outside the options menu and not on the toggle button, hide it
-        if (!options.contains(e.target) && options.classList.contains('hidden') === false) {
+        if (options && !options.contains(e.target) && !options.classList.contains('hidden')) {
             options.classList.add('hidden');
         }
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const toggleBtn = document.getElementById('dropdown-toggle');
-        const menu = document.getElementById('dropdown-menu');
-
-        // Toggle menu visibility
-        toggleBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent immediate closing from the window listener
-            menu.classList.toggle('hidden');
-        });
-
-        // Close menu when clicking anywhere else on the screen
-        window.addEventListener('click', (e) => {
-            if (!menu.classList.contains('hidden')) {
-                menu.classList.add('hidden');
-            }
-        });
-
-        // Prevent closing when clicking inside the menu itself
-        menu.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
     });
 </script>
 

@@ -16,6 +16,7 @@
         rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/PLV-AlumNet LOGO.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 
 <style>
@@ -39,6 +40,31 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
     }
+
+    /* Analytics cards — same as the admin dashboard (superAdmin/dashboard.blade.php). */
+    .chart-card {
+        background: #fff;
+        border-radius: 10px;
+        padding: 16px 18px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, .07);
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    .chart-card .card-title {
+        font-size: 13px;
+        font-weight: 700;
+        background: linear-gradient(to right, #0E0F3B, #C73D1A, #ED7A07);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        display: inline-block;
+    }
+
+    .chart-card .card-sub {
+        font-size: 10.5px;
+        color: #000;
+        margin-top: 2px;
+    }
 </style>
 
 <body>
@@ -58,92 +84,97 @@
 
     <section class="bg-gray-50 p-8">
         <div class="max-w-6xl mx-auto">
-            <h2 class="text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent mb-8 tracking-wide rp-dashboard-title">
-                DASHBOARD FOR {{ strtoupper($employer->employer_company_name ?? 'YOUR COMPANY') }}
-            </h2>
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
+                <h2 class="text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent tracking-wide rp-dashboard-title">
+                    DASHBOARD FOR {{ strtoupper($employer->employer_company_name ?? 'YOUR COMPANY') }}
+                </h2>
+                {{-- Same export button style as the admin dashboard's EXPORT PDF. --}}
+                <button type="button" onclick="exportDashboardPdf()" title="Download the Overview and Analytics below as a PDF report"
+                    class="shrink-0 whitespace-nowrap bg-[#C04828] text-[10px] text-white px-3 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-[#A03D22] transition shadow-sm font-semibold uppercase tracking-wide">
+                    <i class="fa-solid fa-file-pdf text-xs"></i> EXPORT PDF
+                </button>
+            </div>
 
             @php
+                // Same widget layout as the admin pages: icon left of the number, label below.
                 $dashboardTiles = [
-                    ['value' => $stats['activePostings'], 'label' => 'Active Job Postings', 'icon' => 'fa-briefcase'],
-                    ['value' => $stats['totalApplicants'], 'label' => 'Total Applicants', 'icon' => 'fa-users'],
-                    ['value' => $stats['shortlisted'], 'label' => 'Shortlisted', 'icon' => 'fa-list-check'],
-                    ['value' => $stats['hired'], 'label' => 'Hired via AlumNet', 'icon' => 'fa-handshake'],
-                    ['value' => $stats['pending'], 'label' => 'Pending Review', 'icon' => 'fa-hourglass-half'],
-                    ['value' => $stats['expiringSoon'], 'label' => 'Job Postings Expiring Soon', 'icon' => 'fa-calendar-xmark'],
+                    ['value' => $stats['activePostings'], 'label' => 'Active Job Postings', 'icon' => 'fa-briefcase', 'color' => 'text-slate-800'],
+                    ['value' => $stats['totalApplicants'], 'label' => 'Total Applicants', 'icon' => 'fa-users', 'color' => 'text-blue-600', 'badge' => $stats['unreadApplicants'] > 0 ? $stats['unreadApplicants'] . ' new' : null],
+                    ['value' => $stats['shortlisted'], 'label' => 'Shortlisted', 'icon' => 'fa-list-check', 'color' => 'text-amber-500'],
+                    ['value' => $stats['hired'], 'label' => 'Hired via AlumNet', 'icon' => 'fa-handshake', 'color' => 'text-green-500'],
+                    ['value' => $stats['pending'], 'label' => 'Pending Review', 'icon' => 'fa-hourglass-half', 'color' => 'text-[#ED7A07]'],
+                    ['value' => $stats['expiringSoon'], 'label' => 'Job Postings Expiring Soon', 'icon' => 'fa-calendar-xmark', 'color' => 'text-red-500'],
                 ];
             @endphp
 
-            <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-6 md:p-8">
-                <h3 class="font-bold text-[#0E0F3B] mb-5 flex items-center gap-2 text-sm uppercase tracking-wide">
-                    <i class="fa-solid fa-chart-pie text-[#1D46A4]"></i> Overview
-                </h3>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    @foreach ($dashboardTiles as $tile)
-                    <div class="bg-slate-50 rounded-xl border border-gray-200 p-4 text-center transition-all hover:-translate-y-0.5 hover:shadow-md">
-                        <div class="text-2xl md:text-3xl font-bold text-orange-600 mb-1.5">{{ $tile['value'] }}</div>
-                        <p class="text-orange-700 font-semibold text-xs leading-tight flex flex-col items-center justify-center gap-1.5">
-                            <i class="fa-solid {{ $tile['icon'] }} text-orange-700 text-sm"></i>
-                            <span>{{ $tile['label'] }}</span>
-                        </p>
+            <h3 class="font-bold text-[#0E0F3B] mb-4 flex items-center gap-2 text-sm uppercase tracking-wide">
+                <i class="fa-solid fa-chart-pie text-[#1D46A4]"></i> Overview
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                @foreach ($dashboardTiles as $tile)
+                <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid {{ $tile['icon'] }} text-lg shrink-0 {{ $tile['color'] }}"></i>
+                        <p class="text-2xl font-bold {{ $tile['color'] }}">{{ $tile['value'] }}</p>
                     </div>
-                    @endforeach
+                    <p class="text-xs font-medium text-slate-500 mt-1 leading-snug">
+                        {{ $tile['label'] }}
+                        @if (!empty($tile['badge']))
+                        <span class="ml-1 inline-block text-[9px] font-bold uppercase bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full align-middle">{{ $tile['badge'] }}</span>
+                        @endif
+                    </p>
                 </div>
+                @endforeach
             </div>
 
-            <!-- ANALYTICS WIDGETS: applicant traffic per posting + recent applicants quick-links -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+            <!-- ANALYTICS (same chart-card style as the admin dashboard) -->
+            <h3 class="font-bold text-[#0E0F3B] mt-10 mb-4 flex items-center gap-2 text-sm uppercase tracking-wide">
+                <i class="fa-solid fa-chart-simple text-[#1D46A4]"></i> Analytics
+            </h3>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
-                    <h3 class="font-bold text-[#0E0F3B] mb-5 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-simple text-[#1D46A4]"></i> Applicant Traffic by Job Posting
-                    </h3>
-                    @forelse ($jobPostings->take(5) as $job)
-                    <a href="{{ route('jobApplication.showApplications', ['jobPostingId' => $job->job_posting_id]) }}" class="block mb-4 last:mb-0 group">
-                        <div class="flex justify-between gap-2 text-xs font-semibold text-gray-600 mb-1.5">
-                            <span class="flex items-baseline gap-1.5 min-w-0">
-                                <span class="truncate group-hover:text-[#C73D1A] transition-colors">{{ $job->job_posting_title }}</span>
-                                <span class="shrink-0 text-[10px] font-normal text-gray-400">· Posted {{ $job->created_at->format('M j, Y') }}</span>
-                            </span>
-                            <span class="shrink-0">{{ $job->applications_count }} {{ \Illuminate\Support\Str::plural('applicant', $job->applications_count) }}</span>
-                        </div>
-                        <div class="w-full bg-gray-100 rounded-full h-2">
-                            <div class="bg-[#1D46A4] h-2 rounded-full transition-all" style="width: {{ $job->applications_count / $maxApplicantsPerPosting * 100 }}%"></div>
-                        </div>
-                    </a>
-                    @empty
-                    <p class="text-sm text-gray-400">You haven't posted any jobs yet.</p>
-                    @endforelse
+                <!-- Applicant Traffic by Job Posting -->
+                <div class="chart-card">
+                    <div class="card-title">Applicant Traffic by Job Posting</div>
+                    <div class="card-sub">Applicants per posting &mdash; active postings first</div>
+                    <div class="mt-4">
+                        @forelse ($jobPostings->take(5) as $job)
+                        <a href="{{ route('jobApplication.showApplications', ['jobPostingId' => $job->job_posting_id]) }}" class="block mb-4 last:mb-0 group">
+                            <div class="flex justify-between gap-2 text-xs font-semibold text-gray-600 mb-1.5">
+                                <span class="flex items-baseline gap-1.5 min-w-0">
+                                    <span class="truncate group-hover:text-[#C73D1A] transition-colors">{{ $job->job_posting_title }}</span>
+                                    <span class="shrink-0 text-[10px] font-normal text-gray-400">· Posted {{ $job->created_at->format('M j, Y') }}</span>
+                                </span>
+                                <span class="shrink-0">{{ $job->applications_count }} {{ \Illuminate\Support\Str::plural('applicant', $job->applications_count) }}</span>
+                            </div>
+                            <div class="w-full bg-gray-100 rounded-full h-2">
+                                <div class="bg-[#1a3a6e] h-2 rounded-full transition-all" style="width: {{ $job->applications_count / $maxApplicantsPerPosting * 100 }}%"></div>
+                            </div>
+                        </a>
+                        @empty
+                        <p class="text-sm text-gray-400">You haven't posted any jobs yet.</p>
+                        @endforelse
+                    </div>
                 </div>
 
-                <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-bold text-[#0E0F3B] flex items-center gap-2">
-                            <i class="fa-solid fa-user-clock text-[#1D46A4]"></i> Recent Applicants
-                        </h3>
-                        @if ($stats['unreadApplicants'] > 0)
-                        <span class="text-[10px] font-bold uppercase bg-red-100 text-red-600 px-2.5 py-1 rounded-full">{{ $stats['unreadApplicants'] }} new</span>
-                        @endif
+                <!-- Application Status Breakdown -->
+                <div class="chart-card">
+                    <div class="card-title">Application Status Breakdown</div>
+                    <div class="card-sub">Where every applicant across your job postings currently stands</div>
+                    @if (array_sum($statusBreakdown) > 0)
+                    <div style="margin-top:10px; height:220px;"><canvas id="chartApplicationStatus"></canvas></div>
+                    @else
+                    <div class="h-[220px] flex flex-col items-center justify-center text-gray-400 text-sm">
+                        <i class="fa-solid fa-chart-pie text-3xl mb-2 text-gray-300"></i> No applications yet.
                     </div>
-                    @forelse ($recentApplicants as $application)
-                    <a href="{{ route('jobApplication.showApplications', ['jobPostingId' => $application->job_id]) }}"
-                        class="flex items-center gap-3 py-2.5 -mx-2 px-2 rounded-lg border-b border-gray-50 last:border-0 hover:bg-slate-50 transition-colors">
-                        @include('partials.avatar', [
-                            'photo' => $application->alumnus->user->user_profile_picture ? asset('storage/' . $application->alumnus->user->user_profile_picture) : null,
-                            'size' => 'w-9 h-9',
-                            'iconSize' => 'text-sm',
-                        ])
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-semibold text-[#0E0F3B] truncate">{{ $application->alumnus->user->user_first_name }} {{ $application->alumnus->user->user_last_name }}</p>
-                            <p class="text-xs text-gray-500 truncate">Applied to {{ $application->job->job_posting_title }}</p>
-                        </div>
-                        <span class="text-[10px] text-gray-400 shrink-0">{{ $application->application_date->diffForHumans() }}</span>
-                        @unless ($application->is_read)
-                        <span class="w-2 h-2 rounded-full bg-[#C73D1A] shrink-0"></span>
-                        @endunless
-                    </a>
-                    @empty
-                    <p class="text-sm text-gray-400">No applicants yet.</p>
-                    @endforelse
+                    @endif
+                </div>
+
+                <!-- Applications & Hires per Month -->
+                <div class="chart-card lg:col-span-2">
+                    <div class="card-title">Applications &amp; Hires per Month</div>
+                    <div class="card-sub">Applications received and applicants hired across all your job postings &mdash; last 6 months</div>
+                    <div style="margin-top:10px; height:240px;"><canvas id="chartMonthlyActivity"></canvas></div>
                 </div>
 
             </div>
@@ -264,6 +295,91 @@
             nextBtn.addEventListener('click', () => slider.scrollBy({ left: cardScrollAmount(), behavior: 'smooth' }));
         })();
     </script>
+
+    @include('partials.chart-pdf-image')
+    <script>
+        // Analytics charts — same Chart.js setup/palette as the admin dashboard.
+        (function () {
+            const fontDef = { family: 'Montserrat', size: 10 };
+            const gridColor = 'rgba(0,0,0,0.05)';
+            Chart.defaults.font = fontDef;
+            Chart.defaults.color = '#6b7280';
+
+            const statusCanvas = document.getElementById('chartApplicationStatus');
+            if (statusCanvas) {
+                const statusBreakdown = @json($statusBreakdown);
+                new Chart(statusCanvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(statusBreakdown),
+                        datasets: [{
+                            data: Object.values(statusBreakdown),
+                            backgroundColor: ['#94a3b8', '#ED7A07', '#1a3a6e', '#C73D1A'],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '60%',
+                        plugins: { legend: { display: true, position: 'bottom', labels: { font: fontDef, boxWidth: 10 } } }
+                    }
+                });
+            }
+
+            const monthly = @json($monthlyActivity);
+            new Chart(document.getElementById('chartMonthlyActivity'), {
+                type: 'bar',
+                data: {
+                    labels: monthly.labels,
+                    datasets: [
+                        { label: 'Applications Received', data: monthly.applications, backgroundColor: '#1a3a6e', borderRadius: 3 },
+                        { label: 'Applicants Hired', data: monthly.hires, backgroundColor: '#e05c00', borderRadius: 3 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true, position: 'bottom', labels: { font: fontDef, boxWidth: 10 } } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: fontDef } },
+                        y: { beginAtZero: true, grid: { color: gridColor }, ticks: { font: fontDef, precision: 0 } }
+                    }
+                }
+            });
+        })();
+
+        // EXPORT PDF — captures each chart as a JPEG and POSTs it with the
+        // CSRF token (same approach as the admin dashboard's
+        // exportPdfWithCharts()); the server renders the Overview + Analytics PDF.
+        function exportDashboardPdf() {
+            const charts = {};
+            ['chartApplicationStatus', 'chartMonthlyActivity'].forEach(function (id) {
+                const canvas = document.getElementById(id);
+                if (canvas) {
+                    const img = chartCanvasToPdfImage(canvas); // null: the PDF shows a table for this chart
+                    if (img) charts[id] = img;
+                }
+            });
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = {!! json_encode(route('employer.dashboard.exportPdf')) !!};
+            form.style.display = 'none';
+            [['_token', '{{ csrf_token() }}'], ['charts', JSON.stringify(charts)]].forEach(function ([name, value]) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+                form.appendChild(input);
+            });
+            document.body.appendChild(form);
+            form.submit();
+            form.remove();
+        }
+    </script>
+
 
     <section class="py-16 px-6 max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center justify-items-center">
         <div class="rounded-lg overflow-hidden shadow-xl w-full">

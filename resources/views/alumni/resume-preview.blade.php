@@ -5,24 +5,18 @@
     $certTypeLabels = \App\Models\Alumnus::certificationTypeLabels();
 @endphp
 
-<div class="flex justify-end mb-6">
-    <a href="{{ route('resume.pdf') }}"
-        class="flex items-center gap-2 bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white text-xs font-bold py-2 px-4 rounded shadow-md transition duration-200 uppercase">
-        <i class="fa-solid fa-file-arrow-down"></i> Save as PDF
-    </a>
-</div>
-
-<div id="resume-paper" class="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden p-8 md:p-12 mb-8">
+{{-- "Save as PDF" lives in the ALUMNI RESUME header on alumni/profile.blade.php (this partial's only user). --}}
+<div id="resume-paper" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden p-5 sm:p-8 md:p-12">
 
     {{-- ===== Header ===== --}}
-    <div class="flex items-center gap-6 border-b-2 border-[#0E0F3B] pb-6 mb-6">
+    <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 border-b-2 border-[#0E0F3B] pb-5 sm:pb-6 mb-5 sm:mb-6">
         @if($user->user_profile_picture)
             <img src="{{ asset('storage/' . $user->user_profile_picture) }}" alt="Profile Photo"
-                class="w-24 h-24 rounded-full object-cover border-2 border-[#0E0F3B] flex-shrink-0">
+                class="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-[#0E0F3B] flex-shrink-0">
         @endif
         <div class="flex-1 text-center">
-            <h1 class="text-3xl font-bold text-[#0E0F3B] uppercase tracking-wide">{{ $alumnus->resumeFullName() }}</h1>
-            <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-600 mt-3">
+            <h1 class="text-xl sm:text-3xl font-bold text-[#0E0F3B] uppercase tracking-wide break-words">{{ $alumnus->resumeFullName() }}</h1>
+            <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-600 mt-3 break-all">
                 <span><i class="fa-solid fa-envelope text-[#ED7A07] mr-1"></i>{{ $user->user_email }}</span>
                 @if($user->user_number)
                     <span><i class="fa-solid fa-phone text-[#ED7A07] mr-1"></i>{{ $user->user_number }}</span>
@@ -71,7 +65,7 @@
                 @foreach(\App\Models\Skill::CATEGORIES as $categoryKey => $categoryLabel)
                     @continue($skillsByCategory->get($categoryKey, collect())->isEmpty())
                     <div class="flex flex-wrap items-center gap-2">
-                        <span class="text-xs font-semibold text-gray-500 w-32 shrink-0">{{ $categoryLabel }}</span>
+                        <span class="text-xs font-semibold text-gray-500 w-full sm:w-32 shrink-0">{{ $categoryLabel }}</span>
                         <div class="flex flex-wrap gap-2">
                             @foreach($skillsByCategory[$categoryKey] as $skill)
                                 <span class="text-xs font-medium bg-gray-100 text-gray-700 rounded-full px-3 py-1">{{ $skill->skill_name }}</span>

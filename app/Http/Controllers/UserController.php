@@ -27,6 +27,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\DashboardReportService;
+use App\Services\PdfChartImages;
 
 class UserController extends Controller
 {
@@ -974,12 +975,24 @@ class UserController extends Controller
         // which doesn't exist, and no user holds that role. The else below
         // handles it safely if one is ever added.
         } else if ($user->user_role == 'employer') {
-            return view('employer.profile', compact('user'));
+            $user->load(['employer.industry', 'employer.addresses']);
+            $employer = $user->employer;
+            // Figures for the company card at the top of the profile.
+            $profileStats = [
+                'jobPosts' => $employer ? $employer->jobPostings()->count() : 0,
+                'rating' => $employer?->averageRating(),
+                'ratingCount' => $employer ? $employer->ratingCount() : 0,
+            ];
+            return view('employer.profile', compact('user', 'profileStats'));
         } else if ($user->user_role == 'alumni') {
             // Only needed for the finished resume view now — the builder
             // itself moved to Edit Profile (see editProfile() below).
             $user->load(['alumnus.program', 'alumnus.industry', 'alumnus.skills', 'alumnus.experiences.industry', 'alumnus.certifications']);
-            return view('alumni.profile', compact('user'));
+            // Figures for the stats row on the profile card.
+            $profileStats = [
+                'applications' => $user->alumnus ? $user->alumnus->jobApplications()->count() : 0,
+            ];
+            return view('alumni.profile', compact('user', 'profileStats'));
         } else {
             Auth::logout();
             return redirect()->route('auth.login')->withErrors('error', 'Your account role is not recognized. Please contact the administrator.');
@@ -1000,9 +1013,10 @@ class UserController extends Controller
         if ($user->user_role == 'admin' || $user->user_role == 'super_admin') {
             return view('superAdmin.edit-profile', compact('user'));
         } else if ($user->user_role == 'employer') {
+            $user->load(['employer.industry', 'employer.addresses']);
             return view('employer.edit-profile', compact('user', 'industries'));
         } else if ($user->user_role == 'alumni') {
-            $user->load(['alumnus.skills', 'alumnus.experiences.industry', 'alumnus.certifications']);
+            $user->load(['alumnus.program', 'alumnus.skills', 'alumnus.experiences.industry', 'alumnus.certifications']);
             $resumeData = $user->alumnus->toResumeFormArray();
             return view('alumni.edit-profile', compact('user', 'industries', 'resumeData'));
         } else {
@@ -1289,11 +1303,11 @@ class UserController extends Controller
         $collegeLabel = $this->filterLabelForList($colleges, fn ($v) => Program::COLLEGES[$v] ?? $v);
         $yearLabel = $this->filterLabelForYears($years);
 
-        // Decoded client-captured chart PNGs, keyed by canvas id (e.g.
-        // "chartStatus" => "data:image/png;base64,..."). Empty when hit via
+        // Client-captured chart images, keyed by canvas id (e.g.
+        // "chartStatus" => "data:image/jpeg;base64,..."). Empty when hit via
         // plain GET (no JS ran) — the PDF view falls back to its old table
         // rendering per-chart in that case, so the export never breaks.
-        $charts = json_decode((string) request()->input('charts', '{}'), true) ?: [];
+        $charts = PdfChartImages::fromRequest(request());
 
         $pdf = Pdf::loadView('superAdmin.dashboard-report-pdf', compact(
             'stats', 'r', 'batchLabel', 'programLabel', 'statusLabel', 'collegeLabel', 'yearLabel', 'hireMonths', 'topCompaniesLimit', 'charts'

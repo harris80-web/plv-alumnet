@@ -161,6 +161,86 @@
         100% { background: transparent; }
     }
     ::-webkit-scrollbar { display: none; }
+
+    /* ---- Phones & tablets (below 1024px): each applicant row becomes a card ----
+       Same markup as the desktop table, so search, the status filter, sorting,
+       pagination, bulk selection and the row menus keep working. The header
+       row is hidden (its controls are repeated above the cards) and each cell
+       shows its own label (data-label). The #applicants-tbody selectors are
+       there to beat Tailwind's divide-y / padding and the !important alignment
+       rules from partials/table-sort. */
+    @media (max-width: 1023.98px) {
+        .applicants-table-wrap { overflow: visible; }
+        .applicants-table { display: block; white-space: normal; }
+        .applicants-table thead { display: none; }
+        #applicants-tbody { display: grid; grid-template-columns: 1fr; gap: 12px; padding: 12px; background: #f8fafc; }
+        #applicants-tbody > tr {
+            display: grid;
+            grid-template-columns: auto auto minmax(0, 1fr) auto;
+            grid-template-areas:
+                "check num   status menu"
+                "name  name  name   name"
+                "score score score  score"
+                "prog  prog  prog   prog"
+                "coll  coll  coll   coll"
+                "app   app   app    app";
+            gap: 10px;
+            padding: 12px 12px 14px 14px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+        }
+        #applicants-tbody > tr:hover { background: #f8faff; }
+        #applicants-tbody > tr.bg-blue-50 { background: #eff6ff; border-color: #93c5fd; }
+        #applicants-tbody > tr > td {
+            display: block;
+            min-width: 0;
+            padding: 0;
+            border: 0;
+            text-align: left !important;
+            white-space: normal !important;
+            line-height: 1.35;
+        }
+        #applicants-tbody > tr > td[data-label]::before {
+            content: attr(data-label);
+            display: block;
+            margin-bottom: 3px;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+        #applicants-tbody td[data-cell="check"] { grid-area: check; align-self: center; }
+        #applicants-tbody td[data-cell="check"] input { width: 20px; height: 20px; display: block; }
+        #applicants-tbody td[data-cell="num"] { grid-area: num; align-self: center; font-size: 12px; }
+        #applicants-tbody td[data-cell="num"]::before { content: "#"; }
+        #applicants-tbody td[data-cell="status"] { grid-area: status; align-self: center; }
+        #applicants-tbody td[data-cell="menu"] { grid-area: menu; align-self: center; margin: -4px -4px -4px 0; }
+        #applicants-tbody td[data-cell="menu"] button { width: 36px; height: 36px; }
+        #applicants-tbody td[data-cell="name"] { grid-area: name; padding-bottom: 10px; border-bottom: 1px solid #f1f5f9; }
+        #applicants-tbody td[data-cell="name"] .font-semibold { font-size: 15px; font-weight: 700; }
+        #applicants-tbody td[data-cell="score"] { grid-area: score; }
+        #applicants-tbody td[data-cell="score"] > div { flex-direction: row !important; flex-wrap: wrap; align-items: center; justify-content: flex-start !important; gap: 6px; }
+        #applicants-tbody td[data-cell="prog"] { grid-area: prog; font-size: 12px; color: #334155; }
+        #applicants-tbody td[data-cell="coll"] { grid-area: coll; font-size: 12px; color: #334155; }
+        #applicants-tbody td[data-cell="app"] { grid-area: app; padding-top: 4px; }
+        #applicants-tbody td[data-cell="app"] > button { display: flex; width: 100%; align-items: center; justify-content: center; gap: 4px; padding: 10px 12px; }
+        /* "No applicants yet." spans the whole list. */
+        #applicants-tbody > tr.applicants-empty { display: block; grid-column: 1 / -1; }
+        #applicants-tbody > tr.applicants-empty > td { padding: 48px 16px; text-align: center !important; }
+    }
+    @media (min-width: 768px) and (max-width: 1023.98px) {
+        #applicants-tbody { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* Full job description in the top card: keep rich-text formatting readable. */
+    .job-full-description p { margin-bottom: 0.5rem; }
+    .job-full-description p:last-child { margin-bottom: 0; }
+    .job-full-description ul { list-style: disc; padding-left: 1.25rem; margin-bottom: 0.5rem; }
+    .job-full-description ol { list-style: decimal; padding-left: 1.25rem; margin-bottom: 0.5rem; }
+    .job-full-description a { color: #1D46A4; text-decoration: underline; }
 </style>
 
 <body class="min-h-screen flex flex-col">
@@ -176,15 +256,15 @@
         </div>
     </section>
 
-    <!-- BACK BUTTON -->
-    <div class="max-w-5xl mx-auto px-6 pt-6">
-        <a href="{{ route('jobPosting.myJobPosts', ['id' => auth()->user()->user_id]) }}"
-            class="inline-flex items-center gap-2 text-[#0E0F3B] font-bold text-sm hover:text-[#C73D1A] transition-colors">
-            <i class="fas fa-arrow-left"></i> RETURN
-        </a>
-    </div>
+    <main class="w-full max-w-5xl mx-auto px-6 pb-12 flex-1">
 
-    <main class="max-w-5xl mx-auto px-6 pb-12 flex-1">
+        <!-- BACK BUTTON — inside <main> so it shares the card's left edge (and the responsive page padding) at every width -->
+        <div class="pt-6">
+            <a href="{{ route('jobPosting.myJobPosts', ['id' => auth()->user()->user_id]) }}"
+                class="inline-flex items-center gap-2 text-[#0E0F3B] font-bold text-sm hover:text-[#C73D1A] transition-colors">
+                <i class="fas fa-arrow-left"></i> RETURN
+            </a>
+        </div>
 
         <!-- JOB DETAILS CARD -->
         <div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row mt-4 mb-8 md:min-h-[340px]">
@@ -229,13 +309,13 @@
             <!-- Info -->
             <div class="p-6 flex-1 flex flex-col justify-between">
                 <div>
-                    <div class="flex justify-between items-start">
-                        <div>
+                    <div class="flex flex-wrap justify-between items-start gap-x-4 gap-y-1">
+                        <div class="min-w-0">
                             <h2 class="text-2xl font-bold uppercase text-[#0E0F3B]">{{ $jobPost->job_posting_title }}</h2>
                             <p class="text-gray-600">{{ $jobPost->job_posting_company }}</p>
                             <p class="text-gray-500 text-sm">{{ $jobPost->job_posting_address }}</p>
                         </div>
-                        <p class="text-xs text-gray-400 flex items-center">
+                        <p class="text-xs text-gray-400 flex items-center whitespace-nowrap">
                             <i class="far fa-calendar-alt mr-1"></i> {{ $jobPost->created_at->diffForHumans() }}
                         </p>
                     </div>
@@ -258,10 +338,8 @@
 
                     <div class="mt-4">
                         <p class="font-bold text-sm text-[#0E0F3B]">Job Description:</p>
-                        <div class="relative max-h-[2.6rem] overflow-hidden">
-                            <div class="text-gray-500 text-xs job-description-content">{!! $jobPost->job_posting_description !!}</div>
-                            <div class="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
-                        </div>
+                        {{-- Full description (no longer clipped to two lines) — same text style as the View Full Post modal. --}}
+                        <div class="mt-1 text-gray-600 text-sm leading-relaxed text-justify job-description-content job-full-description">{!! $jobPost->job_posting_description !!}</div>
                     </div>
                 </div>
 
@@ -286,7 +364,7 @@
                 $remainingSlots = $jobPost->remainingHiringSlots();
             @endphp
 
-            <div class="px-8 py-4 border-b bg-slate-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rp-applicant-toolbar">
+            <div class="px-8 py-4 border-b bg-slate-50 flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3 rp-applicant-toolbar">
                 <div class="text-xs font-semibold text-gray-600">
                     Hiring Limit: <span class="text-[#0E0F3B]">{{ $jobPost->hiring_limit }}</span>
                     &nbsp;&middot;&nbsp; Hired: <span class="text-green-600">{{ $hiredCount }}</span>
@@ -328,8 +406,45 @@
                 </div>
             </div>
 
-            <div class="overflow-x-auto table-scroll">
-                <table class="w-full text-sm whitespace-nowrap">
+            {{-- Phones/tablets: the applicant cards have no table header, so its
+                 controls (select all, status filter, sorting) live here instead. --}}
+            @if ($jobPost->applicants->isNotEmpty())
+            <div class="lg:hidden flex flex-wrap items-center gap-x-4 gap-y-2 px-4 pt-3">
+                <label class="w-full sm:w-auto flex items-center gap-2 text-xs font-semibold text-gray-600 cursor-pointer select-none">
+                    <input type="checkbox" id="selectAllCheckboxMobile" onchange="toggleSelectAll(this)" class="w-5 h-5 accent-[#1D264F] cursor-pointer">
+                    Select all
+                </label>
+                <div class="flex w-full sm:w-auto sm:flex-1 items-center gap-2">
+                    <div class="relative flex-1 min-w-0">
+                        <select id="applicantStatusMobile" onchange="filterStatus(this.value)" aria-label="Filter by status"
+                            class="w-full pl-3 pr-7 py-2 bg-white border border-slate-200 rounded-full text-xs appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1D46A4] focus:border-[#1D46A4]">
+                            <option value="All">All statuses</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Shortlisted">Shortlisted</option>
+                            <option value="Hired">Hired</option>
+                            <option value="Declined">Declined</option>
+                        </select>
+                        <i class="fas fa-chevron-down text-[9px] absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                    </div>
+                    <div class="relative flex-1 min-w-0">
+                        <select id="applicantSortMobile" aria-label="Sort applicants"
+                            class="w-full pl-3 pr-7 py-2 bg-white border border-slate-200 rounded-full text-xs appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1D46A4] focus:border-[#1D46A4]">
+                            <option value="">Best match</option>
+                            <option value="7:asc">Lowest match</option>
+                            <option value="2:asc">Name A–Z</option>
+                            <option value="2:desc">Name Z–A</option>
+                            <option value="5:asc">Program A–Z</option>
+                            <option value="6:asc">College A–Z</option>
+                        </select>
+                        <i class="fas fa-chevron-down text-[9px] absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            {{-- Shown as cards below 1024px (see the "Phones & tablets" CSS). --}}
+            <div class="overflow-x-auto table-scroll applicants-table-wrap">
+                <table class="w-full text-sm whitespace-nowrap applicants-table">
                     <thead>
                         <tr class="bg-[#1D264F] text-white text-xs uppercase tracking-wider">
                             <th class="px-4 py-3 text-center font-semibold w-10">
@@ -362,7 +477,7 @@
                             <th class="px-6 py-3 text-center font-semibold">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody class="divide-y divide-gray-100" id="applicants-tbody">
 
                         @forelse ($jobPost->applicants as $index => $applicant)
                         @php
@@ -377,16 +492,16 @@
                         @php $isBulkEligible = in_array(strtolower($status), ['pending', 'shortlisted']); @endphp
                         <tr data-id="{{ $index + 1 }}" data-status="{{ $status }}" data-application-id="{{ $applicant->pivot->application_id }}"
                             data-name="{{ strtolower(trim($applicant->user->user_first_name . ' ' . $applicant->user->user_last_name)) }}">
-                            <td class="px-4 py-4 text-center">
+                            <td data-cell="check" class="px-4 py-4 text-center">
                                 <input type="checkbox" class="applicant-checkbox w-4 h-4 accent-[#1D264F] cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                                     value="{{ $applicant->pivot->application_id }}"
                                     {{ $isBulkEligible ? '' : 'disabled' }}
                                     title="{{ $isBulkEligible ? '' : 'Already ' . strtolower($status) . ' — no bulk action left to take' }}"
                                     onchange="updateBulkActionUI()">
                             </td>
-                            <td class="px-6 py-4 text-center text-gray-400 font-semibold">{{ $index + 1 }}</td>
+                            <td data-cell="num" class="px-6 py-4 text-center text-gray-400 font-semibold">{{ $index + 1 }}</td>
 
-                            <td class="px-6 py-4">
+                            <td data-cell="name" class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     @include('partials.avatar', [
                                         'photo' => $applicant->user->user_profile_picture ? asset('storage/' . $applicant->user->user_profile_picture) : null,
@@ -459,11 +574,11 @@
                                 ];
                             @endphp
 
-                            <td class="px-6 py-4 text-center">
+                            <td data-cell="status" class="px-6 py-4 text-center">
                                 <span class="badge {{ $badgeClass }} status-badge">{{ ucfirst($status) }}</span>
                             </td>
 
-                            <td class="px-6 py-4 text-center" data-application-id="{{ $applicant->pivot->application_id }}">
+                            <td data-cell="app" class="px-6 py-4 text-center" data-application-id="{{ $applicant->pivot->application_id }}">
                                 {{-- Item: resumes are no longer a separate column — the resume
                                      (file link or Resume Builder snapshot), cover letter, status,
                                      and score are ALL shown in this one modal, since that's
@@ -474,15 +589,15 @@
                                 </button>
                             </td>
 
-                            <td class="px-6 py-4 text-center text-gray-500 text-xs">
+                            <td data-cell="prog" data-label="Program" class="px-6 py-4 text-center text-gray-500 text-xs">
                                 {{ $applicant->program->program_name }}
                             </td>
 
-                            <td class="px-6 py-4 text-center text-gray-500 text-xs">
+                            <td data-cell="coll" data-label="College" class="px-6 py-4 text-center text-gray-500 text-xs">
                                 {{ $applicant->program?->collegeName() ?? 'N/A' }}
                             </td>
 
-                            <td class="px-6 py-4 text-center">
+                            <td data-cell="score" data-label="Compatibility" class="px-6 py-4 text-center">
                                 @php $score = $applicant->pivot->application_score; @endphp
                                 <div class="flex flex-col items-center gap-1">
                                     @if($score !== null)
@@ -502,9 +617,9 @@
                                 </div>
                             </td>
 
-                            <td class="px-6 py-4 text-center">
+                            <td data-cell="menu" class="px-6 py-4 text-center">
                                 <div class="relative inline-block">
-                                    <button onclick="toggleDropdown(this)"
+                                    <button onclick="toggleDropdown(this)" aria-label="Actions for {{ $applicant->user->user_first_name }} {{ $applicant->user->user_last_name }}"
                                         class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
                                         <i class="fas fa-ellipsis-v text-gray-500"></i>
                                     </button>
@@ -538,7 +653,7 @@
                             </td>
                         </tr>
                         @empty
-                        <tr>
+                        <tr class="applicants-empty">
                             <td colspan="9" class="py-16 text-center text-gray-400">
                                 <i class="fas fa-inbox text-5xl mb-3 block"></i>
                                 <p class="font-semibold">No applicants yet.</p>
@@ -638,18 +753,20 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-3 gap-3 mb-6">
-                <div class="bg-gray-50 rounded-xl p-3 text-center">
+            {{-- Phones: one row per stat (label left, value right) so "Compatibility" isn't
+                 squeezed into a third of the width; 3 boxes side by side from 640px up. --}}
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 mb-6">
+                <div class="bg-gray-50 rounded-xl px-4 py-2.5 sm:p-3 flex items-center justify-between gap-3 sm:block sm:text-center">
                     <p class="text-[10px] text-gray-400 uppercase font-bold">Status</p>
-                    <p id="avm-status" class="text-sm font-bold text-[#0E0F3B] mt-1"></p>
+                    <p id="avm-status" class="text-sm font-bold text-[#0E0F3B] sm:mt-1 text-right sm:text-center"></p>
                 </div>
-                <div class="bg-gray-50 rounded-xl p-3 text-center">
+                <div class="bg-gray-50 rounded-xl px-4 py-2.5 sm:p-3 flex items-center justify-between gap-3 sm:block sm:text-center">
                     <p class="text-[10px] text-gray-400 uppercase font-bold">Compatibility</p>
-                    <p id="avm-score" class="text-sm font-bold text-[#0E0F3B] mt-1"></p>
+                    <p id="avm-score" class="text-sm font-bold text-[#0E0F3B] sm:mt-1 text-right sm:text-center"></p>
                 </div>
-                <div class="bg-gray-50 rounded-xl p-3 text-center">
+                <div class="bg-gray-50 rounded-xl px-4 py-2.5 sm:p-3 flex items-center justify-between gap-3 sm:block sm:text-center">
                     <p class="text-[10px] text-gray-400 uppercase font-bold">Applied</p>
-                    <p id="avm-applied-at" class="text-sm font-bold text-[#0E0F3B] mt-1"></p>
+                    <p id="avm-applied-at" class="text-sm font-bold text-[#0E0F3B] sm:mt-1 text-right sm:text-center"></p>
                 </div>
             </div>
 
@@ -848,10 +965,11 @@
             .filter(cb => cb.closest('tr')?.style.display !== 'none');
         const eligibleCheckedCount = eligibleCheckboxes.filter(cb => cb.checked).length;
 
-        const selectAll = document.getElementById('selectAllCheckbox');
-        if (selectAll) {
-            selectAll.checked = eligibleCheckboxes.length > 0 && eligibleCheckedCount === eligibleCheckboxes.length;
-        }
+        const allChecked = eligibleCheckboxes.length > 0 && eligibleCheckedCount === eligibleCheckboxes.length;
+        ['selectAllCheckbox', 'selectAllCheckboxMobile'].forEach(id => {
+            const selectAll = document.getElementById(id);
+            if (selectAll) selectAll.checked = allChecked;
+        });
     }
 
     function toggleSelectAll(source) {
@@ -1036,8 +1154,37 @@
     function filterStatus(status) {
         currentStatusFilter = status;
         document.getElementById('statusFilterDropdown').classList.remove('open');
+        const mobileStatus = document.getElementById('applicantStatusMobile');
+        if (mobileStatus) mobileStatus.value = status;
         applyApplicantFilters();
+        updateBulkActionUI(); // "Select all" only counts the applicants still shown
     }
+
+    // Phones/tablets "Sort by": runs the same column sort as clicking a table
+    // header (partials/table-sort), which the card view has no headers for.
+    (function () {
+        const select = document.getElementById('applicantSortMobile');
+        const tbody = document.getElementById('applicants-tbody');
+        if (!select || !tbody) return;
+        [...tbody.rows].forEach((row, i) => { row.dataset.defaultOrder = i; });
+        select.addEventListener('change', () => {
+            const headers = tbody.closest('table').querySelectorAll('thead th');
+            if (!select.value) {
+                [...tbody.rows].sort((a, b) => a.dataset.defaultOrder - b.dataset.defaultOrder).forEach(row => tbody.appendChild(row));
+                headers.forEach(th => th.removeAttribute('data-sort-dir'));
+                document.dispatchEvent(new CustomEvent('pv:filtered'));
+            } else {
+                const [col, dir] = select.value.split(':');
+                const th = headers[col];
+                // A header click flips its current direction, so set the opposite first.
+                if (dir === 'asc') th.removeAttribute('data-sort-dir');
+                else th.dataset.sortDir = 'asc';
+                th.click();
+            }
+            // The orange "sorted column" highlight is for the desktop table, not the cards.
+            tbody.querySelectorAll('.pv-sort-active').forEach(cell => cell.classList.remove('pv-sort-active'));
+        });
+    })();
 
     function applyApplicantFilters() {
         const query = (document.getElementById('applicantSearchInput')?.value || '').trim().toLowerCase();

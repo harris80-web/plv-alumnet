@@ -189,6 +189,7 @@ Route::get('/registrar/dashboard', function () {
 })->middleware(['auth'])->name('registrar.dashboard');
 
 Route::get('/employer/dashboard', [EmployerController::class, 'dashboard'])->middleware(['auth'])->name('employer.dashboard');
+Route::post('/employer/dashboard/export-pdf', [EmployerController::class, 'exportDashboardPdf'])->middleware(['auth'])->name('employer.dashboard.exportPdf');
 
 Route::get('/alumni/dashboard', [AlumniDashboardController::class, 'index'])->middleware(['auth'])->name('alumnus.dashboard');
 
@@ -342,6 +343,7 @@ Route::get('/companies/{employer}/reviews', [EmployerReviewController::class, 'r
 // endpoint and have them stored under public storage.
 Route::post('/job-postings/upload-image', [JobPostingController::class, 'uploadDescriptionImage'])->name('jobPosting.uploadDescriptionImage')->middleware('auth');
 Route::get('/myJobPosts/{id}', [JobPostingController::class, 'showMyJobPosts'])->name('jobPosting.myJobPosts')->middleware('auth');
+Route::get('/myJobPosts/{id}/export-csv', [JobPostingController::class, 'exportMyJobPostsCsv'])->name('jobPosting.myJobPostsCsv')->middleware('auth');
 Route::post('/editJobPost/{id}', [JobPostingController::class, 'editJobPost'])->name('jobPosting.editJobPost')->middleware('auth');
 Route::get('/jobManagement', [JobPostingController::class, 'showJobManagement'])->name('jobPosting.jobManagement')->middleware(['auth', 'feature:job_management']);
 Route::get('/jobManagement/page', [JobPostingController::class, 'jobManagementFragment'])->name('jobPosting.jobManagementFragment')->middleware(['auth', 'feature:job_management']);

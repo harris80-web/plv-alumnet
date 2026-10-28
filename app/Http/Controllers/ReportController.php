@@ -8,6 +8,7 @@ use App\Services\DashboardReportService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\PdfChartImages;
 
 /**
  * Item 19 (+17) — grouped report-detail pages. Per the user's own call on
@@ -783,7 +784,7 @@ class ReportController extends Controller
 
         $stats = $reportService->buildOverviewStats($batches, $programIds, $employmentStatuses, $colleges, $years);
         $r = $reportService->buildEmploymentReports($batches, $programIds, $employmentStatuses, $colleges, $years, $hireMonths, $topCompaniesLimit);
-        $charts = json_decode((string) request()->input('charts', '{}'), true) ?: [];
+        $charts = PdfChartImages::fromRequest(request());
 
         $pdf = Pdf::loadView('superAdmin.reports.report-pdf', array_merge(
             ['group' => $group, 'r' => $r, 'stats' => $stats, 'charts' => $charts, 'hireMonths' => $hireMonths, 'topCompaniesLimit' => $topCompaniesLimit],
@@ -894,7 +895,7 @@ class ReportController extends Controller
         [$batches, $programIds, $colleges] = $this->alumniIdFilters($reportService);
         $labels = $this->alumniIdFilterSummary($batches, $programIds, $colleges);
         $r = $reportService->buildAlumniIdYearbookReport($batches, $programIds, $colleges);
-        $charts = json_decode((string) request()->input('charts', '{}'), true) ?: [];
+        $charts = PdfChartImages::fromRequest(request());
 
         $pdf = Pdf::loadView('superAdmin.reports.report-pdf', array_merge(
             ['group' => 'alumniid', 'r' => $r, 'charts' => $charts],
@@ -908,7 +909,7 @@ class ReportController extends Controller
     {
         $networkMonths = $reportService->resolveNetworkMonths(request()->input('network_months'));
         $r = $reportService->buildNetworkingReport($networkMonths);
-        $charts = json_decode((string) request()->input('charts', '{}'), true) ?: [];
+        $charts = PdfChartImages::fromRequest(request());
 
         $pdf = Pdf::loadView('superAdmin.reports.report-pdf', [
             'group' => 'networking', 'r' => $r, 'charts' => $charts, 'networkMonths' => $networkMonths,

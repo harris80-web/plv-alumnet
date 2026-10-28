@@ -732,6 +732,7 @@
     </div>
 
 
+    @include('partials.chart-pdf-image')
     <script>
     lucide.createIcons();
 
@@ -782,7 +783,8 @@
         EXPORTABLE_CHART_IDS.forEach(id => {
             const canvas = document.getElementById(id);
             if (canvas) {
-                try { charts[id] = canvas.toDataURL('image/png'); } catch (e) { /* tainted/unsupported canvas — falls back to a table for this one */ }
+                const img = chartCanvasToPdfImage(canvas); // null = unreadable canvas: the PDF shows a table for this one
+                if (img) charts[id] = img;
             }
         });
 

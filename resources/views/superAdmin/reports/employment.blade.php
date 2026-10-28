@@ -262,6 +262,7 @@
         </main>
     </div>
 
+    @include('partials.chart-pdf-image')
     <script>
         lucide.createIcons();
         const fontDef = { family: 'Montserrat', size: 10 };
@@ -358,7 +359,7 @@
             const charts = {};
             EXPORTABLE_CHART_IDS.forEach(id => {
                 const canvas = document.getElementById(id);
-                if (canvas) { try { charts[id] = canvas.toDataURL('image/png'); } catch (e) {} }
+                if (canvas) { const img = chartCanvasToPdfImage(canvas); if (img) charts[id] = img; }
             });
 
             const form = document.createElement('form');

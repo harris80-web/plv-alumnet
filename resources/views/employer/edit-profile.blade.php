@@ -50,7 +50,7 @@
         font-weight: 700;
         letter-spacing: 0.05em;
         text-transform: uppercase;
-        color: #1D264F;
+        color: #C73D1A;
     }
     /* Required / optional markers next to the labels. */
     .req-mark { margin-left: 2px; color: #C73D1A; }
@@ -165,7 +165,7 @@
                         <header class="flex items-center gap-3 px-6 py-4 border-b border-slate-100">
                             <span class="w-9 h-9 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-building"></i></span>
                             <div>
-                                <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Business Details</h3>
+                                <h3 class="inline-block text-sm font-bold uppercase tracking-wide bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Business Details</h3>
                                 <p class="text-xs text-slate-500">Registered information about your company.</p>
                             </div>
                         </header>
@@ -211,7 +211,7 @@
                         <header class="flex items-center gap-3 px-6 py-4 border-b border-slate-100">
                             <span class="w-9 h-9 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-location-dot"></i></span>
                             <div>
-                                <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Company Addresses<span class="opt-tag">Optional</span></h3>
+                                <h3 class="inline-block text-sm font-bold uppercase tracking-wide bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Company Addresses<span class="opt-tag">Optional</span></h3>
                                 <p class="text-xs text-slate-500">Office and branch locations you can pick from when posting a job.</p>
                             </div>
                         </header>
@@ -247,7 +247,7 @@
                         <header class="flex items-center gap-3 px-6 py-4 border-b border-slate-100">
                             <span class="w-9 h-9 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-user-tie"></i></span>
                             <div>
-                                <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Contact Person</h3>
+                                <h3 class="inline-block text-sm font-bold uppercase tracking-wide bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Contact Person</h3>
                                 <p class="text-xs text-slate-500">Who represents your company.</p>
                             </div>
                         </header>

@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&family=Poppins:wght@300;400;600;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Poppins:wght@300;400;600;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/PLV-AlumNet LOGO.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -17,6 +17,11 @@
         background: url("{{ asset('assets/heroSection.svg') }}");
         background-size: cover;
         background-position: center;
+    }
+
+    /* View Profile modal banner — same campus photo as the Alumni Profile page's card banner. */
+    .pm-banner {
+        background: url("{{ asset('assets/heroSection.svg') }}") center / cover;
     }
 
     html::-webkit-scrollbar,
@@ -104,64 +109,88 @@
 
     </main>
 
-    <!-- VIEW PROFILE MODAL -->
+    <!-- VIEW PROFILE MODAL — same banner + overlapping photo card as the Alumni Profile page -->
     <div id="profileModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
-            <div class="bg-[#0E0F3B] px-8 pt-6 pb-16 relative">
-                <h2 class="text-white font-bold text-lg">Alumni Profile</h2>
-                <button type="button" onclick="closeProfileModal()" class="absolute top-5 right-6 text-white/80 hover:text-white">
-                    <i class="fas fa-times-circle text-xl"></i>
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden max-h-[90vh] overflow-y-auto font-['Montserrat']" role="dialog" aria-modal="true" aria-labelledby="pm-name">
+            <div class="pm-banner relative h-24 sm:h-28">
+                <span class="absolute top-4 left-5 sm:left-6 text-[11px] font-bold uppercase tracking-widest text-white/90">Alumni Profile</span>
+                <button type="button" onclick="closeProfileModal()" aria-label="Close"
+                    class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 text-[#0E0F3B] hover:bg-white flex items-center justify-center shadow transition-colors">
+                    <i class="fas fa-times text-sm"></i>
                 </button>
             </div>
-            <div class="flex justify-center -mt-12 relative z-10">
-                <div class="w-24 h-24 rounded-full bg-orange-500 flex items-center justify-center shadow-md ring-4 ring-white overflow-hidden">
-                    <img id="pm-photo" src="" class="hidden w-full h-full object-cover">
-                    <i id="pm-photo-fallback" class="fas fa-user text-3xl text-white"></i>
-                </div>
-            </div>
-            <div class="px-8 pt-4 pb-8 text-center">
-                <h3 id="pm-name" class="text-xl font-bold text-[#0E0F3B]"></h3>
-                <p id="pm-program" class="text-sm text-gray-500"></p>
 
-                <div class="mt-6 text-left space-y-3 text-sm">
-                    <div class="flex justify-between border-b border-gray-100 pb-2">
-                        <span class="font-bold text-[#C73D1A]">Batch</span>
-                        <span id="pm-batch" class="text-gray-700"></span>
+            <div class="px-5 sm:px-6 pb-6">
+                <div class="flex flex-col items-center text-center">
+                    <div class="relative z-10 -mt-12 w-24 h-24 rounded-full bg-[#0E0F3B] border-4 border-white shadow-md overflow-hidden flex items-center justify-center">
+                        <img id="pm-photo" src="" alt="Profile photo" class="hidden w-full h-full object-cover">
+                        <i id="pm-photo-fallback" class="fas fa-user text-3xl text-white mt-1"></i>
                     </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-2">
-                        <span class="font-bold text-[#C73D1A]">Section</span>
-                        <span id="pm-section" class="text-gray-700"></span>
-                    </div>
-                    <div class="flex justify-between items-center border-b border-gray-100 pb-2">
-                        <span class="font-bold text-[#C73D1A]">Employment</span>
-                        <span class="text-right">
-                            <span id="pm-employment" class="text-gray-700"></span>
-                            <span id="pm-aligned" class="hidden ml-1 inline-flex items-center gap-1 bg-green-100 text-green-700 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full align-middle">
-                                <i class="fa-solid fa-circle-check"></i> Aligned with Course
-                            </span>
+                    <h3 id="pm-name" class="mt-3 text-lg sm:text-xl font-bold text-[#0E0F3B] break-words"></h3>
+                    <p id="pm-program" class="mt-1 text-xs sm:text-sm font-semibold uppercase text-[#ED7A07] break-words"></p>
+                    <p id="pm-college" class="mt-0.5 text-xs text-slate-500 break-words"></p>
+                    <div class="mt-3 flex flex-wrap justify-center gap-1.5">
+                        <span id="pm-employment-badge" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wide"></span>
+                        <span id="pm-aligned" class="hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase tracking-wide">
+                            <i class="fa-solid fa-circle-check"></i> Aligned with Course
                         </span>
                     </div>
-                    <div id="pm-skills-row" class="border-b border-gray-100 pb-2">
-                        <span class="font-bold text-[#C73D1A] block mb-1">Skills</span>
-                        <span id="pm-skills" class="text-gray-700"></span>
-                    </div>
-                    <div id="pm-email-row" class="flex justify-between border-b border-gray-100 pb-2">
-                        <span class="font-bold text-[#C73D1A]">Email</span>
-                        <a id="pm-email" href="#" class="text-blue-600 hover:underline"></a>
-                    </div>
-                    <div id="pm-contact-row" class="flex justify-between border-b border-gray-100 pb-2">
-                        <span class="font-bold text-[#C73D1A]">Contact</span>
-                        <span id="pm-contact" class="text-gray-700"></span>
-                    </div>
-                    <div id="pm-linkedin-row" class="flex justify-between">
-                        <span class="font-bold text-[#C73D1A]">LinkedIn</span>
-                        <a id="pm-linkedin" href="#" target="_blank" class="text-blue-600 hover:underline">View Profile</a>
-                    </div>
                 </div>
 
+                <dl class="mt-5 pt-4 border-t border-slate-100 space-y-3.5 text-left">
+                    <div class="flex items-start gap-3">
+                        <span class="w-8 h-8 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center text-xs"><i class="fa-solid fa-calendar"></i></span>
+                        <div class="min-w-0 flex-1 grid grid-cols-2 gap-3">
+                            <div>
+                                <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Batch</dt>
+                                <dd id="pm-batch" class="text-sm font-semibold text-[#0E0F3B]"></dd>
+                            </div>
+                            <div>
+                                <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Section</dt>
+                                <dd id="pm-section" class="text-sm font-semibold text-[#0E0F3B]"></dd>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="w-8 h-8 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center text-xs"><i class="fa-solid fa-briefcase"></i></span>
+                        <div class="min-w-0">
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Employment</dt>
+                            <dd id="pm-employment" class="text-sm font-semibold text-[#0E0F3B] break-words"></dd>
+                        </div>
+                    </div>
+                    <div id="pm-skills-row" class="flex items-start gap-3">
+                        <span class="w-8 h-8 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center text-xs"><i class="fa-solid fa-lightbulb"></i></span>
+                        <div class="min-w-0 flex-1">
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Skills</dt>
+                            <dd id="pm-skills" class="mt-1 flex flex-wrap gap-1.5"></dd>
+                        </div>
+                    </div>
+                    <div id="pm-email-row" class="flex items-start gap-3">
+                        <span class="w-8 h-8 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center text-xs"><i class="fa-solid fa-envelope"></i></span>
+                        <div class="min-w-0">
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Email</dt>
+                            <dd class="text-sm font-semibold break-all"><a id="pm-email" href="#" class="text-[#1D46A4] hover:underline"></a></dd>
+                        </div>
+                    </div>
+                    <div id="pm-contact-row" class="flex items-start gap-3">
+                        <span class="w-8 h-8 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center text-xs"><i class="fa-solid fa-phone"></i></span>
+                        <div class="min-w-0">
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Contact</dt>
+                            <dd id="pm-contact" class="text-sm font-semibold text-[#0E0F3B] break-words"></dd>
+                        </div>
+                    </div>
+                    <div id="pm-linkedin-row" class="flex items-start gap-3">
+                        <span class="w-8 h-8 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center text-xs"><i class="fa-brands fa-linkedin-in"></i></span>
+                        <div class="min-w-0">
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">LinkedIn</dt>
+                            <dd class="text-sm font-semibold"><a id="pm-linkedin" href="#" target="_blank" rel="noopener" class="text-[#1D46A4] hover:underline">View Profile <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i></a></dd>
+                        </div>
+                    </div>
+                </dl>
+
                 <button type="button" id="pm-message-btn"
-                    class="mt-6 w-full bg-[#1D264F] hover:bg-[#0E0F3B] text-white text-sm font-bold py-2.5 rounded-lg transition-colors uppercase">
-                    <i class="fas fa-comment mr-1"></i> Message
+                    class="mt-6 w-full inline-flex items-center justify-center gap-2 bg-[#1D264F] hover:bg-[#0E0F3B] text-white text-xs font-bold tracking-wider py-2.5 rounded-lg transition-colors uppercase">
+                    <i class="fas fa-comment"></i> Message
                 </button>
             </div>
         </div>
@@ -218,21 +247,43 @@
             }
         });
 
+        // Shows the value, or a muted "Not provided" when there isn't one.
+        function setValue(id, value) {
+            const el = document.getElementById(id);
+            if (value) { el.textContent = value; el.classList.remove('italic', 'font-normal', 'text-slate-400'); }
+            else { el.textContent = 'Not provided'; el.classList.add('italic', 'font-normal', 'text-slate-400'); }
+        }
+
         function openProfileModal(data) {
             document.querySelectorAll('.action-dropdown').forEach(d => d.classList.add('hidden'));
 
             document.getElementById('pm-name').textContent = data.name;
             document.getElementById('pm-program').textContent = data.program;
-            document.getElementById('pm-batch').textContent = data.batch;
-            document.getElementById('pm-section').textContent = data.section;
+            const college = document.getElementById('pm-college');
+            college.textContent = data.college && data.college !== 'Not specified' ? data.college : '';
+            college.classList.toggle('hidden', !college.textContent);
+            setValue('pm-batch', data.batch);
+            setValue('pm-section', data.section);
             document.getElementById('pm-employment').textContent = data.employment + (data.industry ? ' — ' + data.industry : '');
+            const employed = data.employment === 'Employed';
+            const badge = document.getElementById('pm-employment-badge');
+            badge.className = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wide '
+                + (employed ? 'bg-green-50 text-green-700 border-green-200' : 'bg-slate-50 text-slate-600 border-slate-200');
+            badge.innerHTML = '<i class="fa-solid fa-briefcase"></i> ' + (employed ? 'Employed' : 'Unemployed');
             document.getElementById('pm-aligned').classList.toggle('hidden', !data.aligned);
             document.getElementById('pm-message-btn').onclick = function () { messageAlumnus(data.id); };
 
             const skillsRow = document.getElementById('pm-skills-row');
             if (data.skills) {
                 skillsRow.classList.remove('hidden');
-                document.getElementById('pm-skills').textContent = data.skills;
+                // Comma list -> chips (textContent only — skill names are user-entered)
+                const skillsEl = document.getElementById('pm-skills');
+                skillsEl.replaceChildren(...String(data.skills).split(',').map(x => x.trim()).filter(Boolean).map(name => {
+                    const chip = document.createElement('span');
+                    chip.className = 'text-xs font-semibold text-[#1D264F] bg-[#1D264F]/5 border border-[#1D264F]/10 rounded-full px-3 py-1';
+                    chip.textContent = name;
+                    return chip;
+                }));
             } else {
                 skillsRow.classList.add('hidden');
             }

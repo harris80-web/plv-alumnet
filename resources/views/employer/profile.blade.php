@@ -190,29 +190,29 @@
                     <header class="flex items-center gap-3 px-6 py-4 border-b border-slate-100">
                         <span class="w-9 h-9 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-building"></i></span>
                         <div>
-                            <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Business Details</h3>
+                            <h3 class="inline-block text-sm font-bold uppercase tracking-wide bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Business Details</h3>
                             <p class="text-xs text-slate-500">Registered information about your company.</p>
                         </div>
                     </header>
                     <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 p-6">
                         <div>
-                            <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Business Name</dt>
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Business Name</dt>
                             <dd class="mt-1 text-sm font-semibold text-[#0E0F3B] break-words">{!! $employer?->employer_company_name ? e($employer->employer_company_name) : $notProvided !!}</dd>
                         </div>
                         <div>
-                            <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Industry / Sector</dt>
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Industry / Sector</dt>
                             <dd class="mt-1 text-sm font-semibold text-[#0E0F3B]">{!! $employer?->industry ? e($employer->industry->industry_name) : $notProvided !!}</dd>
                         </div>
                         <div>
-                            <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Company / Business Size</dt>
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Company / Business Size</dt>
                             <dd class="mt-1 text-sm font-semibold text-[#0E0F3B]">{!! $employer?->employer_company_size ? e(number_format($employer->employer_company_size) . ' ' . \Illuminate\Support\Str::plural('employee', $employer->employer_company_size)) : $notProvided !!}</dd>
                         </div>
                         <div>
-                            <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Year Established</dt>
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Year Established</dt>
                             <dd class="mt-1 text-sm font-semibold text-[#0E0F3B]">{!! $employer?->employer_year_established ? e($employer->employer_year_established) : $notProvided !!}</dd>
                         </div>
                         <div class="sm:col-span-2">
-                            <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Official Website</dt>
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Official Website</dt>
                             <dd class="mt-1 text-sm font-semibold break-all">
                                 @if ($websiteUrl)
                                 <a href="{{ $websiteUrl }}" target="_blank" rel="noopener noreferrer" class="text-[#1D46A4] hover:underline">
@@ -230,7 +230,7 @@
                     <header class="flex items-center gap-3 px-6 py-4 border-b border-slate-100">
                         <span class="w-9 h-9 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-location-dot"></i></span>
                         <div>
-                            <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Company Addresses</h3>
+                            <h3 class="inline-block text-sm font-bold uppercase tracking-wide bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Company Addresses</h3>
                             <p class="text-xs text-slate-500">Office and branch locations you can pick from when posting a job.</p>
                         </div>
                     </header>
@@ -257,7 +257,7 @@
                     <header class="flex items-center gap-3 px-6 py-4 border-b border-slate-100">
                         <span class="w-9 h-9 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-user-tie"></i></span>
                         <div>
-                            <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Contact Person</h3>
+                            <h3 class="inline-block text-sm font-bold uppercase tracking-wide bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Contact Person</h3>
                             <p class="text-xs text-slate-500">Who represents your company.</p>
                         </div>
                     </header>
@@ -279,14 +279,14 @@
                             <div class="flex items-start gap-3">
                                 <span class="w-8 h-8 shrink-0 rounded-lg bg-slate-50 text-slate-500 flex items-center justify-center text-xs"><i class="fa-solid fa-envelope"></i></span>
                                 <div class="min-w-0">
-                                    <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Email</dt>
+                                    <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Email</dt>
                                     <dd class="text-sm font-semibold break-all"><a href="mailto:{{ $user->user_email }}" class="text-[#0E0F3B] hover:text-[#C73D1A]">{{ $user->user_email }}</a></dd>
                                 </div>
                             </div>
                             <div class="flex items-start gap-3">
                                 <span class="w-8 h-8 shrink-0 rounded-lg bg-slate-50 text-slate-500 flex items-center justify-center text-xs"><i class="fa-solid fa-phone"></i></span>
                                 <div class="min-w-0">
-                                    <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Contact Number</dt>
+                                    <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Contact Number</dt>
                                     <dd class="text-sm font-semibold text-[#0E0F3B]">{!! $user->user_number ? e($user->user_number) : $notProvided !!}</dd>
                                 </div>
                             </div>
@@ -298,7 +298,7 @@
                     <header class="flex items-center gap-3 px-6 py-4 border-b border-slate-100">
                         <span class="w-9 h-9 shrink-0 rounded-lg bg-orange-50 text-[#C73D1A] flex items-center justify-center"><i class="fa-solid fa-list-check"></i></span>
                         <div>
-                            <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Profile Completeness</h3>
+                            <h3 class="inline-block text-sm font-bold uppercase tracking-wide bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Profile Completeness</h3>
                             <p class="text-xs text-slate-500">A complete profile builds trust with applicants.</p>
                         </div>
                     </header>

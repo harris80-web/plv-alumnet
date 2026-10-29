@@ -56,8 +56,16 @@ class OfficeController extends Controller
 
         $user = User::findOrFail($id);
 
+        // Field labels for the success toast ("Profile updated: Phone Number, Address.")
+        $labels = [
+            'user_first_name' => 'First Name', 'user_middle_name' => 'Middle Name', 'user_last_name' => 'Last Name',
+            'user_suffix' => 'Suffix', 'user_email' => 'Email Address', 'user_number' => 'Phone Number',
+            'office_address' => 'Address', 'office_birth_date' => 'Date of Birth',
+        ];
+        $changed = [];
+
         // Update user fields
-        $user->update([
+        $user->fill([
             'user_first_name'  => $validated['user_first_name'],
             'user_middle_name' => $validated['user_middle_name'] ?? null,
             'user_last_name'   => $validated['user_last_name'],
@@ -65,15 +73,17 @@ class OfficeController extends Controller
             'user_email'       => $validated['user_email'],
             'user_number'      => $validated['user_number'] ?? null,
         ]);
+        $changed = array_merge($changed, array_keys($user->getDirty()));
+        $user->save();
 
         // Update office fields
-        $user->office()->updateOrCreate(
-            ['user_id' => $user->user_id],
-            [
-                'office_address'    => $validated['office_address'] ?? null,
-                'office_birth_date' => $validated['office_birth_date'] ?? null,
-            ]
-        );
+        $office = $user->office()->firstOrNew(['user_id' => $user->user_id]);
+        $office->fill([
+            'office_address'    => $validated['office_address'] ?? null,
+            'office_birth_date' => $validated['office_birth_date'] ?? null,
+        ]);
+        $changed = array_merge($changed, array_keys(array_intersect_key($office->getDirty(), $labels)));
+        $office->save();
 
         // Handle profile picture upload
         if ($request->hasFile('user_profile_picture')) {
@@ -83,7 +93,14 @@ class OfficeController extends Controller
             }
             $path = $request->file('user_profile_picture')->store('profile_pictures', 'public');
             $user->update(['user_profile_picture' => $path]);
+            $labels['user_profile_picture'] = 'Profile Picture';
+            $changed[] = 'user_profile_picture';
         }
+
+        $changedLabels = array_values(array_unique(array_map(fn ($k) => $labels[$k] ?? $k, array_intersect($changed, array_keys($labels)))));
+        $message = $changedLabels
+            ? 'Profile updated: ' . implode(', ', $changedLabels) . '.'
+            : 'No changes to save — your profile is already up to date.';
 
         // Not user.profile — for an `admin` that resolves to
         // admin.profile, an unfinished, unstyled placeholder view (no
@@ -91,8 +108,9 @@ class OfficeController extends Controller
         // profile page both admin and super_admin actually use (see
         // UserController::showSuperAdminProfile(), which authorizeStaff()
         // already allows for both roles) and the page this form lives on.
+        // The message shows as the success toast at the top (partials.success).
         return redirect()->route('superAdmin.profile')
-            ->with('success', 'Profile updated successfully!');
+            ->with('success', $message);
     }
 
     /**

@@ -4,6 +4,12 @@
     // "Apply Filters" / "Clear Filters" (both plain GET navigations) come back
     // to the tab the admin was working in instead of resetting to Alumni.
     $activeTab = request()->query('tab') === 'company' ? 'company' : 'alumni';
+
+    // The two tabs' filters travel together, so applying one never drops the other.
+    $companyKeys = ['company_search', 'company_industry', 'company_status', 'company_year', 'company_sort'];
+    $companyQuery = array_filter(request()->only($companyKeys), fn ($v) => $v !== null && $v !== '' && $v !== []);
+    $companyFiltered = (bool) array_diff_key($companyQuery, ['company_sort' => 1]) || ($companyQuery['company_sort'] ?? 'newest') !== 'newest';
+    $alumniQuery = request()->only(['batch', 'program_id', 'employment_status', 'college', 'year', \App\Services\DashboardReportService::FILTERS_APPLIED_PARAM]);
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -41,6 +47,11 @@
         .page-tab-btn:hover:not(.active) {
             color: #ea580c;
         }
+
+        /* Company tab: search + sort pills match the multiselect-filter triggers
+           (grey border at rest, #C73D1A + soft ring when focused). */
+        .company-pill { border-color: #d1d5db; transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+        .company-pill:focus { border-color: #C73D1A; box-shadow: 0 0 0 2px rgba(199, 61, 26, 0.15); }
     </style>
 </head>
 
@@ -67,13 +78,14 @@
                     <span class="section-heading bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Alumni &amp; Company Registration Reports</span>
                 </div> -->
 
+                <!-- ══ TAB: ALUMNI ══ -->
+                <div id="rep-tab-alumni" class="{{ $activeTab === 'alumni' ? '' : 'hidden' }}">
                 {{--
-                    One filter bar, rendered above both panels so it stays put (and
-                    keeps working) whichever tab is open. It is NOT duplicated per
-                    tab on purpose: partials/report-filters-form uses a fixed form
-                    id and partials/report-college-cascade resolves its two
-                    dropdowns with document.querySelector, so a second copy would
-                    silently break the College → Course cascade.
+                    Alumni cohort filters (Year / Year Graduated / College / Course /
+                    Employment Status) — Alumni tab only; they describe alumni, not
+                    employers. Still one copy: partials/report-filters-form uses a
+                    fixed form id and report-college-cascade looks its dropdowns up
+                    with document.querySelector.
                 --}}
                 @include('partials.report-filters-form', [
                     'formAction' => route('reports.companies'),
@@ -82,11 +94,8 @@
                     'batchYearOptions' => $batchYearOptions,
                     'programs' => $programs,
                     'yearOptions' => $yearOptions,
-                    'exportCsvUrl' => route('reports.exportCsv', array_merge(['group' => 'companies'], array_filter($dashboardFilters) + [\App\Services\DashboardReportService::FILTERS_APPLIED_PARAM => 1])),
+                    'exportCsvUrl' => route('reports.exportCsv', array_merge(['group' => 'companies'], array_filter($dashboardFilters) + [\App\Services\DashboardReportService::FILTERS_APPLIED_PARAM => 1], $companyQuery)),
                 ])
-
-                <!-- ══ TAB: ALUMNI ══ -->
-                <div id="rep-tab-alumni" class="{{ $activeTab === 'alumni' ? '' : 'hidden' }}">
                     <div class="chart-card my-4">
                         <div class="flex items-center justify-between mb-3 gap-3">
                             <div>
@@ -150,60 +159,137 @@
 
                 <!-- ══ TAB: COMPANY ══ -->
                 <div id="rep-tab-company" class="{{ $activeTab === 'company' ? '' : 'hidden' }}">
-                    <div class="grid grid-cols-2 gap-4 my-4">
-                        <div class="chart-card">
-                            <div class="card-title">Registered Companies <span>({{ $r['registeredCompanies']->count() }})</span></div>
-                            <div class="card-sub">Approved employer accounts</div>
-                            <div style="overflow-x:auto; margin-top:10px; max-height:320px; overflow-y:auto;">
-                                <table style="width:100%; border-collapse:collapse; font-size:11px;">
-                                    <thead>
-                                        <tr style="background:#0E0F3B; color:#fff; text-align:left;">
-                                            <th style="padding:6px 8px;">Company</th>
-                                            <th style="padding:6px 8px;">Industry</th>
-                                            <th style="padding:6px 8px;">Contact</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse ($r['registeredCompanies'] as $employer)
-                                        <tr style="border-top:1px solid #f1f5f9;">
-                                            <td style="padding:6px 8px; font-weight:600; color:#0E0F3B;">{{ $employer->employer_company_name }}</td>
-                                            <td style="padding:6px 8px;">{{ $employer->industry->industry_name ?? 'N/A' }}</td>
-                                            <td style="padding:6px 8px;">{{ $employer->user->user_email ?? 'N/A' }}</td>
-                                        </tr>
-                                        @empty
-                                        <tr><td colspan="3" style="padding:16px; text-align:center; color:#9ca3af;">None yet.</td></tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
+                    {{-- Employer filters: find a specific company by name, email or contact person,
+                         and narrow by industry, approval status and the year it registered. --}}
+                    <div class="w-full bg-slate-100 px-6 py-4">
+                        <form method="GET" action="{{ route('reports.companies') }}" id="companyFilterForm"
+                            class="flex flex-wrap items-center gap-3 bg-white px-6 py-4 rounded-xl border border-slate-200 shadow-md text-sm font-medium text-slate-700">
+                            <input type="hidden" name="tab" value="company">
+                            {{-- Keep the Alumni tab's filters as they are --}}
+                            @foreach ($alumniQuery as $key => $value)
+                                @foreach ((array) $value as $v)
+                                <input type="hidden" name="{{ is_array($value) ? $key . '[]' : $key }}" value="{{ $v }}">
+                                @endforeach
+                            @endforeach
+
+                            <!-- Search (same pill style as the filter dropdowns) -->
+                            <div class="relative" style="flex: 1.4 1 0%; min-width: 230px;">
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none text-xs"><i class="fas fa-search"></i></span>
+                                <input type="text" name="company_search" value="{{ $companyFilters['search'] }}" maxlength="100"
+                                    placeholder="Search company, email or name" title="Search by company name, email or contact person" aria-label="Search companies"
+                                    class="company-pill w-full pl-11 pr-4 py-1.5 border rounded-full bg-white text-xs text-[#0E0F3B] placeholder-gray-500 focus:outline-none">
                             </div>
-                        </div>
-                        <div class="chart-card">
-                            <div class="card-title">Pending / Unregistered Companies <span>({{ $r['pendingCompanies']->count() }})</span></div>
-                            <div class="card-sub">Awaiting admin approval</div>
-                            <div style="overflow-x:auto; margin-top:10px; max-height:320px; overflow-y:auto;">
-                                <table style="width:100%; border-collapse:collapse; font-size:11px;">
-                                    <thead>
-                                        <tr style="background:#0E0F3B; color:#fff; text-align:left;">
-                                            <th style="padding:6px 8px;">Company</th>
-                                            <th style="padding:6px 8px;">Industry</th>
-                                            <th style="padding:6px 8px;">Contact</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse ($r['pendingCompanies'] as $employer)
-                                        <tr style="border-top:1px solid #f1f5f9;">
-                                            <td style="padding:6px 8px; font-weight:600; color:#0E0F3B;">{{ $employer->employer_company_name }}</td>
-                                            <td style="padding:6px 8px;">{{ $employer->industry->industry_name ?? 'N/A' }}</td>
-                                            <td style="padding:6px 8px;">{{ $employer->user->user_email ?? 'N/A' }}</td>
-                                        </tr>
-                                        @empty
-                                        <tr><td colspan="3" style="padding:16px; text-align:center; color:#9ca3af;">None pending.</td></tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
+
+                            <!-- Industry -->
+                            <div class="flex-1 min-w-[150px]">
+                                @include('partials.multiselect-filter', [
+                                    'name' => 'company_industry',
+                                    'icon' => 'fas fa-industry',
+                                    'placeholder' => 'Industry',
+                                    'labelPrefix' => 'Industry',
+                                    'options' => $industries->pluck('industry_name', 'industry_id'),
+                                    'selected' => $companyFilters['industry_ids'],
+                                ])
                             </div>
+
+                            <!-- Status -->
+                            <div class="flex-1 min-w-[150px]">
+                                @include('partials.multiselect-filter', [
+                                    'name' => 'company_status',
+                                    'icon' => 'fas fa-user-check',
+                                    'placeholder' => 'Status',
+                                    'labelPrefix' => 'Status',
+                                    'options' => ['registered' => 'Registered (approved)', 'pending' => 'Pending approval'],
+                                    'selected' => $companyFilters['statuses'],
+                                ])
+                            </div>
+
+                            <!-- Year Registered -->
+                            <div class="flex-1 min-w-[150px]">
+                                @include('partials.multiselect-filter', [
+                                    'name' => 'company_year',
+                                    'icon' => 'fas fa-calendar-day',
+                                    'placeholder' => 'Year Registered',
+                                    'labelPrefix' => 'Registered',
+                                    'options' => collect($companyYearOptions)->mapWithKeys(fn ($y) => [$y => $y]),
+                                    'selected' => $companyFilters['years'],
+                                ])
+                            </div>
+
+                            <!-- Sort (single choice, styled like the dropdowns) -->
+                            <div class="relative" style="flex: 1.25 1 0%; min-width: 190px;">
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none text-xs"><i class="fas fa-arrow-down-wide-short"></i></span>
+                                <select name="company_sort" aria-label="Sort companies"
+                                    class="company-pill w-full appearance-none pl-11 pr-10 py-1.5 border rounded-full bg-white text-xs focus:outline-none cursor-pointer {{ $companyFilters['sort'] !== 'newest' ? 'text-[#0E0F3B] font-semibold' : 'text-gray-500' }}">
+                                    @foreach ($companySorts as $key => $label)
+                                    <option value="{{ $key }}" @selected($companyFilters['sort'] === $key)>Sort: {{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none"><i class="fas fa-chevron-down text-[10px]"></i></span>
+                            </div>
+
+                            <div class="w-full flex items-center justify-end gap-3 pt-3 mt-1 border-t border-slate-100">
+                                @if ($companyFiltered)
+                                <a href="{{ route('reports.companies', array_merge($alumniQuery, ['tab' => 'company'])) }}"
+                                    class="shrink-0 whitespace-nowrap bg-slate-200 text-[10px] text-slate-600 px-3 py-1.5 rounded-md flex items-center gap-1 hover:bg-slate-300 transition shadow-sm font-semibold uppercase tracking-wide">
+                                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 shrink-0"></i> Reset Filters
+                                </a>
+                                @endif
+                                <button type="submit"
+                                    class="shrink-0 whitespace-nowrap bg-[#1D264F] hover:bg-[#0E0F3B] text-[10px] text-white px-4 py-1.5 rounded-md flex items-center gap-1 transition shadow-sm font-semibold uppercase tracking-wide">
+                                    <i class="fas fa-filter"></i> Apply Filters
+                                </button>
+                                <button type="button" onclick="exportPdfWithCharts()"
+                                    class="shrink-0 whitespace-nowrap bg-[#C04828] text-[10px] text-white px-3 py-1.5 rounded-md flex items-center gap-1 hover:bg-[#A03D22] transition shadow-sm font-semibold uppercase tracking-wide">
+                                    <i data-lucide="file-text" class="w-3.5 h-3.5 shrink-0"></i> EXPORT PDF
+                                </button>
+                                <a href="{{ route('reports.exportCsv', array_merge(['group' => 'companies'], $alumniQuery, $companyQuery)) }}"
+                                    class="shrink-0 whitespace-nowrap border border-[#0E0F3B] text-[#0E0F3B] text-[10px] px-3 py-1.5 rounded-md flex items-center gap-1 hover:bg-[#0E0F3B] hover:text-white transition shadow-sm font-semibold uppercase tracking-wide">
+                                    <i data-lucide="download" class="w-3.5 h-3.5 shrink-0"></i> EXPORT CSV
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+
+                    @php
+                        $companyTables = [];
+                        if ($companyFilters['statuses'] !== ['pending']) $companyTables[] = ['Registered Companies', 'Approved employer accounts', $r['registeredCompanies'], 'No registered companies match these filters.'];
+                        if ($companyFilters['statuses'] !== ['registered']) $companyTables[] = ['Pending / Unregistered Companies', 'Awaiting admin approval', $r['pendingCompanies'], 'No pending companies match these filters.'];
+                    @endphp
+                    @foreach ($companyTables as [$title, $sub, $rows, $emptyText])
+                    <div class="chart-card my-4">
+                        <div class="card-title">{{ $title }} <span>({{ $rows->count() }})</span></div>
+                        <div class="card-sub">{{ $sub }}</div>
+                        <div style="overflow-x:auto; margin-top:10px; max-height:360px; overflow-y:auto;">
+                            <table style="width:100%; border-collapse:collapse; font-size:11px;">
+                                <thead>
+                                    <tr style="background:#0E0F3B; color:#fff; text-align:left; position:sticky; top:0; z-index:1;">
+                                        <th style="padding:6px 8px;">Company</th>
+                                        <th style="padding:6px 8px;">Industry</th>
+                                        <th style="padding:6px 8px;">Contact Person</th>
+                                        <th style="padding:6px 8px;">Email</th>
+                                        <th style="padding:6px 8px; text-align:center;">Job Posts</th>
+                                        <th style="padding:6px 8px;">Registered On</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($rows as $employer)
+                                    <tr style="border-top:1px solid #f1f5f9;">
+                                        <td style="padding:6px 8px; font-weight:600; color:#0E0F3B;">{{ $employer->employer_company_name }}</td>
+                                        <td style="padding:6px 8px;">{{ $employer->industry->industry_name ?? 'N/A' }}</td>
+                                        <td style="padding:6px 8px;">{{ trim(($employer->user->user_first_name ?? '') . ' ' . ($employer->user->user_last_name ?? '')) ?: 'N/A' }}</td>
+                                        <td style="padding:6px 8px;">{{ $employer->user->user_email ?? 'N/A' }}</td>
+                                        <td style="padding:6px 8px; text-align:center;">{{ $employer->job_postings_count }}</td>
+                                        <td style="padding:6px 8px; white-space:nowrap;">{{ optional($employer->created_at)->format('M d, Y') ?? 'N/A' }}</td>
+                                    </tr>
+                                    @empty
+                                    <tr><td colspan="6" style="padding:16px; text-align:center; color:#1D264F;">{{ $emptyText }}</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
                         </div>
                     </div>
+                    @endforeach
                 </div>
 
             </div>
@@ -253,6 +339,20 @@
 
         repSyncTab(@json($activeTab));
 
+        // Applying the Alumni filters keeps the Company tab's filters (and vice versa — see #companyFilterForm).
+        (function () {
+            const form = document.getElementById('dashboardFilterForm');
+            if (!form) return;
+            const companyQuery = @json($companyQuery);
+            Object.entries(companyQuery).forEach(([name, value]) => {
+                (Array.isArray(value) ? value : [value]).forEach(v => {
+                    const i = document.createElement('input');
+                    i.type = 'hidden'; i.name = Array.isArray(value) ? name + '[]' : name; i.value = v;
+                    form.appendChild(i);
+                });
+            });
+        })();
+
         function filterEmployedAlumniRows() {
             const query = document.getElementById('employedAlumniSearch').value.trim().toLowerCase();
             const rows = document.querySelectorAll('#employedAlumniTbody tr[data-search]');
@@ -282,6 +382,11 @@
             });
             // Applied-filters marker, so an emptied Year/Year Graduated exports as "all years", not the current-year default.
             if (params.has('filtered')) addField('filtered', '1');
+            // Company tab filters
+            ['company_search', 'company_sort'].forEach(key => { if (params.get(key)) addField(key, params.get(key)); });
+            ['company_industry', 'company_status', 'company_year'].forEach(key => {
+                params.getAll(key + '[]').forEach(v => addField(key + '[]', v));
+            });
             document.body.appendChild(form);
             form.submit();
             form.remove();

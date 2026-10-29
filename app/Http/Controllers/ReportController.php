@@ -570,8 +570,16 @@ class ReportController extends Controller
 
         $r = $reportService->buildEmploymentReports($batches, $programIds, $employmentStatuses, $colleges, $years);
 
+        // Company tab: its own employer filters (search / industry / status / year registered / sort),
+        // replacing the alumni cohort filters that never described employers.
+        $companyFilters = $reportService->resolveCompanyFilters(request()->query());
+        $r = array_merge($r, $reportService->buildCompanyRegistrationReport($companyFilters));
+        $industries = \App\Models\Industry::orderBy('industry_name')->get();
+        $companyYearOptions = $reportService->companyYearOptions();
+        $companySorts = DashboardReportService::COMPANY_SORTS;
+
         return view('superAdmin.reports.companies', array_merge(
-            compact('r', 'dashboardFilters'),
+            compact('r', 'dashboardFilters', 'companyFilters', 'industries', 'companyYearOptions', 'companySorts'),
             $this->filterOptions($reportService)
         ));
     }
@@ -638,14 +646,23 @@ class ReportController extends Controller
 
         $stats = $reportService->buildOverviewStats($batches, $programIds, $employmentStatuses, $colleges, $years);
         $r = $reportService->buildEmploymentReports($batches, $programIds, $employmentStatuses, $colleges, $years, $hireMonths, $topCompaniesLimit);
+        $companyFilterLabel = null;
+        if ($group === 'companies') {
+            $companyFilters = $reportService->resolveCompanyFilters(request()->query());
+            $r = array_merge($r, $reportService->buildCompanyRegistrationReport($companyFilters));
+            $companyFilterLabel = $reportService->companyFilterSummary($companyFilters);
+        }
 
         $titles = ['employment' => 'Employment & Alignment', 'placement' => 'Job Placement & Hiring', 'companies' => 'Alumni & Company Registration'];
 
-        $callback = function () use ($group, $stats, $r, $labels, $hireMonths, $topCompaniesLimit, $titles) {
+        $callback = function () use ($group, $stats, $r, $labels, $hireMonths, $topCompaniesLimit, $titles, $companyFilterLabel) {
             $out = fopen('php://output', 'w');
             fputcsv($out, ['PLV-AlumNet — ' . $titles[$group] . ' Report Export']);
             fputcsv($out, ['Generated', now()->format('M d, Y h:i A')]);
-            fputcsv($out, ['Filters', "Batch: {$labels['batchLabel']} | Program: {$labels['programLabel']} | Employment Status: {$labels['statusLabel']} | College: {$labels['collegeLabel']} | Year: {$labels['yearLabel']}"]);
+            fputcsv($out, [$group === 'companies' ? 'Alumni Filters' : 'Filters', "Batch: {$labels['batchLabel']} | Program: {$labels['programLabel']} | Employment Status: {$labels['statusLabel']} | College: {$labels['collegeLabel']} | Year: {$labels['yearLabel']}"]);
+            if ($companyFilterLabel) {
+                fputcsv($out, ['Company Filters', $companyFilterLabel]);
+            }
             fputcsv($out, []);
 
             if ($group === 'employment') {
@@ -741,17 +758,27 @@ class ReportController extends Controller
                 }
                 fputcsv($out, []);
 
+                $companyRow = fn ($employer) => [
+                    $employer->employer_company_name,
+                    $employer->industry->industry_name ?? 'N/A',
+                    trim(($employer->user->user_first_name ?? '') . ' ' . ($employer->user->user_last_name ?? '')) ?: 'N/A',
+                    $employer->user->user_email ?? 'N/A',
+                    $employer->job_postings_count ?? 0,
+                    optional($employer->created_at)->format('M d, Y') ?? 'N/A',
+                ];
+                $companyHeader = ['Company', 'Industry', 'Contact Person', 'Email', 'Job Posts', 'Registered On'];
+
                 fputcsv($out, ['REGISTERED COMPANIES (' . $r['registeredCompanies']->count() . ')']);
-                fputcsv($out, ['Company', 'Industry', 'Contact']);
+                fputcsv($out, $companyHeader);
                 foreach ($r['registeredCompanies'] as $employer) {
-                    fputcsv($out, [$employer->employer_company_name, $employer->industry->industry_name ?? 'N/A', $employer->user->user_email ?? 'N/A']);
+                    fputcsv($out, $companyRow($employer));
                 }
                 fputcsv($out, []);
 
                 fputcsv($out, ['PENDING / UNREGISTERED COMPANIES (' . $r['pendingCompanies']->count() . ')']);
-                fputcsv($out, ['Company', 'Industry', 'Contact']);
+                fputcsv($out, $companyHeader);
                 foreach ($r['pendingCompanies'] as $employer) {
-                    fputcsv($out, [$employer->employer_company_name, $employer->industry->industry_name ?? 'N/A', $employer->user->user_email ?? 'N/A']);
+                    fputcsv($out, $companyRow($employer));
                 }
             }
 
@@ -784,10 +811,17 @@ class ReportController extends Controller
 
         $stats = $reportService->buildOverviewStats($batches, $programIds, $employmentStatuses, $colleges, $years);
         $r = $reportService->buildEmploymentReports($batches, $programIds, $employmentStatuses, $colleges, $years, $hireMonths, $topCompaniesLimit);
+        $companyFilterLabel = null;
+        if ($group === 'companies') {
+            // POSTed by the page's Export PDF (company_* fields), or in the query string on a GET.
+            $companyFilters = $reportService->resolveCompanyFilters(request()->all());
+            $r = array_merge($r, $reportService->buildCompanyRegistrationReport($companyFilters));
+            $companyFilterLabel = $reportService->companyFilterSummary($companyFilters);
+        }
         $charts = PdfChartImages::fromRequest(request());
 
         $pdf = Pdf::loadView('superAdmin.reports.report-pdf', array_merge(
-            ['group' => $group, 'r' => $r, 'stats' => $stats, 'charts' => $charts, 'hireMonths' => $hireMonths, 'topCompaniesLimit' => $topCompaniesLimit],
+            ['group' => $group, 'r' => $r, 'stats' => $stats, 'charts' => $charts, 'hireMonths' => $hireMonths, 'topCompaniesLimit' => $topCompaniesLimit, 'companyFilterLabel' => $companyFilterLabel],
             $labels
         ))->setPaper('a4', 'portrait');
 

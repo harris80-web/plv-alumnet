@@ -1411,8 +1411,8 @@ html.rp-scope .rp-chart {
        let them shrink to the screen (they scroll inside themselves). */
     html.rp-scope :is(#postJobModal, #editPostModal) > div {
         min-height: 0;
-        max-height: 90vh;
-        max-height: 90dvh;
+        max-height: 85vh;   /* same cap as desktop: the panel never fills the whole screen */
+        max-height: 85dvh;
     }
 
     /* Pinned action rows (sit at the bottom of the scrolling panel). */

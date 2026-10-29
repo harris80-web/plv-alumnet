@@ -46,7 +46,8 @@
 
     #postJobModal>div {
         overflow-y: auto;
-        max-height: 90vh;
+        max-height: 85vh;
+        max-height: 85dvh; /* compact: never fills the screen (matches the panel class) */
         scrollbar-width: none;
         -ms-overflow-style: none;
     }

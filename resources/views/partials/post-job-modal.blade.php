@@ -21,17 +21,18 @@
 --}}
 <div id="postJobModal" class="fixed inset-0 z-[110] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
 
-    <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl relative flex flex-col min-h-[600px] max-h-[90vh] overflow-y-auto my-8">
+    {{-- Compact panel: max-w-3xl, rounded-2xl, never taller than 85% of the screen (scrolls inside). --}}
+    <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl relative flex flex-col max-h-[85vh] max-h-[85dvh] overflow-y-auto my-auto">
 
         <form action="{{ route('jobPosting.addJobPost', ['id' => $jobPoster->user_id]) }}" method="POST" enctype="multipart/form-data" class="flex flex-col flex-1">
             @csrf
 
-            <button type="button" onclick="closePostModal()" class="absolute top-11 right-8 text-gray-300 hover:text-gray-500 transition-colors z-10">
+            <button type="button" onclick="closePostModal()" aria-label="Close" class="absolute top-5 right-5 sm:top-6 sm:right-6 text-gray-300 hover:text-gray-500 transition-colors z-10">
                 <i class="fas fa-times-circle text-2xl"></i>
             </button>
 
-            <div class="w-full pt-12 text-center">
-                <h2 class="inline-block text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent tracking-tight">
+            <div class="w-full pt-6 sm:pt-8 px-12 text-center">
+                <h2 class="inline-block text-xl sm:text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent tracking-tight">
                     POST A NEW JOB
                 </h2>
             </div>
@@ -39,13 +40,13 @@
             <div class="flex flex-col flex-1">
 
                 <!-- FORM FIELDS -->
-                <div class="p-10 pt-6 space-y-4">
+                <div class="px-5 sm:px-8 pt-4 sm:pt-5 pb-5 sm:pb-8 space-y-4">
 
                     <!-- THUMBNAIL -->
                     <div class="space-y-1">
                         <label class="text-[10px] font-bold text-[#1D264F] uppercase block mb-1">Thumbnail <span class="text-red-500">*</span></label>
                         <div id="imageFrame"
-                            class="relative w-full h-48 rounded-lg overflow-hidden border-2 border-dashed border-[#0E0F3B] bg-slate-100 flex items-center justify-center transition-colors"
+                            class="relative w-full h-36 sm:h-40 rounded-lg overflow-hidden border-2 border-dashed border-[#0E0F3B] bg-slate-100 flex items-center justify-center transition-colors"
                             ondragover="handleDropzoneDragOver(event)" ondragleave="handleDropzoneDragLeave(event)" ondrop="handleDropzoneDrop(event, 'jobImageInput')">
 
                             <div id="uploadPlaceholder" class="text-slate-400 text-xs flex flex-col items-center gap-1 pointer-events-none">
@@ -148,7 +149,7 @@
                                     class="w-full flex-1 border border-[#0E0F3B] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C73D1A] bg-white">
                                     <option selected disabled>Select Undergraduate Program</option>
                                     @foreach ($programs as $program)
-                                    <option value="{{ $program->program_id }}">{{ $program->program_name }}</option>
+                                    <option value="{{ $program->program_id }}">{{ $program->labeledName() }}</option>
                                     @endforeach
                                 </select>
 
@@ -222,7 +223,7 @@
                     @endif
 
                     <!-- ACTION BUTTONS -->
-                    <div class="flex justify-end gap-4 mt-8">
+                    <div class="flex justify-end gap-3 sm:gap-4 mt-6">
                         <button type="button" onclick="closePostModal()"
                             class="px-10 py-2 border-2 border-[#1D264F] text-[#1D264F] rounded-md font-bold text-sm hover:bg-[#0E0F3B] hover:text-white transition-colors">
                             CANCEL

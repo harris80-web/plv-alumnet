@@ -93,7 +93,7 @@ class JobCardDataBuilder
             'image-overlay-color' => $job->defaultThumbnailOverlay()['color'],
             'image-overlay-opacity' => $job->defaultThumbnailOverlay()['overlayOpacity'],
             'image-opacity' => $job->defaultThumbnailOverlay()['imageOpacity'],
-            'programs' => $job->programs->pluck('program_name')->implode(', '),
+            'programs' => $job->programs->map->labeledName()->implode(', '),
             'industry' => $job->industry->industry_name ?? 'Not specified',
             'skills' => $job->skills->pluck('skill_name')->implode('||'),
             'recommended' => $isRecommended ? '1' : '0',

@@ -49,7 +49,7 @@
         font-weight: 700;
         letter-spacing: 0.05em;
         text-transform: uppercase;
-        color: #1D264F;
+        color: #C73D1A;
     }
     /* Required / optional markers next to the labels. */
     .req-mark { margin-left: 2px; color: #C73D1A; }
@@ -193,7 +193,7 @@
                         <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4">
                             @foreach ($readOnlyDetails as $label => $value)
                             <div class="min-w-0 {{ in_array($label, ['Program', 'College']) ? 'col-span-2' : '' }}">
-                                <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{{ $label }}</dt>
+                                <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">{{ $label }}</dt>
                                 <dd class="mt-1 text-sm font-semibold text-[#0E0F3B] uppercase break-words">{!! $value ? e($value) : '<span class="text-slate-300">—</span>' !!}</dd>
                             </div>
                             @endforeach
@@ -210,7 +210,7 @@
                         <header class="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-slate-100">
                             <span class="w-9 h-9 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-briefcase"></i></span>
                             <div>
-                                <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Employment Details</h3>
+                                <h3 class="inline-block text-sm font-bold uppercase tracking-wide bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Employment Details</h3>
                                 <p class="text-xs text-slate-500">Your current work status and job information.</p>
                             </div>
                         </header>
@@ -333,7 +333,7 @@
                         <header class="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-slate-100">
                             <span class="w-9 h-9 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-folder-open"></i></span>
                             <div>
-                                <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Documents</h3>
+                                <h3 class="inline-block text-sm font-bold uppercase tracking-wide bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Documents</h3>
                                 <p class="text-xs text-slate-500">Upload your own Resume/CV and an optional Cover Letter. These can be submitted straight to employers when you apply for a job.</p>
                             </div>
                         </header>
@@ -468,7 +468,7 @@
                         <header class="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-slate-100">
                             <span class="w-9 h-9 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-address-book"></i></span>
                             <div>
-                                <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Contact Details</h3>
+                                <h3 class="inline-block text-sm font-bold uppercase tracking-wide bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Contact Details</h3>
                                 <p class="text-xs text-slate-500">How PLV-AlumNet can reach you.</p>
                             </div>
                         </header>
@@ -488,7 +488,7 @@
                         <header class="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-slate-100">
                             <span class="w-9 h-9 shrink-0 rounded-lg bg-orange-50 text-[#C73D1A] flex items-center justify-center"><i class="fa-solid fa-file-lines"></i></span>
                             <div>
-                                <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Resume{!! $optionalTag !!}</h3>
+                                <h3 class="inline-block text-sm font-bold uppercase tracking-wide bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Resume{!! $optionalTag !!}</h3>
                                 <p class="text-xs text-slate-500">Built with the Resume Builder.</p>
                             </div>
                         </header>
@@ -532,7 +532,7 @@
                         <header class="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-slate-100">
                             <span class="w-9 h-9 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-eye"></i></span>
                             <div>
-                                <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Profile Settings</h3>
+                                <h3 class="inline-block text-sm font-bold uppercase tracking-wide bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Profile Settings</h3>
                                 <p class="text-xs text-slate-500">Choose what other alumni can see on your profile in the Alumni Directory. Your information is never shown to employers, and staff can always see it.</p>
                             </div>
                         </header>

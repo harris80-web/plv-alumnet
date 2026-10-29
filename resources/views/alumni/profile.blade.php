@@ -187,29 +187,29 @@
                     <header class="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-slate-100">
                         <span class="w-9 h-9 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-user"></i></span>
                         <div>
-                            <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Personal Details</h3>
+                            <h3 class="inline-block text-sm font-bold uppercase tracking-wide bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Personal Details</h3>
                             <p class="text-xs text-slate-500">How PLV-AlumNet can reach you.</p>
                         </div>
                     </header>
                     <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 p-5 sm:p-6">
                         <div>
-                            <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Email</dt>
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Email</dt>
                             <dd class="mt-1 text-sm font-semibold break-all"><a href="mailto:{{ $user->user_email }}" class="text-[#0E0F3B] hover:text-[#C73D1A]">{{ $user->user_email }}</a></dd>
                         </div>
                         <div>
-                            <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Contact No.</dt>
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Contact No.</dt>
                             <dd class="mt-1 text-sm font-semibold text-[#0E0F3B]">{!! $user->user_number ? e($user->user_number) : $notProvided !!}</dd>
                         </div>
                         <div>
-                            <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Gender</dt>
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Gender</dt>
                             <dd class="mt-1 text-sm font-semibold text-[#0E0F3B]">{!! $genderLabel ? e($genderLabel) : $notProvided !!}</dd>
                         </div>
                         <div>
-                            <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Batch</dt>
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Batch</dt>
                             <dd class="mt-1 text-sm font-semibold text-[#0E0F3B]">{!! $batchYear ? e($batchYear) : $notProvided !!}</dd>
                         </div>
                         <div class="sm:col-span-2">
-                            <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Skills</dt>
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Skills</dt>
                             <dd class="mt-1.5">
                                 @if ($skillNames->isNotEmpty())
                                 <ul class="flex flex-wrap gap-1.5">
@@ -229,13 +229,13 @@
                     <header class="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-slate-100">
                         <span class="w-9 h-9 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-briefcase"></i></span>
                         <div>
-                            <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Employment Details</h3>
+                            <h3 class="inline-block text-sm font-bold uppercase tracking-wide bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Employment Details</h3>
                             <p class="text-xs text-slate-500">Your current work status and job information.</p>
                         </div>
                     </header>
                     <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 p-5 sm:p-6">
                         <div>
-                            <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Employment Status</dt>
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Employment Status</dt>
                             <dd class="mt-1 text-sm font-semibold text-[#0E0F3B] flex flex-wrap items-center gap-2">
                                 {{ $employed ? 'Employed' : 'Unemployed' }}
                                 @if ($alumnus->hasCourseAlignedJob())
@@ -247,25 +247,25 @@
                         </div>
                         @if ($employed)
                         <div>
-                            <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Industry / Sector</dt>
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Industry / Sector</dt>
                             <dd class="mt-1 text-sm font-semibold text-[#0E0F3B]">{!! $alumnus->industry ? e($alumnus->industry->industry_name) : $notProvided !!}</dd>
                         </div>
                         <div>
-                            <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Where I Work</dt>
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Where I Work</dt>
                             <dd class="mt-1 text-sm font-semibold text-[#0E0F3B] break-words">{!! $workplaceLabel ? e($workplaceLabel) : $notProvided !!}</dd>
                         </div>
                         <div>
-                            <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Job Position</dt>
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Job Position</dt>
                             <dd class="mt-1 text-sm font-semibold text-[#0E0F3B] break-words">{!! $alumnus->alumnus_job_position ? e($alumnus->alumnus_job_position) : $notProvided !!}</dd>
                         </div>
                         <div>
-                            <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Employment Date</dt>
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Employment Date</dt>
                             <dd class="mt-1 text-sm font-semibold text-[#0E0F3B]">{!! $alumnus->alumnus_employment_date ? e($alumnus->alumnus_employment_date->format('F j, Y')) : $notProvided !!}</dd>
                         </div>
                         @endif
                         @if ($employed || $alumnus->alumnus_first_job_date)
                         <div>
-                            <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Date of First Job</dt>
+                            <dt class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">Date of First Job</dt>
                             <dd class="mt-1 text-sm font-semibold text-[#0E0F3B]">{!! $alumnus->alumnus_first_job_date ? e($alumnus->alumnus_first_job_date->format('F j, Y')) : $notProvided !!}</dd>
                         </div>
                         @endif
@@ -279,7 +279,7 @@
                     <header class="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-slate-100">
                         <span class="w-9 h-9 shrink-0 rounded-lg bg-orange-50 text-[#C73D1A] flex items-center justify-center"><i class="fa-solid fa-list-check"></i></span>
                         <div>
-                            <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Profile Completeness</h3>
+                            <h3 class="inline-block text-sm font-bold uppercase tracking-wide bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Profile Completeness</h3>
                             <p class="text-xs text-slate-500">A complete profile makes your job applications stronger.</p>
                         </div>
                     </header>
@@ -321,7 +321,7 @@
                     <header class="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-slate-100">
                         <span class="w-9 h-9 shrink-0 rounded-lg bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-folder-open"></i></span>
                         <div>
-                            <h3 class="text-sm font-bold text-[#C73D1A] uppercase tracking-wide">Documents</h3>
+                            <h3 class="inline-block text-sm font-bold uppercase tracking-wide bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Documents</h3>
                             <p class="text-xs text-slate-500">Files you can send when you apply for a job.</p>
                         </div>
                     </header>
@@ -330,7 +330,7 @@
                         <li class="flex items-center gap-3 px-5 sm:px-6 py-3.5">
                             <span class="w-9 h-9 shrink-0 rounded-lg bg-orange-50 text-[#C73D1A] flex items-center justify-center"><i class="fa-solid {{ $document['icon'] }}"></i></span>
                             <div class="min-w-0 flex-1">
-                                <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{{ $document['label'] }}</p>
+                                <p class="text-[11px] font-bold uppercase tracking-wider text-[#C73D1A]">{{ $document['label'] }}</p>
                                 @if ($document['path'])
                                 <a href="{{ asset('storage/' . $document['path']) }}" target="_blank" rel="noopener"
                                     class="block truncate text-sm font-semibold text-[#1D46A4] hover:underline" title="{{ basename($document['path']) }}">{{ basename($document['path']) }}</a>

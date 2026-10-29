@@ -32,7 +32,10 @@
     <p class="meta">
         Generated {{ now()->format('M d, Y h:i A') }}<br>
         @if (in_array($group, ['employment', 'placement', 'companies']))
-        Filters &mdash; Year: {{ $yearLabel }} | Year Graduated: {{ $batchLabel }} | College: {{ $collegeLabel }} | Program: {{ $programLabel }} | Employment Status: {{ $statusLabel }}
+        {{ $group === 'companies' ? 'Alumni Filters' : 'Filters' }} &mdash; Year: {{ $yearLabel }} | Year Graduated: {{ $batchLabel }} | College: {{ $collegeLabel }} | Program: {{ $programLabel }} | Employment Status: {{ $statusLabel }}
+        @if (!empty($companyFilterLabel))
+        <br>Company Filters &mdash; {{ $companyFilterLabel }}
+        @endif
         @elseif ($group === 'alumniid')
         Filters &mdash; Year Graduated: {{ $batchLabel }} | College: {{ $collegeLabel }} | Program: {{ $programLabel }}
         @elseif ($group === 'networking')
@@ -209,9 +212,9 @@
     <div class="section">
         <h2>Registered Companies ({{ $r['registeredCompanies']->count() }})</h2>
         <table>
-            <tr><th>Company</th><th>Industry</th><th>Contact</th></tr>
+            <tr><th>Company</th><th>Industry</th><th>Contact Person</th><th>Email</th><th>Job Posts</th><th>Registered On</th></tr>
             @foreach ($r['registeredCompanies'] as $employer)
-                <tr><td>{{ $employer->employer_company_name }}</td><td>{{ $employer->industry->industry_name ?? 'N/A' }}</td><td>{{ $employer->user->user_email ?? 'N/A' }}</td></tr>
+                <tr><td>{{ $employer->employer_company_name }}</td><td>{{ $employer->industry->industry_name ?? 'N/A' }}</td><td>{{ trim(($employer->user->user_first_name ?? '') . ' ' . ($employer->user->user_last_name ?? '')) ?: 'N/A' }}</td><td>{{ $employer->user->user_email ?? 'N/A' }}</td><td>{{ $employer->job_postings_count ?? 0 }}</td><td>{{ optional($employer->created_at)->format('M d, Y') ?? 'N/A' }}</td></tr>
             @endforeach
         </table>
     </div>
@@ -219,9 +222,9 @@
     <div class="section">
         <h2>Pending / Unregistered Companies ({{ $r['pendingCompanies']->count() }})</h2>
         <table>
-            <tr><th>Company</th><th>Industry</th><th>Contact</th></tr>
+            <tr><th>Company</th><th>Industry</th><th>Contact Person</th><th>Email</th><th>Job Posts</th><th>Registered On</th></tr>
             @foreach ($r['pendingCompanies'] as $employer)
-                <tr><td>{{ $employer->employer_company_name }}</td><td>{{ $employer->industry->industry_name ?? 'N/A' }}</td><td>{{ $employer->user->user_email ?? 'N/A' }}</td></tr>
+                <tr><td>{{ $employer->employer_company_name }}</td><td>{{ $employer->industry->industry_name ?? 'N/A' }}</td><td>{{ trim(($employer->user->user_first_name ?? '') . ' ' . ($employer->user->user_last_name ?? '')) ?: 'N/A' }}</td><td>{{ $employer->user->user_email ?? 'N/A' }}</td><td>{{ $employer->job_postings_count ?? 0 }}</td><td>{{ optional($employer->created_at)->format('M d, Y') ?? 'N/A' }}</td></tr>
             @endforeach
         </table>
     </div>

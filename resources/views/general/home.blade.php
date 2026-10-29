@@ -99,43 +99,43 @@
             </p>
 
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div class="bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center aspect-square">
+                <div class="group bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center aspect-square">
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-users text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase">Community Updates</span>
+                    <span class="text-xs font-bold uppercase transition-colors group-hover:text-[#C73D1A] group-hover:font-extrabold">Community Updates</span>
                 </div>
 
 
-                <div class="bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center aspect-square">
+                <div class="group bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center aspect-square">
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-address-book text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase">Alumni Directory</span>
+                    <span class="text-xs font-bold uppercase transition-colors group-hover:text-[#C73D1A] group-hover:font-extrabold">Alumni Directory</span>
                 </div>
 
 
-                <div class="bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center aspect-square">
+                <div class="group bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center aspect-square">
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-briefcase text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase">Job Board</span>
+                    <span class="text-xs font-bold uppercase transition-colors group-hover:text-[#C73D1A] group-hover:font-extrabold">Job Board</span>
                 </div>
 
 
-                <div class="bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center aspect-square">
+                <div class="group bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center aspect-square">
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-comments text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase">Network Connect</span>
+                    <span class="text-xs font-bold uppercase transition-colors group-hover:text-[#C73D1A] group-hover:font-extrabold">Network Connect</span>
                 </div>
 
 
-                <div class="bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center aspect-square">
+                <div class="group bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center aspect-square">
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-id-card text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase">Alumni ID &amp; Yearbook Claiming Status</span>
+                    <span class="text-xs font-bold uppercase transition-colors group-hover:text-[#C73D1A] group-hover:font-extrabold">Alumni ID &amp; Yearbook Claiming Status</span>
                 </div>
 
 
@@ -143,30 +143,39 @@
         </div>
     </section>
 
-    <section class="py-16 px-6 max-w-6xl mx-auto relative">
-        <div class="flex justify-between items-end mb-8 pl-4">
-            <span class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent
-            text-4xl font-bold text-blue-900 uppercase tracking-tighter"> | Campus Events</span>
-            <a href="{{ route('notices.guestEventsSeminars') }}" class="font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent uppercase text-xs hover:border-b-2 border-[#C73D1A]">Go to Events ></a>
+    <section class="py-12 sm:py-16 px-4 sm:px-6 max-w-6xl mx-auto relative">
+        <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 mb-4 sm:mb-6 sm:pl-4">
+            <h2 class="inner-text-shadow text-2xl sm:text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent uppercase tracking-tighter">| Campus Events</h2>
+            <a href="{{ route('notices.guestEventsSeminars') }}" class="font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent uppercase text-xs sm:text-sm hover:border-b-2 border-[#C73D1A]">Go to Events ></a>
         </div>
 
         @if ($campusEvents->isEmpty())
-        <div class="bg-white rounded-2xl shadow-md p-12 text-center text-gray-400">
-            <i class="fa-regular fa-calendar-xmark text-4xl mb-3 block text-[#C73D1A]"></i>
-            <p class="font-semibold">No upcoming events to show right now.</p>
+        {{-- Empty state: brand navy, not gray. --}}
+        <div class="bg-white rounded-2xl border border-slate-200 px-6 py-10 text-center">
+            <span class="mx-auto w-14 h-14 rounded-2xl bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-regular fa-calendar-xmark text-2xl"></i></span>
+            <p class="mt-3 text-base font-bold text-[#0E0F3B]">No upcoming events to show right now.</p>
+            <p class="mt-1 text-sm text-[#1D264F]">New campus events will show up here as soon as they're posted.</p>
         </div>
         @else
-        <div class="relative">
+        {{-- Same card + arrow design as the Alumni and Employer dashboard carousels. --}}
+        <div class="relative sm:px-12">
             <button id="eventsCarouselPrev" type="button" aria-label="Previous events"
-                class="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg items-center justify-center text-[#0E0F3B] hover:bg-slate-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
-                <i class="fa-solid fa-chevron-left"></i>
+                class="hidden md:flex absolute left-0 top-16 sm:top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-slate-200 shadow-md text-[#1D264F] items-center justify-center hover:bg-[#1D264F] hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-chevron-left text-sm"></i>
             </button>
 
-            <div id="eventsCarouselTrack" class="carousel-track flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-6 pb-2">
+            {{-- Not .carousel-track: that class carries the shared phone rules that shrink card
+                 text (12px titles, 10px buttons). Scrollbar hidden by .dash-carousel-track below. --}}
+            <div id="eventsCarouselTrack" class="dash-carousel-track flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-4 sm:gap-6">
                 @foreach ($campusEvents as $event)
-                <div class="snap-start shrink-0 w-full md:w-[calc(33.333%-1rem)]">
-                    <div class="bg-white rounded-lg overflow-hidden border border-gray-100 flex flex-col h-full cursor-pointer"
+                @php $overlay = $event->defaultThumbnailOverlay(); @endphp
+                <div class="snap-start shrink-0 w-[85%] sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]" data-event-card>
+                    {{-- The whole card opens the event details popup (partials.notice-detail-modal),
+                         which reads these data-* attributes. --}}
+                    <article class="group/card h-full bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col cursor-pointer transition-colors duration-200 hover:border-[#C73D1A]/40"
+                        role="button" tabindex="0" aria-label="View event details"
                         onclick="openNoticeDetailModal(this)"
+                        onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();openNoticeDetailModal(this);}"
                         data-notice-id="{{ $event->id }}"
                         data-category="{{ $event->category }}"
                         data-title="{{ $event->title }}"
@@ -178,59 +187,75 @@
                         data-description="{{ $event->description }}"
                         data-guest="1"
                         @if ($event->usesDefaultThumbnail())
-                        @php $overlay = $event->defaultThumbnailOverlay(); @endphp
                         data-uses-default="1"
                         data-overlay-color="{{ $overlay['color'] }}"
                         data-overlay-opacity="{{ $overlay['overlayOpacity'] }}"
                         data-image-opacity="{{ $overlay['imageOpacity'] }}"
                         @endif>
-                        <div class="h-40 relative">
-                            <img src="{{ $event->thumbnailUrl() }}" class="w-full h-full object-cover mix-blend-multiply"
+                        <div class="relative h-32 sm:h-36 shrink-0">
+                            <img src="{{ $event->thumbnailUrl() }}" alt="" class="w-full h-full object-cover mix-blend-multiply"
                                 @if ($event->usesDefaultThumbnail())
                                 style="opacity:{{ $overlay['imageOpacity'] }}"
                                 @endif>
                             @if ($event->usesDefaultThumbnail())
                             <div class="absolute inset-0" style="background-color:{{ $overlay['color'] }}; opacity:{{ $overlay['overlayOpacity'] }}"></div>
                             @endif
+                            <span class="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-white/95 text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full shadow-sm" style="color:{{ $overlay['color'] }}">
+                                <span class="w-1.5 h-1.5 rounded-full" style="background-color:{{ $overlay['color'] }}"></span> {{ $event->categoryLabel() }}
+                            </span>
+                            {{-- Date tile, in the category's color --}}
+                            <span class="absolute top-3 right-3 w-12 rounded-lg text-white text-center py-1.5 shadow-md" style="background-color:{{ $overlay['color'] }}">
+                                <span class="block text-lg font-bold leading-none">{{ $event->event_datetime->format('d') }}</span>
+                                <span class="block mt-0.5 text-[10px] font-semibold uppercase">{{ $event->event_datetime->format('M') }}</span>
+                            </span>
                         </div>
 
-                        <div class="p-4 flex gap-4 items-start relative flex-grow">
-                            <div class="flex-grow">
-                                <h3 class="font-bold text-blue-900 uppercase text-sm">{{ $event->title }}</h3>
-                                @if ($event->location)
-                                <p class="text-[10px] text-gray-500 mb-2">
-                                    <i class="fa-solid fa-location-dot mr-1"></i> {{ $event->location }}
-                                </p>
-                                @endif
-                                <p class="text-xs text-black w-3/4 leading-tight">
-                                    {{ \Illuminate\Support\Str::limit(strip_tags($event->description ?? ''), 90) ?: 'No description provided.' }}
-                                </p>
-                            </div>
-                            <div class="flex-shrink-0 absolute right-0 text-white p-2 text-center w-16 rounded-sm shadow-sm" style="background-color:{{ $event->defaultThumbnailOverlay()['color'] }}">
-                                <span class="block text-xl font-bold leading-none tracking-tighter">{{ $event->event_datetime->format('d') }}</span>
-                                <span class="text-[10px] uppercase font-semibold">{{ $event->event_datetime->format('M') }}</span>
-                            </div>
-                        </div>
+                        <div class="p-4 sm:p-5 flex flex-col flex-1">
+                            {{-- Always exactly two lines tall, so every card's details line up. --}}
+                            <h3 class="font-bold text-[#0E0F3B] uppercase text-sm md:text-[15px] leading-snug line-clamp-2 h-[2.75em] break-words transition-colors group-hover/card:text-[#C73D1A] group-hover/card:font-extrabold" title="{{ $event->title }}">{{ $event->title }}</h3>
 
-                        <div class="px-4 pb-4">
-                            <a href="{{ route('auth.login') }}" onclick="event.stopPropagation()" class="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase py-2 rounded-md bg-[#1D264F] hover:bg-[#0E0F3B] text-white transition-colors">
-                                <i class="fa-solid fa-lock"></i> Log In to View Full Details
-                            </a>
+                            <ul class="mt-2 space-y-1 text-xs text-slate-500">
+                                <li class="flex items-center gap-2">
+                                    <i class="fa-regular fa-clock w-3.5 text-center text-slate-400"></i>
+                                    {{ $event->event_datetime->format('D, M d, Y · g:i A') }}
+                                </li>
+                                <li class="flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid fa-location-dot w-3.5 text-center text-slate-400"></i>
+                                    <span class="truncate" title="{{ $event->location }}">{{ $event->location ?: 'Location to be announced' }}</span>
+                                </li>
+                            </ul>
+
+                            <p class="mt-3 text-xs text-slate-600 leading-relaxed line-clamp-3">
+                                {{ \Illuminate\Support\Str::limit(strip_tags($event->description ?? ''), 160) ?: 'No description provided.' }}
+                            </p>
+
+                            <div class="mt-auto pt-4 sm:pt-5">
+                                <a href="{{ route('auth.login') }}" onclick="event.stopPropagation()"
+                                    class="flex items-center justify-center gap-2 w-full bg-[#1D46A4] hover:bg-[#0E0F3B] text-white py-2.5 rounded-lg font-bold text-xs tracking-wider uppercase transition-colors">
+                                    <i class="fa-solid fa-lock text-[10px]"></i> Log In to View Full Details
+                                </a>
+                            </div>
                         </div>
-                    </div>
+                    </article>
                 </div>
                 @endforeach
             </div>
 
             <button id="eventsCarouselNext" type="button" aria-label="Next events"
-                class="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg items-center justify-center text-[#0E0F3B] hover:bg-slate-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
-                <i class="fa-solid fa-chevron-right"></i>
+                class="hidden md:flex absolute right-0 top-16 sm:top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-slate-200 shadow-md text-[#1D264F] items-center justify-center hover:bg-[#1D264F] hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-chevron-right text-sm"></i>
             </button>
         </div>
 
         <div id="eventsCarouselDots" class="flex justify-center gap-2 mt-6"></div>
         @endif
     </section>
+
+    <style>
+        /* Campus Events carousel: no visible scrollbar (swipe / arrows / dots instead). */
+        .dash-carousel-track { scrollbar-width: none; -ms-overflow-style: none; }
+        .dash-carousel-track::-webkit-scrollbar { display: none; }
+    </style>
 
     @include('partials.carousel-init')
     <script>
@@ -294,8 +319,9 @@
         @endif
     </section>
 
-    <section id="alumni-testimonials" class="AlumniTestimonial py-20 px-6 text-white text-center mb-10">
-        <h2 class="text-3xl font-bold uppercase mb-12 tracking-widest">Alumni Testimonials</h2>
+    <section id="alumni-testimonials" class="AlumniTestimonial py-14 sm:py-20 px-4 sm:px-6 text-white text-center mb-10">
+        <h2 class="text-2xl sm:text-3xl font-bold uppercase tracking-widest">Alumni Testimonials</h2>
+        <p class="mt-2 mb-8 sm:mb-12 text-sm text-white/70">What PLV graduates say about PLV-AlumNet.</p>
 
         <div id="testimonial-cards-wrap">
             @include('partials.testimonial-cards')

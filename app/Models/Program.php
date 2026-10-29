@@ -29,6 +29,19 @@ class Program extends Model
     }
 
     /**
+     * "[ACRONYM] - Full Course Name" for recommended-course lists on job posts,
+     * e.g. "BSBA FM - Bachelor of Science in Business Administration - Major in Financial Management".
+     * Falls back to the plain name for a program with no acronym in ABBREVIATIONS.
+     */
+    public function labeledName(): string
+    {
+        $name = str_replace(' Major in ', ' - Major in ', $this->program_name);
+        $abbr = self::ABBREVIATIONS[$this->program_name] ?? null;
+
+        return $abbr ? "{$abbr} - {$name}" : $name;
+    }
+
+    /**
      * Which of the (coarse, 6-category) seeded industries count as "aligned"
      * with each program — no pivot table for this since it's a small, mostly
      * static 1-to-1(ish) mapping, not user-editable data. Keyed by

@@ -35,6 +35,15 @@
             font-size: 11px;
         }
 
+        .card-title { 
+            font-size: 13px; 
+            font-weight: 700; 
+            background: linear-gradient(to right, #0E0F3B, #C73D1A, #ED7A07); 
+            -webkit-background-clip: text; 
+            background-clip: text; 
+            color: transparent; 
+            display: inline-block; }
+
         /* Header cells */
         .jobs-table thead th {
             padding: 12px 10px;
@@ -107,7 +116,8 @@
 
         #postJobModal>div {
             overflow-y: auto;
-            max-height: 90vh;
+            max-height: 85vh;
+        max-height: 85dvh; /* compact: never fills the screen (matches the panel class) */
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
@@ -245,7 +255,7 @@
                 <div id="jm-tab-applicants" class="hidden">
                     <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden w-full mb-6">
                         <div class="px-4 py-3 border-b border-slate-100">
-                            <h3 class="text-sm font-bold text-[#0E0F3B]">My Job Postings</h3>
+                            <h3 class="card-title text-sm font-bold">My Job Postings</h3>
                             <p class="text-xs text-slate-400 mt-0.5">Job posts you personally created (see "Post a New Job") — view the post itself, or its applicants once approved.</p>
                         </div>
                         <div id="applicantJobsTableWrap">
@@ -339,7 +349,7 @@
                     class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-600 focus:outline-none">
                     <option>Select Program</option>
                     @foreach ($programs as $program)
-                    <option>{{ $program->program_name }}</option>
+                    <option value="{{ $program->program_name }}">{{ $program->labeledName() }}</option>
                     @endforeach
                 </select>
             </div>

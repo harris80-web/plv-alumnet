@@ -89,7 +89,7 @@
                 <p>
                 <p class="text-blue-900">Recommended Course/Program: <span class="font-normal ph"></span></p>
                 @foreach ($job->programs as $program)
-                {{ $program->program_name }}
+                {{ $program->labeledName() }}
                 <br><br>
                 @endforeach
                 </p>

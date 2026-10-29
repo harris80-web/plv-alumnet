@@ -967,9 +967,9 @@ class UserController extends Controller
     {
         $user = Auth::user();
         $industries = Industry::all();
-        if ($user->user_role == 'admin') {
-            return view('admin.profile', compact('user'));
-        } else if ($user->user_role == 'super_admin') {
+        if ($user->user_role == 'admin' || $user->user_role == 'super_admin') {
+            // Admins share the super admin profile page (it adapts to the role);
+            // admin/profile.blade.php was an empty "ADMIN PROFILE" stub.
             return view('superAdmin.profile', compact('user'));
         // No 'registrar' branch: it pointed at registrar/profile.blade.php,
         // which doesn't exist, and no user holds that role. The else below
@@ -1011,7 +1011,10 @@ class UserController extends Controller
         //  that doesn't exist; no user holds that role, so the branch is gone
         //  and the else below catches it if one ever appears.)
         if ($user->user_role == 'admin' || $user->user_role == 'super_admin') {
-            return view('superAdmin.edit-profile', compact('user'));
+            // Admins edit inline on their profile page (superAdmin/profile.blade.php) — open it
+            // straight in edit mode instead of the old unstyled superAdmin/edit-profile form.
+            // Saving lands back on that page with the success toast.
+            return redirect()->route('superAdmin.profile', ['edit' => 1]);
         } else if ($user->user_role == 'employer') {
             $user->load(['employer.industry', 'employer.addresses']);
             return view('employer.edit-profile', compact('user', 'industries'));

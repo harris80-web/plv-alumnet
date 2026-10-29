@@ -78,7 +78,7 @@
             </td>
             <td class="font-medium text-black border-r border-slate-100">
                 @foreach ($j->programs as $program)
-                {{ $program->program_name }}<br>
+                {{ $program->labeledName() }}<br>
                 @endforeach
             </td>
             <td class="border-r border-slate-100">
@@ -109,7 +109,7 @@
                         'posted_by' => $j->user->user_first_name . ' ' . $j->user->user_last_name,
                         'type' => $j->job_posting_employment_type,
                         'setup' => $j->job_posting_setup,
-                        'program' => $j->programs->pluck('program_name')->join(', '),
+                        'program' => $j->programs->map->labeledName()->join(', '),
                         'industry' => $j->industry->industry_name ?? 'N/A',
                         'closing' => $j->job_closing_date,
                         'description' => $j->job_posting_description,

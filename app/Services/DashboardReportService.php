@@ -502,6 +502,113 @@ class DashboardReportService
         );
     }
 
+    /** Sort choices for the Company tab of the Alumni & Company Registration report. */
+    public const COMPANY_SORTS = [
+        'newest' => 'Newest registered',
+        'oldest' => 'Oldest registered',
+        'name_asc' => 'Company name (A–Z)',
+        'name_desc' => 'Company name (Z–A)',
+        'job_posts' => 'Most job posts',
+    ];
+
+    /**
+     * Company-tab filters, read from the company_* query params. Independent of
+     * the alumni cohort filters (college / course / employment status / year
+     * graduated describe alumni, not employers) and not defaulted to the current
+     * year — an admin looking for one employer should see every employer.
+     *
+     * Industry, status and year are multi-selects (same checkbox dropdowns as the
+     * Alumni tab); a lone scalar value is accepted too.
+     *
+     * @return array{search: string, industry_ids: int[], statuses: string[], years: int[], sort: string}
+     */
+    public function resolveCompanyFilters($input): array
+    {
+        $input = is_array($input) ? $input : [];
+        $list = fn ($v) => array_values(array_filter((array) ($v ?? []), fn ($x) => is_scalar($x) && $x !== ''));
+        $sort = $input['company_sort'] ?? 'newest';
+
+        $statuses = array_values(array_intersect(['registered', 'pending'], $list($input['company_status'] ?? [])));
+
+        return [
+            'search' => mb_substr(trim((string) (is_scalar($input['company_search'] ?? null) ? $input['company_search'] : '')), 0, 100),
+            'industry_ids' => array_values(array_unique(array_filter(array_map('intval', $list($input['company_industry'] ?? [])), fn ($id) => $id > 0))),
+            // Both statuses ticked = no status filter
+            'statuses' => count($statuses) === 2 ? [] : $statuses,
+            'years' => array_values(array_unique(array_filter(array_map('intval', $list($input['company_year'] ?? [])), fn ($y) => $y >= 2000 && $y <= 2100))),
+            'sort' => is_string($sort) && array_key_exists($sort, self::COMPANY_SORTS) ? $sort : 'newest',
+        ];
+    }
+
+    /** Years employers actually registered in, newest first — options for the Company tab's "Year Registered". */
+    public function companyYearOptions(): array
+    {
+        return Employer::selectRaw('DISTINCT YEAR(created_at) as y')->whereNotNull('created_at')
+            ->orderByDesc('y')->pluck('y')->map(fn ($y) => (int) $y)->all();
+    }
+
+    /**
+     * Registered (approved) and pending employers for the Company tab, narrowed by
+     * resolveCompanyFilters(). Search matches the company name, the account email,
+     * or the contact person's name. A status filter leaves the other list empty.
+     *
+     * @return array{registeredCompanies: \Illuminate\Support\Collection, pendingCompanies: \Illuminate\Support\Collection}
+     */
+    public function buildCompanyRegistrationReport(array $f): array
+    {
+        $build = function (bool $approved) use ($f) {
+            $q = Employer::with(['user', 'industry'])->withCount('jobPostings')->where('employer_approved', $approved);
+
+            if ($f['search'] !== '') {
+                $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $f['search']) . '%';
+                $q->where(function ($w) use ($like) {
+                    $w->where('employer_company_name', 'like', $like)
+                        ->orWhereHas('user', function ($u) use ($like) {
+                            $u->where('user_email', 'like', $like)
+                                ->orWhere('user_first_name', 'like', $like)
+                                ->orWhere('user_last_name', 'like', $like)
+                                ->orWhereRaw("CONCAT_WS(' ', user_first_name, user_last_name) LIKE ?", [$like]);
+                        });
+                });
+            }
+            if ($f['industry_ids']) {
+                $q->whereIn('industry_id', $f['industry_ids']);
+            }
+            if ($f['years']) {
+                $q->whereIn(DB::raw('YEAR(created_at)'), $f['years']);
+            }
+
+            match ($f['sort']) {
+                'oldest' => $q->oldest('created_at'),
+                'name_asc' => $q->orderBy('employer_company_name'),
+                'name_desc' => $q->orderByDesc('employer_company_name'),
+                'job_posts' => $q->orderByDesc('job_postings_count')->orderBy('employer_company_name'),
+                default => $q->latest('created_at'),
+            };
+
+            return $q->get();
+        };
+
+        return [
+            'registeredCompanies' => $f['statuses'] === ['pending'] ? collect() : $build(true),
+            'pendingCompanies' => $f['statuses'] === ['registered'] ? collect() : $build(false),
+        ];
+    }
+
+    /** One-line summary of the Company-tab filters, for the CSV/PDF exports. */
+    public function companyFilterSummary(array $f): string
+    {
+        $parts = [
+            'Search: ' . ($f['search'] !== '' ? '"' . $f['search'] . '"' : 'None'),
+            'Industry: ' . ($f['industry_ids'] ? Industry::whereIn('industry_id', $f['industry_ids'])->orderBy('industry_name')->pluck('industry_name')->implode(', ') : 'All'),
+            'Status: ' . ($f['statuses'] ? ucfirst($f['statuses'][0]) : 'All'),
+            'Year Registered: ' . ($f['years'] ? implode(', ', $f['years']) : 'All'),
+            'Sort: ' . self::COMPANY_SORTS[$f['sort']],
+        ];
+
+        return implode(' | ', $parts);
+    }
+
     /**
      * Group D (report detail page) — Alumni ID & Yearbook. Same 3 filter
      * dimensions as the other groups' cohort lens (batch/program/college);

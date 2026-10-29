@@ -443,7 +443,7 @@
                                                 data-type="{{ $job->job_posting_employment_type }}"
                                                 data-setup="{{ $job->job_posting_setup }}"
                                                 data-valid="{{ $job->job_closing_date }}"
-                                                data-programs="{{ $job->programs->pluck('program_name')->implode(', ') }}"
+                                                data-programs="{{ $job->programs->map->labeledName()->implode(', ') }}"
                                                 data-industry="{{ $job->industry->industry_name ?? 'Not specified' }}"
                                                 data-approved="{{ $job->job_approved ? '1' : '0' }}"
                                                 data-status="{{ $status }}"
@@ -656,32 +656,33 @@
     <div id="editPostModal"
         class="fixed inset-0 z-[999] bg-black/70 flex items-center justify-center overflow-y-auto hidden p-4">
 
-        <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl relative flex flex-col min-h-[600px] max-h-[90vh] overflow-y-auto my-8 rp-editpost-panel">
+        {{-- Compact panel: same size as "Post a New Job" (max-w-3xl, rounded-2xl, max 85% of the screen tall). --}}
+        <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl relative flex flex-col max-h-[85vh] max-h-[85dvh] overflow-y-auto my-auto rp-editpost-panel">
 
             @foreach($jobPostings as $job)
             <form id="editForm-{{ $job->job_posting_id }}" class="flex flex-col flex-1 hidden" action="{{ route('jobPosting.editJobPost', ['id' => $job->job_posting_id]) }}" method="post" enctype="multipart/form-data">
                 @csrf
 
-                <button type="button" onclick="closeEditPostModal()"
-                    class="absolute top-11 right-8 text-gray-300 hover:text-gray-500 z-10">
+                <button type="button" onclick="closeEditPostModal()" aria-label="Close"
+                    class="absolute top-5 right-5 sm:top-6 sm:right-6 text-gray-300 hover:text-gray-500 z-10">
                     <i class="fas fa-times-circle text-2xl"></i>
                 </button>
 
-                <div class="w-full pt-12 text-center">
-                    <h2 class="inline-block text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent rp-editpost-title">
+                <div class="w-full pt-6 sm:pt-8 px-12 text-center">
+                    <h2 class="inline-block text-xl sm:text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent rp-editpost-title">
                         EDIT JOB POST
                     </h2>
                 </div>
 
                 <div class="flex flex-col flex-1">
 
-                    <div class="p-10 pt-6 space-y-4 rp-editpost-body">
+                    <div class="px-5 sm:px-8 pt-4 sm:pt-5 pb-5 sm:pb-8 space-y-4 rp-editpost-body">
 
                         <!-- THUMBNAIL -->
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-[#1D264F] uppercase block mb-1">Thumbnail <span class="text-red-500">*</span></label>
                             <div id="editImageFrame-{{ $job->job_posting_id }}"
-                                class="relative w-full h-48 rounded-lg overflow-hidden border-2 border-dashed border-[#0E0F3B] bg-slate-100 flex items-center justify-center transition-colors"
+                                class="relative w-full h-36 sm:h-40 rounded-lg overflow-hidden border-2 border-dashed border-[#0E0F3B] bg-slate-100 flex items-center justify-center transition-colors"
                                 ondragover="handleDropzoneDragOver(event)" ondragleave="handleDropzoneDragLeave(event)" ondrop="handleDropzoneDrop(event, 'editJobImageInput-{{ $job->job_posting_id }}')">
 
                                 <img id="editJobImagePreview-{{ $job->job_posting_id }}" src="{{ !$job->usesDefaultThumbnail() ? $job->thumbnailUrl() : '' }}" class="w-full h-full object-cover {{ !$job->usesDefaultThumbnail() ? '' : 'hidden' }}" />
@@ -768,7 +769,7 @@
                                         <option value="" selected disabled>Select Undergraduate Program</option>
                                         @foreach($programs as $program)
                                         <option value="{{ $program->program_id }}" {{ $jobProgram->program_id == $program->program_id ? 'selected' : '' }}>
-                                            {{ $program->program_name }}
+                                            {{ $program->labeledName() }}
                                         </option>
                                         @endforeach
                                     </select>
@@ -832,7 +833,7 @@
                             </div>
                         </div>
 
-                        <div class="flex justify-end gap-4 mt-10 p-5 rp-editpost-actions">
+                        <div class="flex justify-end gap-3 sm:gap-4 mt-6 rp-editpost-actions">
                             <button type="button" onclick="closeEditPostModal()"
                                 class="px-10 py-2 border-2 border-[#1D264F] text-[#1D264F] rounded-md font-bold text-sm hover:bg-[#0E0F3B] hover:text-white transition rp-editpost-btn">
                                 CANCEL

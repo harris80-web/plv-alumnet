@@ -454,7 +454,7 @@ class JobPostingController extends Controller
                     $job->job_posting_address,
                     $job->job_posting_employment_type,
                     $job->job_posting_setup,
-                    $job->programs->pluck('program_name')->implode(', '),
+                    $job->programs->map->labeledName()->implode(', '),
                     $job->industry->industry_name ?? 'N/A',
                     $job->applicants->count(),
                     $job->applicants->where('pivot.is_read', false)->count(),

@@ -304,36 +304,45 @@
         </div>
     </section>
 
-    <section class="py-16 px-6 max-w-6xl mx-auto">
-        <div class="flex justify-between items-center mb-10 rp-jobmatches-head">
-            <h2 class="text-3xl font-bold uppercase tracking-tight bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
+    <section class="py-12 sm:py-16 px-4 sm:px-6 max-w-6xl mx-auto">
+        <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 mb-4 sm:mb-6 rp-jobmatches-head">
+            <h2 class="text-2xl sm:text-3xl font-bold uppercase tracking-tight bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">
                 Job Matches <span>For You!</span>
             </h2>
-            <a href="{{ route('jobPosting.jobBoard') }}" class="font-bold uppercase text-sm bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent hover:border-b-2 border-[#C73D1A] transition-colors">
+            <a href="{{ route('jobPosting.jobBoard') }}" class="font-bold uppercase text-xs sm:text-sm bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent hover:border-b-2 border-[#C73D1A] transition-colors">
                 Go to Job Board >
             </a>
         </div>
 
         @if ($jobMatches->isEmpty())
-        <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-10 text-center text-gray-500">
-            <i class="fa-solid fa-magnifying-glass text-3xl mb-3 block text-gray-300"></i>
-            <p class="mb-4">No job matches yet. Complete your resume so we can start recommending jobs for you.</p>
+        {{-- Empty state: brand navy, not gray. --}}
+        <div class="bg-white rounded-2xl border border-slate-200 px-6 py-10 text-center">
+            <span class="mx-auto w-14 h-14 rounded-2xl bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-magnifying-glass text-2xl"></i></span>
+            <p class="mt-3 text-base font-bold text-[#0E0F3B]">No job matches yet.</p>
+            <p class="mt-1 text-sm text-[#1D264F]">Complete your resume so we can start recommending jobs for you.</p>
             {{-- Routed through Edit Profile (the maintained resume-builder-modal), not the
                  old standalone /resume/build wizard — that page duplicates this flow with
                  stale scoring/markup and was the source of the "completeness stuck at 0%"
                  and "resume not submitting" reports. --}}
-            <a href="{{ route('users.editProfile') }}" class="inline-block px-6 py-2 rounded-md bg-[#0E0F3B] text-white text-sm font-bold uppercase hover:bg-[#1D264F] transition-colors">
-                Build Your Resume
+            <a href="{{ route('users.editProfile') }}" class="mt-5 inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-[#0E0F3B] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#1D264F] transition-colors">
+                <i class="fa-solid fa-pen-to-square"></i> Build Your Resume
             </a>
         </div>
         @else
-        <div class="relative">
+        {{-- Same card design as the Employer dashboard's JOB POSTING carousel. Phones: one
+             card plus a peek of the next; tablets: two; desktop: three. Arrows sit in the
+             side gutter from tablet up, and over the card image on phones (the shared
+             responsive CSS keeps carousel arrows visible at every width). --}}
+        <div class="relative sm:px-12">
             <button id="jobMatchesCarouselPrev" type="button" aria-label="Previous job matches"
-                class="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg items-center justify-center text-[#0E0F3B] hover:bg-slate-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
-                <i class="fa-solid fa-chevron-left"></i>
+                class="hidden md:flex absolute left-0 top-16 sm:top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-slate-200 shadow-md text-[#1D264F] items-center justify-center hover:bg-[#1D264F] hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-chevron-left text-sm"></i>
             </button>
 
-            <div id="jobMatchesCarouselTrack" class="carousel-track flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-8 pb-2">
+            {{-- Not .carousel-track: that class carries the shared phone rules that shrink
+                 card text (12px titles, 10px buttons) — these cards use the same sizes as the
+                 employer carousel instead. Scrollbar hidden by .dash-carousel-track below. --}}
+            <div id="jobMatchesCarouselTrack" class="dash-carousel-track flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-4 sm:gap-6">
                 @foreach ($jobMatches as $match)
                 @php
                     $job = $match->jobPosting;
@@ -349,14 +358,17 @@
                     // reviews/rating, working Apply, bookmark, posted-by,
                     // everything — instead of a stripped-down data-* set.
                     extract(\App\Services\JobCardDataBuilder::build($job, $user, $appliedJobs, $bookmarkedIds));
+                    $programsLabel = $job->programs->map->labeledName()->implode(', ') ?: 'Open to all programs';
                 @endphp
-                <div class="snap-start shrink-0 w-full md:w-[calc(33.333%-1.334rem)]">
-                    <div class="bg-white rounded-2xl overflow-hidden border border-gray-100 flex flex-col h-full transition-transform hover:scale-[1.02]">
+                <div class="snap-start shrink-0 w-[85%] sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]" data-job-card>
+                    {{-- group/card (named) so the title hover doesn't also trigger the image's own
+                         "VIEW DETAILS" overlay, which uses the plain `group` on the image. --}}
+                    <article class="group/card h-full bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col transition-colors duration-200 hover:border-[#C73D1A]/40">
                         {{-- Same $cardData + openJobModal() as partials.job-post-card
                              (shared modal: partials.job-detail-modal) so clicking a
                              recommended job here opens the identical "View Details"
                              modal used on the job board. --}}
-                        <div class="relative h-48 group cursor-pointer"
+                        <div class="relative h-32 sm:h-36 shrink-0 group cursor-pointer"
                             role="button" tabindex="0" aria-label="View job details"
                             @foreach ($cardData as $attr => $value)
                             data-{{ $attr }}="{{ $value }}"
@@ -370,8 +382,8 @@
                             <div class="absolute inset-0 bg-[#0E0F3B]/50 mix-blend-multiply"></div>
                             <div class="absolute inset-0 bg-blue-600/20"></div>
                             @endif
-                            <span class="absolute top-3 right-3 bg-white/90 text-[#C73D1A] text-[10px] font-bold uppercase px-2 py-1 rounded-full">
-                                {{ round($match->blendedScore()) }}% Match
+                            <span class="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-white/95 text-[#C73D1A] text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full shadow-sm">
+                                <i class="fa-solid fa-bolt"></i> {{ round($match->blendedScore()) }}% Match
                             </span>
                             <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                 <span class="bg-white/90 text-[#1D264F] text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
@@ -380,32 +392,39 @@
                             </div>
                         </div>
 
-                        <div class="p-6 flex flex-col flex-grow">
-                            <div class="flex justify-between items-start mb-2">
-                                <h3 class="font-bold text-[#0E0F3B] uppercase text-xl">{{ $job->job_posting_title }}</h3>
-                                <span class="text-[9px] text-gray-400 flex items-center gap-1 mt-1 shrink-0">
-                                    <i class="fa-regular fa-calendar"></i> {{ $job->created_at->diffForHumans() }}
-                                </span>
+                        <div class="p-4 sm:p-5 flex flex-col flex-1">
+                            {{-- Always exactly two lines tall, so every card's details line up.
+                                 text-[15px] (not md:text-base) so leading-snug isn't overridden. --}}
+                            <h3 class="font-bold text-[#0E0F3B] uppercase text-sm md:text-[15px] leading-snug line-clamp-2 h-[2.75em] break-words transition-colors group-hover/card:text-[#C73D1A] group-hover/card:font-extrabold" title="{{ $job->job_posting_title }}">{{ $job->job_posting_title }}</h3>
+                            <p class="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500 truncate" title="{{ $job->job_posting_company }}">{{ $job->job_posting_company }}</p>
+
+                            <ul class="mt-2 space-y-1 text-xs text-slate-500">
+                                <li class="flex items-center gap-2">
+                                    <i class="fa-regular fa-calendar w-3.5 text-center text-slate-400"></i>
+                                    {{ $job->job_closing_date ? 'Closes ' . \Carbon\Carbon::parse($job->job_closing_date)->format('M d, Y') : 'Open-ended' }}
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i class="fa-regular fa-clock w-3.5 text-center text-slate-400"></i>
+                                    Posted {{ $job->created_at->diffForHumans() }}
+                                </li>
+                            </ul>
+
+                            <div class="mt-3 sm:mt-4 flex items-center gap-3 rounded-xl bg-[#1D264F]/5 px-3 py-2.5">
+                                <span class="w-8 h-8 shrink-0 rounded-lg bg-white text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-graduation-cap text-xs"></i></span>
+                                <div class="min-w-0">
+                                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Recommended for</p>
+                                    <p class="mt-0.5 text-xs font-bold text-[#0E0F3B] truncate" title="{{ $programsLabel }}">{{ $programsLabel }}</p>
+                                </div>
                             </div>
 
-                            <p class="text-xs text-gray-400 font-semibold uppercase mb-4 tracking-wider">{{ $job->job_posting_company }}</p>
-
-                            <p class="text-[10px] text-gray-500 font-bold uppercase mb-2">
-                                {{ $job->programs->pluck('program_name')->implode(', ') ?: 'Open to all programs' }}
-                            </p>
-
-                            <p class="text-[11px] text-gray-600 leading-relaxed mb-6">
+                            <p class="mt-3 text-xs text-slate-600 leading-relaxed line-clamp-3">
                                 {{ $match->ai_explanation ?: Str::limit(strip_tags($job->job_posting_description), 160) }}
                             </p>
 
-                            <div class="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between gap-2">
-                                <p class="text-[9px] text-gray-400 flex items-center gap-1 uppercase font-bold">
-                                    <i class="fa-regular fa-calendar-check"></i>
-                                    {{ $job->job_closing_date ? 'Closes ' . \Carbon\Carbon::parse($job->job_closing_date)->format('M d, Y') : 'Open-ended' }}
-                                </p>
+                            <div class="mt-auto pt-4 sm:pt-5">
                                 @if ($hasApplied)
-                                <button disabled class="bg-green-600 cursor-not-allowed text-white px-4 py-1.5 rounded-md font-bold text-xs flex items-center gap-1.5 shrink-0">
-                                    <i class="fas fa-check-circle"></i> APPLIED
+                                <button disabled class="w-full flex items-center justify-center gap-2 bg-green-600 cursor-not-allowed text-white py-2.5 rounded-lg font-bold text-xs tracking-wider uppercase">
+                                    <i class="fas fa-check-circle"></i> Applied
                                 </button>
                                 @else
                                 {{-- Same review-first flow as partials.job-post-card's Apply
@@ -414,26 +433,32 @@
                                      rejected by JobApplicationController::applyJob(). --}}
                                 <button type="button"
                                     onclick="openApplyModal({{ $job->job_posting_id }}, {{ $user->alumnus->hasUploadedResumeFile() ? 'true' : 'false' }}, {{ $user->alumnus->hasBuilderResume() ? 'true' : 'false' }}, {{ !empty($user->alumnus->alumnus_cover_letter_file_path) ? 'true' : 'false' }})"
-                                    class="shrink-0 bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white px-4 py-1.5 rounded-md font-bold text-xs transition-colors">
-                                    APPLY
+                                    class="w-full flex items-center justify-center gap-2 bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white py-2.5 rounded-lg font-bold text-xs tracking-wider uppercase transition-all">
+                                    Apply <i class="fa-solid fa-arrow-right text-[10px]"></i>
                                 </button>
                                 @endif
                             </div>
                         </div>
-                    </div>
+                    </article>
                 </div>
                 @endforeach
             </div>
 
             <button id="jobMatchesCarouselNext" type="button" aria-label="Next job matches"
-                class="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg items-center justify-center text-[#0E0F3B] hover:bg-slate-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
-                <i class="fa-solid fa-chevron-right"></i>
+                class="hidden md:flex absolute right-0 top-16 sm:top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-slate-200 shadow-md text-[#1D264F] items-center justify-center hover:bg-[#1D264F] hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-chevron-right text-sm"></i>
             </button>
         </div>
 
         <div id="jobMatchesCarouselDots" class="flex justify-center gap-2 mt-6"></div>
         @endif
     </section>
+
+    <style>
+        /* Job Matches + Campus Events carousels: no visible scrollbar (swipe / arrows / dots instead). */
+        .dash-carousel-track { scrollbar-width: none; -ms-overflow-style: none; }
+        .dash-carousel-track::-webkit-scrollbar { display: none; }
+    </style>
 
     @include('partials.carousel-init')
     <script>
@@ -471,51 +496,51 @@
 
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
 
-                <div class="bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
+                <div class="group bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-users text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase mb-4 text-center">Community Updates</span>
+                    <span class="text-xs font-bold uppercase mb-4 text-center transition-colors group-hover:text-[#C73D1A] group-hover:font-extrabold">Community Updates</span>
                     <a href="{{ route('notices.announcements') }}" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
                         View More
                     </a>
                 </div>
 
-                <div class="bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
+                <div class="group bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-address-book text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase mb-4 text-center">Alumni Directory</span>
+                    <span class="text-xs font-bold uppercase mb-4 text-center transition-colors group-hover:text-[#C73D1A] group-hover:font-extrabold">Alumni Directory</span>
                     <a href="{{ route('alumni.index') }}" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
                         View More
                     </a>
                 </div>
 
-                <div class="bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
+                <div class="group bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-briefcase text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase mb-4 text-center">Job Board</span>
+                    <span class="text-xs font-bold uppercase mb-4 text-center transition-colors group-hover:text-[#C73D1A] group-hover:font-extrabold">Job Board</span>
                     <a href="{{ route('jobPosting.jobBoard') }}" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
                         View More
                     </a>
                 </div>
 
-                <div class="bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
+                <div class="group bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-comments text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase mb-4 text-center">Network Connect</span>
+                    <span class="text-xs font-bold uppercase mb-4 text-center transition-colors group-hover:text-[#C73D1A] group-hover:font-extrabold">Network Connect</span>
                     <a href="{{ route('messages.index') }}" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
                         View More
                     </a>
                 </div>
 
-                <div class="bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
+                <div class="group bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-id-card text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase mb-4 text-center">Alumni ID &amp; Yearbook Claiming Status</span>
+                    <span class="text-xs font-bold uppercase mb-4 text-center transition-colors group-hover:text-[#C73D1A] group-hover:font-extrabold">Alumni ID &amp; Yearbook Claiming Status</span>
                     <a href="#status-section" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
                         View More
                     </a>
@@ -539,55 +564,78 @@
             ->get();
     @endphp
 
-    <section class="py-16 px-6 max-w-6xl mx-auto relative">
-        <div class="flex justify-between items-end mb-8 pl-4">
-            <span class="inner-text-shadow text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent
-            text-4xl font-bold  uppercase tracking-tighter"> | Campus Events</span>
-            <a href="{{ route('notices.eventsSeminars') }}" class="font-bold uppercase text-xs bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent hover:border-b-2 border-[#C73D1A] transition-colors">Go to Events ></a>
+    <section class="py-12 sm:py-16 px-4 sm:px-6 max-w-6xl mx-auto relative">
+        <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 mb-4 sm:mb-6 sm:pl-4">
+            <h2 class="inner-text-shadow text-2xl sm:text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent uppercase tracking-tighter">| Campus Events</h2>
+            <a href="{{ route('notices.eventsSeminars') }}" class="font-bold uppercase text-xs sm:text-sm bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent hover:border-b-2 border-[#C73D1A] transition-colors">Go to Events ></a>
         </div>
 
         @if ($upcomingNotices->isEmpty())
-        <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-10 text-center text-gray-500">
-            <i class="fa-regular fa-calendar-xmark text-3xl mb-3 block text-gray-300"></i>
-            <p>No upcoming events or seminars right now.</p>
+        {{-- Empty state: brand navy, not gray. --}}
+        <div class="bg-white rounded-2xl border border-slate-200 px-6 py-10 text-center">
+            <span class="mx-auto w-14 h-14 rounded-2xl bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-regular fa-calendar-xmark text-2xl"></i></span>
+            <p class="mt-3 text-base font-bold text-[#0E0F3B]">No upcoming events or seminars right now.</p>
+            <p class="mt-1 text-sm text-[#1D264F]">New campus events will show up here as soon as they're posted.</p>
         </div>
         @else
-        <div class="relative">
+        {{-- Same card + arrow design as the Job Matches carousel above. --}}
+        <div class="relative sm:px-12">
             <button id="alumniEventsCarouselPrev" type="button" aria-label="Previous events"
-                class="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg items-center justify-center text-[#0E0F3B] hover:bg-slate-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
-                <i class="fa-solid fa-chevron-left"></i>
+                class="hidden md:flex absolute left-0 top-16 sm:top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-slate-200 shadow-md text-[#1D264F] items-center justify-center hover:bg-[#1D264F] hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-chevron-left text-sm"></i>
             </button>
 
-            <div id="alumniEventsCarouselTrack" class="carousel-track flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-6 pb-2">
+            <div id="alumniEventsCarouselTrack" class="dash-carousel-track flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-4 sm:gap-6">
                 @foreach ($upcomingNotices as $notice)
-                <div class="snap-start shrink-0 w-full md:w-[calc(33.333%-1rem)]">
-                    <a href="{{ route('notices.eventsSeminars', ['tab' => $notice->category === 'seminar' ? 'seminar' : 'events', 'notice' => $notice->id]) }}"
-                        class="block bg-white rounded-lg overflow-hidden border border-gray-100 h-full">
-                        <div class="h-40 relative">
-                            <img src="{{ $notice->thumbnailUrl() }}" class="w-full h-full object-cover mix-blend-multiply"
+                @php
+                    $noticeOverlay = $notice->defaultThumbnailOverlay();
+                    $isSeminar = $notice->category === 'seminar';
+                @endphp
+                <div class="snap-start shrink-0 w-[85%] sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]" data-event-card>
+                    <a href="{{ route('notices.eventsSeminars', ['tab' => $isSeminar ? 'seminar' : 'events', 'notice' => $notice->id]) }}"
+                        class="group/card h-full bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col transition-colors duration-200 hover:border-[#C73D1A]/40">
+                        <div class="relative h-32 sm:h-36 shrink-0">
+                            <img src="{{ $notice->thumbnailUrl() }}" alt="" class="w-full h-full object-cover mix-blend-multiply"
                                 @if ($notice->usesDefaultThumbnail())
-                                style="opacity:{{ $notice->defaultThumbnailOverlay()['imageOpacity'] }}"
+                                style="opacity:{{ $noticeOverlay['imageOpacity'] }}"
                                 @endif>
                             @if ($notice->usesDefaultThumbnail())
-                            <div class="absolute inset-0" style="background-color:{{ $notice->defaultThumbnailOverlay()['color'] }}; opacity:{{ $notice->defaultThumbnailOverlay()['overlayOpacity'] }}"></div>
+                            <div class="absolute inset-0" style="background-color:{{ $noticeOverlay['color'] }}; opacity:{{ $noticeOverlay['overlayOpacity'] }}"></div>
                             @endif
+                            <span class="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-white/95 text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full shadow-sm" style="color:{{ $noticeOverlay['color'] }}">
+                                <span class="w-1.5 h-1.5 rounded-full" style="background-color:{{ $noticeOverlay['color'] }}"></span> {{ $notice->categoryLabel() }}
+                            </span>
+                            {{-- Date tile, in the category's color --}}
+                            <span class="absolute top-3 right-3 w-12 rounded-lg text-white text-center py-1.5 shadow-md" style="background-color:{{ $noticeOverlay['color'] }}">
+                                <span class="block text-lg font-bold leading-none">{{ $notice->event_datetime->format('d') }}</span>
+                                <span class="block mt-0.5 text-[10px] font-semibold uppercase">{{ $notice->event_datetime->format('M') }}</span>
+                            </span>
                         </div>
 
-                        <div class="p-4 flex gap-4 items-start relative">
-                            <div class="flex-grow">
-                                <h3 class="font-bold text-blue-900 uppercase text-sm">{{ $notice->title }}</h3>
-                                @if($notice->location)
-                                <p class="text-[10px] text-gray-500 mb-2">
-                                    <i class="fa-solid fa-location-dot mr-1"></i> {{ $notice->location }}
-                                </p>
-                                @endif
-                                <p class="text-xs text-black w-3/4 leading-tight notice-description-content">
-                                    {{ \Illuminate\Support\Str::limit(strip_tags($notice->description ?? ''), 80) ?: 'No description provided.' }}
-                                </p>
-                            </div>
-                            <div class="flex-shrink-0 absolute right-0 text-white p-2 text-center w-16 rounded-sm shadow-sm" style="background-color:{{ $notice->defaultThumbnailOverlay()['color'] }}">
-                                <span class="block text-xl font-bold leading-none tracking-tighter">{{ $notice->event_datetime->format('d') }}</span>
-                                <span class="text-[10px] uppercase font-semibold">{{ $notice->event_datetime->format('M') }}</span>
+                        <div class="p-4 sm:p-5 flex flex-col flex-1">
+                            {{-- Always exactly two lines tall, so every card's details line up. --}}
+                            <h3 class="font-bold text-[#0E0F3B] uppercase text-sm md:text-[15px] leading-snug line-clamp-2 h-[2.75em] break-words transition-colors group-hover/card:text-[#C73D1A] group-hover/card:font-extrabold" title="{{ $notice->title }}">{{ $notice->title }}</h3>
+
+                            <ul class="mt-2 space-y-1 text-xs text-slate-500">
+                                <li class="flex items-center gap-2">
+                                    <i class="fa-regular fa-clock w-3.5 text-center text-slate-400"></i>
+                                    {{ $notice->event_datetime->format('D, M d, Y · g:i A') }}
+                                </li>
+                                <li class="flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid fa-location-dot w-3.5 text-center text-slate-400"></i>
+                                    <span class="truncate" title="{{ $notice->location }}">{{ $notice->location ?: 'Location to be announced' }}</span>
+                                </li>
+                            </ul>
+
+                            <p class="mt-3 text-xs text-slate-600 leading-relaxed line-clamp-3">
+                                {{ \Illuminate\Support\Str::limit(strip_tags($notice->description ?? ''), 160) ?: 'No description provided.' }}
+                            </p>
+
+                            <div class="mt-auto pt-4 sm:pt-5">
+                                {{-- A span, not a button/link: the whole card is already the link. --}}
+                                <span class="flex items-center justify-center gap-2 w-full bg-[#1D46A4] group-hover/card:bg-[#0E0F3B] text-white py-2.5 rounded-lg font-bold text-xs tracking-wider uppercase transition-colors">
+                                    View Details <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                </span>
                             </div>
                         </div>
                     </a>
@@ -596,8 +644,8 @@
             </div>
 
             <button id="alumniEventsCarouselNext" type="button" aria-label="Next events"
-                class="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg items-center justify-center text-[#0E0F3B] hover:bg-slate-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
-                <i class="fa-solid fa-chevron-right"></i>
+                class="hidden md:flex absolute right-0 top-16 sm:top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-slate-200 shadow-md text-[#1D264F] items-center justify-center hover:bg-[#1D264F] hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-chevron-right text-sm"></i>
             </button>
         </div>
 
@@ -647,8 +695,9 @@
         @endif
     </section>
 
-    <section id="alumni-testimonials" class="AlumniTestimonial py-20 px-6 text-white text-center mb-10">
-        <h2 class="text-3xl font-bold uppercase mb-12 tracking-widest">Alumni Testimonials</h2>
+    <section id="alumni-testimonials" class="AlumniTestimonial py-14 sm:py-20 px-4 sm:px-6 text-white text-center mb-10">
+        <h2 class="text-2xl sm:text-3xl font-bold uppercase tracking-widest">Alumni Testimonials</h2>
+        <p class="mt-2 mb-8 sm:mb-12 text-sm text-white/70">What PLV graduates say about PLV-AlumNet.</p>
 
         <div id="testimonial-cards-wrap">
             @include('partials.testimonial-cards')

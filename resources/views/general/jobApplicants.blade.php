@@ -285,7 +285,7 @@
                 data-type="{{ $jobPost->job_posting_employment_type }}"
                 data-setup="{{ $jobPost->job_posting_setup }}"
                 data-valid="{{ $jobPost->job_closing_date }}"
-                data-programs="{{ $jobPost->programs->pluck('program_name')->implode(', ') }}"
+                data-programs="{{ $jobPost->programs->map->labeledName()->implode(', ') }}"
                 data-industry="{{ $jobPost->industry->industry_name ?? 'Not specified' }}"
                 onclick="openJobViewModal(this)"
                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openJobViewModal(this);}">
@@ -329,7 +329,7 @@
                             <p class="text-blue-900">Recommended Course/Program:
                                 <span class="font-normal text-black">
                                     @foreach ($jobPost->programs as $program)
-                                        {{ $program->program_name }}<br>
+                                        {{ $program->labeledName() }}<br>
                                     @endforeach
                                 </span>
                             </p>

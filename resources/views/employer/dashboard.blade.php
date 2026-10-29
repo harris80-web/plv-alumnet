@@ -181,79 +181,100 @@
         </div>
     </section>
 
-    <section class="bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <section class="bg-gray-50 py-10 sm:py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-6xl mx-auto">
 
-            <div class="flex justify-between items-end mb-8 pb-4">
-                <h2 class="text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent tracking-tight">JOB POSTING</h2>
-                <a href="{{ route('jobPosting.myJobPosts', ['id' => Auth::id()]) }}" class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent font-bold uppercase text-sm hover:border-b-2 border-[#C73D1A] transition-all">
+            <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 mb-4 sm:mb-6">
+                <h2 class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent tracking-tight">JOB POSTING</h2>
+                <a href="{{ route('jobPosting.myJobPosts', ['id' => Auth::id()]) }}" class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent font-bold uppercase text-xs sm:text-sm hover:border-b-2 border-[#C73D1A] transition-all">
                     GO TO MY JOB POSTINGS >
                 </a>
             </div>
 
-            <div class="relative {{ $jobPostings->count() > 3 ? 'px-8 md:px-12' : '' }}">
-                @if ($jobPostings->count() > 3)
-                <button id="prevBtn" class="absolute left-0 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#C73D1A] transition-colors z-10">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 md:h-12 md:w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
+            {{-- Carousel. Phones: one card plus a peek of the next (swipe). Tablets: two
+                 cards, desktop: three, with arrow buttons whenever there's more to scroll. --}}
+            <div class="relative {{ $jobPostings->count() > 1 ? 'sm:px-12' : '' }}">
+                @if ($jobPostings->count() > 1)
+                <button type="button" id="prevBtn" aria-label="Previous job postings"
+                    class="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-slate-200 shadow-md text-[#1D264F] items-center justify-center hover:bg-[#1D264F] hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none">
+                    <i class="fa-solid fa-chevron-left text-sm"></i>
                 </button>
-
-                <button id="nextBtn" class="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#C73D1A] transition-colors z-10">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 md:h-12 md:w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
+                <button type="button" id="nextBtn" aria-label="Next job postings"
+                    class="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-slate-200 shadow-md text-[#1D264F] items-center justify-center hover:bg-[#1D264F] hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none">
+                    <i class="fa-solid fa-chevron-right text-sm"></i>
                 </button>
                 @endif
 
-                <div id="slider" class="flex gap-6 overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth">
+                <div id="slider" class="flex gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth">
 
                     @forelse ($jobPostings as $job)
                     @php
                         $cardImage = $job->thumbnailUrl();
                         $usesDefaultImage = $job->usesDefaultThumbnail();
                         $imgOverlay = $job->defaultThumbnailOverlay();
+                        // Same expired / pending / approved status as My Job Postings.
+                        $cardStatus = [
+                            'pending' => ['Pending Approval', 'text-amber-600', 'bg-amber-500'],
+                            'approved' => ['Approved', 'text-green-700', 'bg-green-500'],
+                            'expired' => ['Expired', 'text-slate-600', 'bg-slate-400'],
+                        ][$job->myPostStatus()];
                     @endphp
-                    <div class="min-w-full md:min-w-[calc(50%-12px)] lg:min-w-[calc(33.333%-16px)] snap-center">
-                        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 flex flex-col transition-transform hover:scale-[1.02]">
-                            <div class="relative h-48">
+                    <div class="shrink-0 w-[85%] sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] snap-start" data-job-card>
+                        {{-- No shadow (it crowded the carousel) — a border that warms up on hover instead. --}}
+                        <article class="group h-full bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col transition-colors duration-200 hover:border-[#C73D1A]/40">
+                            <div class="relative h-32 sm:h-36 shrink-0">
                                 <div class="absolute inset-0 bg-cover bg-center" style="background-image:url('{{ $cardImage }}'); @if ($usesDefaultImage) opacity:{{ $imgOverlay['imageOpacity'] }}; @endif"></div>
                                 @if ($usesDefaultImage)
                                 <div class="absolute inset-0" style="background-color:{{ $imgOverlay['color'] }}; opacity:{{ $imgOverlay['overlayOpacity'] }}"></div>
                                 @else
                                 <div class="absolute inset-0 bg-[#0E0F3B]/50 mix-blend-multiply"></div>
                                 @endif
-                                @unless ($job->job_approved)
-                                <span class="absolute top-3 left-3 bg-amber-500 text-white text-[9px] font-bold uppercase px-2 py-1 rounded-full">Pending Approval</span>
-                                @endunless
+                                <span class="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-white/95 {{ $cardStatus[1] }} text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full shadow-sm">
+                                    <span class="w-1.5 h-1.5 rounded-full {{ $cardStatus[2] }}"></span> {{ $cardStatus[0] }}
+                                </span>
                             </div>
-                            <div class="p-6 flex flex-col flex-grow">
-                                <div class="flex justify-between items-start gap-2 mb-2">
-                                    <h3 class="font-bold text-[#0E0F3B] uppercase text-lg md:text-xl leading-tight line-clamp-2 min-h-[2.5rem] md:min-h-[3rem]">{{ $job->job_posting_title }}</h3>
-                                    <span class="text-[9px] text-gray-400 flex items-center gap-1 mt-1 shrink-0">{{ $job->created_at->diffForHumans() }}</span>
+
+                            <div class="p-4 sm:p-5 flex flex-col flex-1">
+                                {{-- Always exactly two lines tall, so every card's details line up.
+                                     text-[15px] (not md:text-base) so leading-snug isn't overridden. --}}
+                                <h3 class="font-bold text-[#0E0F3B] uppercase text-sm md:text-[15px] leading-snug line-clamp-2 h-[2.75em] break-words transition-colors group-hover:text-[#C73D1A] group-hover:font-extrabold" title="{{ $job->job_posting_title }}">{{ $job->job_posting_title }}</h3>
+
+                                <ul class="mt-2 space-y-1 text-xs text-slate-500">
+                                    <li class="flex items-center gap-2">
+                                        <i class="fa-regular fa-calendar w-3.5 text-center text-slate-400"></i>
+                                        {{ $job->job_closing_date ? 'Closes ' . \Carbon\Carbon::parse($job->job_closing_date)->format('M d, Y') : 'Open-ended' }}
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <i class="fa-regular fa-clock w-3.5 text-center text-slate-400"></i>
+                                        Posted {{ $job->created_at->diffForHumans() }}
+                                    </li>
+                                </ul>
+
+                                <div class="mt-3 sm:mt-4 flex items-center gap-3 rounded-xl bg-[#1D264F]/5 px-3 py-2.5">
+                                    <span class="w-8 h-8 shrink-0 rounded-lg bg-white text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-users text-xs"></i></span>
+                                    <div class="min-w-0">
+                                        <p class="text-base font-bold text-[#0E0F3B] leading-none">{{ $job->applications_count }}</p>
+                                        <p class="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ \Illuminate\Support\Str::plural('Application', $job->applications_count) }} received</p>
+                                    </div>
                                 </div>
-                                <div class="flex items-center text-gray-400 text-xs font-semibold mb-4 uppercase">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                    </svg>
-                                    {{ $job->job_closing_date ? 'Closes ' . \Carbon\Carbon::parse($job->job_closing_date)->format('M d, Y') : 'Open-ended' }}
+
+                                <div class="mt-auto pt-4 sm:pt-5">
+                                    <a href="{{ route('jobApplication.showApplications', ['jobPostingId' => $job->job_posting_id]) }}"
+                                        class="flex items-center justify-center gap-2 w-full bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white py-2.5 rounded-lg font-bold text-xs tracking-wider transition-all uppercase">
+                                        View Applicants <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                    </a>
                                 </div>
-                                <div class="space-y-1 mb-6 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                                    <p>Applications Received: {{ $job->applications_count }}</p>
-                                </div>
-                                <a href="{{ route('jobApplication.showApplications', ['jobPostingId' => $job->job_posting_id]) }}"
-                                    class="block text-center w-full bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white py-3 rounded-md font-bold text-xs tracking-widest hover:bg-black transition-all uppercase">
-                                    View Applicants
-                                </a>
                             </div>
-                        </div>
+                        </article>
                     </div>
                     @empty
-                    <div class="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-10 text-center text-gray-500">
-                        <i class="fa-solid fa-briefcase text-3xl mb-3 block text-gray-300"></i>
-                        <p class="mb-4">You haven't posted any jobs yet.</p>
-                        <a href="{{ route('jobPosting.jobBoard') }}" class="inline-block px-6 py-2 rounded-md bg-[#0E0F3B] text-white text-sm font-bold uppercase hover:bg-[#1D264F] transition-colors">
-                            Post a Job
+                    {{-- Empty state: brand navy, not gray. --}}
+                    <div class="w-full bg-white rounded-2xl border border-slate-200 px-6 py-10 text-center">
+                        <span class="mx-auto w-14 h-14 rounded-2xl bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center"><i class="fa-solid fa-briefcase text-2xl"></i></span>
+                        <p class="mt-3 text-base font-bold text-[#0E0F3B]">You haven't posted any jobs yet.</p>
+                        <p class="mt-1 text-sm text-[#1D264F]">Your job posts will show up here with their applicant counts.</p>
+                        <a href="{{ route('jobPosting.jobBoard') }}" class="mt-5 inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-[#0E0F3B] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#1D264F] transition-colors">
+                            <i class="fa-solid fa-plus"></i> Post a Job
                         </a>
                     </div>
                     @endforelse
@@ -283,16 +304,28 @@
 
             // Scrolls by exactly one card's width (+ the flex gap) instead of a
             // fixed pixel amount, since a card's rendered width changes across
-            // the grid's responsive breakpoints (full/half/third width).
+            // breakpoints (85% / half / third).
             function cardScrollAmount() {
-                const firstCard = slider.children[0];
+                const firstCard = slider.querySelector('[data-job-card]');
                 if (!firstCard) return slider.clientWidth;
                 const gap = parseFloat(getComputedStyle(slider).columnGap || 0);
                 return firstCard.getBoundingClientRect().width + gap;
             }
 
+            // Arrows only when there's something to scroll to; dimmed at either end.
+            function updateArrows() {
+                const max = slider.scrollWidth - slider.clientWidth;
+                const scrollable = max > 2;
+                prevBtn.style.visibility = nextBtn.style.visibility = scrollable ? '' : 'hidden';
+                prevBtn.disabled = !scrollable || slider.scrollLeft <= 2;
+                nextBtn.disabled = !scrollable || slider.scrollLeft >= max - 2;
+            }
+
             prevBtn.addEventListener('click', () => slider.scrollBy({ left: -cardScrollAmount(), behavior: 'smooth' }));
             nextBtn.addEventListener('click', () => slider.scrollBy({ left: cardScrollAmount(), behavior: 'smooth' }));
+            slider.addEventListener('scroll', updateArrows, { passive: true });
+            window.addEventListener('resize', updateArrows);
+            updateArrows();
         })();
     </script>
 
@@ -408,51 +441,51 @@
 
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
 
-                <div class="bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
+                <div class="group bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-users text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase mb-4 text-center">Community Updates</span>
+                    <span class="text-xs font-bold uppercase mb-4 text-center transition-colors group-hover:text-[#C73D1A] group-hover:font-extrabold">Community Updates</span>
                     <a href="{{ route('notices.employerAnnouncements') }}" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
                         View More
                     </a>
                 </div>
 
-                <div class="bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
+                <div class="group bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-address-book text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase mb-4 text-center">Review Candidates</span>
+                    <span class="text-xs font-bold uppercase mb-4 text-center transition-colors group-hover:text-[#C73D1A] group-hover:font-extrabold">Review Candidates</span>
                     <a href="{{ route('jobPosting.myJobPosts', ['id' => Auth::id()]) }}" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
                         View More
                     </a>
                 </div>
 
-                <div class="bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
+                <div class="group bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-briefcase text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase mb-4 text-center">Post Jobs</span>
+                    <span class="text-xs font-bold uppercase mb-4 text-center transition-colors group-hover:text-[#C73D1A] group-hover:font-extrabold">Post Jobs</span>
                     <a href="{{ route('jobPosting.jobBoard') }}" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
                         View More
                     </a>
                 </div>
 
-                <div class="bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
+                <div class="group bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-clipboard-list text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase mb-4 text-center">Manage Postings</span>
+                    <span class="text-xs font-bold uppercase mb-4 text-center transition-colors group-hover:text-[#C73D1A] group-hover:font-extrabold">Manage Postings</span>
                     <a href="{{ route('jobPosting.myJobPosts', ['id' => Auth::id()]) }}" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
                         View More
                     </a>
                 </div>
 
-                <div class="bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
+                <div class="group bg-white rounded-2xl p-6 text-[#0E0F3B] shadow-lg flex flex-col items-center justify-center transition-transform hover:scale-105">
                     <div class="w-16 h-16 bg-[#0E0F3B] rounded-full flex items-center justify-center mb-3">
                         <i class="fa-solid fa-user text-3xl text-white"></i>
                     </div>
-                    <span class="text-xs font-bold uppercase mb-4 text-center">Manage Profile</span>
+                    <span class="text-xs font-bold uppercase mb-4 text-center transition-colors group-hover:text-[#C73D1A] group-hover:font-extrabold">Manage Profile</span>
                     <a href="{{ route('users.editProfile') }}" class="text-[10px] font-bold uppercase py-1.5 px-4 border border-[#0E0F3B] rounded-md hover:bg-[#0E0F3B] hover:text-white transition-colors">
                         View More
                     </a>

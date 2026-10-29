@@ -191,7 +191,10 @@
             'Job Setup' => implode(', ', (array) ($filters['job_setup'] ?? [])),
             'Location' => $filters['location'] ?? '',
             'Date Posted' => ['24h' => 'Last 24 Hours', '7d' => 'Last 7 Days', '30d' => 'Last 30 Days'][$filters['date_posted'] ?? ''] ?? '',
+            'Applicants' => ['any' => 'Posts with applicants', 'pending' => 'Posts with applicants pending review', 'shortlisted' => 'Posts with shortlisted applicants', 'hired' => 'Posts with hired applicants', 'declined' => 'Posts with declined applicants'][$filters['applicants'] ?? ''] ?? '',
         ]);
+        // Opening a post's Applicants from this filtered list shows that status straight away.
+        $applicantsStatusParam = in_array($filters['applicants'] ?? '', ['pending', 'shortlisted', 'hired', 'declined'], true) ? ['status' => ucfirst($filters['applicants'])] : [];
 
         // Status widgets: clicking one filters the table by that status, clicking it again clears it.
         $statusCards = [
@@ -247,7 +250,7 @@
                     <input type="hidden" name="{{ $arrayFilter }}[]" value="{{ $value }}">
                     @endforeach
                 @endforeach
-                @foreach (['location', 'date_posted'] as $textFilter)
+                @foreach (['location', 'date_posted', 'applicants'] as $textFilter)
                     @if (!empty($filters[$textFilter]))
                     <input type="hidden" name="{{ $textFilter }}" value="{{ $filters[$textFilter] }}">
                     @endif
@@ -271,6 +274,7 @@
                             <option value="pending" {{ $activeStatus === 'pending' ? 'selected' : '' }}>Pending Approval</option>
                             <option value="approved" {{ $activeStatus === 'approved' ? 'selected' : '' }}>Approved</option>
                             <option value="expired" {{ $activeStatus === 'expired' ? 'selected' : '' }}>Expired</option>
+                            <option value="expiring" {{ $activeStatus === 'expiring' ? 'selected' : '' }}>Expiring Soon ({{ \App\Models\JobPosting::EXPIRING_SOON_DAYS }} days)</option>
                         </select>
                         <i class="fas fa-chevron-down text-[10px] absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
                     </div>
@@ -393,7 +397,7 @@
                             </td>
                             <td data-cell="btn" class="border-r border-slate-100">
                                 @if ($job->job_approved)
-                                <a href="{{ route('jobApplication.showApplications', ['jobPostingId' => $job->job_posting_id]) }}"
+                                <a href="{{ route('jobApplication.showApplications', ['jobPostingId' => $job->job_posting_id] + $applicantsStatusParam) }}"
                                     class="inline-block px-3 py-1.5 bg-[#1D264F] hover:bg-blue-900 text-white rounded-md text-[10px] font-bold uppercase tracking-wide transition-colors whitespace-nowrap">
                                     <i class="fas fa-users mr-1"></i> Applicants
                                 </a>
@@ -463,8 +467,9 @@
                         </tr>
                         @empty
                         <tr class="my-jobs-empty">
-                            <td colspan="12" class="py-16 text-center text-slate-400">
-                                <i class="fas fa-briefcase text-4xl mb-3 block text-slate-300"></i>
+                            {{-- Empty state: brand dark blue, not gray. --}}
+                            <td colspan="12" class="py-16 text-center text-[#1D264F]">
+                                <i class="fas fa-briefcase text-4xl mb-3 block text-[#1D264F]"></i>
                                 @if ($hasAnyFilter)
                                 <p class="font-semibold text-sm">No job postings match your filters.</p>
                                 <a href="{{ $myJobsUrl }}" class="inline-block mt-2 text-xs font-bold text-[#C73D1A] hover:underline">Clear filters</a>
@@ -497,7 +502,7 @@
         class="fixed top-0 right-0 h-full w-[320px] max-w-full bg-white shadow-2xl z-[206] transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
         <form method="GET" action="{{ $myJobsUrl }}" class="flex flex-col h-full">
             {{-- Keep the toolbar's search/status and the page size when applying panel filters. --}}
-            @foreach (['search', 'status'] as $keep)
+            @foreach (['search', 'status', 'applicants'] as $keep)
                 @if (!empty($filters[$keep]))
                 <input type="hidden" name="{{ $keep }}" value="{{ $filters[$keep] }}">
                 @endif

@@ -6,14 +6,42 @@
     attributes (see partials/job-post-card.blade.php's $cardData), so the
     modal always mirrors the exact card that was clicked — badges, vote
     buttons, bookmark/apply state, "posted by", skill tags, everything.
+
+    Desktop side panel (Job Board only): a page that also renders
+    #jobDetailPanel (general/jobBoard.blade.php) shows these SAME details in a
+    docked panel beside the job list on desktop (>= 1024px, the site's
+    desktop breakpoint) instead of this modal. There is only one copy of the
+    details markup — #jobDetailsContent — which is moved between the modal
+    shell and the panel; openJobModal() fills it the same way either way.
+    Pages without #jobDetailPanel (alumni dashboard) always use the modal.
 --}}
-<div id="jobModal" class="fixed inset-0 z-[100] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 md:p-4">
+<style>
+    /* Long titles / words / URLs and embedded media never widen the details. */
+    #jobDetailsContent .job-description-content { overflow-wrap: anywhere; }
+    #jobDetailsContent .job-description-content img,
+    #jobDetailsContent .job-description-content video,
+    #jobDetailsContent .job-description-content iframe,
+    #jobDetailsContent .job-description-content table { max-width: 100%; height: auto; }
+    #jobDetailsContent .job-description-content pre { white-space: pre-wrap; }
 
-    <div class="bg-white w-full max-w-6xl h-[95vh] md:h-[92vh] rounded-3xl shadow-2xl relative flex flex-col overflow-hidden">
+    @media (max-width: 1023px) {
+        /* Mobile modal: comfortable 44px tap targets for the CTAs. */
+        #jobModal :is(#modal-apply-btn, #modal-applied-btn, #modal-login-link) { min-height: 2.75rem; }
+        /* Keep the sheet inside the notch / home-indicator safe area. */
+        #jobModal { padding: max(0.5rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-right)) max(0.5rem, env(safe-area-inset-bottom)) max(0.5rem, env(safe-area-inset-left)); }
+        #jobModalShell { max-height: 100%; }
+    }
+</style>
 
-        <div class="flex-1 overflow-y-auto">
-            <div class="h-56 md:h-72 w-full relative shrink-0">
-                <img id="modal-img" src="" class="hidden w-full h-full object-cover">
+<div id="jobModal" class="fixed inset-0 z-[100] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 md:p-4"
+    role="dialog" aria-modal="true" aria-labelledby="modal-title">
+
+    <div id="jobModalShell" class="bg-white w-full max-w-6xl h-[95vh] md:h-[92vh] rounded-3xl shadow-2xl relative flex flex-col overflow-hidden">
+
+        {{-- The details themselves: one copy, moved into #jobDetailPanel on the Job Board's desktop view. --}}
+        <div id="jobDetailsContent" class="flex-1 overflow-y-auto overscroll-contain">
+            <div class="h-56 md:h-72 w-full relative shrink-0 jd-hero">
+                <img id="modal-img" src="" alt="" class="hidden w-full h-full object-cover">
                 <div id="modal-img-fallback" class="hidden w-full h-full bg-gradient-to-br from-[#0E0F3B] to-[#1D264F] items-center justify-center">
                     <i class="fas fa-building text-white/30 text-7xl"></i>
                 </div>
@@ -23,20 +51,20 @@
                     <i class="fas fa-star mr-1"></i> Recommended
                 </span>
 
-                <button onclick="toggleModal()" class="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors">
+                <button onclick="toggleModal()" aria-label="Close job details" class="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors">
                     <i class="fas fa-times-circle text-2xl"></i>
                 </button>
             </div>
 
-            <div class="p-6 md:p-10">
+            <div class="p-6 md:p-10 jd-body">
                 <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-                    <div>
-                        <h2 id="modal-title" class="text-2xl md:text-3xl font-bold text-[#1D264F] uppercase tracking-tighter">JOB TITLE</h2>
+                    <div class="min-w-0">
+                        <h2 id="modal-title" class="text-2xl md:text-3xl font-bold text-[#1D264F] uppercase tracking-tighter break-words">JOB TITLE</h2>
                         <div class="flex flex-wrap items-center text-gray-600 mt-1 gap-x-4 gap-y-1">
-                            <p id="modal-company" class="font-semibold text-lg">Company Name</p>
+                            <p id="modal-company" class="font-semibold text-lg break-words min-w-0">Company Name</p>
                             <span id="modal-date" class="flex items-center text-sm"><i class="far fa-calendar-alt mr-2"></i> Posted 2 days ago</span>
                         </div>
-                        <p id="modal-address" class="text-gray-500 font-medium">Company Address</p>
+                        <p id="modal-address" class="text-gray-500 font-medium break-words">Company Address</p>
                     </div>
 
                     <div class="flex items-center gap-3 shrink-0">
@@ -65,15 +93,15 @@
                                     <span class="absolute top-full right-2 border-4 border-transparent border-t-gray-800"></span>
                                 </span>
                             </span>
-                            <button onclick="showModalTooltip('modal-share-tooltip')" class="text-[#1D264F] text-2xl hover:scale-110 transition-transform">
+                            <button onclick="showModalTooltip('modal-share-tooltip')" aria-label="Share this job" class="text-[#1D264F] text-2xl hover:scale-110 transition-transform">
                                 <i class="fas fa-share-nodes"></i>
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-8 flex flex-col md:flex-row gap-8">
-                    <div class="md:w-3/5">
+                <div class="mt-8 flex flex-col md:flex-row gap-8 jd-split">
+                    <div class="md:w-3/5 min-w-0 jd-col">
                         <h3 class="font-bold text-[#0E0F3B] mb-3">Job Description:</h3>
                         <div id="modal-description" class="text-gray-600 text-sm leading-relaxed text-justify job-description-content">
                         </div>
@@ -84,39 +112,39 @@
                         </div>
                     </div>
 
-                    <div class="md:w-2/5 space-y-3 text-[#1D264F]">
-                        <p class="flex justify-between text-sm"><span class="font-bold">Job Type:</span> <span id="modal-job-type">Full-Time</span></p>
-                        <p class="flex justify-between text-sm"><span class="font-bold">Job Setup:</span> <span id="modal-job-setup">Remote</span></p>
+                    <div class="md:w-2/5 space-y-3 text-[#1D264F] min-w-0 jd-col">
+                        <p class="flex justify-between gap-3 text-sm"><span class="font-bold">Job Type:</span> <span id="modal-job-type" class="text-right">Full-Time</span></p>
+                        <p class="flex justify-between gap-3 text-sm"><span class="font-bold">Job Setup:</span> <span id="modal-job-setup" class="text-right">Remote</span></p>
                         <div class="pt-3 border-t border-gray-100">
                             <p class="font-bold text-sm">Recommended Course/Program:</p>
-                            <p id="modal-programs" class="text-sm leading-snug text-gray-600 mt-1">
+                            <p id="modal-programs" class="text-sm leading-snug text-gray-600 mt-1 break-words">
                                 BSIT - Bachelor of Science in Information Technology
                             </p>
                         </div>
                         <div class="pt-3 border-t border-gray-100">
                             <p class="font-bold text-sm">Industry / Sector:</p>
-                            <p id="modal-industry" class="text-sm leading-snug text-gray-600 mt-1"></p>
+                            <p id="modal-industry" class="text-sm leading-snug text-gray-600 mt-1 break-words"></p>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-8 pt-6 border-t flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div class="flex items-center gap-4">
+                <div class="mt-8 pt-6 border-t flex flex-col md:flex-row md:items-center md:justify-between gap-4 jd-row">
+                    <div class="flex flex-wrap items-center gap-4">
                         <div id="modal-valid" class="text-gray-500 text-sm flex items-center font-semibold">
                             <i class="far fa-calendar-check mr-2"></i> Valid until
                         </div>
                         <span id="modal-status-badge" class="hidden text-xs font-bold px-3 py-1 rounded-full"></span>
                     </div>
 
-                    <div class="flex items-center gap-2 text-xs text-gray-500">
-                        <img id="modal-posted-avatar" src="" class="w-6 h-6 rounded-full">
-                        <span>Posted by <span id="modal-posted-by" class="font-bold text-black"></span></span>
+                    <div class="flex items-center gap-2 text-xs text-gray-500 min-w-0">
+                        <img id="modal-posted-avatar" src="" alt="" class="w-6 h-6 rounded-full shrink-0">
+                        <span class="break-words min-w-0">Posted by <span id="modal-posted-by" class="font-bold text-black"></span></span>
                     </div>
                 </div>
 
-                <div class="mt-6 pt-4 border-t border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="mt-6 pt-4 border-t border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4 jd-row">
                     <div class="flex items-center gap-3 flex-wrap">
-                        <div id="modal-vote-section" class="hidden flex items-center gap-2">
+                        <div id="modal-vote-section" class="hidden flex items-center gap-2 flex-wrap">
                             <button type="button" class="vote-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors border-gray-300 text-gray-500 hover:border-green-500 hover:text-green-600"
                                 data-vote-type="upvote" onclick="castCompanyVote(this)">
                                 <i class="fas fa-thumbs-up"></i> <span class="vote-count">0</span>
@@ -145,14 +173,15 @@
                         </a>
                     </div>
 
-                    <div class="flex items-center gap-3">
-                        <button type="button" id="modal-apply-btn" class="hidden bg-[#1D46A4] hover:bg-[#0E0F3B] text-white px-8 py-2 rounded-md font-bold text-sm transition-colors">
+                    {{-- Phones: the CTA goes full width (easy to tap); from sm up it keeps its own width. --}}
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
+                        <button type="button" id="modal-apply-btn" class="hidden w-full sm:w-auto bg-[#1D46A4] hover:bg-[#0E0F3B] text-white px-8 py-2 rounded-md font-bold text-sm transition-colors">
                             APPLY
                         </button>
-                        <button type="button" id="modal-applied-btn" disabled class="hidden bg-green-600 cursor-not-allowed text-white px-8 py-2 rounded-md font-bold text-sm items-center gap-2">
+                        <button type="button" id="modal-applied-btn" disabled class="hidden w-full sm:w-auto justify-center bg-green-600 cursor-not-allowed text-white px-8 py-2 rounded-md font-bold text-sm items-center gap-2">
                             <i class="fas fa-check-circle"></i> APPLIED
                         </button>
-                        <a id="modal-login-link" href="{{ route('auth.login') }}" class="hidden bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white px-6 py-2 rounded-md font-bold text-sm transition-colors">
+                        <a id="modal-login-link" href="{{ route('auth.login') }}" class="hidden w-full sm:w-auto text-center bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white px-6 py-2 rounded-md font-bold text-sm transition-colors">
                             LOGIN TO APPLY
                         </a>
                     </div>
@@ -169,8 +198,47 @@
     const JOB_MODAL_BOOKMARK_URL_TMPL = @json(route('jobBookmark.toggle', 999999999));
     const JOB_MODAL_REVIEWS_URL_TMPL = @json(route('employerReviews.index', ['employer' => 999999999]));
 
+    // ── Modal vs. desktop side panel ──────────────────────────────────────
+    // Desktop = >= 1024px (Tailwind `lg`, the same line responsive-public.css
+    // uses for its "compact" <= 1023px rules). Only pages that render
+    // #jobDetailPanel get the panel; everywhere else stays a modal.
+    const JOB_DETAILS_DESKTOP_MQ = window.matchMedia('(min-width: 1024px)');
+    const jobDetailsState = { open: false, mode: null, trigger: null, title: '' };
+
+    function jobDetailsPanelEl() { return document.getElementById('jobDetailPanel'); }
+    function jobDetailsUsesPanel() { return !!jobDetailsPanelEl() && JOB_DETAILS_DESKTOP_MQ.matches; }
+
+    // Moves the one #jobDetailsContent into the panel or back into the modal shell.
+    function placeJobDetails(inPanel) {
+        const content = document.getElementById('jobDetailsContent');
+        const target = inPanel ? document.getElementById('jobDetailPanelBody') : document.getElementById('jobModalShell');
+        if (content && target && content.parentElement !== target) target.appendChild(content);
+    }
+
+    function showJobDetailsModal() {
+        placeJobDetails(false);
+        document.getElementById('jobModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        jobDetailsState.mode = 'modal';
+    }
+
+    function hideJobDetailsModal() {
+        document.getElementById('jobModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    function showJobDetailsPanel() {
+        const panel = jobDetailsPanelEl();
+        placeJobDetails(true);
+        window.jobBoardPanel?.open(jobDetailsState.title, jobDetailsState.trigger);
+        panel.setAttribute('aria-label', 'Job details: ' + jobDetailsState.title);
+        jobDetailsState.mode = 'panel';
+    }
+
     function openJobModal(btn) {
         const d = btn.dataset;
+        jobDetailsState.trigger = btn;
+        jobDetailsState.title = d.title || '';
 
         const img = document.getElementById('modal-img');
         const fallback = document.getElementById('modal-img-fallback');
@@ -304,8 +372,9 @@
         }
 
         // Apply / Applied / Login — opening the Apply review modal closes
-        // this one first (see partials/job-apply-modal.blade.php) rather
-        // than stacking a second modal on top of it.
+        // the details MODAL first (see partials/job-apply-modal.blade.php)
+        // rather than stacking a second modal on top of it. The desktop
+        // side panel isn't a modal, so it simply stays open underneath.
         const applyBtn = document.getElementById('modal-apply-btn');
         const appliedBtn = document.getElementById('modal-applied-btn');
         const loginLink = document.getElementById('modal-login-link');
@@ -324,7 +393,7 @@
                     hasBuilderResume = d.hasBuilderResume === '1',
                     hasProfileCoverLetter = d.hasProfileCoverLetter === '1';
                 applyBtn.onclick = function () {
-                    toggleModal();
+                    if (jobDetailsState.mode !== 'panel') toggleModal();
                     openApplyModal(jobId, hasUploadedResumeFile, hasBuilderResume, hasProfileCoverLetter);
                 };
                 applyBtn.classList.remove('hidden');
@@ -345,15 +414,41 @@
             statusBadge.classList.add('hidden');
         }
 
-        document.getElementById('jobModal').classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
+        // Each newly opened job starts at the top of its details.
+        document.getElementById('jobDetailsContent').scrollTop = 0;
+        jobDetailsState.open = true;
+        if (jobDetailsUsesPanel()) {
+            showJobDetailsPanel();
+        } else {
+            showJobDetailsModal();
+        }
     }
 
+    // Closes the details — the modal, or the desktop side panel (name kept: every caller already uses it).
     function toggleModal() {
-        const modal = document.getElementById('jobModal');
-        modal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
+        if (jobDetailsState.mode === 'panel') {
+            window.jobBoardPanel?.close();
+        } else {
+            hideJobDetailsModal();
+        }
+        jobDetailsState.open = false;
+        jobDetailsState.mode = null;
+        const trigger = jobDetailsState.trigger;
+        if (trigger && document.contains(trigger)) trigger.focus({ preventScroll: true });
     }
+
+    // Resizing across the desktop breakpoint while a job is open: switch to the
+    // other presentation for the SAME job (panel <-> modal), nothing re-filled.
+    JOB_DETAILS_DESKTOP_MQ.addEventListener('change', function () {
+        if (!jobDetailsState.open || !jobDetailsPanelEl()) return;
+        if (jobDetailsUsesPanel() && jobDetailsState.mode === 'modal') {
+            hideJobDetailsModal();
+            showJobDetailsPanel();
+        } else if (!jobDetailsUsesPanel() && jobDetailsState.mode === 'panel') {
+            window.jobBoardPanel?.close({ instant: true });
+            showJobDetailsModal();
+        }
+    });
 
     // Optional: Close modal if user clicks outside the white box
     window.addEventListener('click', function(event) {

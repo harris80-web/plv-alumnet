@@ -1209,6 +1209,13 @@
     // whichever row(s) just changed — the badge itself already reflects the
     // new status on this fresh page load, but a plain badge among many rows
     // is easy to miss, especially after a bulk action or on a long list.
+    // ?status=Pending|Shortlisted|Hired|Declined (from the employer dashboard's widgets,
+    // via My Job Postings) opens the list already filtered to that status.
+    document.addEventListener('DOMContentLoaded', function () {
+        const wanted = new URLSearchParams(window.location.search).get('status');
+        if (['Pending', 'Shortlisted', 'Hired', 'Declined'].includes(wanted)) filterStatus(wanted);
+    });
+
     const UPDATED_APPLICATION_IDS = @json(session('updatedApplicationIds', []));
     document.addEventListener('DOMContentLoaded', function () {
         if (!UPDATED_APPLICATION_IDS.length) return;

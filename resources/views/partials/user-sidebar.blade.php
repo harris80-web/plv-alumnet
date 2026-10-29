@@ -198,7 +198,7 @@
     </div>
 
     <div class="border-t border-gray-100 px-6 py-4 shrink-0">
-        <form method="POST" action="{{ route('user.logout') }}">
+        <form id="userLogoutForm" method="POST" action="{{ route('user.logout') }}">
             @csrf
             <button type="submit" class="flex items-center gap-3 text-[#0E0F3B] hover:text-[#ED7A07] transition font-bold text-sm">
                 <i class="fa-solid fa-right-from-bracket"></i> Log out
@@ -206,6 +206,70 @@
         </form>
     </div>
 </div>
+
+{{-- Log out confirmation — same dialog as the super admin header (partials/super-admin-header). --}}
+<div id="userLogoutModal" class="fixed inset-0 z-[9999] bg-black/50 hidden items-center justify-center p-4"
+    role="dialog" aria-modal="true" aria-labelledby="userLogoutTitle">
+    <div class="bg-white w-[350px] max-w-full rounded-2xl shadow-2xl p-6 text-center">
+        <h2 id="userLogoutTitle" class="text-lg font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent inline-block">
+            Log out Confirmation
+        </h2>
+        <p class="text-sm text-[#0E0F3B] mt-2">
+            Are you sure you want to log out?
+        </p>
+        <div class="flex justify-center gap-3 mt-6">
+            <button type="button" id="userLogoutCancel"
+                class="px-4 py-2 rounded-lg border text-[#0E0F3B] border-[#0E0F3B] text-sm hover:bg-[#0E0F3B] hover:text-white transition">
+                CANCEL
+            </button>
+            <button type="button" id="userLogoutConfirm"
+                class="px-4 py-2 rounded-lg bg-[#0E0F3B] text-white text-sm hover:bg-[#1a1c5a] transition">
+                CONFIRM
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Log out asks first (same flow as the super admin header): the sidebar's
+    // "Log out" opens the dialog; only CONFIRM submits the logout form.
+    (function () {
+        const form = document.getElementById('userLogoutForm');
+        const modal = document.getElementById('userLogoutModal');
+        if (!form || !modal) return;
+        // Live at the end of <body>: inside the sticky header its z-index would be
+        // capped by the header's stacking context (e.g. the chat bubble could cover it).
+        document.body.appendChild(modal);
+
+        let returnFocus = null;
+        function openLogoutModal() {
+            returnFocus = document.activeElement;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.getElementById('userLogoutCancel').focus();
+        }
+        function closeLogoutModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            returnFocus?.focus?.();
+        }
+
+        form.addEventListener('submit', function (e) {
+            if (form.dataset.confirmed === '1') return;
+            e.preventDefault();
+            openLogoutModal();
+        });
+        document.getElementById('userLogoutConfirm').addEventListener('click', function () {
+            form.dataset.confirmed = '1';
+            form.submit();
+        });
+        document.getElementById('userLogoutCancel').addEventListener('click', closeLogoutModal);
+        modal.addEventListener('click', function (e) { if (e.target === modal) closeLogoutModal(); });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeLogoutModal();
+        });
+    })();
+</script>
 
 <script>
     const sidebar = document.getElementById('userSidebar');

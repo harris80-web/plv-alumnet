@@ -84,35 +84,41 @@
 
     <section class="bg-gray-50 p-8">
         <div class="max-w-6xl mx-auto">
-            <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
-                <h2 class="text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent tracking-wide rp-dashboard-title">
+            {{-- Phones: title on its own row, then OVERVIEW + EXPORT PDF side by side.
+                 Tablet/desktop (md+): title + EXPORT PDF on one row, OVERVIEW below. --}}
+            <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-5 md:gap-y-8 mb-4">
+                <h2 class="col-span-2 md:col-span-1 text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent tracking-wide rp-dashboard-title">
                     DASHBOARD FOR {{ strtoupper($employer->employer_company_name ?? 'YOUR COMPANY') }}
                 </h2>
                 {{-- Same export button style as the admin dashboard's EXPORT PDF. --}}
                 <button type="button" onclick="exportDashboardPdf()" title="Download the Overview and Analytics below as a PDF report"
-                    class="shrink-0 whitespace-nowrap bg-[#C04828] text-[10px] text-white px-3 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-[#A03D22] transition shadow-sm font-semibold uppercase tracking-wide">
+                    class="col-start-2 row-start-2 md:row-start-1 justify-self-end shrink-0 whitespace-nowrap bg-[#C04828] text-[10px] text-white px-3 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-[#A03D22] transition shadow-sm font-semibold uppercase tracking-wide">
                     <i class="fa-solid fa-file-pdf text-xs"></i> EXPORT PDF
                 </button>
+                <h3 class="col-start-1 row-start-2 md:col-span-2 font-bold text-[#0E0F3B] flex items-center gap-2 text-sm uppercase tracking-wide">
+                    <i class="fa-solid fa-chart-pie text-[#1D46A4]"></i> Overview
+                </h3>
             </div>
 
             @php
                 // Same widget layout as the admin pages: icon left of the number, label below.
+                // Each widget opens My Job Postings filtered to what it counts (the applicant
+                // ones then open a post's Applicants already filtered to that status).
+                $myPosts = fn (array $q) => route('jobPosting.myJobPosts', ['id' => Auth::id()] + $q);
                 $dashboardTiles = [
-                    ['value' => $stats['activePostings'], 'label' => 'Active Job Postings', 'icon' => 'fa-briefcase', 'color' => 'text-slate-800'],
-                    ['value' => $stats['totalApplicants'], 'label' => 'Total Applicants', 'icon' => 'fa-users', 'color' => 'text-blue-600', 'badge' => $stats['unreadApplicants'] > 0 ? $stats['unreadApplicants'] . ' new' : null],
-                    ['value' => $stats['shortlisted'], 'label' => 'Shortlisted', 'icon' => 'fa-list-check', 'color' => 'text-amber-500'],
-                    ['value' => $stats['hired'], 'label' => 'Hired via AlumNet', 'icon' => 'fa-handshake', 'color' => 'text-green-500'],
-                    ['value' => $stats['pending'], 'label' => 'Pending Review', 'icon' => 'fa-hourglass-half', 'color' => 'text-[#ED7A07]'],
-                    ['value' => $stats['expiringSoon'], 'label' => 'Job Postings Expiring Soon', 'icon' => 'fa-calendar-xmark', 'color' => 'text-red-500'],
+                    ['value' => $stats['activePostings'], 'label' => 'Active Job Postings', 'icon' => 'fa-briefcase', 'color' => 'text-slate-800', 'href' => $myPosts(['status' => 'approved'])],
+                    ['value' => $stats['totalApplicants'], 'label' => 'Total Applicants', 'icon' => 'fa-users', 'color' => 'text-blue-600', 'badge' => $stats['unreadApplicants'] > 0 ? $stats['unreadApplicants'] . ' new' : null, 'href' => $myPosts(['applicants' => 'any'])],
+                    ['value' => $stats['shortlisted'], 'label' => 'Shortlisted', 'icon' => 'fa-list-check', 'color' => 'text-amber-500', 'href' => $myPosts(['applicants' => 'shortlisted'])],
+                    ['value' => $stats['hired'], 'label' => 'Hired via AlumNet', 'icon' => 'fa-handshake', 'color' => 'text-green-500', 'href' => $myPosts(['applicants' => 'hired'])],
+                    ['value' => $stats['pending'], 'label' => 'Pending Review', 'icon' => 'fa-hourglass-half', 'color' => 'text-[#ED7A07]', 'href' => $myPosts(['applicants' => 'pending'])],
+                    ['value' => $stats['expiringSoon'], 'label' => 'Job Postings Expiring Soon', 'icon' => 'fa-calendar-xmark', 'color' => 'text-red-500', 'href' => $myPosts(['status' => 'expiring'])],
                 ];
             @endphp
 
-            <h3 class="font-bold text-[#0E0F3B] mb-4 flex items-center gap-2 text-sm uppercase tracking-wide">
-                <i class="fa-solid fa-chart-pie text-[#1D46A4]"></i> Overview
-            </h3>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 @foreach ($dashboardTiles as $tile)
-                <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
+                <a href="{{ $tile['href'] }}" title="View {{ strtolower($tile['label']) }}"
+                    class="block bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md hover:border-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C73D1A] px-5 py-4">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid {{ $tile['icon'] }} text-lg shrink-0 {{ $tile['color'] }}"></i>
                         <p class="text-2xl font-bold {{ $tile['color'] }}">{{ $tile['value'] }}</p>
@@ -123,7 +129,7 @@
                         <span class="ml-1 inline-block text-[9px] font-bold uppercase bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full align-middle">{{ $tile['badge'] }}</span>
                         @endif
                     </p>
-                </div>
+                </a>
                 @endforeach
             </div>
 

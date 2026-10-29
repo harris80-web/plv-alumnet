@@ -38,6 +38,9 @@ class JobPosting extends Model
         'hiring_limit' => 'integer',
     ];
 
+    /** "Expiring soon" = approved, still open, closing within this many days (employer dashboard + My Job Postings). */
+    public const EXPIRING_SOON_DAYS = 7;
+
     /** Stock image shown when an employer/admin doesn't upload a job post photo. */
     private const DEFAULT_THUMBNAIL = 'assets/default images/jobPost_default.svg';
 

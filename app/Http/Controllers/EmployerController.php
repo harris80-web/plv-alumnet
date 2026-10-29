@@ -19,7 +19,7 @@ use App\Services\PdfChartImages;
 class EmployerController extends Controller
 {
     /** How many days out counts as "expiring soon" for the dashboard stat tile. */
-    private const EXPIRING_SOON_DAYS = 7;
+    private const EXPIRING_SOON_DAYS = JobPosting::EXPIRING_SOON_DAYS;
 
     /**
      * Employer dashboard — was a closure returning a static view with zero

@@ -426,10 +426,11 @@ class JobPostingController extends Controller
         $programs = Program::all();
         $industries = Industry::all();
         $users = Auth::user();
-        $filters = $request->only(['search', 'industry', 'job_type', 'job_setup', 'location', 'date_posted', 'status']);
+        $filters = $request->only(['search', 'industry', 'job_type', 'job_setup', 'location', 'date_posted', 'status', 'applicants']);
         // Filters that live in the slide-in "Filter by" panel (search and
-        // status have their own controls in the toolbar).
-        $panelFilterCount = count(array_filter(collect($filters)->except(['search', 'status'])->all()));
+        // status have their own controls in the toolbar; "applicants" comes
+        // from the employer dashboard's applicant widgets).
+        $panelFilterCount = count(array_filter(collect($filters)->except(['search', 'status', 'applicants'])->all()));
 
         return view('general.jobPostings', compact('jobPostings', 'programs', 'industries', 'users', 'filters', 'panelFilterCount', 'statusCounts'));
     }
@@ -478,8 +479,18 @@ class JobPostingController extends Controller
     private function myJobPostsQuery(Request $request, $id)
     {
         $query = $this->applySearchFilters(JobPosting::where('user_id', $id), $request);
+        $query = $this->applyMyJobStatusFilter($query, $request->input('status'));
 
-        return $this->applyMyJobStatusFilter($query, $request->input('status'));
+        // Employer dashboard's applicant widgets (Total Applicants / Pending Review /
+        // Shortlisted / Hired): only posts that have applicants (in that status).
+        $applicants = $request->input('applicants');
+        if ($applicants === 'any') {
+            $query->whereHas('applications');
+        } elseif (in_array($applicants, ['pending', 'shortlisted', 'hired', 'declined'], true)) {
+            $query->whereHas('applications', fn ($q) => $q->where('application_status', $applicants));
+        }
+
+        return $query;
     }
 
     /**
@@ -498,6 +509,9 @@ class JobPostingController extends Controller
             'pending' => $query->where('job_approved', false)->where($notExpired),
             'approved' => $query->where('job_approved', true)->where($notExpired),
             'expired' => $query->where('job_closing_date', '<', $today),
+            // Employer dashboard's "Job Postings Expiring Soon" widget — same rule as its count.
+            'expiring' => $query->where('job_approved', true)
+                ->whereBetween('job_closing_date', [$today, now(config('app.local_timezone'))->addDays(JobPosting::EXPIRING_SOON_DAYS)->toDateString()]),
             default => $query,
         };
     }

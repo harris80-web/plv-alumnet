@@ -123,8 +123,13 @@
                     <i class="fas fa-check-circle"></i> APPLIED
                 </button>
                 @else
+                {{-- data-apply-job-id/data-applied-class: markJobApplied()
+                     (partials/job-detail-modal) swaps this for the APPLIED
+                     badge above once the application goes through, no reload. --}}
                 <button
                     type="button"
+                    data-apply-job-id="{{ $job->job_posting_id }}"
+                    data-applied-class="bg-green-600 cursor-not-allowed text-white px-8 py-2 rounded-md font-bold text-sm flex items-center gap-2"
                     onclick="openApplyModal({{ $job->job_posting_id }}, {{ $user->alumnus->hasUploadedResumeFile() ? 'true' : 'false' }}, {{ $user->alumnus->hasBuilderResume() ? 'true' : 'false' }}, {{ !empty($user->alumnus->alumnus_cover_letter_file_path) ? 'true' : 'false' }})"
                     class="bg-[#1D46A4] hover:bg-[#0E0F3B] text-white px-8 py-2 rounded-md font-bold text-sm transition-colors">
                     APPLY
@@ -147,17 +152,20 @@
                 <div class="relative flex items-center group">
                     <div class="bookmark-tooltip invisible opacity-0 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 pointer-events-none transition-all duration-300 z-50">
                         <div class="bg-blue-900 text-white text-[10px] py-1 px-3 rounded shadow-xl whitespace-nowrap relative">
-                            {{ $isBookmarked ? 'Removed from bookmarks' : 'Job post saved!' }}
+                            <span class="bookmark-flash-text">{{ $isBookmarked ? 'Removed from bookmarks' : 'Job post saved!' }}</span>
                             <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-blue-900"></div>
                         </div>
                     </div>
                     <span class="hover-tooltip opacity-0 group-hover:opacity-100 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 pointer-events-none transition-opacity duration-200 z-40">
                         <span class="bg-gray-800 text-white text-[10px] py-1 px-2 rounded shadow-lg whitespace-nowrap relative block">
-                            {{ $isBookmarked ? 'Remove bookmark' : 'Bookmark this job' }}
+                            <span class="bookmark-hover-label">{{ $isBookmarked ? 'Remove bookmark' : 'Bookmark this job' }}</span>
                             <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></span>
                         </span>
                     </span>
-                    <form action="{{ route('jobBookmark.toggle', $job->job_posting_id) }}" method="POST">
+                    {{-- Submitted in the background by partials/job-detail-modal's
+                         [data-bookmark-form] handler, so bookmarking doesn't reload the page. --}}
+                    <form action="{{ route('jobBookmark.toggle', $job->job_posting_id) }}" method="POST"
+                        data-bookmark-form data-bookmark-job-id="{{ $job->job_posting_id }}">
                         @csrf
                         <button type="submit" class="bookmark-btn {{ $isBookmarked ? 'text-blue-900' : 'text-gray-400 hover:text-blue-900' }} text-2xl transition-colors">
                             <i class="{{ $isBookmarked ? 'fas' : 'far' }} fa-bookmark"></i>

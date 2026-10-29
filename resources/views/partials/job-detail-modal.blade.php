@@ -68,14 +68,14 @@
                     </div>
 
                     <div class="flex items-center gap-3 shrink-0">
-                        <form id="modal-bookmark-form" method="POST" action="" class="hidden relative group">
+                        <form id="modal-bookmark-form" method="POST" action="" class="hidden relative group" data-bookmark-form>
                             @csrf
                             <button type="submit" id="modal-bookmark-btn" class="text-gray-400 hover:text-blue-900 text-2xl transition-colors">
                                 <i class="far fa-bookmark"></i>
                             </button>
                             <span class="hover-tooltip opacity-0 group-hover:opacity-100 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 pointer-events-none transition-opacity duration-200 z-40">
                                 <span class="bg-gray-800 text-white text-[10px] py-1 px-2 rounded shadow-lg whitespace-nowrap relative block">
-                                    <span id="modal-bookmark-hover-label">Bookmark this job</span>
+                                    <span id="modal-bookmark-hover-label" class="bookmark-hover-label">Bookmark this job</span>
                                     <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></span>
                                 </span>
                             </span>
@@ -390,16 +390,28 @@
             avgLabel.textContent = Number(d.ratingCount || 0) > 0 ? d.averageRating : '';
         }
 
+        renderJobDetailsActions(d);
+
+        // Each newly opened job starts at the top of its details.
+        document.getElementById('jobDetailsContent').scrollTop = 0;
+        jobDetailsState.open = true;
+        if (jobDetailsUsesPanel()) {
+            showJobDetailsPanel();
+        } else {
+            showJobDetailsModal();
+        }
+    }
+
+    // The bookmark / Apply / status-badge part of the details, pulled out of
+    // openJobModal() so a bookmark or application made without reloading can
+    // re-render just this for the job that's already open (refreshOpenJobDetails()).
+    function renderJobDetailsActions(d) {
         // Bookmark button
         const bookmarkForm = document.getElementById('modal-bookmark-form');
-        const bookmarkBtn = document.getElementById('modal-bookmark-btn');
         if (d.isAlumni === '1' && d.jobId) {
             bookmarkForm.action = JOB_MODAL_BOOKMARK_URL_TMPL.replace('999999999', d.jobId);
-            const bookmarked = d.isBookmarked === '1';
-            bookmarkBtn.classList.toggle('text-blue-900', bookmarked);
-            bookmarkBtn.classList.toggle('text-gray-400', !bookmarked);
-            bookmarkBtn.querySelector('i').className = (bookmarked ? 'fas' : 'far') + ' fa-bookmark';
-            document.getElementById('modal-bookmark-hover-label').textContent = bookmarked ? 'Remove bookmark' : 'Bookmark this job';
+            bookmarkForm.dataset.bookmarkJobId = d.jobId;
+            paintBookmarkForm(bookmarkForm, d.isBookmarked === '1');
             bookmarkForm.classList.remove('hidden');
         } else {
             bookmarkForm.classList.add('hidden');
@@ -447,15 +459,97 @@
         } else {
             statusBadge.classList.add('hidden');
         }
+    }
 
-        // Each newly opened job starts at the top of its details.
-        document.getElementById('jobDetailsContent').scrollTop = 0;
-        jobDetailsState.open = true;
-        if (jobDetailsUsesPanel()) {
-            showJobDetailsPanel();
-        } else {
-            showJobDetailsModal();
-        }
+    // ── Bookmark / apply without reloading the page ───────────────────────
+    // Every card's View Details trigger carries the job's state as data-*
+    // (JobCardDataBuilder); vote buttons also have data-job-id but no
+    // data-title, so this matches only the triggers.
+    function jobCardTriggers(jobId) {
+        return document.querySelectorAll('[data-job-id="' + jobId + '"][data-title]');
+    }
+
+    // Re-renders the open details' actions if they're showing this job (the
+    // desktop side panel stays open while bookmarking/applying).
+    function refreshOpenJobDetails(jobId) {
+        if (!jobDetailsState.open || String(jobDetailsState.jobId) !== String(jobId) || !jobDetailsState.trigger) return;
+        renderJobDetailsActions(jobDetailsState.trigger.dataset);
+    }
+
+    function paintBookmarkForm(form, bookmarked) {
+        const btn = form.querySelector('button[type=submit]');
+        btn.classList.toggle('text-blue-900', bookmarked);
+        btn.classList.toggle('text-gray-400', !bookmarked);
+        btn.classList.toggle('hover:text-blue-900', !bookmarked);
+        btn.querySelector('i').className = (bookmarked ? 'fas' : 'far') + ' fa-bookmark';
+        const label = form.closest('.group')?.querySelector('.bookmark-hover-label');
+        if (label) label.textContent = bookmarked ? 'Remove bookmark' : 'Bookmark this job';
+    }
+
+    function setJobBookmarkedUI(jobId, bookmarked) {
+        jobCardTriggers(jobId).forEach(function (el) { el.dataset.isBookmarked = bookmarked ? '1' : '0'; });
+        document.querySelectorAll('form[data-bookmark-form][data-bookmark-job-id="' + jobId + '"]').forEach(function (form) {
+            paintBookmarkForm(form, bookmarked);
+        });
+        refreshOpenJobDetails(jobId);
+    }
+
+    // The card's "Job post saved!" / "Removed from bookmarks" bubble.
+    function flashBookmarkTooltip(form, bookmarked) {
+        const tooltip = form.closest('.group')?.querySelector('.bookmark-tooltip');
+        if (!tooltip) return;
+        const text = tooltip.querySelector('.bookmark-flash-text');
+        if (text) text.textContent = bookmarked ? 'Job post saved!' : 'Removed from bookmarks';
+        tooltip.classList.remove('invisible', 'opacity-0');
+        tooltip.classList.add('visible', 'opacity-100', '-translate-y-1');
+        setTimeout(function () {
+            tooltip.classList.add('invisible', 'opacity-0');
+            tooltip.classList.remove('visible', 'opacity-100', '-translate-y-1');
+        }, 2000);
+    }
+
+    // Any bookmark form (job cards + this details view) submits in the
+    // background. If that fails (e.g. an expired session), it falls back to a
+    // normal form post so the click is never silently lost.
+    document.addEventListener('submit', function (e) {
+        const form = e.target.closest('form[data-bookmark-form]');
+        if (!form) return;
+        e.preventDefault();
+        if (form.dataset.busy === '1') return;
+        form.dataset.busy = '1';
+
+        fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        })
+        .then(function (response) { return response.ok ? response.json() : Promise.reject(response); })
+        .then(function (data) {
+            setJobBookmarkedUI(form.dataset.bookmarkJobId, !!data.bookmarked);
+            flashBookmarkTooltip(form, !!data.bookmarked);
+        })
+        .catch(function () { form.submit(); })
+        .finally(function () { delete form.dataset.busy; });
+    });
+
+    // Called by partials/job-apply-modal once the server confirms an
+    // application — swaps that job's Apply buttons for the disabled APPLIED
+    // badge the server would render, and updates the stored state so View
+    // Details shows "Applied" + PENDING without a reload.
+    function markJobApplied(jobId) {
+        document.querySelectorAll('[data-apply-job-id="' + jobId + '"]').forEach(function (btn) {
+            const applied = document.createElement('button');
+            applied.type = 'button';
+            applied.disabled = true;
+            applied.className = btn.dataset.appliedClass || 'bg-green-600 cursor-not-allowed text-white px-8 py-2 rounded-md font-bold text-sm flex items-center gap-2';
+            applied.innerHTML = '<i class="fas fa-check-circle"></i> APPLIED';
+            btn.replaceWith(applied);
+        });
+        jobCardTriggers(jobId).forEach(function (el) {
+            el.dataset.hasApplied = '1';
+            if (!el.dataset.applicationStatus) el.dataset.applicationStatus = 'pending';
+        });
+        refreshOpenJobDetails(jobId);
     }
 
     // Closes the details — the modal, or the desktop side panel (name kept: every caller already uses it).

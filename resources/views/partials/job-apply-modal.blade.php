@@ -292,7 +292,12 @@
     const APPLY_BUILDER_RESUME = @json($applyResumeData);
     const APPLY_CERT_TYPE_LABELS = @json($certTypeLabels);
 
+    // Which job this modal is applying to — markJobApplied() needs it once
+    // the server confirms, to flip that job's buttons in place.
+    let applyModalJobId = null;
+
     function openApplyModal(jobId, hasUploadedResumeFile, hasBuilderResume, hasProfileCoverLetter) {
+        applyModalJobId = jobId;
         document.getElementById('jobApplyForm').action = JOB_APPLY_URL_TMPL.replace('999999999', jobId);
         applyModalHasUploadedResumeFile = !!hasUploadedResumeFile;
         applyModalHasBuilderResume = !!hasBuilderResume;
@@ -753,6 +758,11 @@
             try { data = await response.json(); } catch (e) { /* non-JSON response */ }
 
             if (response.ok && data && data.success) {
+                // Flip this job's Apply buttons to APPLIED right away (card,
+                // Job Match card, open View Details) — no page reload needed.
+                if (applyModalJobId !== null && typeof markJobApplied === 'function') {
+                    markJobApplied(applyModalJobId);
+                }
                 document.getElementById('jobApplyModal').classList.add('hidden');
                 document.getElementById('jobApplySuccessModal').classList.remove('hidden');
                 return;
@@ -778,9 +788,8 @@
     function closeApplySuccessModal() {
         document.getElementById('jobApplySuccessModal').classList.add('hidden');
         document.body.style.overflow = 'auto';
-        // The application already happened server-side before this modal
-        // ever showed — just reload so the card reflects the new "Applied" state.
-        window.location.reload();
+        // No reload: markJobApplied() already flipped this job to "Applied"
+        // the moment the server confirmed the application.
     }
 </script>
 

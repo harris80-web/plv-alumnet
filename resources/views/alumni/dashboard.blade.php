@@ -432,6 +432,8 @@
                                      here skipped picking a resume/cover letter and was
                                      rejected by JobApplicationController::applyJob(). --}}
                                 <button type="button"
+                                    data-apply-job-id="{{ $job->job_posting_id }}"
+                                    data-applied-class="bg-green-600 cursor-not-allowed text-white px-4 py-1.5 rounded-md font-bold text-xs flex items-center gap-1.5 shrink-0"
                                     onclick="openApplyModal({{ $job->job_posting_id }}, {{ $user->alumnus->hasUploadedResumeFile() ? 'true' : 'false' }}, {{ $user->alumnus->hasBuilderResume() ? 'true' : 'false' }}, {{ !empty($user->alumnus->alumnus_cover_letter_file_path) ? 'true' : 'false' }})"
                                     class="w-full flex items-center justify-center gap-2 bg-[#1D46A4] hover:bg-gradient-to-t from-[#0E0F3B] to-[#1D46A4] text-white py-2.5 rounded-lg font-bold text-xs tracking-wider uppercase transition-all">
                                     Apply <i class="fa-solid fa-arrow-right text-[10px]"></i>

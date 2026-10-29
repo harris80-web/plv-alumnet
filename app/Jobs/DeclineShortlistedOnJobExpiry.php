@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Models\JobApplication;
 use App\Models\JobPosting;
+use App\Services\JobExpiryService;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,6 +12,11 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
 /**
+ * Closes out a posting's pending + shortlisted applications the moment it
+ * expires, emailing each applicant (App\Services\JobExpiryService). The
+ * class name still says "Shortlisted" only because already-queued rows in
+ * the `jobs` table reference it by name — renaming would orphan them.
+ *
  * One-shot, per-posting replacement for the old daily `job:decline-on-job-
  * expire` schedule entry — that command only ever ran if something invoked
  * `php artisan schedule:run` on a timer, which nothing in this Windows/
@@ -43,7 +48,7 @@ class DeclineShortlistedOnJobExpiry implements ShouldQueue
     {
     }
 
-    public function handle(): void
+    public function handle(JobExpiryService $expiryService): void
     {
         $job = JobPosting::find($this->jobPostingId);
 
@@ -59,9 +64,10 @@ class DeclineShortlistedOnJobExpiry implements ShouldQueue
             return;
         }
 
-        JobApplication::where('job_id', $job->job_posting_id)
-            ->where('application_status', 'shortlisted')
-            ->update(['application_status' => 'declined']);
+        // Pending AND shortlisted applicants are declined and emailed that the
+        // post expired (see JobExpiryService) — not just shortlisted ones as
+        // before, and no longer silently.
+        $expiryService->declineOpenApplications($job);
     }
 
     /** Delay target for a given posting — the moment its closing date has fully elapsed (local PH midnight). */

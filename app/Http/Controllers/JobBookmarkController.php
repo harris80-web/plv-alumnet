@@ -36,6 +36,13 @@ class JobBookmarkController extends Controller
             $message = 'Job bookmarked successfully!';
         }
 
+        // The card / View Details bookmark buttons submit this via fetch()
+        // (see toggleJobBookmark() in partials/job-detail-modal) so the page
+        // doesn't reload; a plain form post (no JS) still redirects back.
+        if (request()->wantsJson()) {
+            return response()->json(['success' => true, 'bookmarked' => !$existing, 'message' => $message]);
+        }
+
         return redirect()->back()->with('success', $message);
     }
 }

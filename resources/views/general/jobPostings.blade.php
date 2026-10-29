@@ -261,8 +261,11 @@
 
                 <div class="relative flex-1 lg:max-w-md">
                     <i class="fas fa-search text-sm absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                    {{-- Searches as you type with this form's status + carried-over sidebar filters
+                         (partials/live-search). Reload, not an in-place swap: each row has its own
+                         edit modal elsewhere on the page that a table-only swap would leave stale. --}}
                     <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search by Job Title or Company Name"
-                        aria-label="Search by job title or company name"
+                        aria-label="Search by job title or company name" autocomplete="off" data-live-search
                         class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A] transition-all">
                 </div>
 
@@ -495,6 +498,7 @@
             @include('partials.table-sort')
         </div>
     </main>
+    @include('partials.live-search')
 
     <!-- FILTER PANEL (same slide-in "Filter by" panel as the admin Job Placement Management page) -->
     <div id="filter-sidebar-overlay" onclick="toggleFilterSidebar()" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[205] hidden"></div>

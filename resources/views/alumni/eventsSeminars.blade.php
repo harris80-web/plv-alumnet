@@ -80,14 +80,16 @@
                     <button type="submit" class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 hover:text-[#C73D1A]">
                         <i class="fas fa-search"></i>
                     </button>
-                    <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search by title" class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                    <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search by title" autocomplete="off"
+                        data-live-search data-live-search-target="#noticeResults" class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
                 </div>
 
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
                         <i class="fas fa-map-marker-alt"></i>
                     </span>
-                    <input type="text" name="location" value="{{ $filters['location'] ?? '' }}" placeholder="Location" class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                    <input type="text" name="location" value="{{ $filters['location'] ?? '' }}" placeholder="Location" autocomplete="off"
+                        data-live-search data-live-search-target="#noticeResults" class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
                 </div>
 
                 <div class="relative">
@@ -114,6 +116,8 @@
             @endif
         </div>
 
+        {{-- Swapped in place by the live search (partials/live-search). --}}
+        <div id="noticeResults">
         @if ($notices->isEmpty())
         <div class="bg-white rounded-2xl shadow-md p-16 text-center text-gray-400">
             <i class="fa-regular fa-calendar-xmark text-4xl mb-3 block {{ $activeTab === 'seminar' ? 'text-[#1D46A4]' : 'text-[#C73D1A]' }}"></i>
@@ -211,8 +215,10 @@
 
         {{ $notices->onEachSide(1)->links('partials.pagination') }}
         @endif
+        </div>
 
     </main>
+    @include('partials.live-search')
 
     @include('partials.notice-detail-modal')
 
@@ -237,14 +243,14 @@
         // Card-grid "Interested" buttons — same submitInterestToggle() used
         // by the detail modal's own button (defined in
         // partials/notice-detail-modal.blade.php), so clicking either one
-        // updates instantly instead of reloading the page.
-        window.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.interest-form').forEach(function (form) {
-                form.addEventListener('submit', function (e) {
-                    e.preventDefault();
-                    submitInterestToggle(this, this.closest('[data-toggle-url]'));
-                });
-            });
+        // updates instantly instead of reloading the page. Delegated (one
+        // listener on the document, not one per form) so cards swapped in by
+        // the live search (partials/live-search) work the same way.
+        document.addEventListener('submit', function (e) {
+            const form = e.target.closest('.interest-form');
+            if (!form) return;
+            e.preventDefault();
+            submitInterestToggle(form, form.closest('[data-toggle-url]'));
         });
     </script>
     @endif

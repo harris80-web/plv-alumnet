@@ -189,7 +189,8 @@ $current_page = 'user_management';
                         <div class="relative w-64">
                             <i data-lucide="search"
                                 class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input type="text" id="adminSearchInput" value="{{ request('admin_search') }}"
+                            <input type="text" id="adminSearchInput" value="{{ request('admin_search') }}" autocomplete="off"
+                                data-live-search data-live-search-param="admin_search" data-live-search-page-param="adminPage"
                                 onkeydown="if(event.key==='Enter'){pvSearchNavigate('admin_search', this.value, 'adminPage')}"
                                 placeholder="Search by name"
                                 class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-transparent">
@@ -372,9 +373,10 @@ $current_page = 'user_management';
                             <div class="relative w-64">
                                 <i data-lucide="search"
                                     class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                <input type="text" id="alumniSearchInput" value="{{ request('alumni_search') }}"
+                                <input type="text" id="alumniSearchInput" value="{{ request('alumni_search') }}" autocomplete="off"
+                                    data-live-search data-live-search-param="alumni_search" data-live-search-page-param="alumniPage"
                                     onkeydown="if(event.key==='Enter'){pvSearchNavigate('alumni_search', this.value, 'alumniPage')}"
-                                    placeholder="Search by name or email (press Enter)"
+                                    placeholder="Search by name or email"
                                     class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A]">
                             </div>
                             <button onclick="toggleAlumniFilterSidebar()"
@@ -666,9 +668,10 @@ $current_page = 'user_management';
                                     <div class="relative w-64">
                                         <i data-lucide="search"
                                             class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                        <input type="text" id="employerPendingSearchInput" value="{{ request('employer_pending_search') }}"
+                                        <input type="text" id="employerPendingSearchInput" value="{{ request('employer_pending_search') }}" autocomplete="off"
+                                            data-live-search data-live-search-param="employer_pending_search" data-live-search-page-param="employerPendingPage"
                                             onkeydown="if(event.key==='Enter'){pvSearchNavigate('employer_pending_search', this.value, 'employerPendingPage')}"
-                                            placeholder="Search by Company Name (press Enter)"
+                                            placeholder="Search by Company Name"
                                             class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A]">
                                     </div>
                                 </div>
@@ -687,9 +690,10 @@ $current_page = 'user_management';
                                     <div class="relative w-64">
                                         <i data-lucide="search"
                                             class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                        <input type="text" id="employerSearchInput" value="{{ request('employer_search') }}"
+                                        <input type="text" id="employerSearchInput" value="{{ request('employer_search') }}" autocomplete="off"
+                                            data-live-search data-live-search-param="employer_search" data-live-search-page-param="employerApprovedPage"
                                             onkeydown="if(event.key==='Enter'){pvSearchNavigate('employer_search', this.value, 'employerApprovedPage')}"
-                                            placeholder="Search by Company Name (press Enter)"
+                                            placeholder="Search by Company Name"
                                             class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A]">
                                     </div>
                                     <button onclick="toggleEmployerFilter()"
@@ -2553,6 +2557,7 @@ $current_page = 'user_management';
         }
     </script>
 
+    @include('partials.live-search')
 </body>
 
 </html>

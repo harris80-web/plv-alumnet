@@ -65,7 +65,8 @@
                     <button type="submit" class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 hover:text-[#C73D1A]">
                         <i class="fas fa-search"></i>
                     </button>
-                    <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search by title" class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                    <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search by title" autocomplete="off"
+                        data-live-search data-live-search-target="#noticeResults" class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
                 </div>
 
                 <div class="relative md:w-56 shrink-0">
@@ -93,6 +94,8 @@
             @endif
         </div>
 
+        {{-- Swapped in place by the live search (partials/live-search). --}}
+        <div id="noticeResults">
         @if ($notices->isEmpty())
         <div class="bg-white rounded-2xl shadow-md p-16 text-center text-gray-400">
             <i class="fa-regular fa-bell-slash text-4xl mb-3 block text-[#ED7A07]"></i>
@@ -160,8 +163,10 @@
 
         {{ $notices->onEachSide(1)->links('partials.pagination') }}
         @endif
+        </div>
 
     </main>
+    @include('partials.live-search')
 
     @include('partials.notice-detail-modal')
 

@@ -175,7 +175,7 @@
                             <!-- Search (same pill style as the filter dropdowns) -->
                             <div class="relative" style="flex: 1.4 1 0%; min-width: 230px;">
                                 <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none text-xs"><i class="fas fa-search"></i></span>
-                                <input type="text" name="company_search" value="{{ $companyFilters['search'] }}" maxlength="100"
+                                <input type="text" name="company_search" value="{{ $companyFilters['search'] }}" maxlength="100" autocomplete="off" data-live-search
                                     placeholder="Search company, email or name" title="Search by company name, email or contact person" aria-label="Search companies"
                                     class="company-pill w-full pl-11 pr-4 py-1.5 border rounded-full bg-white text-xs text-[#0E0F3B] placeholder-gray-500 focus:outline-none">
                             </div>
@@ -394,6 +394,7 @@
     </script>
 
     @include('partials.staged-multiselect')
+    @include('partials.live-search')
     @include('partials.report-college-cascade')
 </body>
 

@@ -205,7 +205,10 @@
                         <button type="submit" class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 hover:text-[#C73D1A]">
                             <i class="fas fa-search"></i>
                         </button>
-                        <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search job title or company" class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                        {{-- Searches as you type, with every filter in this form (partials/live-search). --}}
+                        <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search job title or company" autocomplete="off"
+                            data-live-search data-live-search-target="#jobListColumn"
+                            class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
                     </div>
 
                     <button type="button" onclick="toggleMoreFilters()"
@@ -246,7 +249,9 @@
                         <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none text-xs">
                             <i class="fas fa-map-marker-alt"></i>
                         </span>
-                        <input type="text" name="location" value="{{ $filters['location'] ?? '' }}" placeholder="Location" class="w-full pl-11 pr-4 py-1.5 border rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
+                        <input type="text" name="location" value="{{ $filters['location'] ?? '' }}" placeholder="Location" autocomplete="off"
+                            data-live-search data-live-search-target="#jobListColumn"
+                            class="w-full pl-11 pr-4 py-1.5 border rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
                     </div>
 
                     <div class="relative">
@@ -454,5 +459,6 @@
 </script>
 
 @include('partials.staged-multiselect')
+@include('partials.live-search')
 
 </html>

@@ -373,10 +373,10 @@
         }
     });
 
-    // Share Button Copy Logic
-    function copyJobLink(button) {
-        const dummyUrl = "https://alumnihub.example/jobs/12345";
-        navigator.clipboard.writeText(dummyUrl).then(() => {
+    // Card Share button — copies that job's own link (jobShareUrl()/
+    // copyTextToClipboard() live in partials/job-detail-modal, included above).
+    function copyJobLink(button, jobId) {
+        copyTextToClipboard(jobShareUrl(jobId)).then(() => {
             const tooltip = button.nextElementSibling;
             tooltip.classList.remove('invisible', 'opacity-0');
             tooltip.classList.add('visible', 'opacity-100', '-translate-y-1');

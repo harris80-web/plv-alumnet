@@ -197,6 +197,39 @@
     // hardcode which job it's showing until openJobModal() runs.
     const JOB_MODAL_BOOKMARK_URL_TMPL = @json(route('jobBookmark.toggle', 999999999));
     const JOB_MODAL_REVIEWS_URL_TMPL = @json(route('employerReviews.index', ['employer' => 999999999]));
+    // Public, shareable link to one job: the job board with ?job=, which lists
+    // that job first and auto-opens it (see JobPostingController::
+    // filteredJobPostingsQuery() and jobBoard.blade.php's deep-link script).
+    const JOB_SHARE_URL_TMPL = @json(route('jobPosting.jobBoard', ['job' => 999999999]));
+
+    function jobShareUrl(jobId) {
+        return JOB_SHARE_URL_TMPL.replace('999999999', jobId);
+    }
+
+    // navigator.clipboard only exists on secure origins (https or localhost) —
+    // on a plain-http deploy it's undefined, which is why Share silently did
+    // nothing there. Falls back to the old hidden-textarea copy.
+    function copyTextToClipboard(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text);
+        }
+        return new Promise(function (resolve, reject) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand('copy') ? resolve() : reject(new Error('copy command failed'));
+            } catch (err) {
+                reject(err);
+            } finally {
+                ta.remove();
+            }
+        });
+    }
 
     // ── Modal vs. desktop side panel ──────────────────────────────────────
     // Desktop = >= 1024px (Tailwind `lg`, the same line responsive-public.css
@@ -239,6 +272,7 @@
         const d = btn.dataset;
         jobDetailsState.trigger = btn;
         jobDetailsState.title = d.title || '';
+        jobDetailsState.jobId = d.jobId || null;
 
         const img = document.getElementById('modal-img');
         const fallback = document.getElementById('modal-img-fallback');
@@ -461,12 +495,17 @@
     function showModalTooltip(tooltipId) {
         const tooltip = document.getElementById(tooltipId);
 
+        if (tooltipId === 'modal-share-tooltip') {
+            // The open job's own link — this used to copy window.location.href,
+            // i.e. whatever page the modal happened to be opened from.
+            if (!jobDetailsState.jobId) return;
+            copyTextToClipboard(jobShareUrl(jobDetailsState.jobId)).catch(function (err) {
+                console.error('Failed to copy job link:', err);
+            });
+        }
+
         tooltip.classList.remove('invisible', 'opacity-0');
         tooltip.classList.add('opacity-100');
-
-        if (tooltipId === 'modal-share-tooltip') {
-            navigator.clipboard.writeText(window.location.href);
-        }
 
         setTimeout(() => {
             tooltip.classList.add('invisible', 'opacity-0');

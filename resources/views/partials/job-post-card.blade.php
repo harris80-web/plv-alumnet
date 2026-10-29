@@ -167,7 +167,8 @@
                 @endif
 
                 <div class="relative flex items-center group">
-                    <button class="share-btn text-gray-500 hover:text-black transition-colors p-2" onclick="copyJobLink(this)">
+                    <button type="button" class="share-btn text-gray-500 hover:text-black transition-colors p-2" aria-label="Share this job"
+                        onclick="copyJobLink(this, {{ $job->job_posting_id }})">
                         <i class="fas fa-share-nodes"></i>
                     </button>
                     <div class="share-tooltip invisible opacity-0 absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-3 rounded shadow-lg transition-all duration-300">

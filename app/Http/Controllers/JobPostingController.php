@@ -166,6 +166,14 @@ class JobPostingController extends Controller
     {
         $query = JobPosting::active()->approved()->with(['skills', 'programs', 'industry', 'user', 'employer.reviews', 'employer.votes', 'employer.user']);
 
+        // Shared job link (?job=123 — see the Share buttons in job-post-card /
+        // job-detail-modal): list that job first so it's always on page 1,
+        // where jobBoard.blade.php's deep-link script finds and opens it.
+        // Without this a shared job on, say, page 3 would open nothing.
+        if ($sharedJobId = (int) $request->query('job')) {
+            $query->orderByRaw('job_postings.job_posting_id = ? DESC', [$sharedJobId]);
+        }
+
         if ($user && $user->user_role === 'alumni' && $user->alumnus) {
             $query->addSelect(['match_score' => \App\Models\JobMatch::selectRaw('COALESCE(score * 0.7 + ai_score * 0.3, score)')
                 ->whereColumn('job_matches.job_posting_id', 'job_postings.job_posting_id')

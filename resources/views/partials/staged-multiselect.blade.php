@@ -23,6 +23,20 @@
         });
         panel.classList.toggle('hidden');
         btn.parentElement.classList.toggle('is-open', !panel.classList.contains('hidden'));
+        fitMultiselectPanel(panel);
+    }
+
+    // The panel opens left-aligned under its button; for a button near the
+    // screen's right edge (e.g. the right-hand filter on a phone) that would
+    // run off-screen, so it lines up with the button's right edge instead.
+    function fitMultiselectPanel(panel) {
+        panel.style.left = '';
+        panel.style.right = '';
+        if (panel.classList.contains('hidden')) return;
+        if (panel.getBoundingClientRect().right > document.documentElement.clientWidth - 8) {
+            panel.style.left = 'auto';
+            panel.style.right = '0';
+        }
     }
 
     document.addEventListener('click', function (e) {

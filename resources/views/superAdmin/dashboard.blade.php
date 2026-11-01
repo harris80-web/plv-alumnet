@@ -196,40 +196,133 @@
             background: rgba(199, 61, 26, 0.05);
         }
 
-        /* "View raw data" cue on every clickable chart — see partials/raw-data-link. */
+        /* "View Details" arrow on every clickable chart — see partials/raw-data-link.
+           A round right-arrow button; hovering (or keyboard-focusing) it shows a
+           "View Details" tooltip to its left. */
         .chart-card {
             position: relative;
         }
         .raw-data-link {
             position: absolute;
-            top: 14px;
-            right: 16px;
-            z-index: 1;
+            top: 12px;
+            right: 14px;
+            z-index: 2;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            padding: 3px 9px;
-            font-size: 10px;
-            font-weight: 600;
-            white-space: nowrap;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            font-size: 12px;
             color: #C73D1A;
             background: #fff;
             border: 1px solid rgba(199, 61, 26, 0.35);
             border-radius: 999px;
             text-decoration: none;
-            transition: background 0.15s, color 0.15s;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
         }
         .raw-data-link:hover,
+        .raw-data-link:focus-visible,
         .chart-card:has(.chart-clickable:hover) .raw-data-link {
             background: #C73D1A;
+            border-color: #C73D1A;
             color: #fff;
         }
-        .raw-data-link--inline {
-            position: static;
+        .raw-data-link:focus-visible {
+            outline: 2px solid rgba(199, 61, 26, 0.35);
+            outline-offset: 2px;
         }
-        /* Keep a long title from running underneath the pinned link. */
+        .raw-data-link--inline {
+            position: relative;
+            top: auto;
+            right: auto;
+        }
+        /* Tooltip — dark blue with white text, shown ABOVE the arrow (lined up
+           with its right edge, so it never runs off the card), its pointer aimed
+           down at the arrow's center. Near the top of the scrolling area there's
+           no room above, so it drops below instead (.raw-data-link--tip-below, set
+           by placeRawDataTooltip()). ::before = the bubble, ::after = the pointer.
+           Shows after a short pause (no flicker when the mouse just passes over),
+           hides at once. */
+        .raw-data-link::before,
+        .raw-data-link::after {
+            position: absolute;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.12s ease, visibility 0.12s, transform 0.12s ease;
+        }
+        .raw-data-link::before {
+            content: attr(data-tooltip);
+            bottom: calc(100% + 9px);
+            right: 0;
+            transform: translateY(3px);
+            padding: 5px 11px;
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 16px;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+            color: #fff;
+            background: #0E0F3B;
+            border-radius: 8px;
+            box-shadow: 0 6px 16px -4px rgba(14, 15, 59, 0.35);
+        }
+        .raw-data-link::after {
+            content: '';
+            /* 8px square turned 45deg, centered on the bubble's edge: its tip points
+               at the arrow's center (14px in from the button's right edge) */
+            bottom: calc(100% + 5px);
+            right: 10px;
+            width: 8px;
+            height: 8px;
+            background: #0E0F3B;
+            border-radius: 1px;
+            transform: translateY(3px) rotate(45deg);
+        }
+        .raw-data-link--tip-below::before {
+            bottom: auto;
+            top: calc(100% + 9px);
+            transform: translateY(-3px);
+        }
+        .raw-data-link--tip-below::after {
+            bottom: auto;
+            top: calc(100% + 5px);
+            transform: translateY(-3px) rotate(45deg);
+        }
+        .raw-data-link:hover::before,
+        .raw-data-link:hover::after,
+        .raw-data-link:focus-visible::before,
+        .raw-data-link:focus-visible::after {
+            opacity: 1;
+            visibility: visible;
+            transition-delay: 0.15s;
+        }
+        .raw-data-link:hover::before,
+        .raw-data-link:focus-visible::before {
+            transform: translateY(0);
+        }
+        .raw-data-link:hover::after,
+        .raw-data-link:focus-visible::after {
+            transform: translateY(0) rotate(45deg);
+        }
+
+        /* Cards with a dropdown (Top Hiring Companies, Hires per Month): the
+           dropdown sits right beside the title; the arrow keeps the corner. */
+        .chart-head-with-filter {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+            padding-right: 40px;
+        }
+        /* Keep a long title — and the subtitle, which the tooltip drops down beside —
+           from running underneath the pinned button. */
         .chart-card:has(> .raw-data-link:not(.raw-data-link--inline)) > .card-title {
-            padding-right: 115px;
+            padding-right: 40px;
+        }
+        .chart-card:has(> .raw-data-link:not(.raw-data-link--inline)) > .card-sub {
+            padding-right: 100px;
         }
 
         /* ── Industry bars ── */
@@ -584,22 +677,21 @@
                         <div class="s-value">{{ $totalHired }}</div>
                     </div>
                     <div class="chart-card" style="grid-column: 1 / -1;">
-                        <div class="flex items-center justify-between gap-3" style="flex-wrap:wrap;">
+                        {{-- Title + its dropdown side by side; the View Details arrow stays in the card's top-right corner. --}}
+                        <div class="chart-head-with-filter">
                             <div>
                                 <div class="card-title">Top Hiring Companies</div>
                                 <div class="card-sub">Most hires among current filters</div>
                             </div>
-                            <div class="flex items-center gap-2" style="margin-left:auto;">
-                            @include('partials.raw-data-link', ['url' => route('reports.show', 'top-hiring-companies'), 'inline' => true])
-                            <select id="topCompaniesSelect" onchange="updateTopCompanies(this.value)"
+                            <select id="topCompaniesSelect" onchange="updateTopCompanies(this.value)" aria-label="How many companies to show"
                                 style="border:1px solid #d1d5db; border-radius:6px; padding:5px 10px; font-size:12px; font-family:'Montserrat',sans-serif; outline:none; color:#374151;">
                                 <option value="5" {{ $topCompaniesLimit === 5 ? 'selected' : '' }}>Top 5</option>
                                 <option value="10" {{ $topCompaniesLimit === 10 ? 'selected' : '' }}>Top 10</option>
                                 <option value="15" {{ $topCompaniesLimit === 15 ? 'selected' : '' }}>Top 15</option>
                                 <option value="20" {{ $topCompaniesLimit === 20 ? 'selected' : '' }}>Top 20</option>
                             </select>
-                            </div>
                         </div>
+                        @include('partials.raw-data-link', ['url' => route('reports.show', 'top-hiring-companies')])
                         <div class="ind-bar-wrap chart-clickable" onclick="goToReport('{{ route('reports.show', 'top-hiring-companies') }}')">
                             @forelse ($topHiringCompanies as $row)
                             @php $maxHires = $topHiringCompanies->max('hires') ?: 1; @endphp
@@ -616,22 +708,21 @@
                 </div>
 
                 <div class="chart-card mb-4">
-                    <div class="flex items-center justify-between gap-3" style="flex-wrap:wrap;">
+                    {{-- Title + its dropdown side by side; the View Details arrow stays in the card's top-right corner. --}}
+                    <div class="chart-head-with-filter">
                         <div>
                             <div class="card-title">Hires per Month</div>
                             <div class="card-sub">Date an applicant was actually marked hired, grouped by month</div>
                         </div>
-                        <div class="flex items-center gap-2" style="margin-left:auto;">
-                        @include('partials.raw-data-link', ['url' => route('reports.show', 'hires-per-month'), 'inline' => true])
-                        <select id="hiresRangeSelect" onchange="updateHiresRange(this.value)"
+                        <select id="hiresRangeSelect" onchange="updateHiresRange(this.value)" aria-label="Months to show"
                             style="border:1px solid #d1d5db; border-radius:6px; padding:5px 10px; font-size:12px; font-family:'Montserrat',sans-serif; outline:none; color:#374151;">
                             <option value="3" {{ $hireMonths === 3 ? 'selected' : '' }}>Last 3 months</option>
                             <option value="6" {{ $hireMonths === 6 ? 'selected' : '' }}>Last 6 months</option>
                             <option value="12" {{ $hireMonths === 12 ? 'selected' : '' }}>Last 12 months</option>
                             <option value="24" {{ $hireMonths === 24 ? 'selected' : '' }}>Last 24 months</option>
                         </select>
-                        </div>
                     </div>
+                    @include('partials.raw-data-link', ['url' => route('reports.show', 'hires-per-month')])
                     <div class="chart-clickable" style="margin-top:10px; height:160px;" onclick="goToReport('{{ route('reports.show', 'hires-per-month') }}')">
                         <canvas id="chartHires"></canvas>
                     </div>
@@ -745,7 +836,7 @@
     // interactive for someone who can't use it.
     const CAN_VIEW_REPORTS = @json(Auth::user()->canAccessAdminFeature('reports'));
     // Carries the dashboard's currently-applied filters over (same as each
-    // chart's "View raw data" link — partials/raw-data-link), so the raw
+    // chart's "View Details" arrow — partials/raw-data-link), so the raw
     // table always matches the chart that was clicked instead of falling
     // back to the report page's own current-year default.
     function goToReport(url, keepFilters = true) {
@@ -758,6 +849,30 @@
         }
         window.location.href = target.toString();
     }
+    // "View Details" tooltips show above their arrow. That one drops below instead
+    // when there's no room above (arrow near the top of the scrolling area) or the
+    // space above holds text it would cover (a section heading, the card's title).
+    function placeRawDataTooltip(link) {
+        const area = link.closest('.dash-scroll');
+        const areaTop = Math.max(area ? area.getBoundingClientRect().top : 0, 0);
+        const b = link.getBoundingClientRect();
+        const tip = getComputedStyle(link, '::before');
+        const w = parseFloat(tip.width) || 96, h = parseFloat(tip.height) || 26;
+        const above = { left: b.right - w, right: b.right, top: b.top - 9 - h, bottom: b.top - 9 };
+        const coversText = [...document.querySelectorAll('.section-heading, .card-title, .card-sub, .s-label, .s-value, .ind-label')].some(function (el) {
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            return [...range.getClientRects()].some(r => r.width && above.left < r.right && above.right > r.left && above.top < r.bottom && above.bottom > r.top);
+        });
+        link.classList.toggle('raw-data-link--tip-below', above.top < areaTop + 4 || coversText);
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.raw-data-link').forEach(function (link) {
+            link.addEventListener('mouseenter', function () { placeRawDataTooltip(link); });
+            link.addEventListener('focus', function () { placeRawDataTooltip(link); });
+        });
+    });
+
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.chart-clickable').forEach(function (el) {
             if (CAN_VIEW_REPORTS) {

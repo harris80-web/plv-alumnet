@@ -80,7 +80,13 @@
     <h1>PLV-AlumNet &mdash; Employer Dashboard Report</h1>
     <p class="meta">
         {{ $employer->employer_company_name ?? 'Your Company' }}<br>
-        Generated {{ now(config('app.local_timezone'))->format('M d, Y h:i A') }}
+        Generated {{ now(config('app.local_timezone'))->format('M d, Y h:i A') }}<br>
+        @if (!empty($filterSummary))
+        Filters: @foreach ($filterSummary as $filterLabel => $filterValue){{ $filterLabel }}: {{ $filterValue }}@if (!$loop->last) &middot; @endif @endforeach
+        @else
+        Filters: none (all years, all job postings and applicants)
+        @endif
+        <br>Applicant numbers count applications received in {{ $filters['year'] ? implode(', ', $filters['year']) : 'any year' }}.
     </p>
 
     <div class="section">
@@ -89,7 +95,7 @@
             <tr><td>Active Job Postings</td><td>{{ $stats['activePostings'] }}</td></tr>
             <tr><td>Total Applicants</td><td>{{ $stats['totalApplicants'] }} ({{ $stats['unreadApplicants'] }} unread)</td></tr>
             <tr><td>Shortlisted</td><td>{{ $stats['shortlisted'] }}</td></tr>
-            <tr><td>Hired via AlumNet</td><td>{{ $stats['hired'] }}</td></tr>
+            <tr><td>Hired</td><td>{{ $stats['hired'] }}</td></tr>
             <tr><td>Pending Review</td><td>{{ $stats['pending'] }}</td></tr>
             <tr><td>Job Postings Expiring Soon (next 7 days)</td><td>{{ $stats['expiringSoon'] }}</td></tr>
         </table>
@@ -98,7 +104,7 @@
     <div class="section">
         <h2>Applicant Traffic by Job Posting</h2>
         @if ($jobPostings->isEmpty())
-            <p class="muted">No job postings yet.</p>
+            <p class="muted">{{ empty($filterSummary) ? 'No job postings yet.' : 'No job postings match these filters.' }}</p>
         @else
         <table>
             <tr>
@@ -138,7 +144,7 @@
     </div>
 
     <div class="section">
-        <h2>Applications &amp; Hires per Month (last 6 months)</h2>
+        <h2>Applications &amp; Hires per Month ({{ reset($monthlyActivity['labels']) }} &ndash; {{ end($monthlyActivity['labels']) }})</h2>
         @if (!empty($charts['chartMonthlyActivity']))
             <img class="chart-img" src="{{ $charts['chartMonthlyActivity'] }}">
         @endif

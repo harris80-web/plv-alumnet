@@ -182,10 +182,22 @@
         $panelFilterCount = $panelFilterCount ?? 0;
         $activeStatus = $filters['status'] ?? '';
         $myJobsUrl = route('jobPosting.myJobPosts', ['id' => $users->user_id]);
-        $hasAnyFilter = (bool) array_filter($filters);
+        $carried = $carried ?? ['job_id' => [], 'year' => [], 'batch' => [], 'college' => [], 'program_id' => []];
+        $carriedSummary = $carriedSummary ?? [];
+        $hasAnyFilter = (bool) array_filter($filters) || (bool) array_filter($carried);
+
+        // Status choices (in the slide-in "Filter by" panel).
+        $statusOptions = [
+            '' => 'All Statuses',
+            'pending' => 'Pending Approval',
+            'approved' => 'Approved',
+            'expired' => 'Expired',
+            'expiring' => 'Expiring Soon (' . \App\Models\JobPosting::EXPIRING_SOON_DAYS . ' days)',
+        ];
 
         // Plain-language summary of the slide-in panel's active filters, shown under the toolbar.
         $panelSummary = array_filter([
+            'Status' => $activeStatus !== '' ? ($statusOptions[$activeStatus] ?? '') : '',
             'Industry' => $industries->whereIn('industry_id', (array) ($filters['industry'] ?? []))->pluck('industry_name')->implode(', '),
             'Job Type' => implode(', ', (array) ($filters['job_type'] ?? [])),
             'Job Setup' => implode(', ', (array) ($filters['job_setup'] ?? [])),
@@ -193,13 +205,18 @@
             'Date Posted' => ['24h' => 'Last 24 Hours', '7d' => 'Last 7 Days', '30d' => 'Last 30 Days'][$filters['date_posted'] ?? ''] ?? '',
             'Applicants' => ['any' => 'Posts with applicants', 'pending' => 'Posts with applicants pending review', 'shortlisted' => 'Posts with shortlisted applicants', 'hired' => 'Posts with hired applicants', 'declined' => 'Posts with declined applicants'][$filters['applicants'] ?? ''] ?? '',
         ]);
-        // Opening a post's Applicants from this filtered list shows that status straight away.
-        $applicantsStatusParam = in_array($filters['applicants'] ?? '', ['pending', 'shortlisted', 'hired', 'declined'], true) ? ['status' => ucfirst($filters['applicants'])] : [];
+        // ...plus whatever the employer dashboard carried over (Job Posting, Applied in, Course, …).
+        $panelSummary += $carriedSummary;
+        // Opening a post's Applicants from this filtered list shows that status — and the
+        // dashboard's applicant filters (Year / Year Graduated / College / Course) — straight away.
+        $applicantsStatusParam = (in_array($filters['applicants'] ?? '', ['pending', 'shortlisted', 'hired', 'declined'], true) ? ['status' => ucfirst($filters['applicants'])] : [])
+            + array_filter(\Illuminate\Support\Arr::only($carried, ['year', 'batch', 'college', 'program_id']));
 
         // Status widgets: clicking one filters the table by that status, clicking it again clears it.
         $statusCards = [
             ['key' => 'pending', 'label' => 'Pending Approval', 'icon' => 'fa-clock', 'color' => 'text-[#ED7A07]', 'active' => 'border-[#ED7A07] ring-2 ring-orange-200'],
-            ['key' => 'approved', 'label' => 'Approved Job Posts', 'icon' => 'fa-circle-check', 'color' => 'text-green-500', 'active' => 'border-green-500 ring-2 ring-green-200'],
+            // "Active" = approved and not yet closed (moved here from the employer dashboard).
+            ['key' => 'approved', 'label' => 'Active Job Postings', 'icon' => 'fa-circle-check', 'color' => 'text-green-500', 'active' => 'border-green-500 ring-2 ring-green-200'],
             ['key' => 'expired', 'label' => 'Expired Job Posts', 'icon' => 'fa-calendar-xmark', 'color' => 'text-slate-500', 'active' => 'border-slate-400 ring-2 ring-slate-200'],
         ];
     @endphp
@@ -242,15 +259,15 @@
         <!-- TABLE CARD -->
         <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden w-full">
 
-            <!-- Toolbar: Search / Status / Filter panel / Post / Export -->
+            <!-- Toolbar: Search / Filter panel (incl. Status) / Post / Export -->
             <form method="GET" action="{{ $myJobsUrl }}" class="flex flex-col lg:flex-row lg:items-center gap-3 p-4 border-b border-slate-100">
-                {{-- Carry the panel's filters and the page size through a search/status change. --}}
+                {{-- Carry the panel's filters (Status included) and the page size through a search. --}}
                 @foreach (['industry', 'job_type', 'job_setup'] as $arrayFilter)
                     @foreach ((array) ($filters[$arrayFilter] ?? []) as $value)
                     <input type="hidden" name="{{ $arrayFilter }}[]" value="{{ $value }}">
                     @endforeach
                 @endforeach
-                @foreach (['location', 'date_posted', 'applicants'] as $textFilter)
+                @foreach (['status', 'location', 'date_posted', 'applicants'] as $textFilter)
                     @if (!empty($filters[$textFilter]))
                     <input type="hidden" name="{{ $textFilter }}" value="{{ $filters[$textFilter] }}">
                     @endif
@@ -258,25 +275,20 @@
                 @if (request('per_page'))
                 <input type="hidden" name="per_page" value="{{ request('per_page') }}">
                 @endif
+                {{-- Filters carried over from the employer dashboard. --}}
+                @foreach ($carried as $carriedKey => $carriedValues)
+                    @foreach ($carriedValues as $carriedValue)
+                    <input type="hidden" name="{{ $carriedKey }}[]" value="{{ $carriedValue }}">
+                    @endforeach
+                @endforeach
 
-                <div class="relative flex-1 lg:max-w-md">
-                    <i class="fas fa-search text-sm absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
-                    <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search by Job Title or Company Name"
-                        aria-label="Search by job title or company name"
-                        class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A] transition-all">
-                </div>
-
-                <div class="flex items-center gap-3">
-                    <div class="relative flex-1 min-w-0 lg:flex-none lg:w-48">
-                        <select name="status" onchange="this.form.submit()" aria-label="Filter by status"
-                            class="w-full pl-4 pr-8 py-2 bg-white border border-slate-200 rounded-full text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A] transition-all">
-                            <option value="">All Statuses</option>
-                            <option value="pending" {{ $activeStatus === 'pending' ? 'selected' : '' }}>Pending Approval</option>
-                            <option value="approved" {{ $activeStatus === 'approved' ? 'selected' : '' }}>Approved</option>
-                            <option value="expired" {{ $activeStatus === 'expired' ? 'selected' : '' }}>Expired</option>
-                            <option value="expiring" {{ $activeStatus === 'expiring' ? 'selected' : '' }}>Expiring Soon ({{ \App\Models\JobPosting::EXPIRING_SOON_DAYS }} days)</option>
-                        </select>
-                        <i class="fas fa-chevron-down text-[10px] absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                {{-- Search, then the "Filter by" panel button (Status lives in the panel now). --}}
+                <div class="flex items-center gap-3 flex-1 lg:max-w-xl">
+                    <div class="relative flex-1 min-w-0">
+                        <i class="fas fa-search text-sm absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                        <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search by Job Title or Company Name"
+                            aria-label="Search by job title or company name"
+                            class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A] focus:border-[#C73D1A] transition-all">
                     </div>
 
                     <button type="button" id="filterSidebarToggle" onclick="toggleFilterSidebar()" title="More filters" aria-label="More filters" aria-controls="filter-sidebar" aria-expanded="false"
@@ -288,8 +300,10 @@
                     </button>
 
                     @if ($hasAnyFilter)
-                    <a href="{{ $myJobsUrl }}" class="shrink-0 text-xs font-bold text-slate-400 hover:text-[#C73D1A] whitespace-nowrap">
-                        <i class="fas fa-times mr-1"></i>CLEAR
+                    {{-- Phones: just the x, so the search box keeps its room. --}}
+                    <a href="{{ $myJobsUrl }}" title="Clear all filters" aria-label="Clear all filters"
+                        class="shrink-0 inline-flex items-center justify-center min-w-[24px] min-h-[24px] text-xs font-bold text-slate-400 hover:text-[#C73D1A] whitespace-nowrap">
+                        <i class="fas fa-times sm:mr-1"></i><span class="hidden sm:inline">CLEAR</span>
                     </a>
                     @endif
                 </div>
@@ -501,11 +515,16 @@
     <div id="filter-sidebar" role="dialog" aria-modal="true" aria-labelledby="filterSidebarTitle" inert aria-hidden="true"
         class="fixed top-0 right-0 h-full w-[320px] max-w-full bg-white shadow-2xl z-[206] transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
         <form method="GET" action="{{ $myJobsUrl }}" class="flex flex-col h-full">
-            {{-- Keep the toolbar's search/status and the page size when applying panel filters. --}}
-            @foreach (['search', 'status', 'applicants'] as $keep)
+            {{-- Keep the toolbar's search and the page size when applying panel filters. --}}
+            @foreach (['search', 'applicants'] as $keep)
                 @if (!empty($filters[$keep]))
                 <input type="hidden" name="{{ $keep }}" value="{{ $filters[$keep] }}">
                 @endif
+            @endforeach
+            @foreach ($carried as $carriedKey => $carriedValues)
+                @foreach ($carriedValues as $carriedValue)
+                <input type="hidden" name="{{ $carriedKey }}[]" value="{{ $carriedValue }}">
+                @endforeach
             @endforeach
             @if (request('per_page'))
             <input type="hidden" name="per_page" value="{{ request('per_page') }}">
@@ -519,6 +538,21 @@
             </div>
 
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                {{-- Status (moved here from the toolbar dropdown). --}}
+                <fieldset>
+                    <legend class="text-[10px] font-bold text-[#C73D1A] uppercase tracking-wider mb-3">Status</legend>
+                    <div class="space-y-2">
+                        @foreach ($statusOptions as $value => $label)
+                        <label class="flex items-center gap-3 text-sm text-[#1e1b4b] font-medium cursor-pointer">
+                            <input type="radio" name="status" value="{{ $value }}" class="w-4 h-4 accent-[#ED7A07]"
+                                {{ $activeStatus === (string) $value ? 'checked' : '' }}>
+                            {{ $label }}
+                        </label>
+                        @endforeach
+                    </div>
+                </fieldset>
+
+                <hr class="border-slate-100">
                 <div>
                     <label for="filterLocation" class="text-[13px] font-bold text-[#1e1b4b] block mb-2">Location</label>
                     <input type="text" id="filterLocation" name="location" value="{{ $filters['location'] ?? '' }}" placeholder="Enter Location"
@@ -876,17 +910,17 @@
         sidebar.inert = !opening;
         sidebar.setAttribute('aria-hidden', opening ? 'false' : 'true');
         toggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
-        if (opening) document.getElementById('filterLocation').focus({ preventScroll: true });
+        if (opening) (sidebar.querySelector('input[name="status"]:checked') || document.getElementById('filterLocation')).focus({ preventScroll: true });
         else toggle.focus({ preventScroll: true });
     }
 
-    // Clears only the panel's own fields (the toolbar's search/status ride
-    // along as hidden inputs) and applies right away.
+    // Clears only the panel's own fields, Status included (the toolbar's
+    // search rides along as a hidden input) and applies right away.
     function resetFilterSidebar(form) {
         form.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
         form.querySelectorAll('input[type="text"]').forEach(input => input.value = '');
-        const anyTime = form.querySelector('input[type="radio"][value=""]');
-        if (anyTime) anyTime.checked = true;
+        // "All Statuses" and "Any Time"
+        form.querySelectorAll('input[type="radio"][value=""]').forEach(radio => radio.checked = true);
         form.submit();
     }
 

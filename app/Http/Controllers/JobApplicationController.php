@@ -234,16 +234,27 @@ class JobApplicationController extends Controller
         return redirect()->route('jobApplication.showApplications', ['jobPostingId' => $jobId]);
     }
 
-    public function showApplications($jobPostingId)
+    public function showApplications(\Illuminate\Http\Request $request, $jobPostingId)
     {
-        $jobPost = JobPosting::with(['applicants.user', 'industry'])->findOrFail($jobPostingId);
+        $jobPost = JobPosting::with(['applicants.user', 'applicants.program', 'industry'])->findOrFail($jobPostingId);
         abort_unless($jobPost->user_id === Auth::id(), 403);
 
         // Opening the list is what "reads" the applications — clear the
         // unread flag now so the count on the My Job Postings card resets.
         JobApplication::where('job_id', $jobPostingId)->update(['is_read' => true]);
 
-        return view('general.jobApplicants', compact('jobPost'));
+        // Course filter: the courses of this post's applicants. The employer
+        // dashboard's filters (Applied in / Year Graduated / College / Course)
+        // arrive in the URL when a widget was clicked; the list opens with them on.
+        $courseOptions = $jobPost->applicants->pluck('program')->filter()->unique('program_id')
+            ->sortBy('program_name')
+            ->mapWithKeys(fn ($p) => [$p->program_id => $p->labeledName()]);
+        $courseCollegeAttrs = $jobPost->applicants->pluck('program')->filter()->unique('program_id')
+            ->mapWithKeys(fn ($p) => [$p->program_id => 'data-college="' . e($p->college) . '"']);
+        $carriedFilters = JobApplication::applicantFiltersFrom($request);
+        $carriedLabels = JobApplication::applicantFilterLabels(\Illuminate\Support\Arr::except($carriedFilters, ['program_id']));
+
+        return view('general.jobApplicants', compact('jobPost', 'courseOptions', 'courseCollegeAttrs', 'carriedFilters', 'carriedLabels'));
     }
 
     /**

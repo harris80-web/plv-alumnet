@@ -163,6 +163,22 @@
         document.querySelectorAll('.reviews-link[data-employer-id="' + employerId + '"] .reviews-count').forEach(function (el) {
             el.textContent = data.ratingCount;
         });
+
+        // The job cards keep these numbers as data-* for the details panel/modal —
+        // update them too, so re-opening a job shows the new votes/rating.
+        document.querySelectorAll('[data-employer-id="' + employerId + '"][data-upvotes]').forEach(function (el) {
+            el.dataset.upvotes = data.upvotes;
+            el.dataset.downvotes = data.downvotes;
+            if (data.ratingCount !== undefined) {
+                el.dataset.ratingCount = data.ratingCount;
+                el.dataset.averageRating = data.averageRating ?? '';
+            }
+            if (data.myRating !== undefined) {
+                el.dataset.myRating = data.myRating || '';
+                el.dataset.myReviewBody = data.reviewBody || '';
+            }
+            if (jobId !== undefined && String(el.dataset.jobId) === String(jobId)) el.dataset.myVote = data.myVote || '';
+        });
     }
 
     function openCompanyReviewModal(employerId, kind, value, existingBody) {

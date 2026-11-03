@@ -86,6 +86,9 @@ class JobPostingController extends Controller
         //
     }
 
+    /** Job Board / Bookmarks / My Applications: default rows per page (the pagination bar offers 5 / 10 / 20 / 50, like the admin tables). */
+    private const JOB_BOARD_PER_PAGE = 10;
+
     /** Blended-score floor (see JobMatch::blendedScore()) above which a job counts as "recommended" on the board. */
     private const RECOMMENDED_SCORE_THRESHOLD = 50;
 
@@ -95,7 +98,7 @@ class JobPostingController extends Controller
 
         $jobPostings = $this->filteredJobPostingsQuery($request, $user)
             ->latest('job_postings.updated_at')
-            ->paginate(6)
+            ->paginate($this->resolvePerPage(self::JOB_BOARD_PER_PAGE))
             ->withQueryString();
 
         return view('general.jobBoard', $this->jobBoardViewData($request, $user, $jobPostings, 'board'));
@@ -113,7 +116,7 @@ class JobPostingController extends Controller
         $jobPostings = $this->filteredJobPostingsQuery($request, $user)
             ->whereHas('bookmarkedBy', fn ($q) => $q->where('job_bookmarks.alumnus_id', $user->user_id))
             ->latest('job_postings.updated_at')
-            ->paginate(6)
+            ->paginate($this->resolvePerPage(self::JOB_BOARD_PER_PAGE))
             ->withQueryString();
 
         return view('general.jobBoard', $this->jobBoardViewData($request, $user, $jobPostings, 'bookmarks'));
@@ -146,7 +149,7 @@ class JobPostingController extends Controller
 
         $jobPostings = $this->applySearchFilters($query, $request)
             ->orderByDesc('applied_at')
-            ->paginate(6)
+            ->paginate($this->resolvePerPage(self::JOB_BOARD_PER_PAGE))
             ->withQueryString();
 
         return view('general.jobBoard', $this->jobBoardViewData($request, $user, $jobPostings, 'applications'));
@@ -435,12 +438,18 @@ class JobPostingController extends Controller
         $industries = Industry::all();
         $users = Auth::user();
         $filters = $request->only(['search', 'industry', 'job_type', 'job_setup', 'location', 'date_posted', 'status', 'applicants']);
-        // Filters that live in the slide-in "Filter by" panel (search and
-        // status have their own controls in the toolbar; "applicants" comes
-        // from the employer dashboard's applicant widgets).
-        $panelFilterCount = count(array_filter(collect($filters)->except(['search', 'status', 'applicants'])->all()));
+        // Filters that live in the slide-in "Filter by" panel, Status included
+        // (search has its own box in the toolbar; "applicants" comes from the
+        // employer dashboard's applicant widgets).
+        $panelFilterCount = count(array_filter(collect($filters)->except(['search', 'applicants'])->all()));
 
-        return view('general.jobPostings', compact('jobPostings', 'programs', 'industries', 'users', 'filters', 'panelFilterCount', 'statusCounts'));
+        // From the employer dashboard: kept through searches/filters, shown under "Filtered by".
+        $carried = $this->carriedDashboardFilters($request);
+        $carriedSummary = array_filter([
+            'Job Posting' => $carried['job_id'] ? JobPosting::where('user_id', $id)->whereIn('job_posting_id', $carried['job_id'])->pluck('job_posting_title')->implode(', ') : '',
+        ]) + \App\Models\JobApplication::applicantFilterLabels($carried);
+
+        return view('general.jobPostings', compact('jobPostings', 'programs', 'industries', 'users', 'filters', 'panelFilterCount', 'statusCounts', 'carried', 'carriedSummary'));
     }
 
     /** CSV of the poster's own job posts — the same filters/status as the table, every page (not just the visible one). */
@@ -490,15 +499,39 @@ class JobPostingController extends Controller
         $query = $this->applyMyJobStatusFilter($query, $request->input('status'));
 
         // Employer dashboard's applicant widgets (Total Applicants / Pending Review /
-        // Shortlisted / Hired): only posts that have applicants (in that status).
+        // Shortlisted / Hired): only posts that have applicants (in that status)
+        // matching the dashboard's filters (Year / Year Graduated / College / Course).
         $applicants = $request->input('applicants');
+        $applicantFilters = \App\Models\JobApplication::applicantFiltersFrom($request);
         if ($applicants === 'any') {
-            $query->whereHas('applications');
+            $query->whereHas('applications', fn ($q) => $q->matchingApplicantFilters($applicantFilters));
         } elseif (in_array($applicants, ['pending', 'shortlisted', 'hired', 'declined'], true)) {
-            $query->whereHas('applications', fn ($q) => $q->where('application_status', $applicants));
+            $query->whereHas('applications', fn ($q) => $q->where('application_status', $applicants)->matchingApplicantFilters($applicantFilters));
+        }
+
+        // The dashboard's Job Posting filter.
+        $jobIds = app(\App\Services\DashboardReportService::class)->resolveIntArray($request->input('job_id'));
+        if ($jobIds) {
+            $query->whereIn('job_posting_id', $jobIds);
         }
 
         return $query;
+    }
+
+    /**
+     * Filters carried over from the employer dashboard (not part of this
+     * page's own toolbar/panel): the Job Posting pick, plus — only together
+     * with an "applicants" filter — the applicant filters.
+     *
+     * @return array{job_id: int[], year: int[], batch: int[], college: string[], program_id: int[]}
+     */
+    private function carriedDashboardFilters(Request $request): array
+    {
+        $applicantFilters = in_array($request->input('applicants'), ['any', 'pending', 'shortlisted', 'hired', 'declined'], true)
+            ? \App\Models\JobApplication::applicantFiltersFrom($request)
+            : ['year' => [], 'batch' => [], 'college' => [], 'program_id' => []];
+
+        return ['job_id' => app(\App\Services\DashboardReportService::class)->resolveIntArray($request->input('job_id'))] + $applicantFilters;
     }
 
     /**

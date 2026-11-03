@@ -84,46 +84,140 @@
 
     <section class="bg-gray-50 p-8">
         <div class="max-w-6xl mx-auto">
-            {{-- Phones: title on its own row, then OVERVIEW + EXPORT PDF side by side.
-                 Tablet/desktop (md+): title + EXPORT PDF on one row, OVERVIEW below. --}}
-            <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-5 md:gap-y-8 mb-4">
-                <h2 class="col-span-2 md:col-span-1 text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent tracking-wide rp-dashboard-title">
-                    DASHBOARD FOR {{ strtoupper($employer->employer_company_name ?? 'YOUR COMPANY') }}
-                </h2>
-                {{-- Same export button style as the admin dashboard's EXPORT PDF. --}}
-                <button type="button" onclick="exportDashboardPdf()" title="Download the Overview and Analytics below as a PDF report"
-                    class="col-start-2 row-start-2 md:row-start-1 justify-self-end shrink-0 whitespace-nowrap bg-[#C04828] text-[10px] text-white px-3 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-[#A03D22] transition shadow-sm font-semibold uppercase tracking-wide">
-                    <i class="fa-solid fa-file-pdf text-xs"></i> EXPORT PDF
-                </button>
-                <h3 class="col-start-1 row-start-2 md:col-span-2 font-bold text-[#0E0F3B] flex items-center gap-2 text-sm uppercase tracking-wide">
-                    <i class="fa-solid fa-chart-pie text-[#1D46A4]"></i> Overview
-                </h3>
-            </div>
+            <h2 class="text-2xl font-bold bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent tracking-wide rp-dashboard-title mb-5">
+                DASHBOARD FOR {{ strtoupper($employer->employer_company_name ?? 'YOUR COMPANY') }}
+            </h2>
 
             @php
-                // Same widget layout as the admin pages: icon left of the number, label below.
-                // Each widget opens My Job Postings filtered to what it counts (the applicant
-                // ones then open a post's Applicants already filtered to that status).
+                $hasDashboardFilters = (bool) array_filter(\Illuminate\Support\Arr::only($filters, ['year', 'job_id', 'batch', 'college', 'program_id']));
+                // Narrowed beyond the Year (which every number here follows anyway).
+                $narrowedBeyondYear = (bool) array_filter(\Illuminate\Support\Arr::only($filters, ['job_id', 'batch', 'college', 'program_id']));
+                $hasAnyPost = $carouselPostings->isNotEmpty();
+                $hasAnyApplication = $carouselPostings->sum('applications_count') > 0;
+                $yearScope = $filters['year'] ? implode(', ', $filters['year']) : null;
+                // The Overview widgets: Total Applicants, Shortlisted and Hired side by side (a row of
+                // their own on phones/tablets), then Active Job Postings and Expiring Soon; all five in
+                // one row on desktop. Each opens My Job Postings filtered to what it counts (the
+                // applicant ones then open a post's Applicants already filtered to that status).
                 $myPosts = fn (array $q) => route('jobPosting.myJobPosts', ['id' => Auth::id()] + $q);
+                // Clicking through keeps the dashboard's filters: the applicant numbers
+                // carry all of them, the job-post numbers only the Job Posting pick.
+                $carryApplicantFilters = array_filter(\Illuminate\Support\Arr::only($filters, ['year', 'job_id', 'batch', 'college', 'program_id']));
+                $carryPostFilters = array_filter(\Illuminate\Support\Arr::only($filters, ['job_id']));
+                $carryToApplicants = array_filter(\Illuminate\Support\Arr::only($filters, ['year', 'batch', 'college', 'program_id']));
                 $dashboardTiles = [
-                    ['value' => $stats['activePostings'], 'label' => 'Active Job Postings', 'icon' => 'fa-briefcase', 'color' => 'text-slate-800', 'href' => $myPosts(['status' => 'approved'])],
-                    ['value' => $stats['totalApplicants'], 'label' => 'Total Applicants', 'icon' => 'fa-users', 'color' => 'text-blue-600', 'badge' => $stats['unreadApplicants'] > 0 ? $stats['unreadApplicants'] . ' new' : null, 'href' => $myPosts(['applicants' => 'any'])],
-                    ['value' => $stats['shortlisted'], 'label' => 'Shortlisted', 'icon' => 'fa-list-check', 'color' => 'text-amber-500', 'href' => $myPosts(['applicants' => 'shortlisted'])],
-                    ['value' => $stats['hired'], 'label' => 'Hired via AlumNet', 'icon' => 'fa-handshake', 'color' => 'text-green-500', 'href' => $myPosts(['applicants' => 'hired'])],
-                    ['value' => $stats['pending'], 'label' => 'Pending Review', 'icon' => 'fa-hourglass-half', 'color' => 'text-[#ED7A07]', 'href' => $myPosts(['applicants' => 'pending'])],
-                    ['value' => $stats['expiringSoon'], 'label' => 'Job Postings Expiring Soon', 'icon' => 'fa-calendar-xmark', 'color' => 'text-red-500', 'href' => $myPosts(['status' => 'expiring'])],
+                    ['value' => $stats['totalApplicants'], 'label' => 'Total Applicants', 'icon' => 'fa-users', 'color' => 'text-blue-600', 'badge' => $stats['unreadApplicants'] > 0 ? $stats['unreadApplicants'] . ' new' : null, 'href' => $myPosts(['applicants' => 'any'] + $carryApplicantFilters), 'span' => 'col-span-2 lg:col-span-1'],
+                    ['value' => $stats['shortlisted'], 'label' => 'Shortlisted', 'icon' => 'fa-list-check', 'color' => 'text-amber-500', 'href' => $myPosts(['applicants' => 'shortlisted'] + $carryApplicantFilters), 'span' => 'col-span-2 lg:col-span-1'],
+                    ['value' => $stats['hired'], 'label' => 'Hired', 'icon' => 'fa-handshake', 'color' => 'text-green-500', 'href' => $myPosts(['applicants' => 'hired'] + $carryApplicantFilters), 'span' => 'col-span-2 lg:col-span-1'],
+                    ['value' => $stats['activePostings'], 'label' => 'Active Job Postings', 'icon' => 'fa-briefcase', 'color' => 'text-slate-800', 'href' => $myPosts(['status' => 'approved'] + $carryPostFilters), 'span' => 'col-span-3 lg:col-span-1'],
+                    ['value' => $stats['expiringSoon'], 'label' => 'Job Postings Expiring Soon', 'icon' => 'fa-calendar-xmark', 'color' => 'text-red-500', 'href' => $myPosts(['status' => 'expiring'] + $carryPostFilters), 'span' => 'col-span-3 lg:col-span-1'],
                 ];
             @endphp
 
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {{-- FILTERS — same look as the admin dashboard's filter bar (partials/report-filters-form).
+                 Staged multi-selects: nothing reloads until APPLY FILTERS. --}}
+            <form method="GET" action="{{ route('employer.dashboard') }}" id="dashboardFilterForm"
+                class="flex flex-wrap items-center gap-3 bg-white px-4 sm:px-6 py-4 rounded-xl border border-slate-200 shadow-md text-sm font-medium text-slate-700 mb-8">
+                {{-- Keeps the monthly chart's period through a filter change (updated by its dropdown). --}}
+                <input type="hidden" name="period" id="dashboardPeriodInput" value="{{ $filters['period'] }}">
+                {{-- "These are the employer's own picks": an empty Year then means all years,
+                     instead of the current-year default. --}}
+                <input type="hidden" name="{{ \App\Services\DashboardReportService::FILTERS_APPLIED_PARAM }}" value="1">
+
+                <div class="flex-1 min-w-[150px]">
+                    @include('partials.multiselect-filter', [
+                        'name' => 'year',
+                        'icon' => 'fas fa-calendar-day',
+                        'placeholder' => 'Year',
+                        'labelPrefix' => 'Year',
+                        'options' => $yearOptions,
+                        'selected' => $filters['year'],
+                    ])
+                </div>
+                <div class="flex-1 min-w-[150px]">
+                    @include('partials.multiselect-filter', [
+                        'name' => 'job_id',
+                        'icon' => 'fas fa-briefcase',
+                        'placeholder' => 'Job Posting',
+                        'options' => $jobPostingOptions,
+                        'selected' => $filters['job_id'],
+                    ])
+                </div>
+                <div class="flex-1 min-w-[150px]">
+                    @include('partials.multiselect-filter', [
+                        'name' => 'batch',
+                        'icon' => 'fas fa-calendar',
+                        'placeholder' => 'Year Graduated',
+                        'labelPrefix' => 'Year Graduated',
+                        'options' => $batchYearOptions,
+                        'selected' => $filters['batch'],
+                    ])
+                </div>
+                <div class="flex-1 min-w-[150px]">
+                    @include('partials.multiselect-filter', [
+                        'name' => 'college',
+                        'icon' => 'fas fa-university',
+                        'placeholder' => 'College',
+                        'options' => \App\Models\Program::COLLEGES,
+                        'selected' => $filters['college'],
+                    ])
+                </div>
+                <div class="flex-1 min-w-[150px]">
+                    @include('partials.multiselect-filter', [
+                        'name' => 'program_id',
+                        'icon' => 'fas fa-graduation-cap',
+                        'placeholder' => 'Course',
+                        'options' => $courseOptions,
+                        'selected' => $filters['program_id'],
+                        'optionAttrs' => $courseCollegeAttrs,
+                    ])
+                </div>
+
+                {{-- Actions under the filters (EXPORT PDF moved here from beside the title). --}}
+                <div class="w-full flex flex-wrap items-center justify-end gap-2 sm:gap-3 pt-3 mt-1 border-t border-slate-100">
+                    {{-- What the numbers below cover, in plain words. --}}
+                    <p class="w-full sm:w-auto sm:mr-auto text-[11px] leading-snug text-slate-500" id="dashboardScope">
+                        <i class="fa-solid fa-circle-info text-[#1D46A4] mr-1"></i>
+                        Showing applications received in <span class="font-semibold text-[#0E0F3B]">{{ $yearScope ?? 'all years' }}</span>@if ($narrowedBeyondYear) for the selected filters @endif
+                    </p>
+                    {{-- Back to the defaults (the current year). --}}
+                    @if ($filters['applied'])
+                    <a href="{{ route('employer.dashboard', $filters['period'] !== 6 ? ['period' => $filters['period']] : []) }}"
+                        class="shrink-0 whitespace-nowrap bg-slate-200 text-[10px] text-slate-600 px-3 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-slate-300 transition shadow-sm font-semibold uppercase tracking-wide">
+                        <i class="fa-solid fa-rotate-left text-xs"></i> Reset Filters
+                    </a>
+                    @endif
+                    <button type="submit"
+                        class="shrink-0 whitespace-nowrap bg-[#1D264F] hover:bg-[#0E0F3B] text-[10px] text-white px-4 py-1.5 rounded-md flex items-center gap-1.5 transition shadow-sm font-semibold uppercase tracking-wide">
+                        <i class="fas fa-filter"></i> Apply Filters
+                    </button>
+                    <button type="button" onclick="exportDashboardPdf()" title="Download the Overview and Analytics below as a PDF report"
+                        class="shrink-0 whitespace-nowrap bg-[#C04828] text-[10px] text-white px-3 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-[#A03D22] transition shadow-sm font-semibold uppercase tracking-wide">
+                        <i class="fa-solid fa-file-pdf text-xs"></i> EXPORT PDF
+                    </button>
+                </div>
+            </form>
+
+            {{-- OVERVIEW + the Pending Review call to action, on one row at every width. --}}
+            <div class="flex items-center justify-between gap-3 mb-4">
+                <h3 class="font-bold text-[#0E0F3B] flex items-center gap-2 text-sm uppercase tracking-wide">
+                    <i class="fa-solid fa-chart-pie text-[#1D46A4]"></i> Overview
+                </h3>
+                <a href="{{ $myPosts(['applicants' => 'pending'] + $carryApplicantFilters) }}" title="Review the applicants waiting for your decision"
+                    class="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 bg-[#ED7A07] hover:bg-[#C73D1A] text-white text-[11px] font-semibold uppercase tracking-wide px-3.5 py-2 rounded-md shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#C73D1A]">
+                    <i class="fa-solid fa-hourglass-half text-xs"></i> Pending Review ({{ $stats['pending'] }})
+                </a>
+            </div>
+
+            <div class="grid grid-cols-6 lg:grid-cols-5 gap-2 sm:gap-4">
                 @foreach ($dashboardTiles as $tile)
                 <a href="{{ $tile['href'] }}" title="View {{ strtolower($tile['label']) }}"
-                    class="block bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md hover:border-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C73D1A] px-5 py-4">
+                    class="{{ $tile['span'] ?? '' }} block min-w-0 bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md hover:border-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C73D1A] px-3 py-3 sm:px-5 sm:py-4">
                     <div class="flex items-center gap-2">
-                        <i class="fa-solid {{ $tile['icon'] }} text-lg shrink-0 {{ $tile['color'] }}"></i>
-                        <p class="text-2xl font-bold {{ $tile['color'] }}">{{ $tile['value'] }}</p>
+                        <i class="fa-solid {{ $tile['icon'] }} text-base sm:text-lg shrink-0 {{ $tile['color'] }}"></i>
+                        <p class="text-xl sm:text-2xl font-bold {{ $tile['color'] }}">{{ $tile['value'] }}</p>
                     </div>
-                    <p class="text-xs font-medium text-slate-500 mt-1 leading-snug">
+                    <p class="text-xs font-medium text-slate-500 mt-1 leading-snug break-words">
                         {{ $tile['label'] }}
                         @if (!empty($tile['badge']))
                         <span class="ml-1 inline-block text-[9px] font-bold uppercase bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full align-middle">{{ $tile['badge'] }}</span>
@@ -145,7 +239,7 @@
                     <div class="card-sub">Applicants per posting &mdash; active postings first</div>
                     <div class="mt-4">
                         @forelse ($jobPostings->take(5) as $job)
-                        <a href="{{ route('jobApplication.showApplications', ['jobPostingId' => $job->job_posting_id]) }}" class="block mb-4 last:mb-0 group">
+                        <a href="{{ route('jobApplication.showApplications', ['jobPostingId' => $job->job_posting_id] + $carryToApplicants) }}" class="block mb-4 last:mb-0 group">
                             <div class="flex justify-between gap-2 text-xs font-semibold text-gray-600 mb-1.5">
                                 <span class="flex items-baseline gap-1.5 min-w-0">
                                     <span class="truncate group-hover:text-[#C73D1A] transition-colors">{{ $job->job_posting_title }}</span>
@@ -158,7 +252,7 @@
                             </div>
                         </a>
                         @empty
-                        <p class="text-sm text-gray-400">You haven't posted any jobs yet.</p>
+                        <p class="text-sm text-gray-400">{{ $hasAnyPost ? 'No job postings match these filters.' : "You haven't posted any jobs yet." }}</p>
                         @endforelse
                     </div>
                 </div>
@@ -171,15 +265,31 @@
                     <div style="margin-top:10px; height:220px;"><canvas id="chartApplicationStatus"></canvas></div>
                     @else
                     <div class="h-[220px] flex flex-col items-center justify-center text-gray-400 text-sm">
-                        <i class="fa-solid fa-chart-pie text-3xl mb-2 text-gray-300"></i> No applications yet.
+                        <i class="fa-solid fa-chart-pie text-3xl mb-2 text-gray-300"></i> {{ $hasAnyApplication ? 'No applications match these filters.' : 'No applications yet.' }}
                     </div>
                     @endif
                 </div>
 
                 <!-- Applications & Hires per Month -->
+                @php
+                    $shownMonths = $monthlyByPeriod[$filters['period']]['labels'];
+                @endphp
                 <div class="chart-card lg:col-span-2">
-                    <div class="card-title">Applications &amp; Hires per Month</div>
-                    <div class="card-sub">Applications received and applicants hired across all your job postings &mdash; last 6 months</div>
+                    {{-- Period dropdown at the top right (redraws the chart straight away, no reload).
+                         Phones: it sits above the title, still on the right. --}}
+                    <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+                        <div class="min-w-0 flex-1 basis-64">
+                            <div class="card-title">Applications &amp; Hires per Month</div>
+                            <div class="card-sub">Applications received and applicants hired across {{ $narrowedBeyondYear ? 'the filtered' : 'all your' }} job postings &mdash; <span id="monthlyRangeLabel">{{ reset($shownMonths) }} &ndash; {{ end($shownMonths) }}</span></div>
+                        </div>
+                        <label for="monthlyPeriodSelect" class="sr-only">Period</label>
+                        <select id="monthlyPeriodSelect" class="shrink-0 ml-auto order-first sm:order-none"
+                            style="border:1px solid #d1d5db; border-radius:6px; padding:5px 10px; font-size:12px; font-family:'Montserrat',sans-serif; outline:none; color:#374151; background:#fff;">
+                            @foreach ($monthlyPeriods as $months => $periodLabel)
+                            <option value="{{ $months }}" {{ $filters['period'] === $months ? 'selected' : '' }}>{{ $periodLabel }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div style="margin-top:10px; height:240px;"><canvas id="chartMonthlyActivity"></canvas></div>
                 </div>
 
@@ -199,8 +309,8 @@
 
             {{-- Carousel. Phones: one card plus a peek of the next (swipe). Tablets: two
                  cards, desktop: three, with arrow buttons whenever there's more to scroll. --}}
-            <div class="relative {{ $jobPostings->count() > 1 ? 'sm:px-12' : '' }}">
-                @if ($jobPostings->count() > 1)
+            <div class="relative {{ $carouselPostings->count() > 1 ? 'sm:px-12' : '' }}">
+                @if ($carouselPostings->count() > 1)
                 <button type="button" id="prevBtn" aria-label="Previous job postings"
                     class="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-slate-200 shadow-md text-[#1D264F] items-center justify-center hover:bg-[#1D264F] hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none">
                     <i class="fa-solid fa-chevron-left text-sm"></i>
@@ -213,7 +323,7 @@
 
                 <div id="slider" class="flex gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth">
 
-                    @forelse ($jobPostings as $job)
+                    @forelse ($carouselPostings as $job)
                     @php
                         $cardImage = $job->thumbnailUrl();
                         $usesDefaultImage = $job->usesDefaultThumbnail();
@@ -335,6 +445,8 @@
         })();
     </script>
 
+    @include('partials.staged-multiselect')
+    @include('partials.report-college-cascade')
     @include('partials.chart-pdf-image')
     <script>
         // Analytics charts — same Chart.js setup/palette as the admin dashboard.
@@ -367,14 +479,19 @@
                 });
             }
 
-            const monthly = @json($monthlyActivity);
-            new Chart(document.getElementById('chartMonthlyActivity'), {
+            // The months for each dropdown choice (3 / 6 / 12), already kept inside
+            // the selected Year by the server (the PDF uses the same ones).
+            const monthlyByPeriod = @json($monthlyByPeriod);
+            const periodSelect = document.getElementById('monthlyPeriodSelect');
+            const lastMonths = n => monthlyByPeriod[n];
+            const shown = lastMonths(+periodSelect.value);
+            const monthlyChart = new Chart(document.getElementById('chartMonthlyActivity'), {
                 type: 'bar',
                 data: {
-                    labels: monthly.labels,
+                    labels: shown.labels,
                     datasets: [
-                        { label: 'Applications Received', data: monthly.applications, backgroundColor: '#1a3a6e', borderRadius: 3 },
-                        { label: 'Applicants Hired', data: monthly.hires, backgroundColor: '#e05c00', borderRadius: 3 }
+                        { label: 'Applications Received', data: shown.applications, backgroundColor: '#1a3a6e', borderRadius: 3 },
+                        { label: 'Applicants Hired', data: shown.hires, backgroundColor: '#e05c00', borderRadius: 3 }
                     ]
                 },
                 options: {
@@ -386,6 +503,20 @@
                         y: { beginAtZero: true, grid: { color: gridColor }, ticks: { font: fontDef, precision: 0 } }
                     }
                 }
+            });
+
+            periodSelect.addEventListener('change', function () {
+                const d = lastMonths(+periodSelect.value);
+                monthlyChart.data.labels = d.labels;
+                monthlyChart.data.datasets[0].data = d.applications;
+                monthlyChart.data.datasets[1].data = d.hires;
+                monthlyChart.update();
+                document.getElementById('monthlyRangeLabel').textContent = d.labels[0] + ' \u2013 ' + d.labels[d.labels.length - 1];
+                // Remember it through APPLY FILTERS and a page refresh.
+                document.getElementById('dashboardPeriodInput').value = periodSelect.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('period', periodSelect.value);
+                history.replaceState(null, '', url);
             });
         })();
 
@@ -406,7 +537,15 @@
             form.method = 'POST';
             form.action = {!! json_encode(route('employer.dashboard.exportPdf')) !!};
             form.style.display = 'none';
-            [['_token', '{{ csrf_token() }}'], ['charts', JSON.stringify(charts)]].forEach(function ([name, value]) {
+            const fields = [['_token', '{{ csrf_token() }}'], ['charts', JSON.stringify(charts)], ['period', document.getElementById('monthlyPeriodSelect').value]];
+            // The APPLIED filters (in the URL since the last APPLY FILTERS), not unsaved picks.
+            const params = new URLSearchParams(window.location.search);
+            ['year', 'job_id', 'batch', 'college', 'program_id'].forEach(function (key) {
+                params.getAll(key + '[]').forEach(function (v) { fields.push([key + '[]', v]); });
+            });
+            // Applied-filters marker: an emptied Year exports as "all years", not the current-year default.
+            if (params.has('{{ \App\Services\DashboardReportService::FILTERS_APPLIED_PARAM }}')) fields.push(['{{ \App\Services\DashboardReportService::FILTERS_APPLIED_PARAM }}', '1']);
+            fields.forEach(function ([name, value]) {
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = name;

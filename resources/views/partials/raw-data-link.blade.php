@@ -1,5 +1,7 @@
 {{--
-    "View raw data" link for a clickable dashboard chart — the visible cue
+    "View Details" arrow link for a clickable dashboard chart (a right-arrow
+    button; hovering or focusing it shows a "View Details" tooltip, styled in
+    superAdmin/dashboard.blade.php) — the visible cue
     that the chart (whose whole area is also clickable, see goToReport() in
     superAdmin/dashboard.blade.php) opens the one-row-per-record report
     behind it. A real <a>, so it also works for keyboard / middle-click /
@@ -24,7 +26,7 @@
     $href = $url . ($query ? (str_contains($url, '?') ? '&' : '?') . $query : '');
 @endphp
 <a href="{{ $href }}" class="raw-data-link {{ !empty($inline) ? 'raw-data-link--inline' : '' }}"
-    title="Open the raw data behind this chart" onclick="event.stopPropagation()">
-    <i class="fa-solid fa-table"></i> View raw data
+    aria-label="View details" data-tooltip="View Details" onclick="event.stopPropagation()">
+    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
 </a>
 @endif

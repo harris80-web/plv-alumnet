@@ -10,9 +10,80 @@
         $bookmarkedIds ?? [],
         (float) ($recommendedThreshold ?? 50)
     ));
+    $companyLogoUrl = $employer?->employer_company_logo ? asset('storage/' . $employer->employer_company_logo) : null;
+    // No logo yet → the company's initials on the system's navy gradient
+    // ("Copperline Holdings" → "CH"; corporate suffixes like Inc./Corp. skipped).
+    $companyWords = array_values(array_filter(
+        preg_split('/\s+/', trim(preg_replace('/[^\pL\pN\s]/u', ' ', (string) $job->job_posting_company))),
+        fn ($w) => $w !== '' && !in_array(mb_strtolower($w), ['inc', 'corp', 'co', 'ltd', 'llc', 'the', 'of', 'and'], true)
+    ));
+    $companyInitials = mb_strtoupper(count($companyWords) > 1
+        ? mb_substr($companyWords[0], 0, 1) . mb_substr($companyWords[1], 0, 1)
+        : mb_substr($companyWords[0] ?? 'PLV', 0, 2));
 @endphp
 
-<div class="bg-white rounded-3xl shadow-md flex flex-col md:flex-row relative hover:shadow-lg transition-shadow md:min-h-[340px] rp-job-card">
+{{-- Desktop (>= 1024px): a compact card — company logo, job title, company, location,
+     work setup and work type, in the system's own look (navy/orange tags, gradient title
+     on hover, the job's image with the dashboards' round arrow). Clicking it shows everything else (description, apply,
+     bookmark, share, votes, rating, reviews, status) in the Job Board's side panel. --}}
+<div class="hidden lg:flex jb-list-card group/card relative items-stretch bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer transition-shadow hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C73D1A]"
+    role="button" tabindex="0" aria-label="View details: {{ $job->job_posting_title }}"
+    @foreach ($cardData as $attr => $value)
+    data-{{ $attr }}="{{ $value }}"
+    @endforeach
+    onclick="openJobModal(this)"
+    onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openJobModal(this);}">
+    <div class="flex-1 min-w-0 flex items-center gap-3 xl:gap-4 py-4 pl-4 xl:pl-5 pr-3 xl:pr-4">
+        @if ($companyLogoUrl)
+        <div class="w-12 h-12 xl:w-14 xl:h-14 shrink-0 rounded-xl bg-white ring-1 ring-slate-200 overflow-hidden flex items-center justify-center">
+            <img src="{{ $companyLogoUrl }}" alt="" loading="lazy" class="w-full h-full object-contain">
+        </div>
+        @else
+        <div class="jb-logo-initials w-12 h-12 xl:w-14 xl:h-14 shrink-0 rounded-xl bg-gradient-to-br from-[#0E0F3B] to-[#1D46A4] text-white text-lg font-extrabold tracking-wide flex items-center justify-center shadow-sm" aria-hidden="true">{{ $companyInitials }}</div>
+        @endif
+
+        <div class="min-w-0 flex-1">
+            {{-- Hover / selected: the title fills with the system gradient (see .jb-list-title-text in general/jobBoard). --}}
+            <h2 class="jb-list-title font-bold uppercase text-[15px] leading-snug tracking-tight text-[#0E0F3B] line-clamp-2 break-words"><span class="jb-list-title-text">{{ $job->job_posting_title }}</span></h2>
+            <p class="mt-0.5 text-sm font-semibold text-[#1D46A4] truncate">{{ $job->job_posting_company }}</p>
+            <p class="mt-1 flex items-center gap-1.5 min-w-0 text-xs text-slate-500">
+                <i class="fa-solid fa-location-dot text-[11px] text-[#ED7A07] shrink-0"></i>
+                <span class="truncate">{{ $job->job_posting_address }}</span>
+            </p>
+            <div class="mt-2.5 flex flex-wrap gap-1.5">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-[#0E0F3B] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white" title="Work setup">
+                    <i class="fa-solid fa-house-laptop text-[9px]"></i><span class="sr-only">Work setup:</span> {{ $job->job_posting_setup }}
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ED7A07] bg-[#ED7A07]/5 px-2.5 py-[3px] text-[10px] font-bold uppercase tracking-wider text-[#C73D1A]" title="Work type">
+                    <i class="fa-solid fa-briefcase text-[9px]"></i><span class="sr-only">Work type:</span> {{ $job->job_posting_employment_type }}
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+    {{-- The job's image on the right — its own photo, or the system's default job artwork —
+         with the same tint as the full card / details panel, and the dashboards' round
+         "View Details" arrow on top. --}}
+    @php $thumbOverlay = $job->defaultThumbnailOverlay(); @endphp
+    <div class="jb-list-thumb relative w-20 xl:w-32 shrink-0 overflow-hidden bg-[#0E0F3B]" aria-hidden="true">
+        @if ($job->usesDefaultThumbnail())
+        <img src="{{ $job->thumbnailUrl() }}" alt="" loading="lazy" style="opacity:{{ $thumbOverlay['imageOpacity'] }}"
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover/card:scale-105">
+        <div class="absolute inset-0" style="background-color:{{ $thumbOverlay['color'] }}; opacity:{{ $thumbOverlay['overlayOpacity'] }}"></div>
+        @else
+        <img src="{{ $job->thumbnailUrl() }}" alt="" loading="lazy"
+            class="absolute inset-0 w-full h-full object-cover opacity-80 transition-transform duration-300 group-hover/card:scale-105">
+        <div class="absolute inset-0 bg-[#0E0F3B]/50"></div>
+        @endif
+        <span class="jb-list-arrow absolute inset-0 m-auto w-9 h-9 rounded-full bg-white/95 text-[#C73D1A] flex items-center justify-center shadow-md transition-colors group-hover/card:bg-[#C73D1A] group-hover/card:text-white">
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+        </span>
+    </div>
+</div>
+
+{{-- Phones/tablets: the full card (its details open in the modal). --}}
+<div class="lg:hidden bg-white rounded-3xl shadow-md flex flex-col md:flex-row relative hover:shadow-lg transition-shadow md:min-h-[340px] rp-job-card">
 
     <div class="md:w-1/4 h-48 md:h-auto bg-gray-300 relative rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none overflow-hidden group cursor-pointer"
         role="button" tabindex="0" aria-label="View job details"

@@ -56,57 +56,62 @@
         display: none;
     }
 
-    /* ── Desktop "View Details" side panel (>= 1024px, the site's desktop line) ──
-       Docked beside the job list, not an overlay: the page widens and the list
-       shrinks while it's open. The panel holds the FULL details, so it takes the
-       larger share (~60%) and the job list the smaller (~40%). The details inside
-       are the shared #jobDetailsContent from partials/job-detail-modal (moved here
-       on desktop). */
+    /* ── Desktop (>= 1024px, the site's desktop line): job list + details panel ──
+       The panel is always there on the right — an empty state until a job is
+       picked — and takes the larger share (~60%); the list of compact cards
+       (partials/job-post-card) the smaller (~40%). The details inside are the
+       shared #jobDetailsContent from partials/job-detail-modal (moved here on
+       desktop). Phones/tablets keep the full cards + the details modal. */
     @media (min-width: 1024px) {
-        #jobBoardMain { transition: max-width 280ms ease-out; }
-        #jobBoardMain.is-panel-open { max-width: 96rem; }
+        #jobBoardMain { max-width: 96rem; }
 
         #jobBoardSplit { display: flex; align-items: flex-start; }
-        #jobListColumn { flex: 1 1 auto; min-width: 0; container-type: inline-size; container-name: joblist; }
+        #jobListColumn { flex: 1 1 auto; min-width: 0; }
 
         #jobDetailPanel {
-            /* 60% of the open board: (page width, capped at 96rem, minus the 3rem page
-               padding and the 1.5rem gap) x 0.6. A fixed length, so the details don't
-               reflow while the column animates open. (The job board hides scrollbars,
+            /* 60% of the board: (page width, capped at 96rem, minus the 3rem page
+               padding and the 1.5rem gap) x 0.6. (The job board hides scrollbars,
                so 100vw is the visible width.) */
             --jb-panel-w: calc((min(100vw, 96rem) - 4.5rem) * 0.6);
             position: sticky;
             top: var(--jb-panel-top, 6rem);
-            flex: 0 0 auto;
-            width: 0;
-            margin-left: 0;
-            height: calc(100vh - var(--jb-panel-top, 6rem) - 1rem);
-            overflow: hidden;
-            transition: width 280ms ease-out, margin-left 280ms ease-out;
-        }
-        #jobBoardSplit.is-panel-open #jobDetailPanel { width: var(--jb-panel-w); margin-left: 1.5rem; }
-
-        /* Slides in from the right as the column opens */
-        #jobDetailPanel .jb-panel-card {
+            flex: 0 0 var(--jb-panel-w);
             width: var(--jb-panel-w);
-            height: 100%;
-            transform: translateX(2rem);
-            opacity: 0;
-            transition: transform 280ms ease-out, opacity 200ms ease-out;
+            margin-left: 1.5rem;
+            height: calc(100vh - var(--jb-panel-top, 6rem) - 1rem);
         }
-        #jobBoardSplit.is-panel-open #jobDetailPanel .jb-panel-card { transform: none; opacity: 1; }
+        #jobDetailPanel .jb-panel-card { height: 100%; }
 
         /* Details inside the panel: scroll on their own; the panel header stays put.
-           The modal's own close (x) on the photo is replaced by the header's close button. */
+           The modal's own close (x) on the photo is replaced by the header's button. */
         #jobDetailPanelBody { flex: 1 1 auto; min-height: 0; display: flex; container-type: inline-size; container-name: jobdetail; }
         #jobDetailPanel #jobDetailsContent { flex: 1 1 auto; min-height: 0; }
         #jobDetailPanel #jobDetailsContent .jd-hero > button[onclick="toggleModal()"] { display: none; }
         #jobDetailPanel #jobDetailsContent .jd-hero { height: 14rem; }
         #jobDetailPanel #jobDetailsContent .jd-body { padding: 2rem; }
         #jobDetailPanel #jobDetailsContent #modal-title { font-size: 1.75rem; line-height: 2.125rem; }
-
         /* The card that's open in the panel */
-        #jobBoardSplit.is-panel-open .rp-job-card.is-selected { box-shadow: 0 0 0 2px #C73D1A, 0 10px 15px -3px rgb(0 0 0 / 0.1); }
+        .jb-list-card.is-selected { box-shadow: 0 0 0 2px #C73D1A, 0 10px 20px -6px rgba(199, 61, 26, 0.25); background-color: #fffaf8; }
+        /* Job title on hover / when selected: the system gradient (each line of a
+           two-line title gets the whole gradient). */
+        .jb-list-card:hover .jb-list-title-text,
+        .jb-list-card:focus-visible .jb-list-title-text,
+        .jb-list-card.is-selected .jb-list-title-text {
+            background-image: linear-gradient(to right, #0E0F3B, #C73D1A, #ED7A07);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            -webkit-box-decoration-break: clone;
+            box-decoration-break: clone;
+        }
+        .jb-list-card.is-selected .jb-list-arrow { background: #C73D1A; border-color: #C73D1A; color: #fff; }
+
+        /* The admin pagination bar, fitted to the narrower job list: labels never
+           break mid-phrase; on a small laptop the page buttons drop to their own line. */
+        #jobListColumn [data-pv-pagination] { font-size: 0.8125rem; flex-wrap: wrap; column-gap: 0.5rem; row-gap: 0.5rem; }
+        #jobListColumn [data-pv-pagination] span { white-space: nowrap; }
+        #jobListColumn [data-pv-pagination] [data-pv-per-page] { padding-left: 0.75rem; padding-right: 2rem; }
+        #jobListColumn [data-pv-pagination] > div:last-child { gap: 0.5rem; margin-left: auto; }
     }
 
     /* A wide panel keeps the modal's own two-column layout (description | details);
@@ -118,23 +123,6 @@
         #jobDetailPanel #jobDetailsContent .jd-split { flex-direction: column; gap: 1.5rem; margin-top: 1.5rem; }
         #jobDetailPanel #jobDetailsContent .jd-col { width: 100%; }
         #jobDetailPanel #jobDetailsContent .jd-row { flex-direction: column; align-items: flex-start; }
-    }
-
-    /* The narrower job list (panel open) stacks each card: photo on top, actions wrap. */
-    @container joblist (max-width: 720px) {
-        #jobListColumn .rp-job-card { flex-direction: column; min-height: 0; }
-        #jobListColumn .rp-job-card > div:first-child { width: 100%; height: 10rem; border-radius: 1.5rem 1.5rem 0 0; }
-        #jobListColumn .rp-job-card .rp-job-body { padding: 1.25rem; }
-        #jobListColumn .rp-job-card h2 { font-size: 1.25rem; line-height: 1.75rem; }
-        #jobListColumn .rp-job-card .rp-job-actions { flex-wrap: wrap; gap: 0.75rem 1rem; }
-    }
-    @container joblist (max-width: 460px) {
-        #jobListColumn .rp-job-card .rp-job-meta { grid-template-columns: 1fr; }
-        #jobListColumn .rp-job-card .rp-job-actions-buttons { flex-wrap: wrap; row-gap: 0.5rem; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        #jobBoardMain, #jobDetailPanel, #jobDetailPanel .jb-panel-card { transition: none !important; }
     }
 
     /* Phones/tablets: the cards' hover tooltips (invisible, never shown without a mouse)
@@ -301,7 +289,7 @@
         </div>
         <div id="jobBoardSplit">
         <div id="jobListColumn">
-        <div id="job-list" class="space-y-6">
+        <div id="job-list" class="space-y-6 lg:space-y-3">
             <!--JOB POST CONTAINER -->
 
             @forelse($jobPostings as $job)
@@ -323,21 +311,42 @@
 
         </div>
 
-        {{ $jobPostings->onEachSide(1)->links('partials.pagination') }}
+        {{-- Same pagination bar as the admin management pages: rows per page, record
+             count, first / previous / next / last (keeps the search filters and tab). --}}
+        @if ($jobPostings->total() > 0)
+        <div class="bg-white rounded-2xl shadow-md px-5 lg:px-4 pb-4 mt-6 lg:mt-4">
+            @include('partials.table-pagination-bar', ['id' => 'jobBoardPagination', 'mode' => 'reload', 'paginator' => $jobPostings])
+        </div>
+        @endif
         </div>
 
-        {{-- Desktop "View Details" panel (>= 1024px). Hidden on smaller screens, where
-             the same details open in the modal instead (partials/job-detail-modal). --}}
-        <aside id="jobDetailPanel" class="hidden lg:block" role="complementary" aria-label="Job details" tabindex="-1" inert>
+        {{-- Desktop details panel (>= 1024px): always on the right — an empty state
+             until a job is clicked. Hidden on smaller screens, where the same details
+             open in the modal instead (partials/job-detail-modal). --}}
+        <aside id="jobDetailPanel" class="hidden lg:block" role="complementary" aria-label="Job details" tabindex="-1">
             <div class="jb-panel-card flex flex-col bg-white rounded-3xl shadow-md border border-gray-100 overflow-hidden">
-                <div class="flex items-center justify-between gap-3 px-5 py-3 border-b border-gray-100 shrink-0">
-                    <p class="text-[11px] font-bold uppercase tracking-widest text-[#C73D1A]">Job Details</p>
+                <div class="flex items-center justify-between gap-3 px-5 py-3 border-b border-gray-100 shrink-0 min-h-[3.75rem]">
+                    {{-- System gradient title (same as the page's other section titles). --}}
+                    <h2 class="inline-block text-lg font-bold uppercase tracking-wide bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">Job Details</h2>
                     <button type="button" id="jobDetailPanelClose" onclick="toggleModal()" aria-label="Close job details"
-                        class="w-9 h-9 rounded-full text-gray-400 hover:text-[#0E0F3B] hover:bg-gray-100 flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C73D1A]">
+                        class="hidden w-9 h-9 rounded-full text-gray-400 hover:text-[#0E0F3B] hover:bg-gray-100 flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C73D1A]">
                         <i class="fas fa-times text-lg"></i>
                     </button>
                 </div>
-                <div id="jobDetailPanelBody"></div>
+                <div id="jobDetailPanelBody">
+                    {{-- Empty state (no job picked yet) — brand navy, not gray. Centered in the
+                         part of the panel that's on screen (see centerEmptyState() below): the
+                         panel is taller than what shows before the page is scrolled. --}}
+                    <div id="jobDetailEmpty" class="flex-1 relative">
+                        <div class="jb-empty-inner absolute inset-x-0 top-1/2 -translate-y-1/2 flex flex-col items-center text-center px-10">
+                            <span class="w-20 h-20 rounded-2xl bg-[#1D264F]/5 text-[#1D264F] flex items-center justify-center">
+                                <i class="fa-solid fa-briefcase text-3xl"></i>
+                            </span>
+                            <p class="mt-5 text-2xl font-bold text-[#0E0F3B]">Select a job post</p>
+                            <p class="mt-2 max-w-sm text-base text-[#1D264F]"><i class="fa-solid fa-arrow-left text-[#C73D1A] mr-1.5"></i> Click any job post on the left to see its full details here.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </aside>
         </div>
@@ -399,13 +408,15 @@
     // program row, client validation, confirm/pending flow) now lives in
     // partials/post-job-modal.blade.php, shared with jobPostings.blade.php.
 
-    // ── Desktop "View Details" panel ─────────────────────────────────────
+    // ── Desktop details panel ─────────────────────────────────────────────
+    // Always visible on desktop: an empty state until a job is picked.
     // partials/job-detail-modal.blade.php decides panel vs. modal and fills the
-    // shared details; this only opens/closes the docked column around them.
+    // shared details; this shows/clears them in the panel.
     window.jobBoardPanel = (function () {
         const split = document.getElementById('jobBoardSplit');
-        const main = document.getElementById('jobBoardMain');
         const panel = document.getElementById('jobDetailPanel');
+        const closeBtn = document.getElementById('jobDetailPanelClose');
+        const emptyState = document.getElementById('jobDetailEmpty');
         if (!split || !panel) return null;
 
         // Stick just below the page's sticky header (its height differs per role).
@@ -415,39 +426,68 @@
             panel.style.setProperty('--jb-panel-top', (h + 16) + 'px');
         }
 
+        // Highlights the compact card whose details are showing.
         function markSelected(trigger) {
-            document.querySelectorAll('#job-list .rp-job-card.is-selected').forEach(c => c.classList.remove('is-selected'));
-            trigger?.closest('.rp-job-card')?.classList.add('is-selected');
+            document.querySelectorAll('#job-list .jb-list-card.is-selected').forEach(c => { c.classList.remove('is-selected'); c.removeAttribute('aria-current'); });
+            const jobId = trigger?.dataset?.jobId;
+            const card = jobId ? document.querySelector('#job-list .jb-list-card[data-job-id="' + jobId + '"]') : null;
+            if (card) { card.classList.add('is-selected'); card.setAttribute('aria-current', 'true'); }
         }
 
         function open(title, trigger) {
             setTop();
             markSelected(trigger);
-            main.classList.add('is-panel-open');
-            split.classList.add('is-panel-open');
-            panel.inert = false;
-            panel.removeAttribute('aria-hidden');
+            emptyState.classList.add('hidden');
+            closeBtn.classList.remove('hidden');
             panel.focus({ preventScroll: true });
         }
 
+        // Back to the empty state (the details go back into the hidden modal).
         function close() {
-            split.classList.remove('is-panel-open');
-            main.classList.remove('is-panel-open');
-            panel.inert = true;
-            panel.setAttribute('aria-hidden', 'true');
+            placeJobDetails(false);
+            emptyState.classList.remove('hidden');
+            centerEmptyState();
+            closeBtn.classList.add('hidden');
+            panel.setAttribute('aria-label', 'Job details');
             markSelected(null);
         }
 
-        window.addEventListener('resize', setTop);
+        // Centers the empty state in the part of the panel that's on screen. Before the
+        // page is scrolled only the panel's top shows, so its true middle would be below
+        // the fold; once the panel is fully in view this is simply its middle.
+        const emptyInner = emptyState.querySelector('.jb-empty-inner');
+        let centerQueued = false;
+        function centerEmptyState() {
+            centerQueued = false;
+            if (emptyState.classList.contains('hidden') || !emptyState.offsetHeight) return;
+            const box = emptyState.getBoundingClientRect();
+            const visibleTop = Math.max(box.top, 0);
+            const visibleBottom = Math.min(box.bottom, window.innerHeight);
+            const half = emptyInner.offsetHeight / 2;
+            // Keep the whole message inside the panel (16px margin). On a short screen,
+            // where less of the panel shows than the message needs, it starts right
+            // under the panel's header so its title is still in view.
+            const margin = Math.min(16, Math.max(0, (visibleBottom - visibleTop - 2 * half) / 2));
+            const center = Math.min(Math.max((visibleTop + visibleBottom) / 2 - box.top, half + margin), box.height - half - margin);
+            emptyInner.style.top = center + 'px';
+        }
+        function queueCenter() {
+            if (!centerQueued) { centerQueued = true; requestAnimationFrame(centerEmptyState); }
+        }
+        window.addEventListener('scroll', queueCenter, { passive: true });
 
-        // Escape closes the panel — unless a modal (Apply, review, success…) is open on top of the page.
+        setTop();
+        centerEmptyState();
+        window.addEventListener('resize', function () { setTop(); queueCenter(); });
+        window.addEventListener('load', centerEmptyState);
+
+        // Escape clears the panel — unless a modal (Apply, review, success…) is open on top of the page.
         document.addEventListener('keydown', function (e) {
-            if (e.key !== 'Escape' || !split.classList.contains('is-panel-open')) return;
+            if (e.key !== 'Escape' || !(jobDetailsState.open && jobDetailsState.mode === 'panel')) return;
             const modalOpen = [...document.querySelectorAll('div.fixed.inset-0[id$="Modal"], div.fixed.inset-0[id$="Overlay"]')].some(m => !m.classList.contains('hidden') && getComputedStyle(m).display !== 'none');
             if (!modalOpen) toggleModal();
         });
 
-        panel.setAttribute('aria-hidden', 'true');
         return { open, close };
     })();
 

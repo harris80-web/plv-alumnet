@@ -46,6 +46,9 @@ $title = request()->routeIs('notifications.all')
     : ($pageTitles[$currentPage] ?? $roleLabel . ' Panel');
 ?>
 
+{{-- Admin tables: 80% "compact" view on desktop + frozen column headers. --}}
+@include('partials.admin-table-view')
+
 <style>
     /* Thin, visible scrollbar for the notification dropdown's list — same
        treatment as .chat-scroll in alumni/messages.blade.php and

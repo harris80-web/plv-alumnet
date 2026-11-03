@@ -372,10 +372,26 @@
                     <span class="{{ $remainingSlots > 0 ? 'text-[#C73D1A]' : 'text-red-500' }}">{{ $remainingSlots }}</span>
                 </div>
 
-                <div class="relative">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                    <input type="text" id="applicantSearchInput" placeholder="Search by name..." oninput="applyApplicantFilters()"
-                        class="pl-8 pr-3 py-1.5 border border-slate-200 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-[#1D46A4] focus:border-[#1D46A4] w-48 bg-white">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                        <input type="text" id="applicantSearchInput" placeholder="Search by name..." oninput="applyApplicantFilters()"
+                            class="pl-8 pr-3 py-1.5 border border-slate-200 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-[#1D46A4] focus:border-[#1D46A4] w-full sm:w-48 bg-white">
+                    </div>
+                    {{-- Course filter (the courses of this post's applicants); applies as you tick. --}}
+                    @if (($courseOptions ?? collect())->isNotEmpty())
+                    <div class="w-full sm:w-56" id="applicantCourseFilter">
+                        @include('partials.multiselect-filter', [
+                            'name' => 'course',
+                            'icon' => 'fas fa-graduation-cap',
+                            'placeholder' => 'All Courses',
+                            'labelPrefix' => 'Course',
+                            'options' => $courseOptions,
+                            'selected' => $carriedFilters['program_id'] ?? [],
+                            'optionAttrs' => $courseCollegeAttrs,
+                        ])
+                    </div>
+                    @endif
                 </div>
 
                 <div class="flex items-center gap-2 rp-bulk-actions">
@@ -405,6 +421,20 @@
                     </button>
                 </div>
             </div>
+
+            {{-- Filters carried over from the employer dashboard (the Course pick goes
+                 straight into the Course filter above). Removable in one click. --}}
+            @if (!empty($carriedLabels))
+            <div id="carriedFiltersBar" class="px-8 py-2 border-b border-slate-100 bg-white text-xs text-slate-500 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span class="font-bold text-[#0E0F3B]">From your dashboard:</span>
+                @foreach ($carriedLabels as $carriedLabel => $carriedValue)
+                <span class="inline-flex items-center gap-1 rounded-full bg-[#1D264F]/5 px-2.5 py-1"><span class="font-semibold text-slate-600">{{ $carriedLabel }}:</span> {{ $carriedValue }}</span>
+                @endforeach
+                <button type="button" onclick="clearCarriedFilters()" class="ml-auto inline-flex items-center gap-1 font-bold text-slate-400 hover:text-[#C73D1A]">
+                    <i class="fas fa-times"></i> Show all applicants
+                </button>
+            </div>
+            @endif
 
             {{-- Phones/tablets: the applicant cards have no table header, so its
                  controls (select all, status filter, sorting) live here instead. --}}
@@ -491,7 +521,10 @@
                         @endphp
                         @php $isBulkEligible = in_array(strtolower($status), ['pending', 'shortlisted']); @endphp
                         <tr data-id="{{ $index + 1 }}" data-status="{{ $status }}" data-application-id="{{ $applicant->pivot->application_id }}"
-                            data-name="{{ strtolower(trim($applicant->user->user_first_name . ' ' . $applicant->user->user_last_name)) }}">
+                            data-name="{{ strtolower(trim($applicant->user->user_first_name . ' ' . $applicant->user->user_last_name)) }}"
+                            data-program="{{ $applicant->program_id }}" data-college="{{ $applicant->program?->college }}"
+                            data-batch="{{ $applicant->alumnus_batch?->year }}"
+                            data-applied-year="{{ $applicant->pivot->application_date ? \Carbon\Carbon::parse($applicant->pivot->application_date, config('app.timezone'))->setTimezone(config('app.local_timezone'))->year : '' }}">
                             <td data-cell="check" class="px-4 py-4 text-center">
                                 <input type="checkbox" class="applicant-checkbox w-4 h-4 accent-[#1D264F] cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                                     value="{{ $applicant->pivot->application_id }}"
@@ -661,6 +694,15 @@
                         </tr>
                         @endforelse
 
+                        @if ($jobPost->applicants->isNotEmpty())
+                        {{-- Shown when the filters hide every applicant. --}}
+                        <tr id="applicantsNoMatch" class="applicants-empty" style="display:none">
+                            <td colspan="9" class="px-6 py-12 text-center text-[#1D264F]">
+                                <i class="fas fa-user-slash text-2xl mb-2 block"></i>
+                                <p class="font-semibold">No applicants match these filters.</p>
+                            </td>
+                        </tr>
+                        @endif
                     </tbody>
                 </table>
             </div>
@@ -673,6 +715,7 @@
                 ])
             </div>
             @include('partials.table-sort')
+            @include('partials.staged-multiselect')
 
         </div>
     </main>
@@ -1186,9 +1229,62 @@
         });
     })();
 
+    // Filters carried over from the employer dashboard (?year[]=…&batch[]=…&college[]=…);
+    // the Course pick is in the Course filter itself.
+    const CARRIED_FILTERS = @json(\Illuminate\Support\Arr::except($carriedFilters ?? [], ['program_id']));
+    function clearCarriedFilters() {
+        Object.keys(CARRIED_FILTERS).forEach(key => { CARRIED_FILTERS[key] = []; });
+        document.getElementById('carriedFiltersBar')?.remove();
+        const url = new URL(window.location.href);
+        [...url.searchParams.keys()].filter(key => /^(year|batch|college)\[\d*\]$/.test(key)).forEach(key => url.searchParams.delete(key));
+        history.replaceState(null, '', url);
+        applyApplicantFilters();
+        updateBulkActionUI();
+    }
+
+    // The applicants card clips anything that spills out (rounded corners), so on a
+    // short list the Course list would be cut off — it floats above the page
+    // instead, under its button (or above it when there's no room below).
+    function placeCourseFilterPanel() {
+        const wrap = document.getElementById('applicantCourseFilter');
+        const panel = wrap?.querySelector('.multiselect-panel');
+        if (!panel) return;
+        Object.assign(panel.style, { position: '', top: '', left: '', right: '', marginTop: '' });
+        if (panel.classList.contains('hidden')) return;
+        const btn = wrap.querySelector('.multiselect-trigger-btn').getBoundingClientRect();
+        const below = btn.bottom + 8;
+        const top = below + panel.offsetHeight > window.innerHeight - 8 && btn.top - 8 - panel.offsetHeight >= 8
+            ? btn.top - 8 - panel.offsetHeight
+            : below;
+        Object.assign(panel.style, {
+            position: 'fixed', marginTop: '0', right: 'auto',
+            top: top + 'px',
+            left: Math.max(8, Math.min(btn.left, window.innerWidth - panel.offsetWidth - 8)) + 'px',
+        });
+    }
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('#applicantCourseFilter .multiselect-trigger-btn')) placeCourseFilterPanel();
+    });
+    // A floating list would drift away from its button, so scrolling closes it.
+    window.addEventListener('scroll', function () {
+        const panel = document.querySelector('#applicantCourseFilter .multiselect-panel');
+        if (panel && !panel.classList.contains('hidden')) { closeMultiselect(panel); placeCourseFilterPanel(); }
+    }, { passive: true });
+    window.addEventListener('resize', placeCourseFilterPanel);
+
+    // The Course filter applies as soon as a box is ticked (no Apply button here).
+    document.addEventListener('change', function (e) {
+        if (!e.target.closest('#applicantCourseFilter')) return;
+        applyApplicantFilters();
+        updateBulkActionUI();
+    });
+
     function applyApplicantFilters() {
         const query = (document.getElementById('applicantSearchInput')?.value || '').trim().toLowerCase();
         const rows = document.querySelectorAll('tbody tr[data-status]');
+        const courses = [...document.querySelectorAll('#applicantCourseFilter .option-checkbox:checked')].map(cb => cb.value);
+        const inList = (list, value) => !list || !list.length || list.map(String).includes(String(value ?? ''));
+        let shown = 0;
 
         rows.forEach(row => {
             // .toLowerCase() on both sides — data-status holds the raw DB
@@ -1199,8 +1295,17 @@
             const statusMatches = currentStatusFilter === 'All'
                 || (row.dataset.status || '').toLowerCase() === currentStatusFilter.toLowerCase();
             const nameMatches = !query || (row.dataset.name || '').includes(query);
-            row.style.display = (statusMatches && nameMatches) ? '' : 'none';
+            const filterMatches = inList(courses, row.dataset.program)
+                && inList(CARRIED_FILTERS.year, row.dataset.appliedYear)
+                && inList(CARRIED_FILTERS.batch, row.dataset.batch)
+                && inList(CARRIED_FILTERS.college, row.dataset.college);
+            const visible = statusMatches && nameMatches && filterMatches;
+            row.style.display = visible ? '' : 'none';
+            if (visible) shown++;
         });
+
+        const noMatch = document.getElementById('applicantsNoMatch');
+        if (noMatch) noMatch.style.display = rows.length && !shown ? '' : 'none';
 
         document.dispatchEvent(new CustomEvent('pv:filtered'));
     }
@@ -1214,6 +1319,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         const wanted = new URLSearchParams(window.location.search).get('status');
         if (['Pending', 'Shortlisted', 'Hired', 'Declined'].includes(wanted)) filterStatus(wanted);
+        else { applyApplicantFilters(); updateBulkActionUI(); }
     });
 
     const UPDATED_APPLICATION_IDS = @json(session('updatedApplicationIds', []));

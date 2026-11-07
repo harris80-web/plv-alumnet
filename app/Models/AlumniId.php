@@ -10,6 +10,7 @@ class AlumniId extends Model
     protected $fillable = [
         'alumnus_id',
         'status',
+        'claim_location',
         'status_updated_at',
         'updated_by',
     ];

@@ -2,11 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Industry;
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 
 class DatabaseSeeder extends Seeder
@@ -18,29 +15,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
         $this->call([
             IndustrySeeder::class,
             ProgramSeeder::class,
-            SkillsSeeder::class, // before Alumnus/Job — both attach skills by name
-            SuperAdminSeeder::class,
-            AlumnusSeeder::class,
-            EmployerSeeder::class,
-            AdminSeeder::class,
-            AdminPracticeSeeder::class, // after AdminSeeder — more than one admin for the cross-review split to exercise
-            JobSeeder::class, // after Employer/Industry/Program/Skills
-            JobApplicationSeeder::class, // after Alumnus/Job
-            CohortSeeder::class, // after every core seeder above — its own 49 alumni + 49 employers + job postings/applications, all self-contained
-            AlumniYearbookSeeder::class, // after every alumni seeder (needs every alumnus to exist)
-            NoticeSeeder::class, // after every alumni seeder (attaches interested alumni)
-            NoticePracticeSeeder::class, // after NoticeSeeder + every alumni seeder
-            MessageSeeder::class, // after every alumni seeder (bulk pass scales with the full alumni pool)
-            TestimonialSeeder::class,
-            TestimonialPracticeSeeder::class, // after TestimonialSeeder + every alumni seeder
-            FaqSeeder::class, // after AdminSeeder/SuperAdminSeeder (attributes each FAQ to a staff creator)
-            ChatbotSeeder::class, // after AlumnusSeeder/EmployerSeeder/AdminSeeder (needs named accounts + a claimable office)
-            // You can add more seeders here later (e.g., UserSeeder)
+            SkillsSeeder::class, // before RealisticSeeder — alumni and job posts attach skills by name
+            // Every account and all activity: 2 super admins, 15 admins, 1000 alumni,
+            // 100 employers, job posts, applications, notices, messages, chatbot tickets…
+            // (see RealisticSeeder). Replaces the older fixed-data seeders (AlumnusSeeder,
+            // EmployerSeeder, JobSeeder, CohortSeeder, …), which stay in this folder for
+            // reference but no longer run.
+            RealisticSeeder::class,
+            FaqSeeder::class, // after RealisticSeeder — attributes each FAQ to a staff creator
         ]);
     }
 }

@@ -211,6 +211,13 @@
 
                     <p class="text-sm text-gray-600 mb-4">{{ $alumniIdCard['desc'] }}</p>
 
+                    @if($alumniIdRecord->claim_location)
+                        <div class="mb-4">
+                            <p class="text-xs font-bold text-[#C73D1A] uppercase tracking-wide mb-1">Claim Location</p>
+                            <p class="text-[#0E0F3B] font-semibold">{{ $alumniIdRecord->claim_location }}</p>
+                        </div>
+                    @endif
+
                     <div class="border-t border-gray-100 pt-4 text-xs text-gray-500">
                         Last updated {{ $alumniIdRecord->status_updated_at ? $alumniIdRecord->status_updated_at->format('F j, Y g:i A') : 'Not yet updated' }}
                     </div>

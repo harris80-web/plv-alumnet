@@ -81,12 +81,8 @@
     @endphp
     @include('partials.header-general')
 
-    <section class="HeroSection h-[200px] flex items-end text-white shadow-lg">
-        <div class="max-w-6xl  w-full my-7 ml-4">
-            <h1 class="text-5xl font-bold">About</h1>
-            <p class="text-xl font-light">PLV-AlumNet:Honoring the Past. Shaping the Future.</p>
-        </div>
-    </section>
+    {{-- Shared hero banner (same title indent on every page) --}}
+    @include('partials.hero', ['title' => 'About'])
 
     <section class="PLVSection relative w-full mt-[90px] py-[100px] px-[10%] flex flex-col lg:flex-row items-center gap-10 lg:gap-[150px] text-white bg-cover bg-center">
         <h2 class="flex-shrink-0 text-7xl lg:text-[84px] font-bold leading-[1.1] pl-5 drop-shadow-[4px_4px_15px_rgba(0,0,0,0.8)]">| PLV</h2>

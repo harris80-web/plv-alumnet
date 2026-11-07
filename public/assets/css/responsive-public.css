@@ -100,9 +100,18 @@ html.rp-scope {
     --rp-hero-title: 3rem;           /* h1 48px (text-5xl) */
     --rp-hero-sub: 1.25rem;          /* subtitle 20px */
     --rp-hero-min-h: 200px;
+    --rp-hero-indent: 2.5rem;        /* title/subtitle left indent: 40px on laptops */
 
     /* Charts */
     --rp-chart-h: 320px;
+}
+
+/* Large desktop ≥1280px / ≥1536px — the hero text indent grows with the screen */
+@media (min-width: 1280px) {
+    html.rp-scope { --rp-hero-indent: 3rem; }      /* 48px */
+}
+@media (min-width: 1536px) {
+    html.rp-scope { --rp-hero-indent: 4rem; }      /* 64px */
 }
 
 /* Tablet ≤1023px */
@@ -124,6 +133,7 @@ html.rp-scope {
         --rp-hero-title: 2.25rem;    /* 36px */
         --rp-hero-sub: 1.125rem;
         --rp-hero-min-h: 10rem;
+        --rp-hero-indent: var(--rp-page-pad); /* lines up with the page content: 24 / 16 / 12px */
         --rp-chart-h: 280px;
     }
 }
@@ -324,6 +334,65 @@ html.rp-scope .rp-hamburger {
     }
 }
 
+/* --- Tablet landscape / small laptop 1024–1279px: the full desktop header, sized down so it
+   fits (at 1024 the logo ran into HOME, "JOB BOARD" / "SIGN UP" wrapped onto two lines and
+   the alumni icons got squeezed to ~10px). ≥1280 keeps the original desktop header. --- */
+@media (min-width: 1024px) and (max-width: 1279px) {
+    html.rp-scope header.rp-header {
+        height: 4.5rem;                              /* 72px (was 80) */
+        padding: 0 1.5rem;                           /* overrides px-[4em] py-[1em] */
+        align-items: center;
+        gap: 1.25rem;
+    }
+    html.rp-scope .rp-header .rp-header-logo {
+        margin-left: 0;                              /* overrides ml-10 */
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+    html.rp-scope .rp-header .rp-header-logo img:first-child {
+        width: 2.5rem;                               /* 40px mark (was 48) */
+        height: 2.5rem;
+    }
+    html.rp-scope .rp-header .rp-header-logo img:last-child {
+        height: 1.625rem;                            /* 26px wordmark (was 32) */
+        width: auto;
+    }
+    html.rp-scope .rp-header .rp-header-nav {
+        gap: 1.375rem;                               /* was 40px */
+        font-size: 0.75rem;                          /* 12px links (was 14) */
+        letter-spacing: 0.01em;
+    }
+    html.rp-scope .rp-header .rp-nav-link {
+        white-space: nowrap;
+    }
+    html.rp-scope .rp-header .rp-header-actions {
+        margin-left: 0.25rem;                        /* was ml-5 */
+        gap: 1rem;                                   /* was gap-6 */
+        padding: 0;                                  /* guest bar had p-8 around its buttons */
+        flex-shrink: 0;
+    }
+    /* icons keep their size instead of being squeezed */
+    html.rp-scope .rp-header .rp-header-actions svg {
+        width: 1.25rem;                              /* 20px (was 24) */
+        height: 1.25rem;
+        flex-shrink: 0;
+    }
+    html.rp-scope .rp-header .rp-header-actions .rp-profile-toggle svg {
+        width: 1.5rem;                               /* 24px (was 28) */
+        height: 1.5rem;
+    }
+    /* guest SIGN UP / LOGIN */
+    html.role-general .rp-header .rp-header-actions {
+        gap: 0.625rem;
+    }
+    html.role-general .rp-header .rp-header-actions > a {
+        padding: 0.4375rem 1rem;
+        font-size: 0.75rem;
+        line-height: 1rem;
+        white-space: nowrap;
+    }
+}
+
 /* Hover tooltips under the header icons are hover-only → not shown on touch. */
 @media (hover: none) {
     html.rp-scope header .group > span.pointer-events-none {
@@ -503,8 +572,76 @@ html.rp-scope .rp-only-compact {
 
 /* ==========================================================
    [FOOTER] — used on: general, alumni, employer (partials/footer*.blade.php)
-   Desktop = original single row (4 blocks + vertical dividers). Untouched.
+   Desktop ≥1280 = the original single row (4 blocks + vertical dividers), now in a
+   centred container whose side padding matches the hero text indent
+   (--rp-hero-indent), so it no longer hugs the screen edges on wide screens.
+   1024–1279 = same row, sized down. ≤1023 = the tablet / mobile layouts below.
    ========================================================== */
+
+/* --- Desktop + landscape tablets (≥1024px): centred row, even spacing --- */
+@media (min-width: 1024px) {
+    html.rp-scope .rp-footer .rp-footer-row {
+        width: 100%;
+        max-width: 100rem;                           /* 1600px */
+        margin: 0 auto;
+        padding: 1.5rem var(--rp-hero-indent);       /* was px-5 py-5 */
+        align-items: center;
+        gap: 2rem;
+    }
+    html.rp-scope .rp-footer .rp-footer-col nav {
+        gap: 0.375rem;
+        white-space: nowrap;
+    }
+}
+
+/* --- Landscape tablet / small laptop 1024–1279px: the same row, sized down so nothing
+   wraps awkwardly (at 1024 "PRIVACY POLICY" and the PLV name broke onto 2-3 lines) --- */
+@media (min-width: 1024px) and (max-width: 1279px) {
+    html.rp-scope .rp-footer .rp-footer-row {
+        gap: 1.5rem;
+    }
+    html.rp-scope .rp-footer .rp-footer-brand {
+        gap: 0.875rem;
+    }
+    html.rp-scope .rp-footer .rp-footer-brand > img {
+        height: 4.25rem;                             /* 68px mark (was 93) */
+        width: auto;
+    }
+    html.rp-scope .rp-footer .rp-footer-brand .flex {
+        max-width: 15rem;
+    }
+    html.rp-scope .rp-footer .rp-footer-brand .flex img {
+        height: 2.25rem;                             /* wordmark (was 48px) */
+        width: auto;
+        align-self: flex-start;
+    }
+    html.rp-scope .rp-footer .rp-footer-brand p:first-of-type {
+        font-size: 0.625rem;                         /* 10px */
+    }
+    html.rp-scope .rp-footer .rp-footer-brand p:last-of-type {
+        font-size: 0.75rem;                          /* 12px */
+    }
+    html.rp-scope .rp-footer .rp-footer-col {
+        gap: 0.875rem;
+    }
+    html.rp-scope .rp-footer .rp-footer-col nav {
+        font-size: 0.8125rem;                        /* 13px links (was 15) */
+    }
+    html.rp-scope .rp-footer .rp-footer-contact {
+        gap: 0.875rem;
+    }
+    html.rp-scope .rp-footer .rp-footer-contact > .flex {
+        align-items: center;
+        gap: 0.75rem;
+    }
+    html.rp-scope .rp-footer .rp-footer-contact p:first-child {
+        font-size: 0.75rem;                          /* 12px (was 14) */
+    }
+    html.rp-scope .rp-footer .rp-footer-contact img {
+        height: 4.5rem;                              /* 72px seal (was 100) */
+        width: auto;
+    }
+}
 
 /* --- Tablet ≤1023px: brand row, then the two nav lists packed side by side
    (not each stretched across half the row — a plain 2-column 1fr/1fr grid left
@@ -526,6 +663,15 @@ html.rp-scope .rp-only-compact {
     }
     html.rp-scope .rp-footer .rp-footer-col {
         gap: 0;
+    }
+    html.rp-scope .rp-footer .rp-footer-row {
+        align-items: start;
+    }
+    html.rp-scope .rp-footer .rp-footer-col nav {
+        font-size: 0.8125rem;                        /* 13px links on tablets (was 15) */
+        gap: 0.5rem;
+        justify-content: flex-start;                 /* overrides justify-center */
+        white-space: nowrap;
     }
     html.rp-scope .rp-footer .rp-footer-brand img {
         max-width: 100%;
@@ -613,11 +759,14 @@ html.rp-scope .rp-only-compact {
         max-width: none;
         min-width: 0;
     }
-    /* mockup order of the two round icons: website (globe) first, then Facebook */
+    /* mockup order of the round icons: website (globe) first, the email right beside it, then Facebook */
     html.rp-scope .rp-footer .rp-footer-contact .mt-2 {
-        flex-direction: row-reverse;
-        justify-content: flex-end;
+        flex-direction: row;
+        justify-content: flex-start;
     }
+    html.rp-scope .rp-footer .rp-footer-contact .mt-2 > a[href*="plv.edu.ph"] { order: 1; }
+    html.rp-scope .rp-footer .rp-footer-contact .mt-2 > a[href^="mailto:"] { order: 2; }
+    html.rp-scope .rp-footer .rp-footer-contact .mt-2 > a[href*="facebook"] { order: 3; }
     html.rp-scope .rp-footer .rp-footer-contact p {
         font-size: 0.75rem;                         /* address text: 12px minimum */
         line-height: 1.5;
@@ -648,17 +797,24 @@ html.rp-scope .rp-only-compact {
    ========================================================== */
 
 /* ---- Hero banner (the strip under the header on almost every page) ----
-   Desktop: fixed 200px strip, 48px h1 — untouched. Compact: height grows with
-   the text (a fixed 200px cut long titles like "Campus Announcements" off the
-   top), title/subtitle scale with --rp-hero-* (see [ROOT VARIABLES]). */
+   Every page renders it from partials/hero.blade.php, so the title + subtitle
+   indent is identical everywhere: --rp-hero-indent (see [ROOT VARIABLES]) —
+   the page's side padding on phones/tablets, 40px laptops, 48px ≥1280,
+   64px ≥1536. Desktop: fixed 200px strip, 48px h1. Compact: height grows
+   with the text (a fixed 200px cut long titles like "Campus Announcements"
+   off the top), title/subtitle scale with --rp-hero-title / --rp-hero-sub. */
+html.rp-scope section.HeroSection > .rp-hero-text {
+    padding-left: var(--rp-hero-indent);
+    padding-right: var(--rp-hero-indent);
+}
 @media (max-width: 1023px) {
     html.rp-scope section.HeroSection {
         height: auto;                                /* overrides h-[200px] */
         min-height: var(--rp-hero-min-h);
-        padding: 1.5rem var(--rp-page-pad);
+        padding: 1.5rem 0;                           /* side indent: .rp-hero-text above */
     }
     html.rp-scope section.HeroSection > div {
-        margin: 0;                                   /* overrides my-7 ml-10 / ml-4 */
+        margin: 0;                                   /* overrides my-7 */
         max-width: none;
         width: 100%;
     }

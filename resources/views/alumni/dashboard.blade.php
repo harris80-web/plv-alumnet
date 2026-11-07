@@ -67,12 +67,8 @@
     @endphp
     @include('partials.header-alumni')
 
-    <section class="HeroSection h-[200px] flex items-end text-white shadow-lg">
-        <div class="max-w-6xl  w-full my-7 ml-4">
-            <h1 class="text-5xl font-bold">Welcome to PLV-AlumNet!</h1>
-            <p class="text-xl font-light">Honoring the Past. Shaping the Future.</p>
-        </div>
-    </section>
+    {{-- Shared hero banner (same title indent on every page) --}}
+    @include('partials.hero', ['title' => 'Welcome to PLV-AlumNet!', 'subtitle' => 'Honoring the Past. Shaping the Future.'])
     @include('partials.success')
 
     @include('partials.error')

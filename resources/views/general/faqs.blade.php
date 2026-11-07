@@ -40,12 +40,8 @@
 <body class="bg-gray-50 min-h-screen flex flex-col">
     @include('partials.header-general')
 
-    <section class="HeroSection h-[200px] flex items-end text-white shadow-lg">
-        <div class="max-w-6xl w-full my-7 ml-4">
-            <h1 class="text-5xl font-bold">Frequently Asked Questions (FAQs)</h1>
-            <p class="text-xl font-light">PLV-AlumNet: Honoring the Past. Shaping the Future.</p>
-        </div>
-    </section>
+    {{-- Shared hero banner (same title indent on every page) --}}
+    @include('partials.hero', ['title' => 'Frequently Asked Questions (FAQs)'])
 
     <section id="faq-section" class="max-w-3xl mx-auto font-[Montserrat] px-4 flex-1">
         <header class="text-center mt-10 mb-10">

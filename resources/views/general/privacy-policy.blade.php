@@ -41,12 +41,8 @@
 <body class="min-h-screen flex flex-col">
     @include('partials.header-general')
 
-    <section class="HeroSection h-[200px] flex items-end text-white shadow-lg">
-        <div class="max-w-6xl  w-full my-7 ml-4">
-            <h1 class="text-5xl font-bold">Privacy Policy</h1>
-            <p class="text-xl font-light">PLV-AlumNet:Honoring the Past. Shaping the Future.</p>
-        </div>
-    </section>
+    {{-- Shared hero banner (same title indent on every page) --}}
+    @include('partials.hero', ['title' => 'Privacy Policy'])
 
     <section class="container mx-auto px-6 max-w-5xl mt-10 mb-10 font-[Montserrat] flex-1">
         <div class="text-center mb-12">

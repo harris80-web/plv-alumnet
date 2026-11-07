@@ -13,6 +13,7 @@ use App\Models\Program;
 use App\Models\Skill;
 use App\Models\User;
 use App\Models\UserNotification;
+use App\Services\StoredFileCleaner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -601,12 +602,15 @@ class JobPostingController extends Controller
             'skills.*' => ['string', 'max:100'],
         ]);
 
+        // The replaced image (and any description images taken out of the
+        // text) are only removed after the save below succeeds — see the
+        // StoredFileCleaner call at the end. Deleting the old image up front
+        // also broke every OTHER job sharing that file (seeded jobs reuse
+        // e.g. jobImages/accounting.jpg across many postings).
         $oldJobImage = $job->job_posting_image ?? null;
+        $oldDescription = $job->job_posting_description;
         $jobImage = null;
         if ($request->hasFile('job_posting_image')) {
-            if ($oldJobImage && Storage::disk('public')->exists($oldJobImage)) {
-                Storage::disk('public')->delete($oldJobImage);
-            }
             $jobImage = $request->file('job_posting_image')->store('jobImages', 'public');
         }
         $selectedPrograms = array_unique(array_filter($request->program));
@@ -648,6 +652,15 @@ class JobPostingController extends Controller
             }
             return back()->withErrors(['error' => 'Failed to upload job posting image. Please try again.']);
         }
+
+        // Saved — drop the replaced image and any description images that
+        // were taken out of the text (unless another record still uses them).
+        $cleaner = app(StoredFileCleaner::class);
+        $removedDescriptionImages = array_diff(
+            $cleaner->descriptionImagePaths($oldDescription),
+            $cleaner->descriptionImagePaths($job->job_posting_description)
+        );
+        $cleaner->deleteIfUnused($jobImage ? $oldJobImage : null, ...$removedDescriptionImages);
 
         if ($closingDateChanged) {
             $this->scheduleExpiryCheck($job);
@@ -878,6 +891,13 @@ class JobPostingController extends Controller
         // Queued — see approveJobPost()'s comment above for why.
         Mail::to($job->user->user_email)->queue(new DeleteJobPostMail($job->user, $job, $validated['delete-reason']));
         $job->delete();
+
+        // A deleted (not declined) job isn't shown anywhere any more, so its
+        // image and description images go too — unless another record shares
+        // them. Declined jobs keep theirs: the admin's "Declined Job Posts"
+        // tab still shows them (see declineJobPost(), which doesn't do this).
+        $cleaner = app(StoredFileCleaner::class);
+        $cleaner->deleteIfUnused($job->job_posting_image, ...$cleaner->descriptionImagePaths($job->job_posting_description));
 
         return back()->with('success', 'Job posting deleted successfully!');
     }

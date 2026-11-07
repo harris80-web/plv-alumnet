@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use App\Services\DashboardReportService;
 use App\Services\PdfChartImages;
+use App\Services\StoredFileCleaner;
 
 class EmployerController extends Controller
 {
@@ -446,22 +447,18 @@ class EmployerController extends Controller
             'industry_id' => 'Industry / Sector',
         ]);
 
-        // Update the user's profile information
+        // Update the user's profile information. The replaced picture/logo is
+        // only removed after the save below succeeds (StoredFileCleaner) —
+        // deleting it up front left a broken image whenever the save failed.
         $oldProfilePicture = $user->user_profile_picture ?? null;
         $profilePicture = null;
         if ($request->hasFile('user_profile_picture')) {
-            if ($oldProfilePicture && Storage::disk('public')->exists($oldProfilePicture)) {
-                Storage::disk('public')->delete($oldProfilePicture);
-            }
             $profilePicture = $request->file('user_profile_picture')->store('profilePictures', 'public');
         }
 
         $oldCompanyLogo = $user->employer->employer_company_logo ?? null;
         $companyLogo = null;
         if ($request->hasFile('employer_company_logo')) {
-            if ($oldCompanyLogo && Storage::disk('public')->exists($oldCompanyLogo)) {
-                Storage::disk('public')->delete($oldCompanyLogo);
-            }
             $companyLogo = $request->file('employer_company_logo')->store('companyLogos', 'public');
         }
 
@@ -533,6 +530,12 @@ class EmployerController extends Controller
             // here is unexpected, so keep the user-facing message generic.
             return redirect()->route('user.profile')->with('error', 'Could not save your profile changes. Please try again, and contact support if this keeps happening.');
         }
+
+        // Saved — drop the replaced files (unless another record shares them).
+        app(StoredFileCleaner::class)->deleteIfUnused(
+            $profilePicture ? $oldProfilePicture : null,
+            $companyLogo ? $oldCompanyLogo : null,
+        );
 
         return redirect()->route('user.profile')->with('success', 'Profile updated successfully.');
     }

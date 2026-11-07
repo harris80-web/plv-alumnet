@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\StoredFileCleaner;
 use App\Mail\DeleteAdminMail;
 use App\Models\Office;
 use App\Models\User;
@@ -87,12 +88,11 @@ class OfficeController extends Controller
 
         // Handle profile picture upload
         if ($request->hasFile('user_profile_picture')) {
-            // Delete old picture if exists
-            if ($user->user_profile_picture) {
-                Storage::disk('public')->delete($user->user_profile_picture);
-            }
+            $oldPicture = $user->user_profile_picture;
             $path = $request->file('user_profile_picture')->store('profile_pictures', 'public');
             $user->update(['user_profile_picture' => $path]);
+            // After saving the new one, and only if nothing else shares the old file.
+            app(StoredFileCleaner::class)->deleteIfUnused($oldPicture);
             $labels['user_profile_picture'] = 'Profile Picture';
             $changed[] = 'user_profile_picture';
         }
@@ -175,6 +175,10 @@ class OfficeController extends Controller
             $admin->update(['user_active' => false]);
             $admin->office->delete();
             $admin->delete();
+
+            // A deleted admin isn't shown anywhere, so their picture goes too
+            // (after the delete, so their own row no longer counts as using it).
+            app(StoredFileCleaner::class)->deleteIfUnused($admin->user_profile_picture);
         } catch (\Exception $e) {
             
             return back()->with('error', $e->getMessage());

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\StoredFileCleaner;
 use App\Models\Alumnus;
 use App\Models\Notice;
 use App\Models\UserNotification;
@@ -168,8 +169,9 @@ class NoticeController extends Controller
                 'thumbnail' => $thumbnailPath ?? $oldThumbnail,
             ]);
 
-            if ($thumbnailPath && $oldThumbnail && Storage::disk('public')->exists($oldThumbnail)) {
-                Storage::disk('public')->delete($oldThumbnail);
+            // Only if no other record shares it (seeded notices reuse job images).
+            if ($thumbnailPath) {
+                app(StoredFileCleaner::class)->deleteIfUnused($oldThumbnail);
             }
         } catch (\Exception $e) {
             if ($thumbnailPath) {
@@ -185,11 +187,12 @@ class NoticeController extends Controller
     {
         $this->authorizeStaff();
 
-        if ($notice->thumbnail && Storage::disk('public')->exists($notice->thumbnail)) {
-            Storage::disk('public')->delete($notice->thumbnail);
-        }
-
+        $thumbnail = $notice->thumbnail;
         $notice->delete();
+
+        // After the delete, so this notice no longer counts as using it — and
+        // only if no other record shares the file (seeded notices reuse job images).
+        app(StoredFileCleaner::class)->deleteIfUnused($thumbnail);
 
         return back()->with('success', 'Notice deleted successfully.');
     }

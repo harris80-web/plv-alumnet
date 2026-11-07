@@ -24,3 +24,8 @@ Artisan::command('inspire', function () {
 // API usage bounded. See RecomputeJobMatches for the full split.
 Schedule::command('job-matches:recompute')->hourly();
 Schedule::command('job-matches:recompute --ai --limit=100')->dailyAt('02:00');
+
+// Job-description images uploaded in the editor but never saved into a post
+// (or no longer used by any post) — see SweepDescriptionImages. Removals on
+// edit / job delete already happen inline; this catches abandoned uploads.
+Schedule::command('files:sweep-description-images')->dailyAt('03:00')->timezone('Asia/Manila');

@@ -7,6 +7,7 @@ use App\Mail\DeactAlumniMail;
 use App\Models\Alumnus;
 use App\Models\Program;
 use App\Models\User;
+use App\Services\StoredFileCleaner;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -201,12 +202,12 @@ class AlumnusController extends Controller
             'user_number' => 'Phone Number',
         ]);
 
+        // Old files are only removed AFTER the update below succeeds (see the
+        // StoredFileCleaner call at the end) — deleting them up front left the
+        // profile pointing at a missing file whenever the update failed.
         $oldProfilePicture = $user->user_profile_picture ?? null;
         $profilePicture = null;
         if ($request->hasFile('user_profile_picture')) {
-            if ($oldProfilePicture && Storage::disk('public')->exists($oldProfilePicture)) {
-                Storage::disk('public')->delete($oldProfilePicture);
-            }
             $profilePicture = $request->file('user_profile_picture')->store('profilePictures', 'public');
         }
 
@@ -222,14 +223,8 @@ class AlumnusController extends Controller
         $resumeFile = null;
         $removeResumeFile = false;
         if ($request->hasFile('alumnus_resume_file')) {
-            if ($oldResumeFile && Storage::disk('public')->exists($oldResumeFile)) {
-                Storage::disk('public')->delete($oldResumeFile);
-            }
             $resumeFile = $request->file('alumnus_resume_file')->store('alumniDocuments/resumes', 'public');
         } elseif ($request->boolean('remove_alumnus_resume_file') && $oldResumeFile) {
-            if (Storage::disk('public')->exists($oldResumeFile)) {
-                Storage::disk('public')->delete($oldResumeFile);
-            }
             $removeResumeFile = true;
         }
 
@@ -237,14 +232,8 @@ class AlumnusController extends Controller
         $resumeBackupFile = null;
         $removeResumeBackupFile = false;
         if ($request->hasFile('alumnus_resume_backup_file')) {
-            if ($oldResumeBackupFile && Storage::disk('public')->exists($oldResumeBackupFile)) {
-                Storage::disk('public')->delete($oldResumeBackupFile);
-            }
             $resumeBackupFile = $request->file('alumnus_resume_backup_file')->store('alumniDocuments/resumes', 'public');
         } elseif ($request->boolean('remove_alumnus_resume_backup_file') && $oldResumeBackupFile) {
-            if (Storage::disk('public')->exists($oldResumeBackupFile)) {
-                Storage::disk('public')->delete($oldResumeBackupFile);
-            }
             $removeResumeBackupFile = true;
         }
 
@@ -252,14 +241,8 @@ class AlumnusController extends Controller
         $coverLetterFile = null;
         $removeCoverLetterFile = false;
         if ($request->hasFile('alumnus_cover_letter_file')) {
-            if ($oldCoverLetterFile && Storage::disk('public')->exists($oldCoverLetterFile)) {
-                Storage::disk('public')->delete($oldCoverLetterFile);
-            }
             $coverLetterFile = $request->file('alumnus_cover_letter_file')->store('alumniDocuments/coverLetters', 'public');
         } elseif ($request->boolean('remove_alumnus_cover_letter_file') && $oldCoverLetterFile) {
-            if (Storage::disk('public')->exists($oldCoverLetterFile)) {
-                Storage::disk('public')->delete($oldCoverLetterFile);
-            }
             $removeCoverLetterFile = true;
         }
 
@@ -370,6 +353,15 @@ class AlumnusController extends Controller
 
             return redirect()->route('user.profile')->with('error', 'An error occurred while updating your profile: ' . $e->getMessage());
         }
+
+        // Saved — now drop whatever was replaced or removed (only if no other
+        // record shares the file; see StoredFileCleaner).
+        app(StoredFileCleaner::class)->deleteIfUnused(
+            $profilePicture ? $oldProfilePicture : null,
+            ($resumeFile || $removeResumeFile) ? $oldResumeFile : null,
+            ($resumeBackupFile || $removeResumeBackupFile) ? $oldResumeBackupFile : null,
+            ($coverLetterFile || $removeCoverLetterFile) ? $oldCoverLetterFile : null,
+        );
 
         return redirect()->route('user.profile')->with('success', 'Alumni profile updated successfully.');
     }

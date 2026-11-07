@@ -566,6 +566,16 @@ class UserController extends Controller
             $user->delete();
             $user->user->delete();
 
+            // A rejected employer isn't shown anywhere, so their uploads go
+            // too — including the company verification document, private
+            // business info there's no reason to keep. Only if no other
+            // record shares the file (seeded employers reuse documents).
+            app(\App\Services\StoredFileCleaner::class)->deleteIfUnused(
+                $user->user->user_profile_picture,
+                $user->employer_company_logo,
+                $user->employer_company_document,
+            );
+
         } catch (\Exception $e) {
             Log::error('Failed to send employer rejection email, employer not removed: ' . $e->getMessage());
             return back()->with('error', $e->getMessage());

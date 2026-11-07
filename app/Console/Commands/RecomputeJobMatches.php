@@ -53,7 +53,8 @@ class RecomputeJobMatches extends Command
             $useAi = false;
         }
 
-        $alumniQuery = Alumnus::where('alumnus_resume_completeness', '>', 0);
+        $alumniQuery = Alumnus::with(['skills', 'experiences', 'certifications'])
+            ->where('alumnus_resume_completeness', '>', 0);
 
         // When AI-enriching, work through alumni whose matches were AI-refreshed
         // longest ago (or never) first, so a --limit cap rotates fairly across
@@ -74,9 +75,11 @@ class RecomputeJobMatches extends Command
         $this->info("Recomputing matches for {$alumni->count()} alumni" . ($useAi ? ' (with AI enrichment)' : ' (deterministic only)') . '...');
 
         $aiCalls = 0;
+        // Loaded once (with everything scoring needs) and reused for every alumnus.
+        $jobs = $matchService->scorableJobs();
 
         foreach ($alumni as $alumnus) {
-            $matches = $matchService->refreshForAlumnus($alumnus);
+            $matches = $matchService->refreshForAlumnus($alumnus, $jobs);
 
             if (!$useAi) {
                 continue;

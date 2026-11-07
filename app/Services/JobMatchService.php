@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Alumnus;
 use App\Models\JobMatch;
 use App\Models\JobPosting;
+use Illuminate\Support\Collection;
 
 /**
  * Computes how well an alumnus's profile/resume fits a job posting on a
@@ -36,6 +37,31 @@ class JobMatchService
 
     public function scoreFor(JobPosting $job, Alumnus $alumnus): JobMatch
     {
+        [$score, $breakdown] = $this->computeScore($job, $alumnus);
+
+        return JobMatch::updateOrCreate(
+            ['job_posting_id' => $job->job_posting_id, 'alumnus_id' => $alumnus->user_id],
+            ['score' => $score, 'score_breakdown' => $breakdown, 'computed_at' => now()]
+        );
+    }
+
+    /**
+     * Every open+approved posting with everything the scoring reads already
+     * loaded — load this ONCE and pass it to refreshForAlumnus() when scoring
+     * many alumni (see RecomputeJobMatches). Without the eager loads, each
+     * posting lazily queried its skills, programs and employer reviews/votes
+     * one by one (thousands of queries per alumnus).
+     */
+    public function scorableJobs(): Collection
+    {
+        return JobPosting::approved()->open()
+            ->with(['skills', 'programs', 'employer.reviews', 'employer.votes'])
+            ->get();
+    }
+
+    /** @return array{0: float, 1: array} [score, breakdown] — the pure calculation, no DB writes. */
+    private function computeScore(JobPosting $job, Alumnus $alumnus): array
+    {
         $breakdown = [
             'skills' => $this->scoreSkills($job, $alumnus),
             'experience' => $this->scoreExperience($alumnus),
@@ -54,10 +80,7 @@ class JobMatchService
         // App\Models\EmployerReview).
         $score = round(min(100, max(0, array_sum($breakdown))), 2);
 
-        return JobMatch::updateOrCreate(
-            ['job_posting_id' => $job->job_posting_id, 'alumnus_id' => $alumnus->user_id],
-            ['score' => $score, 'score_breakdown' => $breakdown, 'computed_at' => now()]
-        );
+        return [$score, $breakdown];
     }
 
     /**
@@ -133,10 +156,35 @@ class JobMatchService
      *
      * @return \Illuminate\Support\Collection<int, JobMatch>
      */
-    public function refreshForAlumnus(Alumnus $alumnus)
+    public function refreshForAlumnus(Alumnus $alumnus, ?Collection $jobs = null)
     {
-        return JobPosting::approved()->open()->get()
-            ->map(fn (JobPosting $job) => $this->scoreFor($job, $alumnus));
+        $jobs ??= $this->scorableJobs();
+        if ($jobs->isEmpty()) {
+            return collect();
+        }
+        $alumnus->loadMissing(['skills', 'experiences', 'certifications']);
+
+        // Same scores as scoreFor(), saved in one bulk write instead of a
+        // select + insert/update per posting.
+        $now = now();
+        $rows = $jobs->map(function (JobPosting $job) use ($alumnus, $now) {
+            [$score, $breakdown] = $this->computeScore($job, $alumnus);
+
+            return [
+                'job_posting_id' => $job->job_posting_id, 'alumnus_id' => $alumnus->user_id,
+                'score' => $score, 'score_breakdown' => json_encode($breakdown), 'computed_at' => $now,
+            ];
+        })->all();
+        foreach (array_chunk($rows, 500) as $chunk) {
+            JobMatch::upsert($chunk, ['job_posting_id', 'alumnus_id'], ['score', 'score_breakdown', 'computed_at']);
+        }
+
+        $jobsById = $jobs->keyBy('job_posting_id');
+
+        return JobMatch::where('alumnus_id', $alumnus->user_id)
+            ->whereIn('job_posting_id', $jobsById->keys())
+            ->get()
+            ->each(fn (JobMatch $match) => $match->setRelation('jobPosting', $jobsById[$match->job_posting_id]));
     }
 
     /**

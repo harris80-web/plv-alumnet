@@ -22,8 +22,10 @@ Artisan::command('inspire', function () {
 // scores refresh hourly (cheap, no external calls); the Gemini semantic pass
 // only runs once a day (and only for the top matches per alumnus) to keep
 // API usage bounded. See RecomputeJobMatches for the full split.
-Schedule::command('job-matches:recompute')->hourly();
-Schedule::command('job-matches:recompute --ai --limit=100')->dailyAt('02:00');
+// withoutOverlapping: with ~1000 alumni a full pass takes several minutes, so a
+// slow run must never start a second copy on top of itself.
+Schedule::command('job-matches:recompute')->hourly()->withoutOverlapping();
+Schedule::command('job-matches:recompute --ai --limit=100')->dailyAt('02:00')->withoutOverlapping();
 
 // Job-description images uploaded in the editor but never saved into a post
 // (or no longer used by any post) — see SweepDescriptionImages. Removals on

@@ -76,6 +76,28 @@ class DashboardReportService
         return (int) now(config('app.local_timezone'))->year;
     }
 
+    /**
+     * A calendar month in Philippine time, as UTC [start, end] for querying
+     * timestamp columns (stored in UTC). Without this, a hire at 7:00 AM
+     * on the 1st (Manila) would land in the previous month.
+     */
+    private function localMonthRange(int $year, int $month): array
+    {
+        $start = Carbon::create($year, $month, 1, 0, 0, 0, config('app.local_timezone'));
+
+        return [$start->copy()->utc(), $start->copy()->endOfMonth()->utc()];
+    }
+
+    /**
+     * Only active alumni accounts count toward the alumni-based reports —
+     * the same group as the "Total Alumni Users" card. Inactive means the
+     * account is still awaiting approval or was deactivated.
+     */
+    private function activeAlumniOnly($query)
+    {
+        return $query->whereHas('user', fn ($u) => $u->where('user_active', true)->where('user_role', 'alumni'));
+    }
+
     private function defaultToCurrentYear(array $years): array
     {
         return (!empty($years) || $this->filtersApplied()) ? $years : [$this->currentYear()];
@@ -235,7 +257,7 @@ class DashboardReportService
         int $hireMonths = 6,
         int $topCompaniesLimit = 5
     ): array {
-        $alumniQuery = Alumnus::with(['user', 'program', 'industry']);
+        $alumniQuery = $this->activeAlumniOnly(Alumnus::with(['user', 'program', 'industry']));
         if (!empty($batches)) {
             $alumniQuery->whereIn(DB::raw('YEAR(alumnus_batch)'), $batches);
         }
@@ -412,19 +434,17 @@ class DashboardReportService
                 foreach ($monthLabels as $i => $label) {
                     $count = $hiringBase()
                         ->where('job_applications.application_status', 'hired')
-                        ->whereYear('job_applications.hired_at', $year)
-                        ->whereMonth('job_applications.hired_at', $i + 1)
+                        ->whereBetween('job_applications.hired_at', $this->localMonthRange($year, $i + 1))
                         ->count();
                     $hiresPerMonth->put("$label $year", $count);
                 }
             }
         } else {
             $hiresPerMonth = collect(range($hireMonths - 1, 0))->mapWithKeys(function ($i) use ($hiringBase) {
-                $month = now()->subMonths($i);
+                $month = now(config('app.local_timezone'))->startOfMonth()->subMonthsNoOverflow($i);
                 $count = $hiringBase()
                     ->where('job_applications.application_status', 'hired')
-                    ->whereYear('job_applications.hired_at', $month->year)
-                    ->whereMonth('job_applications.hired_at', $month->month)
+                    ->whereBetween('job_applications.hired_at', $this->localMonthRange($month->year, $month->month))
                     ->count();
                 return [$month->format('M Y') => $count];
             });
@@ -621,6 +641,7 @@ class DashboardReportService
     {
         $applyAlumnusFilters = function ($query) use ($batches, $programIds, $colleges) {
             $query->whereHas('alumnus', function ($q) use ($batches, $programIds, $colleges) {
+                $this->activeAlumniOnly($q);
                 if (!empty($batches)) {
                     $q->whereIn(DB::raw('YEAR(alumnus_batch)'), $batches);
                 }
@@ -634,7 +655,7 @@ class DashboardReportService
             return $query;
         };
 
-        $alumniQuery = Alumnus::query();
+        $alumniQuery = $this->activeAlumniOnly(Alumnus::query());
         if (!empty($batches)) {
             $alumniQuery->whereIn(DB::raw('YEAR(alumnus_batch)'), $batches);
         }
@@ -704,20 +725,19 @@ class DashboardReportService
      */
     public function buildNetworkingReport(int $months): array
     {
-        $window = collect(range($months - 1, 0))->map(fn ($i) => now()->subMonths($i));
+        $window = collect(range($months - 1, 0))
+            ->map(fn ($i) => now(config('app.local_timezone'))->startOfMonth()->subMonthsNoOverflow($i));
 
         $monthlyConversations = $window->mapWithKeys(function ($month) {
             $count = DB::table('conversations')
-                ->whereYear('conversation_created_at', $month->year)
-                ->whereMonth('conversation_created_at', $month->month)
+                ->whereBetween('conversation_created_at', $this->localMonthRange($month->year, $month->month))
                 ->count();
             return [$month->format('M Y') => $count];
         });
 
         $monthlyMessages = $window->mapWithKeys(function ($month) {
             $count = DB::table('messages')
-                ->whereYear('message_created_at', $month->year)
-                ->whereMonth('message_created_at', $month->month)
+                ->whereBetween('message_created_at', $this->localMonthRange($month->year, $month->month))
                 ->count();
             return [$month->format('M Y') => $count];
         });

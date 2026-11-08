@@ -30,20 +30,30 @@ class ChatTicketController extends Controller
         $this->authorizeStaff();
 
         $settings = ChatbotSetting::current();
-        $today = Carbon::today();
-        $weekStart = Carbon::now()->startOfWeek();
-        $monthStart = Carbon::now()->startOfMonth();
 
-        $activeAiSessions = ChatTicket::with(['user', 'latestMessage'])->where('status', 'ai_active')->latest('ticket_id')->get();
+        // "Today", "this week" and "this month" follow Philippine time. The
+        // database stores UTC, so each boundary is worked out in Manila time
+        // and then converted to UTC for the query — otherwise "today" would
+        // run from 8:00 AM to 8:00 AM local time.
+        $localNow = now(config('app.local_timezone'));
+        $todayRange = [$localNow->copy()->startOfDay()->utc(), $localNow->copy()->endOfDay()->utc()];
+        $weekStart = $localNow->copy()->startOfWeek()->utc();
+        $monthStart = $localNow->copy()->startOfMonth()->utc();
+        $thisWeek = fn ($q) => $q->where('created_at', '>=', $weekStart);
+
+        // An AI session counts once the person has actually asked something
+        // (opening the widget alone creates a greeting-only ticket).
+        $activeAiSessions = ChatTicket::with(['user', 'latestMessage'])->where('status', 'ai_active')->asked()->latest('ticket_id')->get();
         $waitingTickets = ChatTicket::with(['user', 'latestMessage'])->waitingAgent()->oldest('escalated_at')->get();
         $withAgentTickets = ChatTicket::with(['user', 'office.user', 'latestMessage'])->where('status', 'with_agent')->latest('claimed_at')->get();
-        $resolvedToday = ChatTicket::where('status', 'resolved')->whereDate('resolved_at', $today)->count();
-        $resolvedTodayByAgent = ChatTicket::where('status', 'resolved')->whereDate('resolved_at', $today)->whereNotNull('office_id')->count();
+        $resolvedToday = ChatTicket::where('status', 'resolved')->whereBetween('resolved_at', $todayRange)->count();
+        $resolvedTodayByAgent = ChatTicket::where('status', 'resolved')->whereBetween('resolved_at', $todayRange)->whereNotNull('office_id')->count();
 
-        $totalTicketsEverAttempted = ChatTicket::where('failed_attempts', '>', 0)->orWhereNotNull('escalated_at')->orWhere('status', '!=', 'ai_active')->count();
-        $everEscalated = ChatTicket::whereNotNull('escalated_at')->count();
-        $allTicketsCount = ChatTicket::count();
-        $aiResolutionRate = $allTicketsCount > 0 ? round((($allTicketsCount - $everEscalated) / $allTicketsCount) * 100) : 0;
+        // See ChatTicket::aiOutcomeStats() — chats still in progress are
+        // left out, since whether the AI helped isn't known yet.
+        $aiOutcomes = ChatTicket::aiOutcomeStats();
+        $aiOutcomesThisWeek = ChatTicket::aiOutcomeStats($thisWeek);
+        $aiResolutionRate = $aiOutcomes['rate'];
 
         $avgWaitMinutes = (int) round(
             $waitingTickets->avg(fn (ChatTicket $t) => $t->escalated_at?->diffInMinutes(now()) ?? 0) ?? 0
@@ -58,14 +68,14 @@ class ChatTicketController extends Controller
             'activeAiSessions' => $activeAiSessions->count(),
             'aiResolutionRate' => $aiResolutionRate,
             'pendingEscalations' => $waitingTickets->count(),
-            'alumniMessagesToday' => Message::whereDate('created_at', $today)->count(),
+            'alumniMessagesToday' => Message::whereBetween('created_at', $todayRange)->count(),
             'detectedMessages' => $pendingFlags->count(),
         ];
 
         $aiChatbot = [
             'activeAiSessions' => $activeAiSessions->count(),
             'resolvedToday' => $resolvedToday,
-            'escalatedToday' => ChatTicket::whereDate('escalated_at', $today)->count(),
+            'escalatedToday' => ChatTicket::whereBetween('escalated_at', $todayRange)->count(),
             'resolutionRate' => $aiResolutionRate,
         ];
 
@@ -78,13 +88,22 @@ class ChatTicketController extends Controller
         ];
 
         $alumniMessaging = [
-            'threadsToday' => Conversation::whereDate('conversation_last_message_at', $today)->count(),
+            'threadsToday' => Conversation::whereBetween('conversation_last_message_at', $todayRange)->count(),
             'autoFlagged' => $pendingFlags->count(),
             'warningsThisWeek' => MessageFlag::where('status', 'warned')->where('reviewed_at', '>=', $weekStart)->count(),
-            'mutedThisMonth' => User::where('user_muted', true)->where('updated_at', '>=', $monthStart)->count(),
+            // Senders muted from a flagged message this month (and still muted).
+            // updated_at can't be used: it changes on any account edit.
+            'mutedThisMonth' => DB::table('message_flags')
+                ->join('messages', 'messages.message_id', '=', 'message_flags.message_id')
+                ->join('users', 'users.user_id', '=', 'messages.sender_id')
+                ->where('message_flags.status', 'muted')
+                ->where('message_flags.reviewed_at', '>=', $monthStart)
+                ->where('users.user_muted', true)
+                ->distinct()
+                ->count('messages.sender_id'),
         ];
 
-        $totalSessionsThisWeek = ChatTicket::where('created_at', '>=', $weekStart)->count();
+        $totalSessionsThisWeek = ChatTicket::asked()->where('created_at', '>=', $weekStart)->count();
         $resolvedThisWeek = ChatTicket::where('status', 'resolved')->where('resolved_at', '>=', $weekStart)->get();
         $avgResolutionMinutes = (int) round(
             $resolvedThisWeek->avg(fn (ChatTicket $t) => $t->created_at->diffInMinutes($t->resolved_at)) ?? 0
@@ -92,16 +111,17 @@ class ChatTicketController extends Controller
 
         $reports = [
             'totalSessionsThisWeek' => $totalSessionsThisWeek,
-            'aiResolvedThisWeek' => ChatTicket::where('created_at', '>=', $weekStart)->whereNull('escalated_at')->count(),
-            'escalatedThisWeek' => ChatTicket::where('created_at', '>=', $weekStart)->whereNotNull('escalated_at')->count(),
+            'aiResolvedThisWeek' => $aiOutcomesThisWeek['aiResolved'],
+            'escalatedThisWeek' => $aiOutcomesThisWeek['escalated'],
             'avgResolutionMinutes' => $avgResolutionMinutes,
             'sessionsByRole' => [
-                'alumni' => ChatTicket::whereHas('user', fn ($q) => $q->where('user_role', 'alumni'))->where('created_at', '>=', $weekStart)->count(),
-                'employer' => ChatTicket::whereHas('user', fn ($q) => $q->where('user_role', 'employer'))->where('created_at', '>=', $weekStart)->count(),
+                'alumni' => ChatTicket::asked()->whereHas('user', fn ($q) => $q->where('user_role', 'alumni'))->where('created_at', '>=', $weekStart)->count(),
+                'employer' => ChatTicket::asked()->whereHas('user', fn ($q) => $q->where('user_role', 'employer'))->where('created_at', '>=', $weekStart)->count(),
             ],
-            'messageVolumePerDay' => collect(range(6, 0))->map(function ($daysAgo) {
-                $date = Carbon::today()->subDays($daysAgo);
-                return ['label' => $date->format('D'), 'count' => Message::whereDate('created_at', $date)->count()];
+            'messageVolumePerDay' => collect(range(6, 0))->map(function ($daysAgo) use ($localNow) {
+                $day = $localNow->copy()->subDays($daysAgo);
+                $range = [$day->copy()->startOfDay()->utc(), $day->copy()->endOfDay()->utc()];
+                return ['label' => $day->format('D'), 'count' => Message::whereBetween('created_at', $range)->count()];
             })->values(),
             'flagBreakdown' => collect(MessageFlag::REASONS)->map(fn ($reason) => [
                 'key' => $reason,
@@ -127,7 +147,7 @@ class ChatTicketController extends Controller
 
         return view('superAdmin.chatbotMessaging', compact(
             'settings', 'activeAiSessions', 'waitingTickets', 'withAgentTickets',
-            'overview', 'aiChatbot', 'liveQueue', 'alumniMessaging', 'reports',
+            'overview', 'aiChatbot', 'liveQueue', 'alumniMessaging', 'reports', 'aiOutcomes',
             'pendingFlags', 'allFlags', 'faqs', 'chatHistoryAlumni'
         ));
     }

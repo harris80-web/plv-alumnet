@@ -28,6 +28,9 @@ class EmployerController extends Controller
     private const MONTHLY_PERIODS = [3 => 'Quarterly (3 months)', 6 => 'Semiannual (6 months)', 12 => 'Annually (1 year)'];
     private const DEFAULT_MONTHLY_PERIOD = 6;
 
+    /** How many postings the "Applicant Traffic by Job Posting" widget lists. */
+    public const TRAFFIC_POSTINGS_SHOWN = 5;
+
     /**
      * Employer dashboard — was a closure returning a static view with zero
      * data (see routes/web.php history); every number/list here was
@@ -270,10 +273,12 @@ class EmployerController extends Controller
             ->sort(fn ($a, $b) => [$activeRank($a), $b->applications_count, $b->job_posting_id] <=> [$activeRank($b), $a->applications_count, $a->job_posting_id])
             ->values();
 
-        // Highest applicant count among their postings — the "traffic by
-        // posting" widget scales each bar against this so the busiest post
-        // reads as a full bar, not an arbitrary fixed max.
-        $maxApplicantsPerPosting = max(1, (int) $jobPostings->max('applications_count'));
+        // Highest applicant count among the postings the "traffic by
+        // posting" widget actually shows (its top 5) — each bar is scaled
+        // against this so the busiest shown post reads as a full bar. Taking
+        // the max over every post made all five bars tiny whenever the
+        // busiest post overall was a closed one ranked below them.
+        $maxApplicantsPerPosting = max(1, (int) $jobPostings->take(self::TRAFFIC_POSTINGS_SHOWN)->max('applications_count'));
 
         $monthlyActivity = $this->monthlyApplicationsAndHires($employerId, $filters);
         $monthlyByPeriod = $this->monthlyByPeriod($monthlyActivity, $years);
@@ -307,11 +312,14 @@ class EmployerController extends Controller
             ->where(fn ($q) => $q
                 ->where(fn ($r) => $r->where('job_applications.application_date', '>=', $since)->where('job_applications.application_date', '<', $until))
                 ->orWhere(fn ($r) => $r->where('job_applications.hired_at', '>=', $since)->where('job_applications.hired_at', '<', $until)))
-            ->get(['job_applications.application_date', 'job_applications.hired_at']);
+            ->get(['job_applications.application_date', 'job_applications.hired_at', 'job_applications.application_status']);
 
         $monthKey = fn ($value) => $value ? \Carbon\Carbon::parse($value, $storedTz)->setTimezone($localTz)->format('Y-m') : null;
         $applications = $rows->map(fn ($r) => $monthKey($r->application_date))->filter()->countBy();
-        $hires = $rows->map(fn ($r) => $monthKey($r->hired_at))->filter()->countBy();
+        // Only applicants who are still hired: hired_at stays filled in if a
+        // hire is later declined, and that person shouldn't count as a hire
+        // (same rule as the "Hired" card and the admin's Hires per Month).
+        $hires = $rows->where('application_status', 'hired')->map(fn ($r) => $monthKey($r->hired_at))->filter()->countBy();
 
         return [
             'keys' => $months->map(fn ($m) => $m->format('Y-m'))->all(),

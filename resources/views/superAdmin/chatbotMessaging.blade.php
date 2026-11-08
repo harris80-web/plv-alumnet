@@ -219,10 +219,12 @@
                         <div class="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
                             <h3 class="text-xs font-bold text-slate-500 uppercase mb-4">Session outcome breakdown</h3>
                             @php
-                                $outcomeTotal = max($allTicketsCountOverview = \App\Models\ChatTicket::count(), 1);
+                                // Finished sessions only — see ChatTicket::aiOutcomeStats().
+                                $outcomeTotal = max($aiOutcomes['finished'], 1);
                                 $outcomes = [
-                                    ['label' => 'Answered by AI', 'count' => \App\Models\ChatTicket::whereNull('escalated_at')->count(), 'color' => '#16a34a'],
-                                    ['label' => 'Escalated to agent', 'count' => \App\Models\ChatTicket::whereNotNull('escalated_at')->count(), 'color' => '#C73D1A'],
+                                    ['label' => 'Answered by AI', 'count' => $aiOutcomes['aiResolved'], 'color' => '#16a34a'],
+                                    ['label' => 'Left without an answer', 'count' => $aiOutcomes['unanswered'], 'color' => '#94a3b8'],
+                                    ['label' => 'Escalated to agent', 'count' => $aiOutcomes['escalated'], 'color' => '#C73D1A'],
                                 ];
                             @endphp
                             <div class="space-y-4">
@@ -235,6 +237,7 @@
                                     <div class="bar-track"><div class="bar-fill" style="width: {{ round(($o['count'] / $outcomeTotal) * 100) }}%; background: {{ $o['color'] }};"></div></div>
                                 </div>
                                 @endforeach
+                                <p class="text-[11px] text-slate-400">Out of {{ number_format($aiOutcomes['finished']) }} finished sessions. {{ number_format($aiOutcomes['inProgress']) }} still in progress {{ $aiOutcomes['inProgress'] === 1 ? 'is' : 'are' }} not counted yet (a chat counts as finished after {{ \App\Models\ChatTicket::AI_IDLE_MINUTES }} minutes without a message).</p>
                             </div>
                         </div>
                     </div>

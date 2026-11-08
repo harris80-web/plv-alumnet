@@ -77,6 +77,80 @@ class ChatTicket extends Model
         return $query->where('status', 'waiting_agent');
     }
 
+    /**
+     * An AI chat with no new message for this long counts as finished.
+     * AI chats never get a "resolved" status (only agents resolve
+     * tickets), so idle time is the only sign the person is done.
+     */
+    public const AI_IDLE_MINUTES = 30;
+
+    /**
+     * Tickets where the person actually asked something. Opening the
+     * widget creates a ticket with just the greeting, and those shouldn't
+     * count as sessions the AI handled.
+     */
+    public function scopeAsked($query)
+    {
+        return $query->whereHas('messages', fn ($q) => $q->where('sender_type', 'user'));
+    }
+
+    /** Still with the AI and nobody has written for AI_IDLE_MINUTES. */
+    private function whereIdleWithAi($query)
+    {
+        return $query->asked()
+            ->where('status', 'ai_active')
+            ->whereNull('escalated_at')
+            ->whereDoesntHave('messages', fn ($q) => $q->where('created_at', '>=', now()->subMinutes(self::AI_IDLE_MINUTES)));
+    }
+
+    /** Finished with the AI, and the AI's last reply was an answer (failed_attempts resets to 0 on every answer). */
+    public function scopeAiResolved($query)
+    {
+        return $this->whereIdleWithAi($query)->where('failed_attempts', 0);
+    }
+
+    /** Finished with the AI, but its last reply was "I'm not sure" — the person left without an answer. */
+    public function scopeAiUnanswered($query)
+    {
+        return $this->whereIdleWithAi($query)->where('failed_attempts', '>', 0);
+    }
+
+    /** The person asked something and the AI chat is still going (a message within AI_IDLE_MINUTES). */
+    public function scopeAiInProgress($query)
+    {
+        return $query->asked()
+            ->where('status', 'ai_active')
+            ->whereNull('escalated_at')
+            ->whereHas('messages', fn ($q) => $q->where('created_at', '>=', now()->subMinutes(self::AI_IDLE_MINUTES)));
+    }
+
+    /**
+     * AI Resolution Rate: of finished sessions, the share the AI answered
+     * without handing over to staff. Sessions still in progress are left
+     * out, since their outcome isn't known yet.
+     *
+     * @param  callable|null  $scope  narrows every count the same way (e.g. "created this week")
+     * @return array{aiResolved:int, unanswered:int, escalated:int, finished:int, inProgress:int, rate:int}
+     */
+    public static function aiOutcomeStats(?callable $scope = null): array
+    {
+        $base = fn () => tap(static::query(), fn ($q) => $scope ? $scope($q) : null);
+
+        $aiResolved = $base()->aiResolved()->count();
+        $unanswered = $base()->aiUnanswered()->count();
+        $escalated = $base()->whereNotNull('escalated_at')->count();
+        $finished = $aiResolved + $unanswered + $escalated;
+
+        return [
+            'aiResolved' => $aiResolved,
+            'unanswered' => $unanswered,
+            'escalated' => $escalated,
+            'finished' => $finished,
+            'inProgress' => $base()->aiInProgress()->count(),
+            'rate' => $finished > 0 ? (int) round($aiResolved / $finished * 100) : 0,
+        ];
+    }
+
     public function statusLabel(): string
     {
         return self::statusLabels()[$this->status] ?? $this->status;

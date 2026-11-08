@@ -234,7 +234,7 @@
                     <div class="card-title">Applicant Traffic by Job Posting</div>
                     <div class="card-sub">Applicants per posting &mdash; active postings first</div>
                     <div class="mt-4">
-                        @forelse ($jobPostings->take(5) as $job)
+                        @forelse ($jobPostings->take(\App\Http\Controllers\EmployerController::TRAFFIC_POSTINGS_SHOWN) as $job)
                         <a href="{{ route('jobApplication.showApplications', ['jobPostingId' => $job->job_posting_id] + $carryToApplicants) }}" class="block mb-4 last:mb-0 group">
                             <div class="flex justify-between gap-2 text-xs font-semibold text-gray-600 mb-1.5">
                                 <span class="flex items-baseline gap-1.5 min-w-0">

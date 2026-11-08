@@ -394,6 +394,7 @@
                                             'claimingStatus' => $yearbookRecord->claiming_status,
                                             'distributionStatus' => $yearbookRecord->distribution_status,
                                             'scheduledAt' => optional($yearbookRecord->distribution_scheduled_at)->format('Y-m-d\TH:i'),
+                                            'endTime' => $yearbookRecord->distribution_end_time ? substr($yearbookRecord->distribution_end_time, 0, 5) : null,
                                             'building' => $yearbookRecord->distribution_building,
                                             'roomFloor' => $yearbookRecord->distribution_room_floor,
                                             'updateUrl' => route('alumniYearbook.update', $yearbookRecord->id),
@@ -414,7 +415,7 @@
                                             </span>
                                         </td>
                                         <td class="border-r border-slate-100">
-                                            {{ optional($yearbookRecord->distribution_scheduled_at)->format('M d, Y h:i A') ?? 'Not yet scheduled' }}
+                                            {{ $yearbookRecord->scheduleLabel() ?? 'Not yet scheduled' }}
                                         </td>
                                         <td class="border-r border-slate-100">{{ $yearbookRecord->locationLabel() }}</td>
                                         <td class="border-r border-slate-100">
@@ -724,11 +725,21 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Distribution Schedule</label>
-                            <input type="datetime-local" name="distribution_scheduled_at" id="ybm-scheduled-at"
-                                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A]">
+                        {{-- Claiming window: date + start time, and the time it ends
+                             (defaults to 5:00 PM, office closing, if left blank). --}}
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="col-span-2">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Claiming Date & Start Time</label>
+                                <input type="datetime-local" name="distribution_scheduled_at" id="ybm-scheduled-at"
+                                    class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A]">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Until</label>
+                                <input type="time" name="distribution_end_time" id="ybm-end-time" title="Defaults to 5:00 PM (office closing) if left blank"
+                                    class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C73D1A]/20 focus:border-[#C73D1A]">
+                            </div>
                         </div>
+                        <p class="text-[10px] text-slate-400 -mt-2">Alumni can claim within this time window. "Until" defaults to 5:00 PM (office closing) if left blank.</p>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Building Name</label>
@@ -972,6 +983,7 @@
             selectYearbookClaimingStatus('');
             document.getElementById('ybm-distribution-status').value = '';
             document.getElementById('ybm-scheduled-at').value = '';
+            document.getElementById('ybm-end-time').value = '';
             document.getElementById('ybm-building').value = '';
             document.getElementById('ybm-room-floor').value = '';
             switchYearbookModalTab('claiming');
@@ -1005,6 +1017,7 @@
             selectYearbookClaimingStatus(data.claimingStatus);
             document.getElementById('ybm-distribution-status').value = data.distributionStatus ?? '';
             document.getElementById('ybm-scheduled-at').value = data.scheduledAt ?? '';
+            document.getElementById('ybm-end-time').value = data.endTime ?? '';
             document.getElementById('ybm-building').value = data.building ?? '';
             document.getElementById('ybm-room-floor').value = data.roomFloor ?? '';
 

@@ -20,6 +20,13 @@ class AlumniYearbookController extends Controller
             'claiming_status' => ['nullable', 'in:' . implode(',', AlumniYearbook::CLAIMING_STATUSES)],
             'distribution_status' => ['nullable', 'in:' . implode(',', AlumniYearbook::DISTRIBUTION_STATUSES)],
             'distribution_scheduled_at' => ['nullable', 'date'],
+            // Claiming window's end — must be after the start time (same day).
+            'distribution_end_time' => ['nullable', 'date_format:H:i', function ($attribute, $value, $fail) {
+                $start = request('distribution_scheduled_at');
+                if ($value && $start && strtotime(date('H:i', strtotime($start))) >= strtotime($value)) {
+                    $fail('The claiming end time must be later than the start time.');
+                }
+            }],
             'distribution_building' => ['nullable', 'string', 'max:255'],
             'distribution_room_floor' => ['nullable', 'string', 'max:255'],
         ];

@@ -10,6 +10,7 @@ class AlumniYearbook extends Model
         'alumnus_id',
         'distribution_status',
         'distribution_scheduled_at',
+        'distribution_end_time',
         'distribution_building',
         'distribution_room_floor',
         'claiming_status',
@@ -104,6 +105,31 @@ class AlumniYearbook extends Model
      * place that joins them so the table and dashboard card can't drift
      * apart on the format.
      */
+    /** Office closing time — the default end of a claiming window. */
+    public const DEFAULT_END_TIME = '17:00';
+
+    /** "9:00 AM – 5:00 PM", or just the start time if no end is set, or null if unscheduled. */
+    public function timeRangeLabel(): ?string
+    {
+        if (!$this->distribution_scheduled_at) {
+            return null;
+        }
+        $start = $this->distribution_scheduled_at->format('g:i A');
+        if (!$this->distribution_end_time) {
+            return $start;
+        }
+
+        return $start . ' – ' . \Carbon\Carbon::createFromFormat('H:i:s', $this->distribution_end_time)->format('g:i A');
+    }
+
+    /** Date plus time window, e.g. "Nov 20, 2026, 9:00 AM – 5:00 PM". */
+    public function scheduleLabel(): ?string
+    {
+        return $this->distribution_scheduled_at
+            ? $this->distribution_scheduled_at->format('M d, Y') . ', ' . $this->timeRangeLabel()
+            : null;
+    }
+
     public function locationLabel(): string
     {
         $parts = array_filter([$this->distribution_building, $this->distribution_room_floor]);
@@ -120,6 +146,10 @@ class AlumniYearbook extends Model
     public function applyUpdate(array $data, ?int $userId): void
     {
         $this->fill($data);
+        // A schedule always has an end: the office's closing time unless one was given.
+        if ($this->distribution_scheduled_at && !$this->distribution_end_time) {
+            $this->distribution_end_time = self::DEFAULT_END_TIME;
+        }
         $this->status_updated_at = now();
         $this->updated_by = $userId;
         $this->save();

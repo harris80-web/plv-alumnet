@@ -45,6 +45,25 @@ class Experience extends Model
     }
 
     /**
+     * The line under the title on the resume, as plain text:
+     * "Information Technology | Jan 2022 – Present (2 yrs 3 mos)".
+     * Industry is left off for projects.
+     */
+    public function resumeMetaLine(bool $withIndustry = true): ?string
+    {
+        $duration = Alumnus::formatExperienceDuration($this->experience_duration_months);
+        $dates = $this->dateRangeLabel();
+        $when = $dates ? $dates . ($duration ? " ({$duration})" : '') : $duration;
+
+        $parts = array_filter([
+            $withIndustry ? $this->industry?->industry_name : null,
+            $when,
+        ]);
+
+        return $parts ? implode(' | ', $parts) : null;
+    }
+
+    /**
      * The resume builder's duties/responsibilities inputs are joined with
      * "\n" into experience_job_description as one field (no schema change
      * needed) — this splits it back into lines for display as a bulleted

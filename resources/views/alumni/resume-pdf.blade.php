@@ -3,94 +3,55 @@
     $workExperiences = $alumnus->experiences->where('experience_type', 'work');
     $projects = $alumnus->experiences->where('experience_type', 'project');
     $certTypeLabels = \App\Models\Alumnus::certificationTypeLabels();
-
-    // Embed as a base64 data URI rather than a raw filesystem path — dompdf's
-    // security options restrict local file access by default, which made a
-    // plain storage_path() silently fail to render (no error, just missing).
-    // A data URI needs no file access at render time, so it sidesteps that.
-    $photoDataUri = null;
-    if ($user->user_profile_picture) {
-        $photoFullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($user->user_profile_picture);
-        if (file_exists($photoFullPath)) {
-            $mime = mime_content_type($photoFullPath) ?: 'image/jpeg';
-            $photoDataUri = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($photoFullPath));
-        }
-    }
+    $contactParts = $alumnus->resumeContactParts();
 @endphp
+{{--
+    ATS-friendly PDF: a single column of real, selectable text in a standard
+    font, standard section headings, and no photo, tables, columns, icons or
+    background shapes — applicant tracking systems read it top to bottom.
+    Keep it in step with resume-preview.blade.php. ResumeTextParser reads
+    this same layout back in when an alumnus imports their exported PDF.
+--}}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <title>{{ $alumnus->resumeFullName() }} - Resume</title>
     <style>
-        @page { margin: 42px 46px; }
+        @page { margin: 48px 54px; }
 
-        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #333333; font-size: 11px; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #222222; font-size: 11px; line-height: 1.4; }
 
-        h1 { font-size: 22px; color: #0E0F3B; text-align: center; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px; }
+        h1 { font-size: 20px; color: #0E0F3B; margin: 0; }
+        .headline { font-size: 11px; color: #333333; margin: 2px 0 0; }
+        .contact { font-size: 10px; color: #444444; margin: 4px 0 0; }
 
-        .header { border-bottom: 2px solid #0E0F3B; padding-bottom: 12px; margin-bottom: 18px; display: flex; align-items: center; gap: 16px; }
-        .header-text { flex: 1; }
+        .header { border-bottom: 2px solid #0E0F3B; padding-bottom: 8px; margin-bottom: 14px; }
 
-        .photo { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid #0E0F3B; }
+        h2 { font-size: 12px; color: #0E0F3B; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #bbbbbb; padding-bottom: 2px; margin: 0 0 6px; }
 
-        .contact { text-align: center; color: #555555; font-size: 10px; }
-        .contact span { margin: 0 8px; }
+        .section { margin-bottom: 14px; }
 
-        h2 { font-size: 12px; color: #0E0F3B; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #dddddd; padding-bottom: 4px; margin: 0 0 8px; }
+        .item { margin-bottom: 9px; }
+        h3 { font-size: 11px; font-weight: bold; color: #111111; margin: 0; }
+        .meta { font-size: 10px; color: #444444; margin: 1px 0 0; }
 
-        .section { margin-bottom: 16px; }
+        p { margin: 0; }
 
-        .row { display: flex; justify-content: space-between; }
+        ul { margin: 3px 0 0; padding-left: 16px; }
+        li { margin: 0 0 2px; }
 
-        .item { margin-bottom: 10px; }
-        .item-title { font-weight: bold; color: #111111; }
-        .item-sub { font-style: italic; color: #666666; font-size: 10px; margin: 2px 0; }
-        .item-date { color: #666666; font-size: 10px; white-space: nowrap; }
-
-        p { margin: 4px 0 0; line-height: 1.4; }
-
-        ul.duties { margin: 4px 0 0; padding-left: 14px; line-height: 1.4; }
-        ul.duties li { margin: 0 0 2px; }
-
-        .skill {
-            display: inline-block;
-            background: #f0f0f0;
-            border-radius: 10px;
-            padding: 3px 10px;
-            margin: 0 4px 4px 0;
-            font-size: 10px;
-        }
-
-        .skill-category-row { margin-bottom: 4px; }
-        .skill-category-label {
-            display: inline-block;
-            font-size: 10px;
-            font-weight: bold;
-            color: #666666;
-            width: 110px;
-            vertical-align: top;
-        }
+        ul.plain { list-style: none; padding-left: 0; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        @if($photoDataUri)
-            <img class="photo" src="{{ $photoDataUri }}" alt="">
+        <h1>{{ $alumnus->resumeFullName() }}</h1>
+        @if($alumnus->program?->program_name)
+            <p class="headline">{{ $alumnus->program->program_name }} Graduate</p>
         @endif
-        <div class="header-text">
-            <h1>{{ $alumnus->resumeFullName() }}</h1>
-            <div class="contact">
-                <span>{{ $user->user_email }}</span>
-                @if($user->user_number)
-                    <span>&bull; {{ $user->user_number }}</span>
-                @endif
-                @if($alumnus->linkedin_url)
-                    <span>&bull; {{ preg_replace('~^https?://(www\.)?~i', '', $alumnus->linkedin_url) }}</span>
-                @endif
-            </div>
-        </div>
+        <p class="contact">{!! collect($contactParts)->map(fn ($value, $label) => e($label) . ': ' . e($value))->implode(' &nbsp;|&nbsp; ') !!}</p>
     </div>
 
     @if($alumnus->alumnus_resume_summary)
@@ -100,33 +61,16 @@
         </div>
     @endif
 
-    <div class="section">
-        <h2>Education</h2>
-        <div class="row">
-            <span class="item-title">{{ $alumnus->program->program_name ?? '--' }}</span>
-            @if($alumnus->alumnus_batch)
-                <span class="item-date">Batch {{ $alumnus->alumnus_batch->format('Y') }}</span>
-            @endif
-        </div>
-        @if($alumnus->program?->collegeName())
-            <p class="item-sub">{{ $alumnus->program->collegeName() }}</p>
-        @endif
-        <p class="item-sub">Pamantasan ng Lungsod ng Valenzuela (PLV)</p>
-    </div>
-
     @if($alumnus->skills->isNotEmpty())
         @php $skillsByCategory = $alumnus->skills->groupBy('skill_category'); @endphp
         <div class="section">
             <h2>Skills</h2>
-            @foreach(\App\Models\Skill::CATEGORIES as $categoryKey => $categoryLabel)
-                @continue($skillsByCategory->get($categoryKey, collect())->isEmpty())
-                <div class="skill-category-row">
-                    <span class="skill-category-label">{{ $categoryLabel }}</span>
-                    @foreach($skillsByCategory[$categoryKey] as $skill)
-                        <span class="skill">{{ $skill->skill_name }}</span>
-                    @endforeach
-                </div>
-            @endforeach
+            <ul class="plain">
+                @foreach(\App\Models\Skill::CATEGORIES as $categoryKey => $categoryLabel)
+                    @continue($skillsByCategory->get($categoryKey, collect())->isEmpty())
+                    <li><strong>{{ $categoryLabel }}:</strong> {{ $skillsByCategory[$categoryKey]->pluck('skill_name')->implode(', ') }}</li>
+                @endforeach
+            </ul>
         </div>
     @endif
 
@@ -135,19 +79,12 @@
             <h2>Work Experience</h2>
             @foreach($workExperiences as $exp)
                 <div class="item">
-                    <div class="row">
-                        <span class="item-title">{{ $exp->experience_job_title }}</span>
-                        @if($exp->dateRangeLabel())
-                            <span class="item-date">{{ $exp->dateRangeLabel() }}@if(\App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months)) ({{ \App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months) }})@endif</span>
-                        @elseif(\App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months))
-                            <span class="item-date">{{ \App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months) }}</span>
-                        @endif
-                    </div>
-                    @if($exp->industry)
-                        <p class="item-sub">{{ $exp->industry->industry_name }}</p>
+                    <h3>{{ $exp->experience_job_title }}</h3>
+                    @if($exp->resumeMetaLine())
+                        <p class="meta">{{ $exp->resumeMetaLine() }}</p>
                     @endif
                     @if($exp->jobDuties())
-                        <ul class="duties">
+                        <ul>
                             @foreach($exp->jobDuties() as $duty)
                                 <li>{{ $duty }}</li>
                             @endforeach
@@ -163,16 +100,12 @@
             <h2>Projects</h2>
             @foreach($projects as $exp)
                 <div class="item">
-                    <div class="row">
-                        <span class="item-title">{{ $exp->experience_job_title }}</span>
-                        @if($exp->dateRangeLabel())
-                            <span class="item-date">{{ $exp->dateRangeLabel() }}@if(\App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months)) ({{ \App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months) }})@endif</span>
-                        @elseif(\App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months))
-                            <span class="item-date">{{ \App\Models\Alumnus::formatExperienceDuration($exp->experience_duration_months) }}</span>
-                        @endif
-                    </div>
+                    <h3>{{ $exp->experience_job_title }}</h3>
+                    @if($exp->resumeMetaLine(false))
+                        <p class="meta">{{ $exp->resumeMetaLine(false) }}</p>
+                    @endif
                     @if($exp->jobDuties())
-                        <ul class="duties">
+                        <ul>
                             @foreach($exp->jobDuties() as $duty)
                                 <li>{{ $duty }}</li>
                             @endforeach
@@ -183,23 +116,20 @@
         </div>
     @endif
 
+    <div class="section">
+        <h2>Education</h2>
+        <h3>{{ $alumnus->program->program_name ?? '--' }}</h3>
+        <p class="meta">{{ $alumnus->resumeEducationLine() }}</p>
+    </div>
+
     @if($alumnus->certifications->isNotEmpty())
         <div class="section">
             <h2>Certifications &amp; Trainings</h2>
-            @foreach($alumnus->certifications as $cert)
-                <div class="row">
-                    <span>
-                        <span class="item-title">{{ $cert->certification_name }}</span>
-                        @if($cert->certification_from)
-                            &mdash; {{ $cert->certification_from }}
-                        @endif
-                        ({{ $certTypeLabels[$cert->certification_type] ?? ucfirst($cert->certification_type) }})
-                    </span>
-                    @if($cert->certification_date)
-                        <span class="item-date">{{ $cert->certification_date?->format('M Y') }}</span>
-                    @endif
-                </div>
-            @endforeach
+            <ul class="plain">
+                @foreach($alumnus->certifications as $cert)
+                    <li><strong>{{ $cert->certification_name }}</strong>{{ $cert->resumeDetailText($certTypeLabels) }}</li>
+                @endforeach
+            </ul>
         </div>
     @endif
 

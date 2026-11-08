@@ -343,6 +343,29 @@ class Alumnus extends Model
     }
 
     /**
+     * Resume contact details as label => text, in display order. Plain
+     * labelled text (no icons) so ATS software can pick each one out.
+     */
+    public function resumeContactParts(): array
+    {
+        return array_filter([
+            'Email' => $this->user->user_email,
+            'Phone' => $this->user->user_number,
+            'LinkedIn' => $this->linkedin_url ? preg_replace('~^https?://(www\.)?~i', '', $this->linkedin_url) : null,
+        ]);
+    }
+
+    /** "Pamantasan ng Lungsod ng Valenzuela (PLV) | College of ... | Graduated 2020" */
+    public function resumeEducationLine(): string
+    {
+        return implode(' | ', array_filter([
+            'Pamantasan ng Lungsod ng Valenzuela (PLV)',
+            $this->program?->collegeName(),
+            $this->alumnus_batch ? 'Graduated ' . $this->alumnus_batch->format('Y') : null,
+        ]));
+    }
+
+    /**
      * "Last, First Middle Suffix" — the formal listing format used by the
      * Alumni Directory table, as opposed to resumeFullName()'s "First
      * Middle Last Suffix" used on the resume itself.

@@ -921,55 +921,77 @@
     // is the alumnus's Resume Builder content exactly as it was when they
     // applied, not necessarily what's on their profile right now.
     function buildSnapshotView(snap) {
+        // Plain, single-column text with standard headings — the same
+        // ATS-friendly layout as the alumnus's own resume and PDF.
         const wrap = document.createElement('div');
-        wrap.className = 'border border-gray-200 rounded-xl p-4 space-y-4 text-sm';
+        wrap.className = 'border border-gray-200 rounded-xl p-4 space-y-3 text-sm text-gray-800 bg-white';
+
+        const certTypeLabels = { certification: 'Certification', seminar: 'Seminar', training: 'Training' };
+        const formatDuration = (months) => {
+            months = parseInt(months, 10) || 0;
+            if (months <= 0) return '';
+            const y = Math.floor(months / 12), m = months % 12;
+            return [y ? y + ' yr' + (y > 1 ? 's' : '') : '', m ? m + ' mo' + (m > 1 ? 's' : '') : ''].filter(Boolean).join(' ');
+        };
+        const formatMonthYear = (value) => {
+            const d = value ? new Date(value + 'T00:00:00') : null;
+            return d && !isNaN(d) ? d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '';
+        };
+        const el = (tag, className, text) => {
+            const node = document.createElement(tag);
+            if (className) node.className = className;
+            if (text !== undefined) node.textContent = text;
+            return node;
+        };
+        const addSection = (title) => {
+            const section = el('section');
+            section.appendChild(el('h4', 'text-xs font-bold text-[#0E0F3B] uppercase tracking-wider border-b border-gray-300 pb-1 mb-1.5', title));
+            wrap.appendChild(section);
+            return section;
+        };
+        const addExperiences = (title, items) => {
+            if (!items.length) return;
+            const section = addSection(title);
+            items.forEach(e => {
+                const item = el('div', 'mb-2 last:mb-0');
+                item.appendChild(el('p', 'font-semibold text-gray-900 text-xs', e.job_title || ''));
+                const duration = formatDuration(e.duration_months);
+                if (duration) item.appendChild(el('p', 'text-[11px] text-gray-600', duration));
+                const duties = String(e.job_description || '').split(/\r\n|\r|\n/).map(s => s.trim()).filter(Boolean);
+                if (duties.length) {
+                    const ul = el('ul', 'list-disc list-outside ml-4 text-xs leading-relaxed mt-0.5');
+                    duties.forEach(d => ul.appendChild(el('li', '', d)));
+                    item.appendChild(ul);
+                }
+                section.appendChild(item);
+            });
+        };
 
         if (snap.summary) {
-            const p = document.createElement('p');
-            p.className = 'text-gray-600 text-xs leading-relaxed';
-            p.textContent = snap.summary;
-            wrap.appendChild(p);
+            addSection('Professional Summary').appendChild(el('p', 'text-xs leading-relaxed', snap.summary));
         }
 
         if (snap.skills && snap.skills.length) {
-            const skillsWrap = document.createElement('div');
-            skillsWrap.className = 'flex flex-wrap gap-1.5';
-            snap.skills.forEach(s => {
-                const chip = document.createElement('span');
-                chip.className = 'bg-blue-50 text-[#1D46A4] text-[10px] font-semibold px-2.5 py-1 rounded-full';
-                chip.textContent = s.name;
-                skillsWrap.appendChild(chip);
-            });
-            wrap.appendChild(skillsWrap);
+            addSection('Skills').appendChild(el('p', 'text-xs leading-relaxed', snap.skills.map(s => s.name).filter(Boolean).join(', ')));
         }
 
-        if (snap.experiences && snap.experiences.length) {
-            const expTitle = document.createElement('p');
-            expTitle.className = 'text-[10px] font-bold text-gray-400 uppercase mt-2';
-            expTitle.textContent = 'Experience';
-            wrap.appendChild(expTitle);
-            snap.experiences.forEach(e => {
-                const row = document.createElement('div');
-                row.className = 'text-xs border-l-2 border-gray-200 pl-3';
-                row.innerHTML = '<span class="font-bold text-[#0E0F3B]"></span> <span class="text-gray-400"></span><p class="text-gray-500 mt-0.5"></p>';
-                row.querySelector('.font-bold').textContent = e.job_title || '';
-                row.querySelector('.text-gray-400').textContent = e.duration_months ? '(' + e.duration_months + ' mos)' : '';
-                row.querySelector('p').textContent = e.job_description || '';
-                wrap.appendChild(row);
-            });
-        }
+        const experiences = snap.experiences || [];
+        addExperiences('Work Experience', experiences.filter(e => e.type !== 'project'));
+        addExperiences('Projects', experiences.filter(e => e.type === 'project'));
 
         if (snap.certifications && snap.certifications.length) {
-            const certTitle = document.createElement('p');
-            certTitle.className = 'text-[10px] font-bold text-gray-400 uppercase mt-2';
-            certTitle.textContent = 'Certifications';
-            wrap.appendChild(certTitle);
+            const ul = el('ul', 'text-xs leading-relaxed space-y-0.5');
             snap.certifications.forEach(c => {
-                const row = document.createElement('p');
-                row.className = 'text-xs text-gray-600';
-                row.textContent = c.certification_name + (c.certification_from ? ' — ' + c.certification_from : '');
-                wrap.appendChild(row);
+                const li = el('li');
+                li.appendChild(el('span', 'font-semibold', c.certification_name || ''));
+                const type = certTypeLabels[c.certification_type] || '';
+                const date = formatMonthYear(c.certification_date);
+                li.appendChild(document.createTextNode(
+                    (c.certification_from ? ' — ' + c.certification_from : '') + (type ? ' (' + type + ')' : '') + (date ? ', ' + date : '')
+                ));
+                ul.appendChild(li);
             });
+            addSection('Certifications & Trainings').appendChild(ul);
         }
 
         if (!wrap.children.length) {

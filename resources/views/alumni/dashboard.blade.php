@@ -150,7 +150,7 @@
 
                         <div class="text-left w-full max-w-[210px] text-[11px] space-y-1.5">
                             <p><span class="font-bold">DATE:</span> {{ optional($yearbookRecord?->distribution_scheduled_at)->format('M d, Y') ?? 'TBA' }}</p>
-                            <p><span class="font-bold">SCHEDULE:</span> {{ optional($yearbookRecord?->distribution_scheduled_at)->format('h:i A') ?? 'TBA' }}</p>
+                            <p><span class="font-bold">SCHEDULE:</span> {{ $yearbookRecord?->timeRangeLabel() ?? 'TBA' }}</p>
                             <p><span class="font-bold">LOCATION:</span> {{ $yearbookRecord ? $yearbookRecord->locationLabel() : 'TBA' }}</p>
                         </div>
                     </div>
@@ -271,7 +271,7 @@
                         </div>
                         <div>
                             <p class="text-xs font-bold text-[#C73D1A] uppercase tracking-wide mb-1">Schedule</p>
-                            <p class="text-[#0E0F3B] font-semibold">{{ optional($yearbookRecord->distribution_scheduled_at)->format('h:i A') ?? 'TBA' }}</p>
+                            <p class="text-[#0E0F3B] font-semibold">{{ $yearbookRecord->timeRangeLabel() ?? 'TBA' }}</p>
                         </div>
                         <div class="sm:col-span-2">
                             <p class="text-xs font-bold text-[#C73D1A] uppercase tracking-wide mb-1">Location</p>

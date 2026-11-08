@@ -909,6 +909,7 @@ class RealisticSeeder extends Seeder
                 $books[] = [
                     'alumnus_id' => $aid, 'distribution_status' => $onHand ? 'on_hand' : 'pending',
                     'distribution_scheduled_at' => $onHand ? $this->ts($a['batch']->copy()->addMonths(mt_rand(4, 7))->setTime(9, 0)) : null,
+                    'distribution_end_time' => $onHand ? '17:00:00' : null,
                     'distribution_building' => 'Student Building', 'distribution_room_floor' => 'Office of Student Affairs, 2nd Floor',
                     'claiming_status' => $a['i'] === 1 ? 'claimed' : $claiming,
                     'status_updated_at' => $this->ts($updated), 'updated_by' => $staffIds[$rr++ % count($staffIds)],
@@ -955,7 +956,8 @@ class RealisticSeeder extends Seeder
         $recentForNotify = [];
         foreach ($notices as $n => [$cat, $title, $at, $location, $html, $recipient, $speaker, $topic]) {
             $createdAt = $cat === 'announcement' ? $at->copy() : $this->minC($this->now->copy()->subHours(3), $at->copy()->subDays(mt_rand(14, 45)));
-            $thumb = $thumbs[$cat] && $this->chance(85) ? $this->storeImage($this->pick($thumbs[$cat]), 'noticeThumbnails', 'seed-' . Str::slug($title) . '.png') : null;
+            // Announcements always use the built-in default cover (Notice::DEFAULT_THUMBNAILS).
+            $thumb = $cat !== 'announcement' && $thumbs[$cat] && $this->chance(85) ?$this->storeImage($this->pick($thumbs[$cat]), 'noticeThumbnails', 'seed-' . Str::slug($title) . '.png') : null;
             $nid = DB::table('notices')->insertGetId([
                 'category' => $cat, 'title' => $title, 'thumbnail' => $thumb,
                 // Announcements keep their posting date here too (the list sorts by it) — same as NoticeController::preparedData().

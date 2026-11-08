@@ -151,6 +151,9 @@ class ResumeTextParser
 
     private function extractSkills(array $lines): array
     {
+        // Drop a leading "Category:" label — our own export lists skills as
+        // "Technical: PHP, Laravel" lines (see resume-pdf.blade.php).
+        $lines = array_map(fn ($l) => preg_replace('/^[^:,]{2,30}:\s*/u', '', $l), $lines);
         $joined = implode(', ', array_filter($lines, fn ($l) => $l !== ''));
         $tokens = preg_split('/[,•|\/;]|\s{2,}/u', $joined) ?: [];
 
@@ -179,26 +182,55 @@ class ResumeTextParser
                 continue;
             }
 
-            // A title and its date range are usually laid out side by side
-            // (ours included — see resume-pdf.blade.php's ".row"), and PDF
-            // text extraction often runs same-line content together with no
+            // Many resumes put the date range on the title line, and PDF text
+            // extraction often runs same-line content together with no
             // separator, e.g. "Junior Developer 6 mos". Strip that off the
             // title before it's mistaken for part of the job title.
             [$title, $titleDuration] = $this->stripTrailingDuration($titleLine);
 
-            $description = trim(implode(' ', array_slice($block, 1)));
+            // Our own export puts "Industry | Jan 2022 – Present (2 yrs)" on
+            // the line under the title (see resume-pdf.blade.php) — read the
+            // duration from it and keep it out of the description.
+            $body = array_slice($block, 1);
+            $metaDuration = 0;
+            if (isset($body[0]) && $this->isDateMetaLine($body[0])) {
+                $metaDuration = $this->parseDurationText(array_shift($body));
+            }
+
+            $description = trim(implode(' ', $body));
             $blockText = implode(' ', $block);
 
             $results[] = [
                 'type' => $type,
                 'job_title' => mb_substr($title, 0, 150),
                 'job_description' => $description !== '' ? mb_substr($description, 0, 2000) : null,
-                'duration_months' => $titleDuration ?: $this->extractDurationMonths($blockText),
+                'duration_months' => $titleDuration ?: ($metaDuration ?: $this->extractDurationMonths($blockText)),
                 'industry_id' => $type === 'work' ? $this->guessIndustryId($blockText) : null,
             ];
         }
 
         return $results;
+    }
+
+    /** A line holding a date range ("Jan 2022 – Present") or a duration ("2 yrs 3 mos"). */
+    private function isDateMetaLine(string $line): bool
+    {
+        return (bool) preg_match(
+            '/\b(?:19|20)\d{2}\s*[-–—]\s*(?:[a-z]{3,9}\.?\s+)?(?:(?:19|20)\d{2}|present|current|now)\b|\(\d+\s*(?:yrs?|mos?)\b|^\d+\s*(?:yrs?|mos?)\b/iu',
+            $line
+        );
+    }
+
+    /** "… (2 yrs 3 mos)" → 27; falls back to a year range when there's no explicit duration. */
+    private function parseDurationText(string $line): int
+    {
+        if (preg_match('/(\d+)\s*yrs?(?:\s*(\d+)\s*mos?)?|(\d+)\s*mos?/i', $line, $m)) {
+            $months = !empty($m[1]) ? (int) $m[1] * 12 + (int) ($m[2] ?? 0) : (int) ($m[3] ?? 0);
+
+            return min(600, $months);
+        }
+
+        return $this->extractDurationMonths($line);
     }
 
     /**
@@ -235,13 +267,27 @@ class ResumeTextParser
     {
         $results = [];
 
+        $typeMarker = '/\((Certification|Seminar|Training)\)/i';
+
+        // Our own export lists one entry per line with no blank line between
+        // them ("Name — Issuer (Training), Jun 2023") — when every line in a
+        // block looks like that, each line is its own entry.
+        $blocks = [];
         foreach ($this->splitIntoBlocks($lines) as $block) {
+            $allInline = count($block) > 1
+                && count(array_filter($block, fn ($l) => preg_match($typeMarker, $l))) === count($block);
+            array_push($blocks, ...($allInline ? array_map(fn ($l) => [$l], $block) : [$block]));
+        }
+
+        foreach ($blocks as $block) {
             $nameLine = $block[0] ?? null;
             if (!$nameLine) {
                 continue;
             }
 
-            // Strip a trailing "(Type)  <date>" the PDF/on-screen view renders
+            $entryType = preg_match($typeMarker, $nameLine, $typeMatch) ? strtolower($typeMatch[1]) : $certType;
+
+            // Strip a trailing "(Type), <date>" the PDF/on-screen view renders
             // inline (see resume-pdf.blade.php), then split "Name — Issuer"
             // if that's on the same line — both are things our own export
             // can hand right back to us on re-import.
@@ -260,10 +306,10 @@ class ResumeTextParser
             }
 
             $results[] = [
-                'certification_type' => $certType,
+                'certification_type' => $entryType,
                 'certification_name' => mb_substr(trim($name), 0, 150),
                 'certification_from' => $from ? mb_substr(trim($from), 0, 150) : null,
-                'certification_date' => $this->extractYearAsDate(implode(' ', $block)),
+                'certification_date' => $this->extractMonthYearAsDate(implode(' ', $block)),
             ];
         }
 
@@ -292,6 +338,18 @@ class ResumeTextParser
         }
 
         return max(0, min(600, ($endYear - $startYear) * 12));
+    }
+
+    /** "Jun 2023" → 2023-06-01; a bare year → Jan 1 of that year. */
+    private function extractMonthYearAsDate(string $text): ?string
+    {
+        if (preg_match('/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+((?:19|20)\d{2})\b/i', $text, $m)) {
+            $month = array_search(ucfirst(strtolower($m[1])), ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], true);
+
+            return sprintf('%s-%02d-01', $m[2], $month);
+        }
+
+        return $this->extractYearAsDate($text);
     }
 
     private function extractYearAsDate(string $text): ?string

@@ -20,6 +20,15 @@
     $companyInitials = mb_strtoupper(count($companyWords) > 1
         ? mb_substr($companyWords[0], 0, 1) . mb_substr($companyWords[1], 0, 1)
         : mb_substr($companyWords[0] ?? 'PLV', 0, 2));
+    // Alumni: their application status for this job, in the same pill colours as the job details
+    // (green hired, red declined, yellow pending/shortlisted). A job they haven't applied to yet
+    // still gets a hidden pill, so applying can show "PENDING" without a reload (markJobApplied()).
+    $applicationStatus = $hasApplied ? $appliedJobs[$job->job_posting_id]->pivot->application_status : null;
+    $statusPillColor = match ($applicationStatus) {
+        'hired' => 'bg-green-100 text-green-700',
+        'declined' => 'bg-red-100 text-red-700',
+        default => 'bg-yellow-100 text-yellow-700',
+    };
 @endphp
 
 {{-- Desktop (>= 1024px): a compact card — company logo, job title, company, location,
@@ -57,6 +66,12 @@
                 <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ED7A07] bg-[#ED7A07]/5 px-2.5 py-[3px] text-[10px] font-bold uppercase tracking-wider text-[#C73D1A]" title="Work type">
                     <i class="fa-solid fa-briefcase text-[9px]"></i><span class="sr-only">Work type:</span> {{ $job->job_posting_employment_type }}
                 </span>
+                @if ($isAlumni)
+                <span data-app-status-pill="{{ $job->job_posting_id }}" title="Application status"
+                    class="{{ $hasApplied ? '' : 'hidden ' }}inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider {{ $statusPillColor }}">
+                    <span class="sr-only">Application status:</span><span data-app-status-text>{{ strtoupper($applicationStatus ?? 'pending') }}</span>
+                </span>
+                @endif
             </div>
         </div>
 
@@ -310,13 +325,10 @@
                 </div>
                 @endif
 
-                @if ($hasApplied)
-                @php $status = $appliedJobs[$job->job_posting_id]->pivot->application_status; @endphp
-                <span class="inline-block text-xs font-bold px-3 py-1 rounded-full
-                    {{ $status === 'hired' ? 'bg-green-100 text-green-700' : '' }}
-                    {{ $status === 'declined' ? 'bg-red-100 text-red-700' : '' }}
-                    {{ $status === 'pending' ? 'bg-yellow-100 text-yellow-700' : '' }}">
-                    {{ strtoupper($status) }}
+                @if ($isAlumni)
+                <span data-app-status-pill="{{ $job->job_posting_id }}" title="Application status"
+                    class="{{ $hasApplied ? '' : 'hidden ' }}inline-block text-xs font-bold px-3 py-1 rounded-full {{ $statusPillColor }}">
+                    <span data-app-status-text>{{ strtoupper($applicationStatus ?? 'pending') }}</span>
                 </span>
                 @endif
             </div>

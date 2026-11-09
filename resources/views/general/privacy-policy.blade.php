@@ -49,7 +49,10 @@
             <h3 class="text-4xl md:text-5xl font-bold mb-2">
                 <span class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">PLV-AlumNet Privacy Policy</span>
             </h3>
-            <p class="text-xs font-bold text-[#0E0F3B] tracking-widest uppercase mb-8">Effective Date</p>
+            <p class="text-xs font-bold text-[#0E0F3B] tracking-widest uppercase mb-1">Effective Date</p>
+            <p class="text-lg md:text-xl font-bold mb-8">
+                <time datetime="2026-11" class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">November 2026</time>
+            </p>
 
             <div class="max-w-3xl mx-auto space-y-6 text-black text-sm md:text-base leading-relaxed font-medium">
                 <p>
@@ -87,7 +90,8 @@
                         We use essential cookies to manage basic site functionality and performance tracking. By using the public site, you consent to the use of these cookies.
                     </p>
                     <p class="text-gray-500 text-xs italic mt-auto">
-                        For questions about this policy, please contact us at
+                        For questions about this policy, please contact us at <br>
+                        <a href="mailto:plvalumnet@gmail.com" class="text-indigo-900 font-bold not-italic underline underline-offset-4">plvalumnet@gmail.com</a>.
                     </p>
                 </div>
             </div>

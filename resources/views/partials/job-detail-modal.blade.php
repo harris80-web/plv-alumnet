@@ -549,6 +549,13 @@
             el.dataset.hasApplied = '1';
             if (!el.dataset.applicationStatus) el.dataset.applicationStatus = 'pending';
         });
+        // The card's own status pill (job board list + phone card): a new application is PENDING.
+        document.querySelectorAll('[data-app-status-pill="' + jobId + '"]').forEach(function (pill) {
+            if (!pill.classList.contains('hidden')) return;
+            const text = pill.querySelector('[data-app-status-text]');
+            if (text) text.textContent = 'PENDING';
+            pill.classList.remove('hidden');
+        });
         refreshOpenJobDetails(jobId);
     }
 

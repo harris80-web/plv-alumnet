@@ -49,7 +49,10 @@
             <h2 class="text-4xl font-bold mb-2">
                 <span class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">PLV-AlumNet Terms of Use</span>
             </h2>
-            <p class="text-xs font-bold text-[#0E0F3B] tracking-widest uppercase mb-8">EFFECTIVE DATE</p>
+            <p class="text-xs font-bold text-[#0E0F3B] tracking-widest uppercase mb-1">EFFECTIVE DATE</p>
+            <p class="text-lg md:text-xl font-bold mb-8">
+                <time datetime="2026-11" class="bg-gradient-to-r from-[#0E0F3B] via-[#C73D1A] to-[#ED7A07] bg-clip-text text-transparent">November 2026</time>
+            </p>
 
             <p class="max-w-2xl mx-auto text-black text-sm leading-relaxed mb-12 font-medium">
                 By accessing and using the public areas of the PLV AlumNet website, you agree to comply with these <strong class="text-[#C73D1A]">Terms of Use</strong>.
@@ -129,7 +132,7 @@
                                 </li>
                                 <li class="flex items-start">
                                     <span class="mr-2">•</span>
-                                    <span><strong>Contact:</strong> For questions regarding these terms, please contact us at <a href="mailto:alumnioffice@plv.edu.ph" class="text-indigo-900 hover:underline">alumnioffice@plv.edu.ph</a>.</span>
+                                    <span><strong>Contact:</strong> For questions regarding these terms, please contact us at <a href="mailto:plvalumnet@gmail.com" class="text-indigo-900 hover:underline">plvalumnet@gmail.com</a>.</span>
                                 </li>
                             </ul>
                         </div>

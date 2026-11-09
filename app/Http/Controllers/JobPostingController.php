@@ -93,6 +93,9 @@ class JobPostingController extends Controller
     /** Blended-score floor (see JobMatch::blendedScore()) above which a job counts as "recommended" on the board. */
     private const RECOMMENDED_SCORE_THRESHOLD = 50;
 
+    /** My Applications' status filter: every application status, in the order an application moves through them. */
+    private const APPLICATION_STATUS_LABELS = ['pending' => 'Pending', 'shortlisted' => 'Shortlisted', 'hired' => 'Hired', 'declined' => 'Declined'];
+
     public function showJobBoard(Request $request)
     {
         $user = Auth::user();
@@ -140,8 +143,15 @@ class JobPostingController extends Controller
         $user = Auth::user();
         abort_unless($user && $user->user_role === 'alumni', 403);
 
+        // Status filter (checkboxes): only the known statuses count; none ticked shows every application.
+        $statuses = array_values(array_intersect(
+            array_keys(self::APPLICATION_STATUS_LABELS),
+            array_map('strval', array_filter((array) $request->input('status'), 'is_scalar'))
+        ));
+
         $query = JobPosting::with(['skills', 'programs', 'industry', 'user', 'employer.reviews', 'employer.votes', 'employer.user'])
-            ->whereHas('applications', fn ($q) => $q->where('alumnus_id', $user->user_id))
+            ->whereHas('applications', fn ($q) => $q->where('alumnus_id', $user->user_id)
+                ->when($statuses, fn ($q) => $q->whereIn('application_status', $statuses)))
             ->addSelect(['applied_at' => JobApplication::selectRaw('application_date')
                 ->whereColumn('job_applications.job_id', 'job_postings.job_posting_id')
                 ->where('job_applications.alumnus_id', $user->user_id)
@@ -255,15 +265,31 @@ class JobPostingController extends Controller
             $bookmarkedIds = $user->alumnus->bookmarkedJobs->pluck('job_posting_id')->toArray();
         }
 
-        $filters = $request->only(['search', 'industry', 'job_type', 'job_setup', 'location', 'date_posted']);
+        $filterKeys = ['search', 'industry', 'job_type', 'job_setup', 'location', 'date_posted'];
+        if ($activeTab === 'applications') {
+            $filterKeys[] = 'status';
+        }
+        $filters = $request->only($filterKeys);
         $recommendedThreshold = self::RECOMMENDED_SCORE_THRESHOLD;
         // Panel starts expanded whenever an advanced filter (anything but
-        // the always-visible search box) is already applied, so a filtered
+        // the always-visible search box and status filter) is already applied, so a filtered
         // link/bookmark never lands on a page that hides its own filters.
-        $advancedFilters = collect($filters)->except('search')->all();
+        $advancedFilters = collect($filters)->except(['search', 'status'])->all();
         $moreFiltersActive = (bool) array_filter($advancedFilters);
 
-        return compact('jobPostings', 'programs', 'industries', 'user', 'appliedJobs', 'bookmarkedIds', 'activeTab', 'filters', 'recommendedThreshold', 'moreFiltersActive');
+        // My Applications: status checkboxes, each with how many of this alumnus's applications have it.
+        $statusOptions = [];
+        if ($activeTab === 'applications' && $user?->alumnus) {
+            $statusCounts = JobApplication::where('alumnus_id', $user->user_id)
+                ->selectRaw('application_status, COUNT(*) AS total')
+                ->groupBy('application_status')
+                ->pluck('total', 'application_status');
+            foreach (self::APPLICATION_STATUS_LABELS as $value => $label) {
+                $statusOptions[$value] = $label . ' (' . ($statusCounts[$value] ?? 0) . ')';
+            }
+        }
+
+        return compact('jobPostings', 'programs', 'industries', 'user', 'appliedJobs', 'bookmarkedIds', 'activeTab', 'filters', 'recommendedThreshold', 'moreFiltersActive', 'statusOptions');
     }
 
     public function addJobPost(Request $request, $id)

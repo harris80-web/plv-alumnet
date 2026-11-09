@@ -24,6 +24,9 @@
         background-position: center;
     }
 
+    /* My Applications' status filter sits beside the search box: same height as it. */
+    .jb-status-filter .multiselect-trigger-btn { min-height: 42px; font-size: 0.8125rem; }
+
     html::-webkit-scrollbar,
     body::-webkit-scrollbar {
         display: none;
@@ -187,6 +190,20 @@
                             class="w-full pl-11 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#C73D1A]">
                     </div>
 
+                    @if ($activeTab === 'applications' && !empty($statusOptions))
+                    {{-- My Applications: filter by application status (checkboxes; applied with Apply Filters like the others). --}}
+                    <div class="jb-status-filter md:w-64 shrink-0">
+                        @include('partials.multiselect-filter', [
+                            'name' => 'status',
+                            'icon' => 'fas fa-clipboard-check',
+                            'placeholder' => 'Application Status',
+                            'labelPrefix' => 'Status',
+                            'options' => $statusOptions,
+                            'selected' => $filters['status'] ?? [],
+                        ])
+                    </div>
+                    @endif
+
                     <button type="button" onclick="toggleMoreFilters()"
                         class="more-filters-toggle flex items-center justify-center gap-2 px-6 py-2 rounded-full border font-bold text-xs uppercase tracking-wide shrink-0 transition-colors {{ $moreFiltersActive ? 'bg-[#0E0F3B] text-white border-[#0E0F3B]' : 'border-gray-300 text-gray-600 hover:border-[#C73D1A] hover:text-[#C73D1A]' }}">
                         <i class="fas fa-sliders"></i>
@@ -289,7 +306,7 @@
                 <p class="font-semibold">You haven't bookmarked any jobs yet.</p>
                 @elseif($activeTab === 'applications')
                 <i class="fas fa-file-circle-check text-4xl mb-3 text-gray-300"></i>
-                <p class="font-semibold">You haven't applied to any jobs yet.</p>
+                <p class="font-semibold">{{ array_filter($filters) ? 'No applications match your filters.' : "You haven't applied to any jobs yet." }}</p>
                 @else
                 <i class="fas fa-briefcase text-4xl mb-3 text-gray-300"></i>
                 <p class="font-semibold">No job postings match your search.</p>

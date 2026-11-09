@@ -17,7 +17,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            background-image: url("{{ asset('assets/loginBackground.svg') }}");
+            background-image: url("{{ asset('assets/loginBackground.svg') . '?v=' . @filemtime(public_path('assets/loginBackground.svg')) }}");
             background-size: cover;
             background-position: center;
 
@@ -34,7 +34,7 @@
     <div id="toastContainer" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 w-[90%] max-w-sm pointer-events-none"></div>
 
     <div class="absolute inset-0 z-0">
-        <img src="{{ asset('assets/loginBackground.svg') }}" alt="PLV Building" class="w-full h-full object-cover">
+        <img src="{{ asset('assets/loginBackground.svg') . '?v=' . @filemtime(public_path('assets/loginBackground.svg')) }}" alt="PLV Building" class="w-full h-full object-cover">
     </div>
 
     <div class="relative z-10 container mx-auto px-6 lg:px-5 flex flex-col lg:flex-row items-center justify-evenly">

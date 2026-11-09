@@ -555,6 +555,7 @@
     </script>
 
 
+    {{-- "Your Journey has just begun" section — hidden from the employer dashboard. Remove this comment wrapper to bring it back.
     <section class="py-16 px-6 max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center justify-items-center">
         <div class="rounded-lg overflow-hidden shadow-xl w-full">
             <img src="{{ asset('assets/Landing Page/graduationImage.png') }}" alt="Graduation" class="w-full h-full object-cover">
@@ -572,6 +573,7 @@
             </button>
         </div>
     </section>
+    --}}
 
     <section class="EmployerFeatures orange-gradient py-16 px-6 text-white text-center">
         <div class="max-w-4xl mx-auto">

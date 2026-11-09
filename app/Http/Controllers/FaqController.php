@@ -106,21 +106,22 @@ class FaqController extends Controller
     /** Public, not-logged-in FAQ page — only FAQs meant for everyone. */
     public function generalFaqs()
     {
-        $faqs = Faq::visibleToGeneral()->orderByDesc('created_at')->get();
+        $faqs = Faq::visibleToGeneral()->orderByDesc('created_at')->orderBy('faq_id')->get();
 
         return view('general.faqs', compact('faqs'));
     }
 
+    // Newest first; FAQs added together (same timestamp) keep the order they were added in.
     public function alumniFaqs()
     {
-        $faqs = Faq::visibleToAlumni()->orderByDesc('created_at')->get();
+        $faqs = Faq::visibleToAlumni()->orderByDesc('created_at')->orderBy('faq_id')->get();
 
         return view('alumni.faqs', compact('faqs'));
     }
 
     public function employerFaqs()
     {
-        $faqs = Faq::visibleToEmployer()->orderByDesc('created_at')->get();
+        $faqs = Faq::visibleToEmployer()->orderByDesc('created_at')->orderBy('faq_id')->get();
 
         return view('employer.faqs', compact('faqs'));
     }

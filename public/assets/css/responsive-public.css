@@ -844,13 +844,21 @@ html.rp-scope section.HeroSection > .rp-hero-text {
    `background-attachment: fixed`. Phones/tablets render that badly (iOS ignores it, Android
    is janky, the image only paints inside the first screen-height) → scroll on compact screens.
    The About page's four sections (PLVSection, AssociatedPartners, AlumniAssociation, SystemCore,
-   shared by general/alumni/employer About) are explicitly EXEMPTED per request — kept `fixed`
-   at every width to match desktop. Known caveat: iOS Safari still ignores `fixed` regardless
-   of this CSS (a platform limitation, not something any stylesheet can override) and scrolls
-   those backgrounds normally there. */
+   shared by general/alumni/employer About) keep `fixed` on desktop (mouse). On phones/tablets
+   and any touch screen they scroll too, so the photos stay sharp: a `fixed` + `cover` photo
+   is sized to the whole (tall) screen — on a phone that blew the 2560×1440 photos up ~1.7×
+   (blurry), and iOS/iPadOS stretches it over the entire page. Covering just the section
+   draws them at full sharpness (≥1 photo pixel per screen pixel). */
 @media (max-width: 1023px) {
     html.rp-scope :is(.AlumniServices, .AlumniTestimonial, .Experience, .EmployerFeatures) {
         background-attachment: scroll;
+    }
+}
+@media (max-width: 1023px), (hover: none) and (pointer: coarse) {
+    html.rp-scope :is(.PLVSection, .AssociatedPartners, .AlumniAssociation, .SystemCore) {
+        background-attachment: scroll;
+        background-size: cover;
+        background-position: center;
     }
 }
 
@@ -1732,15 +1740,11 @@ html.rp-scope .rp-chart {
     }
 }
 
-/* Floating assistant (partials/chatbot-widget.blade.php — alumni + employer): the panel stays inside the
-   visible screen (dvh = mobile URL-bar aware) and its controls are comfortable to tap. Its own sizing
-   classes (w-[23rem] max-w-[calc(100vw-2rem)]) already fit phones; open/close is unchanged. */
+/* ALMA chat widget (partials/chatbot-widget.blade.php — alumni + employer): its main buttons are
+   comfortable to tap. The widget sizes and places its own panel for every screen (phones, short
+   landscape screens, tablets, large monitors); the round close button has its own 44px tap area. */
 @media (max-width: 1023px) {
-    html.rp-scope #chatWidgetPanel {
-        max-height: calc(100vh - 8rem);
-        max-height: calc(100dvh - 8rem);
-    }
-    html.rp-scope #chatWidgetPanel button {
+    html.rp-scope #chatWidgetPanel button:is(.alma-send, .alma-new-chat) {
         display: inline-flex;
         align-items: center;
         justify-content: center;

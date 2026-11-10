@@ -380,7 +380,7 @@ class SeedCatalog
         ['Can I change the email address of my account?', 'You can update your email from your profile page by clicking Edit Profile.', true, 'Hello! I have updated your email for you. Please use your new email the next time you log in.'],
         ['I forgot my password', 'Click "Forgot Password" on the login page and follow the link sent to your email.', false, null],
         ['How can I make my profile appear in more job matches?', 'Complete your resume in the Resume Builder — add a summary, skills, experiences and certifications. Profiles with a complete resume get better matches.', false, null],
-        ['Is the alumni ID free?', 'I’m not sure about that. Let me connect you with a staff member.', true, 'Hi! The first Alumni ID is free for all PLV graduates. Replacement IDs have a minimal fee payable at the Cashier.'],
+        ['Is the alumni ID free?', 'I’m not sure about that. Let me connect you with a staff member.', true, 'Hi! The Alumni ID is not free. It has a fee of ₱1,200, and replacement IDs cost the same ₱1,200. You can pay at the Cashier.'],
         ['Paano po mag-apply sa job posting?', 'Pumunta sa Job Board, piliin ang job, at i-click ang "Apply". Pipili ka kung anong resume ang gagamitin bago i-submit.', false, null],
         ['My yearbook status still says pending even though I already paid.', 'Let me connect you with a staff member who can check your record.', true, 'Hi! Your payment has been verified and your yearbook status is now updated. Thank you for your patience!'],
     ];

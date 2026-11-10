@@ -243,7 +243,8 @@
             </button>
         </div>
 
-        <div id="eventsCarouselDots" class="flex justify-center gap-2 mt-6"></div>
+        {{-- Phones: < dots > centred under the cards, like the Alumni Testimonials. --}}
+        @include('partials.carousel-mobile-nav', ['prev' => 'eventsCarouselPrev', 'next' => 'eventsCarouselNext', 'dotsId' => 'eventsCarouselDots', 'label' => 'events'])
         @endif
     </section>
 

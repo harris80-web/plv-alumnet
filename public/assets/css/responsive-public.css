@@ -1024,6 +1024,15 @@ html.rp-scope [id$="CarouselNext"] {
     display: flex;
     touch-action: manipulation;
 }
+/* Phones (< 640px): no side arrows (they sat on top of the card images). The carousel shows
+   < dots > centred under the cards instead, like the Alumni Testimonials
+   (partials/carousel-mobile-nav.blade.php, whose buttons drive these arrows). */
+@media (max-width: 639px) {
+    html.rp-scope [id$="CarouselPrev"],
+    html.rp-scope [id$="CarouselNext"] {
+        display: none;
+    }
+}
 
 /* --- Tablet/mobile ≤1023px: keep the arrows clear of the card edge on narrow screens --- */
 @media (max-width: 1023px) {

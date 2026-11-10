@@ -455,7 +455,8 @@
             </button>
         </div>
 
-        <div id="jobMatchesCarouselDots" class="flex justify-center gap-2 mt-6"></div>
+        {{-- Phones: < dots > centred under the cards, like the Alumni Testimonials. --}}
+        @include('partials.carousel-mobile-nav', ['prev' => 'jobMatchesCarouselPrev', 'next' => 'jobMatchesCarouselNext', 'dotsId' => 'jobMatchesCarouselDots', 'label' => 'job matches'])
         @endif
     </section>
 
@@ -654,7 +655,8 @@
             </button>
         </div>
 
-        <div id="alumniEventsCarouselDots" class="flex justify-center gap-2 mt-6"></div>
+        {{-- Phones: < dots > centred under the cards, like the Alumni Testimonials. --}}
+        @include('partials.carousel-mobile-nav', ['prev' => 'alumniEventsCarouselPrev', 'next' => 'alumniEventsCarouselNext', 'dotsId' => 'alumniEventsCarouselDots', 'label' => 'events'])
         @endif
     </section>
 

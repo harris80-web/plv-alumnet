@@ -101,7 +101,9 @@
     </footer>
 
     <script>
-        lucide.createIcons();
+        // Guarded: some public pages (e.g. the home page) don't load the lucide icons script, and an
+        // error here stopped the footer's current-page highlight below from running.
+        if (window.lucide) lucide.createIcons();
 
         const navLinks = document.querySelectorAll('#footer-nav a');
         const currentUrl = window.location.pathname;

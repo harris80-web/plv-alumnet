@@ -393,6 +393,11 @@
 
                 </div>
             </div>
+
+            @if ($carouselPostings->count() > 1)
+            {{-- Dots under the cards (like the general/alumni carousels); on phones < > either side of them, like the Alumni Testimonials. --}}
+            @include('partials.carousel-mobile-nav', ['prev' => 'prevBtn', 'next' => 'nextBtn', 'dotsId' => 'jobPostingsCarouselDots', 'label' => 'job postings'])
+            @endif
         </div>
     </section>
 
@@ -424,13 +429,47 @@
                 return firstCard.getBoundingClientRect().width + gap;
             }
 
-            // Arrows only when there's something to scroll to; dimmed at either end.
+            // Dots, same as the general/alumni carousels (partials/carousel-init): one per three cards
+            // (the desktop column count), the current one in #C73D1A; a dot jumps to its first card.
+            const PER_PAGE = 3;
+            const cards = Array.from(slider.querySelectorAll('[data-job-card]'));
+            const dotsWrap = document.getElementById('jobPostingsCarouselDots');
+            const pageCount = Math.max(1, Math.ceil(cards.length / PER_PAGE));
+            if (dotsWrap) {
+                dotsWrap.innerHTML = '';
+                for (let i = 0; i < pageCount; i++) {
+                    const dot = document.createElement('button');
+                    dot.type = 'button';
+                    dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+                    dot.className = 'w-2.5 h-2.5 rounded-full transition-colors bg-slate-300';
+                    dot.addEventListener('click', () => {
+                        const first = cards[i * PER_PAGE];
+                        if (first) slider.scrollTo({ left: first.offsetLeft - cards[0].offsetLeft, behavior: 'smooth' });
+                    });
+                    dotsWrap.appendChild(dot);
+                }
+            }
+
+            function updateDots(max) {
+                if (!dotsWrap) return;
+                const index = Math.round(slider.scrollLeft / cardScrollAmount());
+                // at the very end the last dot is current, even when the last group can't reach the left edge
+                const page = slider.scrollLeft >= max - 2 ? pageCount - 1 : Math.min(pageCount - 1, Math.floor(index / PER_PAGE));
+                Array.from(dotsWrap.children).forEach((dot, i) => {
+                    dot.classList.toggle('bg-[#C73D1A]', i === page);
+                    dot.classList.toggle('bg-slate-300', i !== page);
+                });
+            }
+
+            // Arrows and dots only when there's something to scroll to; arrows dimmed at either end.
             function updateArrows() {
                 const max = slider.scrollWidth - slider.clientWidth;
                 const scrollable = max > 2;
                 prevBtn.style.visibility = nextBtn.style.visibility = scrollable ? '' : 'hidden';
                 prevBtn.disabled = !scrollable || slider.scrollLeft <= 2;
                 nextBtn.disabled = !scrollable || slider.scrollLeft >= max - 2;
+                dotsWrap?.classList.toggle('hidden', !scrollable || pageCount < 2);
+                updateDots(max);
             }
 
             prevBtn.addEventListener('click', () => slider.scrollBy({ left: -cardScrollAmount(), behavior: 'smooth' }));

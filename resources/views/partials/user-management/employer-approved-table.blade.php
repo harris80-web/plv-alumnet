@@ -89,12 +89,23 @@
                                 View Employer
                             </button>
                             <hr class="my-1 border-slate-100">
+                            @if ($employer->user->user_active)
                             <button
                                 onclick="openEmployerDeactivateModal('{{ $employer->user->user_first_name }}', '{{ $employer->user->user_last_name }}', {{ $employer->user_id }})"
                                 class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                 <i data-lucide="user-minus" class="w-4 h-4 mr-3"></i>
                                 Deactivate Account
                             </button>
+                            @else
+                            {{-- Reuses the shared activate modal (the alumni and admin tabs
+                                 open the same one); it keys off activateForm_<user id>. --}}
+                            <button
+                                onclick="openActivateModal('{{ $employer->user->user_first_name }}', '{{ $employer->user->user_last_name }}', {{ $employer->user_id }})"
+                                class="flex items-center w-full px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 transition-colors">
+                                <i data-lucide="user-plus" class="w-4 h-4 mr-3"></i>
+                                Activate Account
+                            </button>
+                            @endif
                         </div>
 
                     </div>
@@ -106,6 +117,13 @@
                             @method('PUT')
                             <input type="hidden" name="deactivate-reason"
                                 id="employerDeactivateReason_{{ $employer->user_id }}">
+                        </form>
+
+                        <form id="activateForm_{{ $employer->user_id }}"
+                            action="{{ route('employers.activateEmployer', $employer->user_id) }}"
+                            method="POST">
+                            @csrf
+                            @method('PUT')
                         </form>
                     </div>
                 </div>

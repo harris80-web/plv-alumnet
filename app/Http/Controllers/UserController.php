@@ -251,11 +251,14 @@ class UserController extends Controller
             'user_password' => 'Password',
         ]);
 
-        // An employer whose registration is still pending (or whose account
-        // was deactivated) fails here exactly like a wrong password, so the
+        // A deactivated account can't sign in, whatever its role — this used
+        // to check user_active for employers only, so a deactivated alumnus
+        // or admin kept full access and "Deactivate Account" did nothing but
+        // change a label. Employers additionally need their registration
+        // approved. Both cases fail exactly like a wrong password, so the
         // response gives no hint that the account exists.
-        $mayLogIn = fn (User $user) => $user->user_role !== 'employer'
-            || ($user->user_active && $user->employer?->employer_approved);
+        $mayLogIn = fn (User $user) => $user->user_active
+            && ($user->user_role !== 'employer' || $user->employer?->employer_approved);
 
         if (Auth::attemptWhen(['user_email' => $validated['user_email'], 'password' => $validated['user_password']], $mayLogIn, true)) {
             // Regenerates the session ID (and, as part of that, the CSRF
@@ -374,7 +377,7 @@ class UserController extends Controller
                             ->orWhere('user_email', 'like', "%{$search}%");
                     });
                 }
-                // Clickable "Active"/"Inactive" stat tiles (item — status
+                // Clickable "Active"/"Deactivated" stat tiles (item — status
                 // filters must be server-side, not client-side row-hiding on
                 // an already-paginated page: a matching row on page 3 would
                 // never show up while filtering only page 1's DOM rows).
@@ -386,7 +389,10 @@ class UserController extends Controller
             ->paginate($this->resolvePerPage(10, 'admin_per_page'), ['*'], 'adminPage')
             ->withQueryString();
 
-        $alumni = Alumnus::with('user')
+        // 'program' is eager loaded, not just 'user': the rows render
+        // $alumnus->program->program_name and ->collegeName(), which without
+        // this fired one SELECT per row (15 extra queries on a default page).
+        $alumni = Alumnus::with(['user', 'program'])
             ->when(trim((string) request('alumni_search')), function ($q, $search) {
                 $q->whereHas('user', function ($q2) use ($search) {
                     $q2->where('user_first_name', 'like', "%{$search}%")
@@ -428,7 +434,11 @@ class UserController extends Controller
         $adminStats = [
             'total' => Office::whereHas('user', fn ($q) => $q->where('user_role', 'admin'))->count(),
             'active' => Office::whereHas('user', fn ($q) => $q->where('user_role', 'admin')->where('user_active', true))->count(),
-            'inactive' => Office::whereHas('user', fn ($q) => $q->where('user_role', 'admin')->where('user_active', false))->count(),
+            // Named to match the alumni/employer tabs: an admin that is
+            // switched off is "deactivated", and still counts toward 'total'
+            // above because deactivating only flips user_active (see
+            // OfficeController::deactivateAdmin()).
+            'deactivated' => Office::whereHas('user', fn ($q) => $q->where('user_role', 'admin')->where('user_active', false))->count(),
         ];
         $alumniStats = [
             'total' => Alumnus::count(),
@@ -533,11 +543,20 @@ class UserController extends Controller
     public function approveEmployer($id)
     {
         $this->authorizeStaff();
-        $user = User::findOrFail($id);
+
+        // Resolved through Employer (same as rejectEmployer below) rather
+        // than User: this used to be User::findOrFail($id) followed by a
+        // blind $user->employer->update(), so any non-employer id was a
+        // fatal "call to update() on null". Worse, user_active was flipped
+        // on BEFORE that crash, which silently reactivated a deactivated
+        // account of another role. Resolving the employer first makes a
+        // wrong id a clean 404 and leaves nothing half-applied.
+        $employer = Employer::where('user_id', $id)->firstOrFail();
+        $user = $employer->user;
+        abort_if($user === null, 404);
 
         $user->update(['user_active' => 1]);
-
-        $user->employer->update(['employer_approved' => 1]);
+        $employer->update(['employer_approved' => 1]);
 
         // Approval already happened above — a failed notification email must
         // not undo it or block the response, just get logged.
@@ -1140,7 +1159,11 @@ class UserController extends Controller
             'college' => $colleges, 'year' => $years,
         ];
 
-        $reports = $reportService->buildEmploymentReports($batches, $programIds, $employmentStatuses, $colleges, $years, $hireMonths, $topCompaniesLimit);
+        // Last argument false: the dashboard renders charts and summary
+        // cards, never the per-application "Applications Report" table, so
+        // there's no reason to select and hydrate every application row here.
+        // The placement report page still passes the default (true).
+        $reports = $reportService->buildEmploymentReports($batches, $programIds, $employmentStatuses, $colleges, $years, $hireMonths, $topCompaniesLimit, false);
 
         // Alumni ID & Yearbook Reports widget — unfiltered (no batch/program/
         // college lens on the main dashboard card), built via the same

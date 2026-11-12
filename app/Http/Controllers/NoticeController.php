@@ -33,8 +33,19 @@ class NoticeController extends Controller
     {
         $this->authorizeStaff();
 
+        // The interested-alumni relation is only ever used for two things on
+        // this page: the count (from withCount) and the hover list of names
+        // (Notice::interestedAlumniNames()). Loading it unconstrained
+        // hydrated a full Alumnus AND a full User model for every row in
+        // notice_interests — ~1900 of each — to produce two name strings, and
+        // that hydration, not the 9 queries, was most of this page's time.
+        // The selected columns are the relation keys plus the two names.
         $notices = Notice::withCount('interestedAlumni')
-            ->with(['creator', 'interestedAlumni.user'])
+            ->with([
+                'creator',
+                'interestedAlumni:user_id',
+                'interestedAlumni.user:user_id,user_first_name,user_last_name',
+            ])
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->get();

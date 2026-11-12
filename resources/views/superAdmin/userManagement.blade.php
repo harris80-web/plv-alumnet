@@ -157,17 +157,17 @@ $current_page = 'user_management';
                             <p class="text-xs font-medium text-slate-500 mt-1">Active Admin</p>
                         </div>
 
-                        <!-- Inactive Admins -->
-                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('admin_status') === 'Inactive' ? 'border-[#C73D1A] ring-2 ring-orange-200' : 'border-transparent' }}"
-                            title="Click to {{ request('admin_status') === 'Inactive' ? 'clear this filter' : 'filter by Inactive' }}"
-                            onclick="pvSearchNavigate('admin_status', '{{ request('admin_status') === 'Inactive' ? '' : 'Inactive' }}', 'adminPage')">
+                        <!-- Deactivated Admins -->
+                        <div class="bg-white rounded-lg border shadow-sm px-5 py-4 cursor-pointer transition-all hover:shadow-md {{ request('admin_status') === 'Deactivated' ? 'border-[#C73D1A] ring-2 ring-orange-200' : 'border-transparent' }}"
+                            title="Click to {{ request('admin_status') === 'Deactivated' ? 'clear this filter' : 'filter by Deactivated' }}"
+                            onclick="pvSearchNavigate('admin_status', '{{ request('admin_status') === 'Deactivated' ? '' : 'Deactivated' }}', 'adminPage')">
                             <div class="flex items-center gap-2">
                                 <i data-lucide="user-x" class="w-5 h-5 shrink-0 text-[#C73D1A]"></i>
                                 <p class="text-2xl font-bold text-[#C73D1A]">
-                                {{ $adminStats['inactive'] }}
+                                {{ $adminStats['deactivated'] }}
                             </p>
                             </div>
-                            <p class="text-xs font-medium text-slate-500 mt-1">Inactive Admin</p>
+                            <p class="text-xs font-medium text-slate-500 mt-1">Deactivated Accounts</p>
                         </div>
 
                         <!-- Super Admin -->
@@ -230,6 +230,12 @@ $current_page = 'user_management';
                             </thead>
                             <tbody class="divide-y divide-slate-100 text-center">
                                 @forelse ($admins as $admin)
+                                @php
+                                $adminStatus = $admin->user->user_active ? 'Active' : 'Deactivated';
+                                $adminStatusClass = $admin->user->user_active
+                                ? 'bg-green-100 text-green-700 border-green-200'
+                                : 'bg-red-100 text-red-700 border-red-200';
+                                @endphp
                                 <tr class="hover:bg-slate-50/80 transition-colors font-medium">
                                     <td class="px-4 py-4 border-r border-slate-100">
                                         <input type="checkbox" class="admin-row-checkbox bulk-checkbox" value="{{ $admin->user_id }}">
@@ -242,8 +248,8 @@ $current_page = 'user_management';
                                     </td>
                                     <td class="px-4 py-4 text-center border-r border-slate-100">
                                         <span
-                                            class="{{ $admin->user->user_active ? 'status-active' : 'status-inactive' }} font-semibold">
-                                            {{ $admin->user->user_active ? 'Active' : 'Inactive' }}
+                                            class="px-2 py-1 rounded-full border text-[9px] font-bold {{ $adminStatusClass }}">
+                                            {{ strtoupper($adminStatus) }}
                                         </span>
                                     </td>
                                     <td class="px-4 py-4 text-black border-r border-slate-100">
@@ -269,23 +275,49 @@ $current_page = 'user_management';
                                                         data-suffix="{{ $admin->user->user_suffix ?? '' }}"
                                                         data-email="{{ $admin->user->user_email }}"
                                                         data-address="{{ $admin->office_address }}"
-                                                        data-status="{{ $admin->user->user_active ? 'Active' : 'Inactive' }}"
+                                                        data-status="{{ $adminStatus }}"
                                                         data-joined="{{ $admin->user->created_at->format('M d, Y') }}"
                                                         data-user-id="{{ $admin->user_id }}"
                                                         data-permissions="{{ implode(',', $admin->permissions ?? []) }}">
                                                         <i data-lucide="eye" class="w-4 h-4 mr-3 text-blue-500"></i>
                                                         View Profile
                                                     </button>
+                                                    @if ($admin->user->user_active)
                                                     <button
-                                                        data-route="{{ route('offices.deleteAdmin', $admin->user_id) }}"
-                                                        data-firstname="{{ $admin->user->user_first_name }}"
-                                                        data-lastname="{{ $admin->user->user_last_name }}"
-                                                        onclick="openDeleteProfileModal(this.dataset.route, this.dataset.firstname, this.dataset.lastname)"
+                                                        onclick="openDeactivateModal('{{ $admin->user->user_first_name }}', '{{ $admin->user->user_last_name }}', {{ $admin->user_id }})"
                                                         class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                        <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i> Delete
-                                                        Profile
+                                                        <i data-lucide="user-minus" class="w-4 h-4 mr-3"></i> Deactivate
+                                                        Account
                                                     </button>
+                                                    @else
+                                                    <button
+                                                        onclick="openActivateModal('{{ $admin->user->user_first_name }}', '{{ $admin->user->user_last_name }}', {{ $admin->user_id }})"
+                                                        class="flex items-center w-full px-4 py-2 text-sm text-green-600 hover:bg-green-50 transition-colors">
+                                                        <i data-lucide="user-plus" class="w-4 h-4 mr-3"></i> Activate
+                                                        Account
+                                                    </button>
+                                                    @endif
                                                 </div>
+                                            </div>
+                                            {{-- Reuses the shared deactivate/activate modals (the alumni
+                                                 tab opens the same ones) — they key off these per-row
+                                                 form ids, so admins need their own pair here. --}}
+                                            <div style="display:none;">
+                                                <form id="deactivateForm_{{ $admin->user_id }}"
+                                                    action="{{ route('offices.deactivateAdmin', $admin->user_id) }}"
+                                                    method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <input type="hidden" name="deactivate-reason"
+                                                        id="deactivateReason_{{ $admin->user_id }}">
+                                                </form>
+
+                                                <form id="activateForm_{{ $admin->user_id }}"
+                                                    action="{{ route('offices.activateAdmin', $admin->user_id) }}"
+                                                    method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                </form>
                                             </div>
                                         </div>
                                     </td>
@@ -841,51 +873,6 @@ $current_page = 'user_management';
             </form>
         </div>
     </div>
-
-    <!-- DELETE ADMIN PROFILE HIDDEN FORM — place this outside the foreach -->
-    <div style="display:none;">
-        <form id="deleteProfileForm" method="POST">
-            @csrf
-            @method('DELETE')
-            <input type="hidden" name="delete-reason" id="deleteProfileReasonInput">
-        </form>
-    </div>
-
-    {{-- ===================== DELETE ADMIN PROFILE MODAL ===================== --}}
-    <div id="deleteProfileModal"
-        class="fixed inset-0 z-[200] flex items-center justify-center invisible transition-all duration-300">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDeleteProfileModal()"></div>
-        <div id="deleteProfileContent"
-            class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden relative z-10 transform scale-95 transition-transform duration-300">
-            <div class="p-8">
-                <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-                    <i data-lucide="trash-2" class="w-8 h-8 text-red-500"></i>
-                </div>
-                <h3 class="text-[#0E0F3B] text-xl font-bold mb-1 text-center">Delete Admin Account</h3>
-                <p id="deleteProfileAdminName" class="text-slate-400 text-xs text-center mb-5"></p>
-                <label class="text-xs font-bold text-[#0E0F3B] uppercase tracking-wider block mb-2">
-                    Reason for Deletion <span class="text-red-500">*</span>
-                </label>
-                <textarea id="deleteProfileReason" rows="4"
-                    placeholder="Enter your reason for deleting this admin account..."
-                    class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 resize-none transition-all"></textarea>
-                <p id="deleteProfileError" class="text-red-500 text-xs mt-1 hidden">
-                    Please provide a reason before deleting.
-                </p>
-            </div>
-            <div class="px-8 pb-8 flex gap-3">
-                <button onclick="closeDeleteProfileModal()"
-                    class="flex-1 py-2.5 border-2 border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all uppercase">
-                    Cancel
-                </button>
-                <button onclick="submitDeleteProfile()"
-                    class="flex-1 py-2.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-all uppercase">
-                    Yes, Delete
-                </button>
-            </div>
-        </div>
-    </div>
-
 
     <!-- ==================== ADD ALUMNI MODAL ==================== -->
     <div id="addAlumniModal" class="modal-overlay" onclick="if(event.target===this) closeModal('addAlumniModal')">
@@ -2008,59 +1995,6 @@ $current_page = 'user_management';
                     menu.classList.add('hidden');
                 }
             }
-        }
-
-        //DELETE ADMIN MODAL JS
-        let _deleteProfileRoute = '';
-
-        // ── open modal ─────────────────────────────────────────────────────
-        function openDeleteProfileModal(route, firstName, lastName) {
-            _deleteProfileRoute = route;
-
-            document.getElementById('deleteProfileAdminName').textContent = firstName + ' ' + lastName;
-            document.getElementById('deleteProfileReason').value = '';
-            document.getElementById('deleteProfileError').classList.add('hidden');
-
-            const modal = document.getElementById('deleteProfileModal');
-            const content = document.getElementById('deleteProfileContent');
-
-            modal.classList.remove('invisible');
-            requestAnimationFrame(() => {
-                modal.classList.add('bg-black/30');
-                content.classList.remove('scale-95');
-                content.classList.add('scale-100');
-            });
-        }
-
-        // ── close modal ────────────────────────────────────────────────────
-        function closeDeleteProfileModal() {
-            const modal = document.getElementById('deleteProfileModal');
-            const content = document.getElementById('deleteProfileContent');
-
-            content.classList.remove('scale-100');
-            content.classList.add('scale-95');
-
-            setTimeout(() => {
-                modal.classList.add('invisible');
-            }, 300);
-        }
-
-        // ── submit ───────────────────────────────────────────────────
-        function submitDeleteProfile() {
-            const reason = document.getElementById('deleteProfileReason').value.trim();
-            const error = document.getElementById('deleteProfileError');
-
-            if (!reason) {
-                error.classList.remove('hidden');
-                return;
-            }
-
-            error.classList.add('hidden');
-
-            const form = document.getElementById('deleteProfileForm');
-            document.getElementById('deleteProfileReasonInput').value = reason;
-            form.action = _deleteProfileRoute;
-            form.submit();
         }
 
         // EMPLOYERS CSV EXPORT JS LOGIC

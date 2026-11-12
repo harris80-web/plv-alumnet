@@ -306,6 +306,7 @@ Route::put('/employers/updateProfile/{employer}', [EmployerController::class, 'u
 // Was missing ->middleware('auth') entirely — any logged-in user, or a
 // direct unauthenticated POST, could deactivate an employer account.
 Route::put('/employer/deactivate/{id}', [EmployerController::class, 'deactivateEmployer'])->name('employers.deactivateEmployer')->middleware(['auth', 'feature:user_management']);
+Route::put('/employer/activate/{id}', [EmployerController::class, 'activateEmployer'])->name('employers.activateEmployer')->middleware(['auth', 'feature:user_management']);
 Route::put('/users/employer/bulk-deactivate', [EmployerController::class, 'bulkDeactivateEmployer'])->name('employers.bulkDeactivateEmployer')->middleware(['auth', 'feature:user_management']);
 
 Route::resource('industries', IndustryController::class);
@@ -366,7 +367,8 @@ Route::put('/offices/updateProfile/{office}', [OfficeController::class, 'updateO
 // permissions) is super_admin-only — an `admin` must never be able to
 // change its own or another admin's access, even one with every other
 // feature granted.
-Route::delete('/admin/delete/{id}', [OfficeController::class, 'deleteAdmin'])->name('offices.deleteAdmin')->middleware(['auth', 'super_admin']);
+Route::put('/admin/{id}/deactivate', [OfficeController::class, 'deactivateAdmin'])->name('offices.deactivateAdmin')->middleware(['auth', 'super_admin']);
+Route::put('/admin/{id}/activate', [OfficeController::class, 'activateAdmin'])->name('offices.activateAdmin')->middleware(['auth', 'super_admin']);
 Route::put('/admin/{id}/permissions', [OfficeController::class, 'updatePermissions'])->name('offices.updatePermissions')->middleware(['auth', 'super_admin']);
 Route::put('/admin/permissions/bulk', [OfficeController::class, 'bulkUpdatePermissions'])->name('offices.bulkUpdatePermissions')->middleware(['auth', 'super_admin']);
 
@@ -440,8 +442,9 @@ if (app()->environment('local')) {
             'activateAlumni' => 'Activate Alumni Account',
             'deactAlumni' => 'Deactivate Alumni Account',
             'deactEmployer' => 'Deactivate Employer Account',
+            'deactAdmin' => 'Deactivate Admin Account',
+            'activateAdmin' => 'Activate Admin Account',
             'rejectEmployer' => 'Reject Employer Registration',
-            'deleteAdmin' => 'Delete Admin Account',
             'applyJob' => 'Job Application Received',
             'approveJob' => 'Job Post Approved',
             'declineJob' => 'Job Post Declined',
@@ -481,8 +484,8 @@ if (app()->environment('local')) {
         $data = match ($template) {
             'resetPassword' => ['user' => $user, 'token' => 'sample-preview-token'],
             'alumniCreated' => ['user' => $user, 'password' => 'TempPass123'],
-            'activateAlumni' => ['user' => $user],
-            'deactAlumni', 'deactEmployer', 'rejectEmployer', 'deleteAdmin' => ['user' => $user, 'reason' => $reason],
+            'activateAlumni', 'activateAdmin' => ['user' => $user],
+            'deactAlumni', 'deactEmployer', 'rejectEmployer', 'deactAdmin' => ['user' => $user, 'reason' => $reason],
             'applyJob' => ['job' => $job, 'alumni' => $alumni],
             'approveJob' => ['job' => $job],
             'declineJob' => ['job' => $job, 'reason' => $reason],

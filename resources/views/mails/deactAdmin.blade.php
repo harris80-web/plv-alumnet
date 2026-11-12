@@ -1,14 +1,14 @@
 @extends('mails.layout')
 
-@section('title', 'PLV-AlumNet Account Removed')
-@section('preheader', 'Your PLV-AlumNet admin account has been removed.')
-@section('footer_disclaimer', "You're receiving this email as part of your administrator account privileges and notifications on PLV-AlumNet.")
+@section('title', 'PLV-AlumNet Admin Account Deactivated')
+@section('preheader', 'Your PLV-AlumNet admin account has been deactivated.')
+@section('footer_disclaimer', "You're receiving this email as part of your administrator account status updates on PLV-AlumNet.")
 
 @section('content')
 
     <!-- Heading -->
     <h1 style="margin:0 0 20px 0; font-family:'Montserrat', Arial, sans-serif; font-size:26px; line-height:1.3; font-weight:800; text-align:center;">
-        <span style="color:#0E0F3B; background:linear-gradient(90deg, #0E0F3B 0%, #C73D1A 50%, #ED7A07 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">Account Deleted</span>
+        <span style="color:#0E0F3B; background:linear-gradient(90deg, #0E0F3B 0%, #C73D1A 50%, #ED7A07 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">Account Deactivated</span>
     </h1>
 
     <!-- Greeting -->
@@ -18,7 +18,7 @@
 
     <!-- Intro text -->
     <p style="margin:0 0 24px 0; font-family:'Inter', Arial, sans-serif; font-size:14px; line-height:1.6; color:#4B4B63; text-align:center;">
-        Your PLV-AlumNet administrator account has been removed for the following reason:
+        Your PLV-AlumNet administrator account has been deactivated by the super administrator for the following reason:
     </p>
 
     <!-- Reason box -->
@@ -40,7 +40,7 @@
             <td align="center" style="padding:10px 16px;">
                 <p style="margin:0; font-family:'Inter', Arial, sans-serif; font-size:12px; line-height:1.5; font-weight:600; color:#C73D1A; text-align:center;">
                     <span style="display:inline-block; margin-right:4px; font-size:13px; vertical-align:middle;">&#9888;</span>
-                    <span style="vertical-align:middle;">If you have questions about this decision, please contact the PLV-AlumNet Alumni Relations Office.</span>
+                    <span style="vertical-align:middle;">You will not be able to sign in until your account is reactivated. If you believe this was a mistake, please contact the super administrator.</span>
                 </p>
             </td>
         </tr>

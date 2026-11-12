@@ -73,7 +73,7 @@
                 <div class="w-full">
                     <label class="block text-sm font-bold text-[#12123B] mb-2">New Password:</label>
                     <div class="relative">
-                        <input type="password" name="new_password" class="pw-input w-full p-3 border rounded focus:ring-2 focus:ring-[#C73D1A] outline-none transition shadow-inner {{ $errors->has('new_password') ? 'border-red-600' : 'border-orange-300' }}">
+                        <input id="newPasswordInput" type="password" name="new_password" class="pw-input w-full p-3 border rounded focus:ring-2 focus:ring-[#C73D1A] outline-none transition shadow-inner {{ $errors->has('new_password') ? 'border-red-600' : 'border-orange-300' }}">
                         <button type="button" class="toggle-pw absolute right-4 top-3.5 text-gray-400 hover:text-orange-500">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 eye-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -87,7 +87,7 @@
                 <div class="w-full">
                     <label class="block text-sm font-bold text-[#12123B] mb-2">Confirm New Password:</label>
                     <div class="relative">
-                        <input type="password" name="new_password_confirmation" class="pw-input w-full p-3 border rounded focus:ring-2 focus:ring-[#C73D1A] outline-none transition shadow-inner {{ $errors->has('new_password_confirmation') ? 'border-red-600' : 'border-orange-300' }}">
+                        <input id="confirmPasswordInput" type="password" name="new_password_confirmation" aria-describedby="confirmPasswordError confirmPasswordSuccess" class="pw-input w-full p-3 border rounded focus:ring-2 focus:ring-[#C73D1A] outline-none transition shadow-inner {{ $errors->has('new_password_confirmation') ? 'border-red-600' : 'border-orange-300' }}">
                         <button type="button" class="toggle-pw absolute right-4 top-3.5 text-gray-400 hover:text-orange-500">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 eye-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -95,6 +95,12 @@
                             </svg>
                         </button>
                     </div>
+                    {{-- Same live match/mismatch feedback as the employer sign-up form
+                         (auth/register.blade.php) — see the script at the bottom. --}}
+                    <p id="confirmPasswordError" role="alert" class="hidden text-[11px] text-red-600 mt-2">Passwords do not match.</p>
+                    <p id="confirmPasswordSuccess" role="status" class="hidden items-center gap-1 text-[11px] text-green-600 mt-2">
+                        <i class="fas fa-circle-check" aria-hidden="true"></i> Passwords match.
+                    </p>
                 </div>
 
                 <button type="submit" class="w-full bg-[#0D0D2B] text-white py-4 rounded font-bold tracking-[0.2em] hover:bg-blue-900 transition duration-200 uppercase text-sm mt-4 shadow-md">
@@ -138,6 +144,51 @@
                 }
             });
         });
+
+        // Confirm New Password: live match indicator, same behaviour as the
+        // employer sign-up form (auth/register.blade.php). The "match" message
+        // appears as soon as the two agree; the "do not match" error waits
+        // until the field has been left or the form submitted, so it doesn't
+        // nag while the password is still being typed.
+        (function () {
+            const passwordInput = document.getElementById('newPasswordInput');
+            const confirmInput = document.getElementById('confirmPasswordInput');
+            const confirmError = document.getElementById('confirmPasswordError');
+            const confirmSuccess = document.getElementById('confirmPasswordSuccess');
+            if (!passwordInput || !confirmInput) return;
+
+            let confirmTouched = false;
+
+            function validateConfirmPassword() {
+                const filled = confirmInput.value !== '';
+                const mismatch = filled && confirmInput.value !== passwordInput.value;
+                const match = filled && !mismatch;
+                const showError = mismatch && confirmTouched;
+
+                confirmError.classList.toggle('hidden', !showError);
+                confirmSuccess.classList.toggle('hidden', !match);
+                confirmSuccess.classList.toggle('flex', match);
+                confirmInput.setAttribute('aria-invalid', showError ? 'true' : 'false');
+                confirmInput.classList.toggle('border-red-600', showError);
+                confirmInput.classList.toggle('border-orange-300', !showError);
+                return !mismatch;
+            }
+
+            confirmInput.addEventListener('blur', function () {
+                confirmTouched = true;
+                validateConfirmPassword();
+            });
+            confirmInput.addEventListener('input', validateConfirmPassword);
+            passwordInput.addEventListener('input', validateConfirmPassword);
+
+            confirmInput.form.addEventListener('submit', function (e) {
+                confirmTouched = true;
+                if (!validateConfirmPassword()) {
+                    e.preventDefault();
+                    confirmInput.focus();
+                }
+            });
+        })();
 
         // Error toasts (red), populated from server-side validation errors
         function showToast(message) {

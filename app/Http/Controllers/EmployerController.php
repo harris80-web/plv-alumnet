@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ActivateEmployerMail;
 use App\Mail\DeactEmployerMail;
 use App\Models\Employer;
 use App\Models\JobPosting;
@@ -574,6 +575,34 @@ class EmployerController extends Controller
         }
         
         return back()->with('success', 'Employer deactivated successfully!');
+    }
+
+    /**
+     * Counterpart to deactivateEmployer() above — there was none, so an
+     * employer deactivated here could never be switched back on: no route,
+     * no method, and the row's menu only ever offered "Deactivate Account".
+     * That left the employer tab's own "Deactivated Accounts" metric
+     * counting accounts with no admin path back.
+     *
+     * Mirrors AlumnusController::activateAlumnus(): already-active is an
+     * error rather than a silent no-op, so a double click on a stale page
+     * doesn't report success it didn't perform.
+     */
+    public function activateEmployer(Request $request, $id)
+    {
+        $employer = Employer::where('user_id', $id)->firstOrFail();
+        abort_if($employer->user === null, 404);
+
+        if ($employer->user->user_active) {
+            return back()->with('error', 'Employer is already activated!');
+        }
+
+        $employer->user->update(['user_active' => true]);
+        Log::info("Employer with ID {$employer->user->user_id}: {$employer->user->user_first_name} {$employer->user->user_last_name} activated.");
+
+        Mail::to($employer->user->user_email)->queue(new ActivateEmployerMail($employer->user));
+
+        return back()->with('success', 'Employer activated successfully!');
     }
 
     /**

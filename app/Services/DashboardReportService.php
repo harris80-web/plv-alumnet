@@ -89,6 +89,33 @@ class DashboardReportService
     }
 
     /**
+     * Applies a "graduated in one of these years" filter as half-open date
+     * ranges rather than YEAR($column) IN (...).
+     *
+     * Wrapping the column in YEAR() makes any index on it unusable, so MySQL
+     * scanned every alumni row and recomputed the year for each — that single
+     * predicate was the most expensive query on the admin dashboard. A range
+     * per year is sargable, so the index on alumnus_batch is used instead.
+     *
+     * Boundaries are built in the app's default timezone, which is the same
+     * timezone the database evaluated YEAR() in, so the rows matched are
+     * identical. Half-open (>= Jan 1, < next Jan 1) rather than a BETWEEN on
+     * Dec 31 so DATETIME columns can't lose the last second of the year.
+     */
+    private function applyYearRange($query, string $column, array $years)
+    {
+        return $query->where(function ($q) use ($column, $years) {
+            foreach ($years as $year) {
+                $year = (int) $year;
+                $q->orWhere(function ($w) use ($column, $year) {
+                    $w->where($column, '>=', Carbon::create($year, 1, 1)->startOfDay())
+                        ->where($column, '<', Carbon::create($year + 1, 1, 1)->startOfDay());
+                });
+            }
+        });
+    }
+
+    /**
      * Only active alumni accounts count toward the alumni-based reports —
      * the same group as the "Total Alumni Users" card. Inactive means the
      * account is still awaiting approval or was deactivated.
@@ -183,7 +210,7 @@ class DashboardReportService
     {
         $applyAlumniFilters = function ($query, string $alumniTable = 'alumni') use ($batches, $programIds, $employmentStatuses, $colleges) {
             if (!empty($batches)) {
-                $query->whereIn(DB::raw("YEAR($alumniTable.alumnus_batch)"), $batches);
+                $this->applyYearRange($query, "$alumniTable.alumnus_batch", $batches);
             }
             if (!empty($programIds)) {
                 $query->whereIn("$alumniTable.program_id", $programIds);
@@ -255,11 +282,18 @@ class DashboardReportService
         array $colleges,
         array $years,
         int $hireMonths = 6,
-        int $topCompaniesLimit = 5
+        int $topCompaniesLimit = 5,
+        // One row per application, for the placement report's "Applications
+        // Report" table (and its CSV/PDF). Defaults to true so every existing
+        // caller is unchanged; the admin dashboard passes false because its
+        // view never renders this table, and building it there meant
+        // selecting and hydrating every application row on the system
+        // (thousands) on every dashboard load, just to discard them.
+        bool $includeApplicationsTable = true
     ): array {
         $alumniQuery = $this->activeAlumniOnly(Alumnus::with(['user', 'program', 'industry']));
         if (!empty($batches)) {
-            $alumniQuery->whereIn(DB::raw('YEAR(alumnus_batch)'), $batches);
+            $this->applyYearRange($alumniQuery, 'alumnus_batch', $batches);
         }
         if (!empty($programIds)) {
             $alumniQuery->whereIn('program_id', $programIds);
@@ -267,7 +301,13 @@ class DashboardReportService
         if (!empty($colleges)) {
             $alumniQuery->whereHas('program', fn ($q) => $q->whereIn('college', $colleges));
         }
-        $allAlumni = $alumniQuery->get();
+        // Deterministic order: without it the row order here is whatever
+        // index MySQL happened to scan, so the Employed Alumni table's
+        // same-date ties (and the CSV/PDF exports built from it) could come
+        // out in a different order from one request to the next. Same reason
+        // the paginated queries in UserController each carry an explicit
+        // orderBy.
+        $allAlumni = $alumniQuery->orderBy('user_id')->get();
         $employedAlumni = $allAlumni->where('alumnus_employment_status', true);
 
         $totalAlumni = $allAlumni->count();
@@ -421,7 +461,7 @@ class DashboardReportService
         $hiringBase = fn () => DB::table('job_applications')
             ->join('alumni', 'alumni.user_id', '=', 'job_applications.alumnus_id')
             ->join('job_postings', 'job_postings.job_posting_id', '=', 'job_applications.job_id')
-            ->when(!empty($batches), fn ($q) => $q->whereIn(DB::raw('YEAR(alumni.alumnus_batch)'), $batches))
+            ->when(!empty($batches), fn ($q) => $this->applyYearRange($q, 'alumni.alumnus_batch', $batches))
             ->when(!empty($programIds), fn ($q) => $q->whereIn('alumni.program_id', $programIds))
             ->when(!empty($colleges), fn ($q) => $q->whereIn('alumni.program_id', function ($sub) use ($colleges) {
                 $sub->select('program_id')->from('programs')->whereIn('college', $colleges);
@@ -489,7 +529,7 @@ class DashboardReportService
         // cohort as topHiringCompanies/hiresPerMonth above (any status, not
         // just hired), so the admin can see the actual records those
         // charts' numbers were computed from.
-        $applicationsTable = $hiringBase()
+        $applicationsTable = !$includeApplicationsTable ? collect() : $hiringBase()
             ->join('users', 'users.user_id', '=', 'job_applications.alumnus_id')
             ->select(
                 DB::raw("CONCAT(users.user_first_name, ' ', users.user_last_name) as applicant_name"),
@@ -650,7 +690,7 @@ class DashboardReportService
             $query->whereHas('alumnus', function ($q) use ($batches, $programIds, $colleges) {
                 $this->activeAlumniOnly($q);
                 if (!empty($batches)) {
-                    $q->whereIn(DB::raw('YEAR(alumnus_batch)'), $batches);
+                    $this->applyYearRange($q, 'alumnus_batch', $batches);
                 }
                 if (!empty($programIds)) {
                     $q->whereIn('program_id', $programIds);
@@ -664,7 +704,7 @@ class DashboardReportService
 
         $alumniQuery = $this->activeAlumniOnly(Alumnus::query());
         if (!empty($batches)) {
-            $alumniQuery->whereIn(DB::raw('YEAR(alumnus_batch)'), $batches);
+            $this->applyYearRange($alumniQuery, 'alumnus_batch', $batches);
         }
         if (!empty($programIds)) {
             $alumniQuery->whereIn('program_id', $programIds);

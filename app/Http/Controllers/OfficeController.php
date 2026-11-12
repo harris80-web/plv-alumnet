@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Services\StoredFileCleaner;
-use App\Mail\DeleteAdminMail;
+use App\Mail\ActivateAdminMail;
+use App\Mail\DeactAdminMail;
 use App\Models\Office;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -155,36 +156,61 @@ class OfficeController extends Controller
         return back()->with('success', 'Permissions updated for ' . $adminIds->count() . ' admin' . ($adminIds->count() === 1 ? '' : 's') . '.');
     }
 
-    public function deleteAdmin(Request $request, $id)
+    /**
+     * Deactivating is the admin counterpart to
+     * AlumnusController::deactivateAlumnus() — it only flips user_active, so
+     * the account stays listed (with a DEACTIVATED badge) and keeps counting
+     * toward Total Admin, exactly like the alumni and employer tabs.
+     *
+     * This replaced an earlier deleteAdmin() that soft-deleted the office and
+     * user rows: that dropped the admin out of every metric card at once,
+     * including the "Deactivated" one that is meant to be counting them, so
+     * the count could never be anything but zero.
+     */
+    public function deactivateAdmin(Request $request, $id)
     {
         $admin = User::where('user_id', $id)->firstOrFail();
-        
+
         $validated = $request->validate([
-            'delete-reason' => 'required|string|max:255',
-        ]);
+            'deactivate-reason' => 'required|string|max:255',
+        ], [], ['deactivate-reason' => 'Reason']);
 
-        if ($admin->user_role != 'admin') {
-            return back()->withErrors('error', 'The specified user is not an admin.');
+        if ($admin->user_role !== 'admin') {
+            return back()->with('error', 'The specified user is not an admin.');
         }
 
-        try {
-            // Log the deletion reason (you can also store this in a database table if needed)
-            Log::info("Admin with ID {$admin->user_id}: {$admin->user_first_name} {$admin->user_last_name} deleted. Reason: {$validated['delete-reason']}");
-            Mail::to($admin->user_email)->send(new DeleteAdminMail($admin, $validated['delete-reason']));
-            // Soft delete the admin
-            $admin->update(['user_active' => false]);
-            $admin->office->delete();
-            $admin->delete();
-
-            // A deleted admin isn't shown anywhere, so their picture goes too
-            // (after the delete, so their own row no longer counts as using it).
-            app(StoredFileCleaner::class)->deleteIfUnused($admin->user_profile_picture);
-        } catch (\Exception $e) {
-            
-            return back()->with('error', $e->getMessage());
+        // A super admin deactivating themselves would lock the only account
+        // that can undo it; nothing in the UI offers this, but the route is
+        // reachable directly.
+        if ($admin->user_id === Auth::id()) {
+            return back()->with('error', 'You cannot deactivate your own account.');
         }
 
+        $admin->update(['user_active' => false]);
+        Log::info("Admin with ID {$admin->user_id}: {$admin->user_first_name} {$admin->user_last_name} deactivated. Reason: {$validated['deactivate-reason']}");
 
-        return back()->with('success', 'Admin deleted successfully!');
+        // Queued rather than sent inline, same as the alumni path — an SMTP
+        // failure shouldn't report an error for an account that was already
+        // deactivated successfully.
+        Mail::to($admin->user_email)->queue(new DeactAdminMail($admin, $validated['deactivate-reason']));
+
+        return back()->with('success', 'Admin deactivated successfully!');
+    }
+
+    public function activateAdmin(Request $request, $id)
+    {
+        $admin = User::where('user_id', $id)->firstOrFail();
+
+        if ($admin->user_role !== 'admin') {
+            return back()->with('error', 'The specified user is not an admin.');
+        }
+
+        if (!$admin->user_active) {
+            $admin->update(['user_active' => true]);
+            Log::info("Admin with ID {$admin->user_id}: {$admin->user_first_name} {$admin->user_last_name} reactivated.");
+            Mail::to($admin->user_email)->queue(new ActivateAdminMail($admin));
+        }
+
+        return back()->with('success', 'Admin activated successfully!');
     }
 }

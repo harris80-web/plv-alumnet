@@ -532,6 +532,14 @@
 
                             <td data-cell="name" class="px-6 py-4">
                                 <div class="flex items-center gap-3">
+                                    {{-- Which applicants were still unread when this page was
+                                         opened (the ones the "N new" badge on the dashboard and
+                                         My Job Postings were counting). Opening the page marks
+                                         them read, so this highlight is gone next visit. --}}
+                                    @if (in_array($applicant->pivot->application_id, $newApplicationIds))
+                                    <span class="px-1.5 py-0.5 rounded-full bg-orange-100 text-[#C73D1A] text-[8px] font-bold whitespace-nowrap shrink-0"
+                                        title="New applicant — you haven't opened this list since they applied">NEW</span>
+                                    @endif
                                     @include('partials.avatar', [
                                         'photo' => $applicant->user->user_profile_picture ? asset('storage/' . $applicant->user->user_profile_picture) : null,
                                         'size' => 'w-9 h-9',

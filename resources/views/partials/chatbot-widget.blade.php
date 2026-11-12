@@ -386,6 +386,20 @@
     .alma-bubble.is-failed { background: #fee2e2; color: #991b1b; }
     .alma-time { margin: 4px 4px 0; color: #9ca3af; font-size: 10px; line-height: 1.2; }
     .alma-time:empty { display: none; }
+
+    /* Dated day separator — drawn wherever the day changes between two
+       consecutive messages, so bubbles only ever show a clock time. */
+    .alma-day { display: flex; align-items: center; gap: 10px; }
+    .alma-day::before,
+    .alma-day::after { content: ''; flex: 1; height: 1px; background: #e5e7eb; }
+    .alma-day span {
+        flex-shrink: 0;
+        color: #9ca3af;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
     .alma-failed-note { display: flex; align-items: center; gap: 6px; margin: 4px 4px 0; color: #b91c1c; font-size: 10.5px; font-weight: 600; }
     .alma-retry {
         padding: 2px 8px;
@@ -666,6 +680,9 @@
         let pollEvery = 0;
         let polling = false;
         const renderedIds = new Set();
+        // Day of the last message put in the thread, so a dated separator is
+        // drawn only when the day actually changes (see maybeAddDayDivider).
+        let lastDateKey = null;
 
         const STATUS = {
             ai_active: { label: 'Online', tone: 'online' },
@@ -759,6 +776,37 @@
             return g && g.classList.contains('alma-group') && g.id !== 'chatWidgetTyping' ? g : null;
         }
 
+        // Draws a dated separator when `dateKey` differs from the last message
+        // already in the thread, and reports whether it did — a true result
+        // also means the next message must start its own group rather than
+        // merging into one that now sits above the divider. Inserted before
+        // the typing indicator when it's up, so ALMA's reply lands under the
+        // divider rather than above it.
+        function maybeAddDayDivider(dateKey, dateLabel) {
+            if (!dateKey || dateKey === lastDateKey) return false;
+            lastDateKey = dateKey;
+
+            const divider = document.createElement('div');
+            divider.className = 'alma-day';
+            divider.innerHTML = '<span></span>';
+            divider.querySelector('span').textContent = dateLabel || dateKey;
+
+            const typing = document.getElementById('chatWidgetTyping');
+            if (typing) thread.insertBefore(divider, typing);
+            else thread.appendChild(divider);
+            return true;
+        }
+
+        // Server-side dateKeys come from Asia/Manila (App\Support\ChatDate), so
+        // an optimistic bubble sent before the server echo has to use the same
+        // zone or it could draw a second divider for the same day.
+        function currentDayKey() {
+            // en-CA formats as YYYY-MM-DD, matching ChatDate::key().
+            return new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit',
+            }).format(new Date());
+        }
+
         function showTyping() {
             if (document.getElementById('chatWidgetTyping')) return;
             const near = isNearBottom();
@@ -802,13 +850,15 @@
             const near = isNearBottom();
             const isUser = msg.senderType === 'user';
 
+            const dayChanged = maybeAddDayDivider(msg.dateKey, msg.dateLabel);
+
             let group = null;
             let newGroup = false;
             if (msg.senderType === 'ai') group = takeTypingGroup();
             if (!group) {
                 hideTyping();
                 const last = lastGroup();
-                if (last && last.dataset.sender === senderKey(msg)) {
+                if (last && !dayChanged && last.dataset.sender === senderKey(msg)) {
                     group = last;
                 } else {
                     group = createGroup(msg);
@@ -1019,9 +1069,10 @@
 
         function addPendingUserBubble(text) {
             hideTyping();
+            const dayChanged = maybeAddDayDivider(currentDayKey(), 'Today');
             let group = lastGroup();
             let newGroup = false;
-            if (!group || group.dataset.sender !== 'user') {
+            if (dayChanged || !group || group.dataset.sender !== 'user') {
                 group = createGroup({ senderType: 'user' });
                 thread.appendChild(group);
                 newGroup = true;
@@ -1137,6 +1188,7 @@
             stopPolling();
             thread.innerHTML = '';
             renderedIds.clear();
+            lastDateKey = null;
             pendingBubbles.length = 0;
             ticketId = null;
             ticketStatus = null;

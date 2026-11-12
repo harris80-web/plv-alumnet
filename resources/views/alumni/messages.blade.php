@@ -105,8 +105,14 @@
                     </button>
                 </div>
 
-                <div id="messageThread" class="flex-1 overflow-y-auto chat-scroll p-5 space-y-4">
+                <div id="messageThread" class="flex-1 overflow-y-auto chat-scroll p-5 space-y-4"
+                    data-last-date-key="{{ $messages->isNotEmpty() ? $messages->last()['dateKey'] : '' }}">
+                    @php $renderedDateKey = null; @endphp
                     @foreach ($messages as $message)
+                        @if ($message['dateKey'] !== $renderedDateKey)
+                            @include('partials.chat-date-divider', ['label' => $message['dateLabel']])
+                            @php $renderedDateKey = $message['dateKey']; @endphp
+                        @endif
                         @include('partials.chat-message-bubble', ['message' => $message, 'contact' => $activeContact, 'currentUserId' => auth()->id()])
                     @endforeach
                 </div>
@@ -268,6 +274,32 @@
             return wrapper;
         }
 
+        // ── Day separators (mirrors partials/chat-date-divider.blade.php) ──
+        // Seeded from the last server-rendered message so the first message
+        // to arrive after page load only draws a divider if it actually
+        // falls on a new day.
+        function renderDateDivider(label) {
+            const divider = document.createElement('div');
+            divider.className = 'flex items-center gap-3 py-1';
+            divider.dataset.chatDateDivider = '';
+            divider.innerHTML = `
+                <span class="flex-1 h-px bg-gray-200"></span>
+                <span class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 shrink-0">${escapeHtml(label)}</span>
+                <span class="flex-1 h-px bg-gray-200"></span>
+            `;
+            return divider;
+        }
+
+        // The single append path for both the poll loop and the send handler,
+        // so a day change can never be missed by one of them.
+        function appendMessage(thread, msg, isMine) {
+            if (msg.dateKey && msg.dateKey !== thread.dataset.lastDateKey) {
+                thread.appendChild(renderDateDivider(msg.dateLabel || msg.dateKey));
+                thread.dataset.lastDateKey = msg.dateKey;
+            }
+            thread.appendChild(renderBubble(msg, isMine));
+        }
+
         // ── Poll the open conversation for new messages ──
         async function pollMessages() {
             if (!CONVERSATION_ID) return;
@@ -284,7 +316,7 @@
                         // skip anything already rendered (e.g. by the send
                         // handler below) so it doesn't get appended twice.
                         if (thread.querySelector(`[data-message-id="${msg.id}"]`)) return;
-                        thread.appendChild(renderBubble(msg, msg.senderId === CURRENT_USER_ID));
+                        appendMessage(thread, msg, msg.senderId === CURRENT_USER_ID);
                         lastMessageId = Math.max(lastMessageId, msg.id);
                     });
                     if (wasNearBottom) scrollThreadToBottom();
@@ -450,7 +482,7 @@
                     // already rendered this exact message by the time this
                     // fetch() resolves.
                     if (!thread.querySelector(`[data-message-id="${message.id}"]`)) {
-                        thread.appendChild(renderBubble(message, true));
+                        appendMessage(thread, message, true);
                     }
                     lastMessageId = Math.max(lastMessageId, message.id);
                     scrollThreadToBottom();

@@ -105,6 +105,14 @@ class JobApplicationSeeder extends Seeder
         }
     }
 
+    /**
+     * Records the hire, then has the alumnus adopt it as their workplace —
+     * the two are separate steps now. Being hired no longer rewrites a
+     * profile by itself (JobApplicationController::hireApplication()); the
+     * alumnus selects which of their hires they actually work for, and that
+     * is what copies the company/title/date over. Seeding both keeps these
+     * alumni looking like someone who was hired and then said so.
+     */
     private function hire(JobApplication $application, JobPosting $job, Alumnus $alumnus): void
     {
         $application->application_status = 'hired';
@@ -118,6 +126,10 @@ class JobApplicationSeeder extends Seeder
         if ($job->job_posting_company) {
             $alumnus->alumnus_workplace = $job->job_posting_company;
             $alumnus->alumnus_workplace_undisclosed = false;
+            $alumnus->alumnus_job_position = $job->job_posting_title;
+            $alumnus->alumnus_employment_date = $application->hired_at;
+            $alumnus->alumnus_employed_via_platform = true;
+            $alumnus->alumnus_hired_application_id = $application->application_id;
         }
         if (!$alumnus->alumnus_first_job_date) {
             $alumnus->alumnus_first_job_date = now();

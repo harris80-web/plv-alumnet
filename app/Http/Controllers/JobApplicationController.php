@@ -241,7 +241,19 @@ class JobApplicationController extends Controller
 
         // Opening the list is what "reads" the applications — clear the
         // unread flag now so the count on the My Job Postings card resets.
-        JobApplication::where('job_id', $jobPostingId)->update(['is_read' => true]);
+        // The ids are captured first so this visit can still mark which rows
+        // were the new ones: after the update nothing on the page can tell
+        // them apart, which is why the list gave no clue who the "N new"
+        // badge was pointing at. Deliberately a one-visit highlight — come
+        // back later and these are read like any other applicant.
+        $newApplicationIds = JobApplication::where('job_id', $jobPostingId)
+            ->where('is_read', false)
+            ->pluck('application_id')
+            ->all();
+
+        if (!empty($newApplicationIds)) {
+            JobApplication::whereIn('application_id', $newApplicationIds)->update(['is_read' => true]);
+        }
 
         // Course filter: the courses of this post's applicants. The employer
         // dashboard's filters (Applied in / Year Graduated / College / Course)
@@ -254,7 +266,7 @@ class JobApplicationController extends Controller
         $carriedFilters = JobApplication::applicantFiltersFrom($request);
         $carriedLabels = JobApplication::applicantFilterLabels(\Illuminate\Support\Arr::except($carriedFilters, ['program_id']));
 
-        return view('general.jobApplicants', compact('jobPost', 'courseOptions', 'courseCollegeAttrs', 'carriedFilters', 'carriedLabels'));
+        return view('general.jobApplicants', compact('jobPost', 'courseOptions', 'courseCollegeAttrs', 'carriedFilters', 'carriedLabels', 'newApplicationIds'));
     }
 
     /**
@@ -274,11 +286,18 @@ class JobApplicationController extends Controller
 
     /**
      * Shared by hireApplicant() (single) and bulkHireApplicants() so both
-     * paths flip the same status + alumnus side effects the same way —
-     * getting hired through the system sets these automatically, same as
-     * before (see AlumnusController::updateAlumniProfile for the manual
-     * path). First job date only gets set the first time ever — a later
-     * hire (job change) shouldn't overwrite the actual first job date.
+     * paths record the hire the same way.
+     *
+     * Deliberately does NOT touch the alumnus's employment profile. It used
+     * to set employment status, industry, workplace, job position and
+     * employment date straight from this posting — but an alumnus can hold
+     * offers from several employers at once, and nothing here can tell which
+     * one they actually accepted, so each new hire silently overwrote the
+     * last and could contradict the alumnus's own answer. The hire is now
+     * only recorded against the application; the alumnus picks which of
+     * their hires is their current workplace on the edit-profile form, which
+     * is what copies the company/title/date across (see
+     * Alumnus::hiringOptions() and AlumnusController::updateAlumniProfile()).
      *
      * Mail is queued, not sent inline — bulkHireApplicants() can call this
      * in a loop over a dozen-plus applicants, and a live SMTP round-trip
@@ -293,30 +312,6 @@ class JobApplicationController extends Controller
         $application->save();
 
         $alumnus = $application->alumnus;
-        $alumnus->alumnus_employment_status = true;
-        if ($application->job->industry_id) {
-            $alumnus->industry_id = $application->job->industry_id;
-        }
-        if ($application->job->job_posting_company) {
-            $alumnus->alumnus_workplace = $application->job->job_posting_company;
-            $alumnus->alumnus_workplace_undisclosed = false;
-        }
-        // Job position + employment date come from the posting itself and
-        // are locked on the self-service profile form while this flag is
-        // true (see AlumnusController::updateAlumniProfile()) — every new
-        // in-system hire overwrites them with the new posting's details,
-        // same as workplace/industry above.
-        $alumnus->alumnus_job_position = $application->job->job_posting_title;
-        $alumnus->alumnus_employment_date = now();
-        $alumnus->alumnus_employed_via_platform = true;
-        if (!$alumnus->alumnus_first_job_date) {
-            $alumnus->alumnus_first_job_date = now();
-            // A hire through an in-system job posting is a regular job, not
-            // an internship — set explicitly (not left null) so this counts
-            // as "answered: no" the same way a self-reported first job does.
-            $alumnus->alumnus_first_job_is_internship = false;
-        }
-        $alumnus->save();
 
         Mail::to($alumnus->user->user_email)->queue(new HireApplicantMail($application));
         UserNotification::create([

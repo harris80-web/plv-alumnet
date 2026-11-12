@@ -102,7 +102,7 @@ class AlumnusSeeder extends Seeder
                 'workplace_undisclosed' => true,
             ],
             [
-                'first' => 'Ella', 'last' => 'Fernandez', 'gender' => 'prefer_not_to_say',
+                'first' => 'Ella', 'last' => 'Fernandez', 'gender' => 'female',
                 'program' => 'Bachelor of Science in Business Administration Major in Human Resource Management', 'batch' => 2024,
                 'email' => 'alumni8@example.com',
                 'skills' => ['Communication', 'Teamwork'],

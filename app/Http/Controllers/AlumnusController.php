@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 
 class AlumnusController extends Controller
@@ -166,6 +167,17 @@ class AlumnusController extends Controller
         abort_unless(Auth::check() && Auth::id() == $alumnus, 403);
 
         $user = User::where('user_id', $alumnus)->firstOrFail();
+
+        // "Where do you work?" is a dropdown of this alumnus's own hires plus
+        // "other". Building the allowed values from their own hiring options
+        // is also the ownership check — someone else's application id simply
+        // isn't in the list, so it can't be claimed as a workplace.
+        $hiringOptionIds = Alumnus::where('user_id', $alumnus)->firstOrFail()
+            ->hiringOptions()
+            ->pluck('application_id')
+            ->map(fn ($id) => (string) $id)
+            ->all();
+
         $validated = $request->validate([
             'user_profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'alumnus_resume_file' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
@@ -173,7 +185,12 @@ class AlumnusController extends Controller
             'alumnus_cover_letter_file' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'alumnus_employment_status' => 'required|boolean|max:255',
             'industry_id' => 'required_if:alumnus_employment_status,1|nullable|exists:industries,industry_id',
-            'alumnus_workplace' => 'nullable|string|max:255',
+            // Either one of this alumnus's own hire ids, or "other" for a job
+            // that didn't come from this system.
+            'alumnus_workplace_source' => ['nullable', 'string', Rule::in(array_merge(['other'], $hiringOptionIds))],
+            // Only used when the source is "other" — a selected hire's company
+            // name comes from the posting, never from the form.
+            'alumnus_workplace_other' => 'nullable|string|max:255',
             'alumnus_workplace_undisclosed' => 'nullable|boolean',
             'alumnus_job_position' => 'nullable|string|max:255',
             'alumnus_employment_date' => 'nullable|date|before_or_equal:today',
@@ -194,7 +211,8 @@ class AlumnusController extends Controller
             'alumnus_cover_letter_file' => 'Cover Letter',
             'alumnus_employment_status' => 'Employment Status',
             'industry_id' => 'Industry / Sector',
-            'alumnus_workplace' => 'Workplace',
+            'alumnus_workplace_source' => 'Where Do You Work',
+            'alumnus_workplace_other' => 'Workplace',
             'alumnus_job_position' => 'Job Position',
             'alumnus_employment_date' => 'Employment Date',
             'alumnus_first_job_date' => 'First Job Date',
@@ -259,36 +277,65 @@ class AlumnusController extends Controller
                 $employed = (bool) ($validated['alumnus_employment_status'] ?? $alumni->alumnus_employment_status);
                 $workplaceUndisclosed = $employed && !empty($validated['alumnus_workplace_undisclosed']);
 
-                // Job position + employment date are system-of-record once
-                // hired through an in-system job posting (see
-                // JobApplicationController::hireApplication()) — this
-                // self-service form can't overwrite them while that's still
-                // true. The only way it clears is marking yourself
-                // unemployed; a later "Employed" self-edit after that is by
-                // definition a job that didn't come from the platform.
-                $viaPlatform = $employed && $alumni->alumnus_employed_via_platform;
+                // "Where do you work?" is either one of this alumnus's own
+                // hires here, or "other" (a job from outside the system).
+                // Already restricted to their own hire ids by the Rule::in
+                // above; re-read from the database anyway so the company,
+                // title and date come from the posting itself rather than
+                // from anything the form could have been made to submit.
+                $source = $validated['alumnus_workplace_source'] ?? null;
+                $selectedHire = $employed && $source !== null && $source !== 'other'
+                    ? $alumni->jobApplications()->with('job')
+                        ->where('application_id', $source)
+                        ->where('application_status', 'hired')
+                        ->first()
+                    : null;
+
+                if ($employed && !$request->has('alumnus_workplace_source')) {
+                    // The form always submits this field. Its absence means the
+                    // request didn't come from the current form at all (a page
+                    // loaded before this field existed, say), and treating that
+                    // as "no workplace chosen" would quietly erase a perfectly
+                    // good employer — so leave the workplace exactly as it is.
+                    $workplace = $alumni->alumnus_workplace;
+                    $jobPosition = $alumni->alumnus_job_position;
+                    $employmentDate = $alumni->alumnus_employment_date;
+                    $selectedHire = $alumni->hiredApplication;
+                } elseif (!$employed) {
+                    $workplace = null;
+                    $jobPosition = null;
+                    $employmentDate = null;
+                } elseif ($selectedHire?->job) {
+                    $workplace = $selectedHire->job->job_posting_company;
+                    $jobPosition = $selectedHire->job->job_posting_title;
+                    $employmentDate = optional($selectedHire->hired_at ?? $selectedHire->application_date)->toDateString();
+                } else {
+                    $workplace = !empty($validated['alumnus_workplace_other']) ? $validated['alumnus_workplace_other'] : null;
+                    $jobPosition = !empty($validated['alumnus_job_position']) ? $validated['alumnus_job_position'] : null;
+                    $employmentDate = !empty($validated['alumnus_employment_date']) ? $validated['alumnus_employment_date'] : null;
+                }
 
                 $alumni->update([
                     'alumnus_employment_status' => $employed,
-                    'alumnus_employed_via_platform' => $viaPlatform,
+                    // Now means "the workplace on this profile is one of my
+                    // hires here", which is exactly whether a hire is selected.
+                    'alumnus_employed_via_platform' => $selectedHire !== null,
+                    'alumnus_hired_application_id' => $selectedHire?->application_id,
                     'industry_id' => $employed && !empty($validated['industry_id']) ? $validated['industry_id'] : null,
-                    // Not required — alumni can share their industry without
-                    // naming the employer, or skip it entirely.
-                    'alumnus_workplace' => $employed && !$workplaceUndisclosed && !empty($validated['alumnus_workplace'])
-                        ? $validated['alumnus_workplace']
-                        : null,
+                    // Kept even while undisclosed: that flag only hides the
+                    // name on public pages (profile.blade.php swaps in "Not
+                    // disclosed"), so clearing the column here meant toggling
+                    // the button off and on again lost the employer for good.
+                    'alumnus_workplace' => $workplace,
                     'alumnus_workplace_undisclosed' => $workplaceUndisclosed,
-                    'alumnus_job_position' => $viaPlatform
-                        ? $alumni->alumnus_job_position
-                        : ($employed && !empty($validated['alumnus_job_position']) ? $validated['alumnus_job_position'] : null),
-                    'alumnus_employment_date' => $viaPlatform
-                        ? $alumni->alumnus_employment_date
-                        : ($employed && !empty($validated['alumnus_employment_date']) ? $validated['alumnus_employment_date'] : null),
-                    // Settable exactly once — for alumni whose job didn't
-                    // come through the system (the system itself sets this
-                    // automatically on hire, see JobApplicationController::
-                    // hireApplicant()). Once set, incoming values are
-                    // ignored rather than overwriting the real first date.
+                    'alumnus_job_position' => $jobPosition,
+                    'alumnus_employment_date' => $employmentDate,
+                    // Settable exactly once, and only by the alumnus: being
+                    // hired here no longer fills it in (see
+                    // JobApplicationController::hireApplication()), since the
+                    // system can't tell which offer someone actually took.
+                    // Once set, incoming values are ignored rather than
+                    // overwriting the real first date.
                     'alumnus_first_job_date' => $alumni->alumnus_first_job_date
                         ?? (empty($validated['alumnus_first_job_date']) ? null : $validated['alumnus_first_job_date']),
                     // Same set-once lifecycle as alumnus_first_job_date

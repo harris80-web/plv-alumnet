@@ -310,14 +310,21 @@ class DashboardReportService
         }
         $industryDistribution = $industryDistribution->sortDesc();
 
-        // Employment rate by gender
+        // Employment rate by gender. Driven by Alumnus::genderLabels() rather
+        // than by whatever values the data happens to hold, so the series is
+        // always Male then Female regardless of row order, and alumni with no
+        // recorded gender (only legacy "prefer not to say" rows — both entry
+        // paths require one) are left out instead of becoming a third
+        // category. See the 2026_11_12_090000 migration.
         $genderLabels = Alumnus::genderLabels();
-        $genderEmployment = $allAlumni->groupBy(fn ($a) => $a->alumnus_gender ?: '')
-            ->map(function ($group, $key) use ($genderLabels) {
+        $alumniByGender = $allAlumni->groupBy(fn ($a) => (string) $a->alumnus_gender);
+        $genderEmployment = collect($genderLabels)
+            ->map(function ($label, $key) use ($alumniByGender) {
+                $group = $alumniByGender->get($key, collect());
                 $total = $group->count();
                 $employed = $group->where('alumnus_employment_status', true)->count();
                 return [
-                    'label' => $genderLabels[$key] ?? 'Unspecified',
+                    'label' => $label,
                     'total' => $total,
                     'employed' => $employed,
                     'rate' => $total > 0 ? round($employed / $total * 100, 2) : 0,

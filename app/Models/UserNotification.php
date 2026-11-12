@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Named UserNotification (not Notification) and kept on its own
@@ -74,9 +75,9 @@ class UserNotification extends Model
     public function targetUrl(): ?string
     {
         return match ($this->type) {
-            'new_event' => route('notices.eventsSeminars', array_filter(['tab' => 'events', 'notice' => $this->reference_id])),
-            'new_seminar' => route('notices.eventsSeminars', array_filter(['tab' => 'seminar', 'notice' => $this->reference_id])),
-            'new_announcement' => route('notices.announcements', array_filter(['notice' => $this->reference_id])),
+            'new_event' => $this->eventsSeminarsUrl('events'),
+            'new_seminar' => $this->eventsSeminarsUrl('seminar'),
+            'new_announcement' => $this->announcementsUrl(),
             'job_posting_submitted' => route('jobPosting.jobManagement', array_filter(['job' => $this->reference_id])),
             'employer_registration_pending' => route('superAdmin.userManagement', array_filter(['tab' => 'employer', 'pendingEmployer' => $this->reference_id])),
             'testimonial_submitted' => route('testimonials.manage', array_filter(['testimonial' => $this->reference_id])),
@@ -88,5 +89,44 @@ class UserNotification extends Model
             'alumni_id_status', 'yearbook_status' => route('alumnus.dashboard') . '#status-section',
             default => null,
         };
+    }
+
+    /**
+     * Notice pages come in a per-role pair (NoticeController::alumni* vs
+     * ::employer*), each refusing the other's role outright — so a single
+     * hardcoded destination sent every employer holding one of these
+     * notifications to a 403 instead of their own copy of the page.
+     */
+    private function eventsSeminarsUrl(string $tab): string
+    {
+        $params = array_filter(['tab' => $tab, 'notice' => $this->reference_id]);
+
+        return $this->recipientRole() === 'employer'
+            ? route('notices.employerEventsSeminars', $params)
+            : route('notices.eventsSeminars', $params);
+    }
+
+    private function announcementsUrl(): string
+    {
+        $params = array_filter(['notice' => $this->reference_id]);
+
+        return $this->recipientRole() === 'employer'
+            ? route('notices.employerAnnouncements', $params)
+            : route('notices.announcements', $params);
+    }
+
+    /**
+     * Every caller renders or opens the signed-in user's own notifications
+     * (NotificationController scopes by Auth::id()), so the common path
+     * answers from the already-loaded user rather than querying one per
+     * notification in a 20-row bell dropdown.
+     */
+    private function recipientRole(): ?string
+    {
+        $user = Auth::user();
+
+        return $user && $user->user_id === $this->user_id
+            ? $user->user_role
+            : $this->user?->user_role;
     }
 }

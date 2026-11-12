@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\DashboardReportService;
 use App\Services\PdfChartImages;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -592,7 +593,9 @@ class UserController extends Controller
             'user_last_name' => 'required|string|max:255',
             'user_middle_name' => 'nullable|string|max:255',
             'user_suffix' => 'nullable|string|max:255',
-            'alumnus_gender' => 'required|in:male,female,prefer_not_to_say',
+            // Driven by Alumnus::genderLabels() so the form, this rule and the
+            // CSV import can't drift apart on which values are accepted.
+            'alumnus_gender' => ['required', Rule::in(array_keys(Alumnus::genderLabels()))],
             'program_id' => 'required|exists:programs,program_id',
             'alumnus_batch' => 'required|date|after:1900-01-01|before_or_equal:' . now()->addYear()->toDateString(),
             'user_email' => 'required|email|max:255|unique:users,user_email',
@@ -716,11 +719,13 @@ class UserController extends Controller
             return back()->withErrors(['error' => 'CSV is missing required column(s): ' . implode(', ', $missing) . '. Download the template for the correct format.']);
         }
 
+        // Keys are the lower-cased spellings accepted in the CSV; values are
+        // the stored enum values (see Alumnus::genderLabels()).
         $genderMap = [
             'male' => 'male',
             'female' => 'female',
-            'prefer not to say' => 'prefer_not_to_say',
-            'prefer_not_to_say' => 'prefer_not_to_say',
+            'm' => 'male',
+            'f' => 'female',
         ];
 
         $rowNum = 1; // row 1 was the header
@@ -763,7 +768,7 @@ class UserController extends Controller
 
             $gender = $genderMap[$genderRaw] ?? null;
             if (!$gender) {
-                $errors[] = "Row {$rowNum}: gender must be \"male\", \"female\", or \"prefer not to say\".";
+                $errors[] = "Row {$rowNum}: gender must be \"male\" or \"female\".";
                 continue;
             }
 
@@ -1031,7 +1036,11 @@ class UserController extends Controller
         } else if ($user->user_role == 'alumni') {
             $user->load(['alumnus.program', 'alumnus.skills', 'alumnus.experiences.industry', 'alumnus.certifications']);
             $resumeData = $user->alumnus->toResumeFormArray();
-            return view('alumni.edit-profile', compact('user', 'industries', 'resumeData'));
+            // Options for "Where do you work?" — the jobs here this alumnus
+            // was actually hired for, each carrying the position and date the
+            // form fills in when it's picked (see Alumnus::hiringOptions()).
+            $hiringOptions = $user->alumnus->hiringOptions();
+            return view('alumni.edit-profile', compact('user', 'industries', 'resumeData', 'hiringOptions'));
         } else {
             Auth::logout();
             return redirect()->route('auth.login')->withErrors('error', 'Your account role is not recognized. Please contact the administrator.');

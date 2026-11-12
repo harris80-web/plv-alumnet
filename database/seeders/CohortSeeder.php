@@ -207,7 +207,7 @@ class CohortSeeder extends Seeder
         $batchYears = range(2016, 2026);
         $batchCycle = collect(range(0, $count - 1))->map(fn ($i) => $batchYears[$i % count($batchYears)])->shuffle()->values();
 
-        $genderPool = array_merge(array_fill(0, 9, 'male'), array_fill(0, 9, 'female'), array_fill(0, 2, 'prefer_not_to_say'));
+        $genderPool = array_merge(array_fill(0, 10, 'male'), array_fill(0, 10, 'female'));
         $staffIds = User::whereIn('user_role', ['admin', 'super_admin'])->pluck('user_id');
 
         $created = collect();
@@ -429,9 +429,12 @@ class CohortSeeder extends Seeder
                 ]);
                 $application->forceFill(['created_at' => $appliedAt, 'updated_at' => $hiredAt])->save();
 
-                // Mirror JobApplicationController::hireApplication()'s side
-                // effects exactly, so this alumnus's profile is consistent
-                // with the application that actually produced it.
+                // Getting hired no longer rewrites a profile on its own
+                // (JobApplicationController::hireApplication()) — the alumnus
+                // picks which hire they actually work for on the edit-profile
+                // form, and that's what copies these across. Seeded as though
+                // this alumnus made that choice, so their profile and the
+                // application that produced it still agree.
                 $alumnus->alumnus_employment_status = true;
                 $alumnus->industry_id = $job->industry_id;
                 $alumnus->alumnus_workplace = $job->job_posting_company;
@@ -439,6 +442,7 @@ class CohortSeeder extends Seeder
                 $alumnus->alumnus_job_position = $job->job_posting_title;
                 $alumnus->alumnus_employment_date = $hiredAt;
                 $alumnus->alumnus_employed_via_platform = true;
+                $alumnus->alumnus_hired_application_id = $application->application_id;
                 $alumnus->alumnus_first_job_date = $hiredAt;
                 $alumnus->save();
             }

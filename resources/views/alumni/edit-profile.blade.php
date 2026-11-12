@@ -214,18 +214,27 @@
                                 <p class="text-xs text-slate-500">Your current work status and job information.</p>
                             </div>
                         </header>
+                        @php
+                            // Which "Where do you work?" option is selected on load: the hire
+                            // recorded on the profile, else "Others" (self-entered details).
+                            $selectedHireId = $alumnus->alumnus_hired_application_id;
+                            $hasSelectedHire = $selectedHireId
+                                && $hiringOptions->contains(fn ($o) => $o['application_id'] == $selectedHireId);
+                            $workplaceSource = $hasSelectedHire ? (string) $selectedHireId : 'other';
+                        @endphp
                         <div class="p-5 sm:p-6">
-                            <div class="sm:w-1/2 sm:pr-3">
-                                <label for="alumnus_employment_status" class="profile-label">Employment Status{!! $requiredMark !!}</label>
-                                <select name="alumnus_employment_status" id="alumnus_employment_status" required onchange="toggleEmploymentFields(this.value)" class="profile-field">
-                                    <option value="1" {{ $alumnus->alumnus_employment_status == 1 ? 'selected' : '' }}>Employed</option>
-                                    <option value="0" {{ $alumnus->alumnus_employment_status == 0 ? 'selected' : '' }}>Unemployed</option>
-                                </select>
-                            </div>
-
-                            {{-- Only relevant once "Employed" is picked above. --}}
-                            <div id="employment-fields" class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5 {{ $alumnus->alumnus_employment_status ? '' : 'hidden' }}">
+                            {{-- Employment Status and Industry sit together: industry is the one
+                                 field that's always required alongside the status itself. --}}
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
                                 <div>
+                                    <label for="alumnus_employment_status" class="profile-label">Employment Status{!! $requiredMark !!}</label>
+                                    <select name="alumnus_employment_status" id="alumnus_employment_status" required onchange="toggleEmploymentFields(this.value)" class="profile-field">
+                                        <option value="1" {{ $alumnus->alumnus_employment_status == 1 ? 'selected' : '' }}>Employed</option>
+                                        <option value="0" {{ $alumnus->alumnus_employment_status == 0 ? 'selected' : '' }}>Unemployed</option>
+                                    </select>
+                                </div>
+
+                                <div id="industry-field" class="{{ $alumnus->alumnus_employment_status ? '' : 'hidden' }}">
                                     <label for="industry_id" class="profile-label">Industry / Sector{!! $requiredMark !!}</label>
                                     {{-- Not a native `required` attribute — this field is hidden while
                                          Unemployed, and the browser's own bubble can silently fail to
@@ -240,60 +249,80 @@
                                         @endforeach
                                     </select>
                                     <p class="profile-help">
-                                        Required while Employed. Set automatically when you're hired through a job post here — change it yourself if your job didn't come from the system.
+                                        Required while Employed.
                                     </p>
                                 </div>
+                            </div>
 
+                            {{-- Only relevant once "Employed" is picked above. --}}
+                            <div id="employment-fields" class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5 {{ $alumnus->alumnus_employment_status ? '' : 'hidden' }}">
+                                {{-- Workplace: a dropdown of the jobs here this alumnus was hired
+                                     for, plus "Others" for a job from outside the system. Picking a
+                                     hire fills in (and locks) the position and date from that
+                                     posting; "Others" opens all three for typing. --}}
                                 <div>
-                                    <label for="alumnus_workplace" class="profile-label">Where Do You Work?{!! $optionalTag !!}</label>
+                                    <label for="alumnus_workplace_source" class="profile-label">Where Do You Work?{!! $optionalTag !!}</label>
                                     <input type="hidden" name="alumnus_workplace_undisclosed" id="alumnus_workplace_undisclosed" value="{{ $alumnus->alumnus_workplace_undisclosed ? 1 : 0 }}">
-                                    <input type="text" name="alumnus_workplace" id="alumnus_workplace" placeholder="Company / Organization name"
-                                        value="{{ $alumnus->alumnus_workplace }}"
-                                        {{ $alumnus->alumnus_workplace_undisclosed ? 'disabled' : '' }}
-                                        class="profile-field">
-                                    {{-- Under the input (not beside the label) so this field lines up with Industry / Sector. --}}
+                                    <select name="alumnus_workplace_source" id="alumnus_workplace_source" onchange="onWorkplaceSourceChange()" class="profile-field">
+                                        @foreach($hiringOptions as $option)
+                                        <option value="{{ $option['application_id'] }}"
+                                            data-position="{{ $option['position'] }}"
+                                            data-date="{{ $option['date'] }}"
+                                            {{ $workplaceSource === (string) $option['application_id'] ? 'selected' : '' }}>
+                                            {{ $option['company'] }}@if($option['position']) — {{ $option['position'] }}@endif
+                                        </option>
+                                        @endforeach
+                                        {{-- Always last, so an alumnus hired here still has a way to
+                                             record a job they took elsewhere. --}}
+                                        <option value="other" {{ $workplaceSource === 'other' ? 'selected' : '' }}>Others (not hired through this system)</option>
+                                    </select>
+                                    @if($hiringOptions->isNotEmpty())
+                                    <p class="profile-help">
+                                        Hired through more than one employer here? Pick the one you actually work for — being hired no longer changes your profile on its own.
+                                    </p>
+                                    @endif
+
                                     <button type="button" id="workplaceUndisclosedBtn" onclick="toggleWorkplaceUndisclosed()"
                                         class="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase px-2.5 py-1 rounded border border-[#0E0F3B] text-[#0E0F3B] hover:bg-[#0E0F3B] hover:text-white transition">
                                         <i class="fa-solid fa-eye-slash"></i>
                                         <span id="workplaceUndisclosedLabel">{{ $alumnus->alumnus_workplace_undisclosed ? 'Disclose Workplace' : "Don't Disclose" }}</span>
                                     </button>
+                                    <p class="profile-help" id="workplaceUndisclosedHelp">
+                                        Hiding your workplace only keeps the company name off your public profile — the name itself is kept, so you can show it again any time.
+                                    </p>
+                                </div>
+
+                                {{-- Sits next to the dropdown, and only while "Others" is picked. --}}
+                                <div id="workplace-other-field" class="{{ $workplaceSource === 'other' ? '' : 'hidden' }}">
+                                    <label for="alumnus_workplace_other" class="profile-label">Company / Organization{!! $optionalTag !!}</label>
+                                    <input type="text" name="alumnus_workplace_other" id="alumnus_workplace_other" placeholder="Company / Organization name"
+                                        value="{{ $hasSelectedHire ? '' : $alumnus->alumnus_workplace }}"
+                                        class="profile-field">
                                     <p class="profile-help">
-                                        Set automatically when you're hired through a job post here — only fill this in yourself if your job didn't come from the system. You can also mark it undisclosed and just keep your industry set.
+                                        Type where you work, since this job didn't come from a job post here.
                                     </p>
                                 </div>
 
                                 <div>
-                                    @if($alumnus->alumnus_employed_via_platform)
-                                    <label class="profile-label">Job Position{!! $lockedTag !!}</label>
-                                    <input type="text" value="{{ $alumnus->alumnus_job_position }}" disabled aria-label="Job Position" class="profile-field">
-                                    <p class="profile-help">
-                                        Set from the job posting you were hired through here — not editable while that's your current job.
-                                    </p>
-                                    @else
-                                    <label for="alumnus_job_position" class="profile-label">Job Position{!! $optionalTag !!}</label>
+                                    <label for="alumnus_job_position" class="profile-label">Job Position<span id="jobPositionTag">{!! $hasSelectedHire ? $lockedTag : $optionalTag !!}</span></label>
                                     <input type="text" name="alumnus_job_position" id="alumnus_job_position" placeholder="e.g. Software Engineer"
-                                        value="{{ $alumnus->alumnus_job_position }}" class="profile-field">
-                                    <p class="profile-help">
-                                        Set automatically when you're hired through a job post here — fill this in yourself if your job didn't come from the system.
+                                        value="{{ $alumnus->alumnus_job_position }}"
+                                        {{ $hasSelectedHire ? 'readonly' : '' }}
+                                        class="profile-field {{ $hasSelectedHire ? 'bg-slate-50 text-slate-500' : '' }}">
+                                    <p class="profile-help" id="jobPositionHelp">
+                                        {{ $hasSelectedHire ? 'Comes from the job post you were hired through — pick "Others" above to type your own.' : 'The role you hold at the company above.' }}
                                     </p>
-                                    @endif
                                 </div>
 
                                 <div>
-                                    @if($alumnus->alumnus_employed_via_platform)
-                                    <label class="profile-label">Employment Date{!! $lockedTag !!}</label>
-                                    <input type="date" value="{{ optional($alumnus->alumnus_employment_date)->format('Y-m-d') }}" disabled aria-label="Employment Date" class="profile-field">
-                                    <p class="profile-help">
-                                        Set when you were hired through this job post — not editable while that's your current job.
-                                    </p>
-                                    @else
-                                    <label for="alumnus_employment_date" class="profile-label">Employment Date{!! $optionalTag !!}</label>
+                                    <label for="alumnus_employment_date" class="profile-label">Employment Date<span id="employmentDateTag">{!! $hasSelectedHire ? $lockedTag : $optionalTag !!}</span></label>
                                     <input type="date" name="alumnus_employment_date" id="alumnus_employment_date" max="{{ now()->format('Y-m-d') }}"
-                                        value="{{ optional($alumnus->alumnus_employment_date)->format('Y-m-d') }}" class="profile-field">
-                                    <p class="profile-help">
-                                        When you started your current job — not the same as your date of first job below. Set automatically when hired through a job post here.
+                                        value="{{ optional($alumnus->alumnus_employment_date)->format('Y-m-d') }}"
+                                        {{ $hasSelectedHire ? 'readonly' : '' }}
+                                        class="profile-field {{ $hasSelectedHire ? 'bg-slate-50 text-slate-500' : '' }}">
+                                    <p class="profile-help" id="employmentDateHelp">
+                                        {{ $hasSelectedHire ? 'The date that hire was recorded — pick "Others" above to set your own.' : 'When you started your current job — not the same as your date of first job below.' }}
                                     </p>
-                                    @endif
                                 </div>
 
                                 <div>
@@ -312,7 +341,7 @@
                                     <label for="alumnus_first_job_date" class="profile-label">Date of First Job{!! $optionalTag !!}</label>
                                     <input type="date" name="alumnus_first_job_date" id="alumnus_first_job_date" max="{{ now()->format('Y-m-d') }}" class="profile-field">
                                     <p class="profile-help">
-                                        Set automatically when you're hired through a job post here — only fill this in yourself if your first job didn't come from the system. You can only set this once.
+                                        The date your very first job started, whether or not it came from a job post here. You can only set this once.
                                     </p>
                                     <label class="flex items-center gap-2 mt-2 text-xs text-[#0E0F3B]">
                                         <input type="checkbox" name="alumnus_first_job_is_internship" value="1" class="rounded border-[#0E0F3B]">
@@ -602,21 +631,60 @@
     // they're employed — keep them hidden otherwise, live as the select
     // changes during editing (not just on initial page load).
     function toggleEmploymentFields(status) {
-        document.getElementById('employment-fields').classList.toggle('hidden', status !== '1');
+        const employed = status === '1';
+        document.getElementById('employment-fields').classList.toggle('hidden', !employed);
+        // Industry sits on the status row rather than inside #employment-fields,
+        // so it has to be toggled on its own.
+        document.getElementById('industry-field').classList.toggle('hidden', !employed);
     }
 
+    // Picking one of the alumnus's hires fills in that posting's position and
+    // hire date and locks both (the server re-reads them from the posting
+    // either way); "Others" clears the lock so they can type their own.
+    function onWorkplaceSourceChange() {
+        const select = document.getElementById('alumnus_workplace_source');
+        const option = select.options[select.selectedIndex];
+        const isOther = select.value === 'other';
+
+        document.getElementById('workplace-other-field').classList.toggle('hidden', !isOther);
+
+        const position = document.getElementById('alumnus_job_position');
+        const date = document.getElementById('alumnus_employment_date');
+
+        if (!isOther) {
+            position.value = option.dataset.position || '';
+            date.value = option.dataset.date || '';
+        }
+
+        [position, date].forEach(function (field) {
+            field.readOnly = !isOther;
+            field.classList.toggle('bg-slate-50', !isOther);
+            field.classList.toggle('text-slate-500', !isOther);
+        });
+
+        document.getElementById('jobPositionHelp').textContent = isOther
+            ? 'The role you hold at the company above.'
+            : 'Comes from the job post you were hired through — pick "Others" above to type your own.';
+        document.getElementById('employmentDateHelp').textContent = isOther
+            ? 'When you started your current job — not the same as your date of first job below.'
+            : 'The date that hire was recorded — pick "Others" above to set your own.';
+    }
+
+    // Visibility only — the company name is deliberately left in the field and
+    // in the database either way, so undisclosing and disclosing again doesn't
+    // lose the employer (it used to blank the input, which saved as empty).
     function toggleWorkplaceUndisclosed() {
         const hiddenField = document.getElementById('alumnus_workplace_undisclosed');
-        const workplaceInput = document.getElementById('alumnus_workplace');
         const label = document.getElementById('workplaceUndisclosedLabel');
         const undisclosed = hiddenField.value !== '1';
 
         hiddenField.value = undisclosed ? '1' : '0';
-        workplaceInput.disabled = undisclosed;
-        if (undisclosed) {
-            workplaceInput.value = '';
-        }
+        // Reads as the action the button will take next: while the workplace is
+        // hidden it offers to show it, and vice versa.
         label.textContent = undisclosed ? 'Disclose Workplace' : "Don't Disclose";
+        document.getElementById('workplaceUndisclosedHelp').textContent = undisclosed
+            ? 'Your workplace is hidden on your public profile. The company name is kept, so you can show it again any time.'
+            : 'Hiding your workplace only keeps the company name off your public profile — the name itself is kept, so you can show it again any time.';
     }
 
     //user profile view image/upload image

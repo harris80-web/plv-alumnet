@@ -323,7 +323,7 @@ class RealisticSeeder extends Seeder
             $pid = $isDemo ? $itId : $assign[$i - 1];
             $prog = $this->programs[$pid];
             $profile = $prog['p'];
-            $gender = $isDemo ? 'female' : $this->weighted(['female' => 52, 'male' => 45, 'prefer_not_to_say' => 3]);
+            $gender = $isDemo ? 'female' : $this->weighted(['female' => 53, 'male' => 47]);
             [$first, $last, $middle] = $isDemo ? ['Ryza', 'Ison', 'Santos'] : $this->personName($gender);
             $batchYear = $isDemo ? 2023 : (int) $this->weighted($batchWeights);
             $batch = Carbon::create($batchYear, mt_rand(6, 7), mt_rand(1, 28));
@@ -816,17 +816,30 @@ class RealisticSeeder extends Seeder
                     $this->notify($aid, "job_application_{$status}", $label, $body, $jid, $statusAt);
                 }
                 if ($status === 'hired' && (!isset($hires[$aid]) || $hiredAt->gt($hires[$aid]['at']))) {
-                    $hires[$aid] = ['at' => $hiredAt, 'job' => $job];
+                    $hires[$aid] = ['at' => $hiredAt, 'job' => $job, 'jid' => $jid];
                 }
             }
         }
         $this->insertChunked('job_applications', $rows);
 
-        // A hire through the platform becomes the alumnus's current job.
+        // Being hired no longer fills in a profile by itself
+        // (JobApplicationController::hireApplication()) — the alumnus picks
+        // which of their hires they actually work for, which is what copies
+        // the company/title/date across. Seeded as though each of these
+        // alumni picked their most recent hire, so profiles still line up
+        // with the application behind them. The id of that hire is what the
+        // form reselects, so it's looked up here in one query rather than
+        // per alumnus.
+        $hiredApplicationIds = DB::table('job_applications')
+            ->where('application_status', 'hired')
+            ->get(['application_id', 'job_id', 'alumnus_id'])
+            ->keyBy(fn ($row) => $row->job_id . '-' . $row->alumnus_id);
+
         foreach ($hires as $aid => $h) {
             $a = $this->alumni[$aid];
             DB::table('alumni')->where('user_id', $aid)->update([
                 'alumnus_employment_status' => 1, 'alumnus_employed_via_platform' => 1,
+                'alumnus_hired_application_id' => $hiredApplicationIds->get($h['jid'] . '-' . $aid)?->application_id,
                 'alumnus_workplace' => $h['job']['company'], 'alumnus_workplace_undisclosed' => 0,
                 'alumnus_job_position' => $h['job']['title'], 'industry_id' => $h['job']['industry'],
                 'alumnus_employment_date' => $h['at']->toDateString(),
@@ -982,13 +995,16 @@ class RealisticSeeder extends Seeder
 
         // The two newest notices of each kind notified their recipients, like the real "create notice" flow.
         usort($recentForNotify, fn ($x, $y) => $y[0] <=> $x[0]);
-        $employerIds = array_keys(array_filter($this->employers, fn ($e) => $e['status'] === 'approved'));
         $newest = [];
         foreach ($recentForNotify as $row) {
             if (count(array_filter($newest, fn ($r) => $r[2] === $row[2])) < 2) $newest[] = $row;
         }
         foreach ($newest as [$at, $nid, $cat, $title, $recipient]) {
-            $targets = array_merge($recipient !== 'employer' ? array_keys($this->alumni) : [], $recipient !== 'alumni' ? $employerIds : []);
+            // Alumni only, and only for notices addressed to them — exactly what
+            // NoticeController::store() fans out (notifyAllAlumni()). Seeding
+            // employers notice notifications the real flow never creates left
+            // them holding links into alumni-only pages.
+            $targets = in_array($recipient, ['alumni', 'everyone'], true) ? array_keys($this->alumni) : [];
             $label = ['event' => 'New event', 'seminar' => 'New seminar', 'announcement' => 'New announcement'][$cat];
             foreach ($targets as $uid) $this->notify($uid, "new_{$cat}", $label, $title, $nid, $at, 55);
         }

@@ -356,7 +356,7 @@
                         <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
                             <div class="flex items-center gap-2">
                                 <i data-lucide="timer" class="w-5 h-5 shrink-0 text-slate-800"></i>
-                                <p class="text-2xl font-bold text-slate-800">{{ $liveQueue['avgWaitMinutes'] }}m</p>
+                                <p class="text-2xl font-bold text-slate-800">{{ \App\Support\Duration::fromMinutes($liveQueue['avgWaitMinutes']) }}</p>
                             </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Avg. wait time</p>
                         </div>
@@ -609,7 +609,7 @@
                         <div class="bg-white rounded-lg border border-transparent shadow-sm transition-all hover:shadow-md px-5 py-4">
                             <div class="flex items-center gap-2">
                                 <i data-lucide="timer" class="w-5 h-5 shrink-0 text-blue-600"></i>
-                                <p class="text-2xl font-bold text-blue-600">{{ $reports['avgResolutionMinutes'] }}m</p>
+                                <p class="text-2xl font-bold text-blue-600">{{ \App\Support\Duration::fromMinutes($reports['avgResolutionMinutes']) }}</p>
                             </div>
                             <p class="text-xs font-medium text-slate-500 mt-1">Avg. resolution time</p>
                         </div>

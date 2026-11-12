@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ChatDate;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -68,6 +69,11 @@ class Message extends Model
      */
     public function toChatArray(): array
     {
+        // Stored/read in UTC (config('app.timezone')) — converted here
+        // since every user of this messaging feature is in the
+        // Philippines and a raw UTC clock time reads 8 hours off.
+        $local = $this->created_at->setTimezone(ChatDate::TIMEZONE);
+
         return [
             'id' => $this->message_id,
             'senderId' => $this->sender_id,
@@ -77,10 +83,12 @@ class Message extends Model
             'attachmentUrl' => $this->attachmentUrl(),
             'attachmentName' => $this->attachment_original_name,
             'createdAt' => $this->created_at->toIso8601String(),
-            // Stored/read in UTC (config('app.timezone')) — converted here
-            // since every user of this messaging feature is in the
-            // Philippines and a raw UTC clock time reads 8 hours off.
-            'timeLabel' => $this->created_at->setTimezone('Asia/Manila')->format('h:i A'),
+            'timeLabel' => $local->format('h:i A'),
+            // Day-separator support: bubbles show only the clock time, and a
+            // dated divider is drawn wherever dateKey changes between two
+            // consecutive messages (see partials/chat-date-divider).
+            'dateKey' => ChatDate::key($local),
+            'dateLabel' => ChatDate::label($local),
         ];
     }
 }

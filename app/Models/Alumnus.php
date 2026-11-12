@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 
 class Alumnus extends Model
 {
@@ -26,6 +27,7 @@ class Alumnus extends Model
         'alumnus_job_position',
         'alumnus_employment_date',
         'alumnus_employed_via_platform',
+        'alumnus_hired_application_id',
         'alumnus_resume_summary',
         'alumnus_resume_file_path',
         'alumnus_resume_backup_file_path',
@@ -53,12 +55,18 @@ class Alumnus extends Model
         'alumnus_show_linkedin' => 'boolean',
     ];
 
+    /**
+     * Male/female only: this field mirrors the registrar's records, which
+     * record nothing else. Drives the add-alumni form, CSV import and every
+     * gender breakdown, so adding a value here is all it takes to offer one.
+     * Rows predating that rule hold NULL and are left out of gender
+     * breakdowns rather than shown as a third category.
+     */
     public static function genderLabels(): array
     {
         return [
             'male' => 'Male',
             'female' => 'Female',
-            'prefer_not_to_say' => 'Prefer not to say',
         ];
     }
 
@@ -140,6 +148,44 @@ class Alumnus extends Model
     public function jobApplications()
     {
         return $this->hasMany(JobApplication::class, 'alumnus_id', 'user_id');
+    }
+
+    /** The hire this alumnus picked as their current workplace, if any. */
+    public function hiredApplication()
+    {
+        return $this->belongsTo(JobApplication::class, 'alumnus_hired_application_id', 'application_id');
+    }
+
+    /**
+     * Every job here this alumnus was hired for — the options offered by
+     * "Where do you work?" on the edit-profile form, newest hire first.
+     *
+     * Being hired no longer fills the employment section in automatically
+     * (an alumnus can be hired by several employers and only they know
+     * which offer they took), so the form lets them pick one of these and
+     * copies its company, title and hire date across. Each hire is its own
+     * option rather than being collapsed per company: the same employer can
+     * hire someone twice for different roles, and the position/date
+     * attached to each differ.
+     *
+     * Applications whose posting has since been deleted are skipped — there
+     * is no company or title left to offer.
+     */
+    public function hiringOptions(): Collection
+    {
+        return $this->jobApplications()
+            ->where('application_status', 'hired')
+            ->with('job')
+            ->get()
+            ->filter(fn (JobApplication $application) => $application->job !== null)
+            ->sortByDesc(fn (JobApplication $application) => $application->hired_at ?? $application->application_date)
+            ->map(fn (JobApplication $application) => [
+                'application_id' => $application->application_id,
+                'company' => $application->job->job_posting_company,
+                'position' => $application->job->job_posting_title,
+                'date' => optional($application->hired_at ?? $application->application_date)->format('Y-m-d'),
+            ])
+            ->values();
     }
 
     /**

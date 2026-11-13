@@ -729,6 +729,8 @@ class UserController extends Controller
 
         // Normalize so column order/casing/stray whitespace in the uploaded
         // file doesn't have to match the template byte-for-byte.
+        // Excel's "CSV UTF-8" save prepends a BOM, which would otherwise glue onto "first_name".
+        $header[0] = preg_replace('/^\xEF\xBB\xBF/', '', (string) $header[0]);
         $header = array_map(fn ($h) => strtolower(trim((string) $h)), $header);
         $required = ['first_name', 'middle_name', 'last_name', 'email', 'gender', 'college', 'program', 'batch'];
         $missing = array_diff($required, $header);

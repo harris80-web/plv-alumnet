@@ -691,7 +691,7 @@ class UserController extends Controller
     {
         $this->authorizeStaff();
         $columns = ['first_name', 'middle_name', 'last_name', 'suffix', 'email', 'gender', 'college', 'program', 'batch'];
-        $example = ['Juan', 'Santos', 'Dela Cruz', '', 'juan.delacruz@example.com', 'male', 'CEIT', 'Bachelor of Science in Information Technology', now()->subYears(2)->format('Y-m-d')];
+        $example = ['Import', 'Test', 'Sample Row', '', 'import.test@example.com', 'female', 'CEIT', 'Bachelor of Science in Information Technology', '2024-04-15'];
 
         $callback = function () use ($columns, $example) {
             $handle = fopen('php://output', 'w');
